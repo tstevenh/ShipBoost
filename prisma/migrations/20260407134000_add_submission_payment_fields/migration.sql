@@ -1,0 +1,7 @@
+CREATE TYPE "PaymentStatus" AS ENUM ('NOT_REQUIRED', 'PENDING', 'PAID', 'FAILED', 'REFUNDED');
+
+ALTER TABLE "Submission"
+ADD COLUMN "paymentStatus" "PaymentStatus" NOT NULL DEFAULT 'NOT_REQUIRED',
+ADD COLUMN "polarCheckoutId" TEXT,
+ADD COLUMN "polarOrderId" TEXT,
+ADD COLUMN "paidAt" TIMESTAMP(3);

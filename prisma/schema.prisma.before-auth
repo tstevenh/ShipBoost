@@ -1,0 +1,271 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  FOUNDER
+  ADMIN
+}
+
+enum PricingModel {
+  FREE
+  FREEMIUM
+  PAID
+  CUSTOM
+  CONTACT_SALES
+}
+
+enum ModerationStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+enum PublicationStatus {
+  UNPUBLISHED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SubmissionType {
+  LISTING_ONLY
+  FREE_LAUNCH
+  FEATURED_LAUNCH
+  RELAUNCH
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BadgeVerificationStatus {
+  NOT_REQUIRED
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum LaunchType {
+  FREE
+  FEATURED
+  RELAUNCH
+}
+
+enum LaunchStatus {
+  PENDING
+  APPROVED
+  LIVE
+  ENDED
+  REJECTED
+}
+
+enum MediaType {
+  LOGO
+  SCREENSHOT
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  role          UserRole @default(FOUNDER)
+
+  bio         String?
+  xUrl        String?
+  githubUrl   String?
+  linkedinUrl String?
+  facebookUrl String?
+
+  tools       Tool[]       @relation("OwnedTools")
+  submissions Submission[]
+  launches    Launch[]     @relation("LaunchCreatedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tool {
+  id          String  @id @default(cuid())
+  ownerUserId String?
+  owner       User?   @relation("OwnedTools", fields: [ownerUserId], references: [id])
+
+  slug            String @unique
+  name            String
+  tagline         String
+  websiteUrl      String
+  richDescription String
+
+  pricingModel        PricingModel
+  affiliateUrl        String?
+  affiliateSource     String?
+  hasAffiliateProgram Boolean      @default(false)
+
+  moderationStatus  ModerationStatus  @default(DRAFT)
+  publicationStatus PublicationStatus @default(UNPUBLISHED)
+
+  launchBadgeRequired Boolean                 @default(false)
+  badgeVerification   BadgeVerificationStatus @default(NOT_REQUIRED)
+  currentLaunchType   LaunchType?
+  isFeatured          Boolean                 @default(false)
+
+  founderXUrl        String?
+  founderGithubUrl   String?
+  founderLinkedinUrl String?
+  founderFacebookUrl String?
+
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+  internalNote    String?
+
+  logoMediaId String?    @unique
+  logoMedia   ToolMedia? @relation("ToolLogo", fields: [logoMediaId], references: [id])
+
+  media          ToolMedia[]    @relation("ToolMediaItems")
+  toolCategories ToolCategory[]
+  toolTags       ToolTag[]
+  submissions    Submission[]
+  launches       Launch[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUserId])
+  @@index([moderationStatus])
+  @@index([publicationStatus])
+}
+
+model ToolMedia {
+  id     String @id @default(cuid())
+  toolId String
+  tool   Tool   @relation("ToolMediaItems", fields: [toolId], references: [id], onDelete: Cascade)
+
+  type      MediaType
+  url       String
+  publicId  String?
+  format    String?
+  width     Int?
+  height    Int?
+  sortOrder Int       @default(0)
+
+  logoForTool Tool? @relation("ToolLogo")
+
+  createdAt DateTime @default(now())
+
+  @@index([toolId])
+  @@index([type])
+}
+
+model Category {
+  id              String  @id @default(cuid())
+  slug            String  @unique
+  name            String
+  description     String?
+  seoIntro        String?
+  metaTitle       String?
+  metaDescription String?
+  faqJson         Json?
+  isActive        Boolean @default(true)
+  sortOrder       Int     @default(0)
+
+  toolCategories ToolCategory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tag {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String?
+  isActive    Boolean @default(true)
+
+  toolTags ToolTag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ToolCategory {
+  id         String   @id @default(cuid())
+  toolId     String
+  categoryId String
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  tool     Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([toolId, categoryId])
+  @@index([categoryId])
+}
+
+model ToolTag {
+  id        String   @id @default(cuid())
+  toolId    String
+  tagId     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  tool Tool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([toolId, tagId])
+  @@index([tagId])
+}
+
+model Submission {
+  id                 String                  @id @default(cuid())
+  userId             String
+  toolId             String
+  submissionType     SubmissionType
+  requestedSlug      String?
+  badgeFooterUrl     String?
+  badgeVerification  BadgeVerificationStatus @default(NOT_REQUIRED)
+  reviewStatus       ReviewStatus            @default(PENDING)
+  founderVisibleNote String?
+  internalReviewNote String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tool Tool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, reviewStatus])
+  @@index([toolId])
+}
+
+model Launch {
+  id             String       @id @default(cuid())
+  toolId         String
+  createdById    String
+  launchType     LaunchType
+  status         LaunchStatus @default(PENDING)
+  launchDate     DateTime     @default(now())
+  startAt        DateTime
+  endAt          DateTime?
+  priorityWeight Int          @default(0)
+
+  tool      Tool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  createdBy User @relation("LaunchCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([toolId, status])
+  @@index([launchDate])
+}
