@@ -12,6 +12,7 @@ type AuthFormProps = {
   mode: AuthMode;
   initialNotice?: string | null;
   redirectTo?: string;
+  googleEnabled?: boolean;
 };
 
 function getTitle(mode: AuthMode) {
@@ -38,6 +39,7 @@ export function AuthForm({
   mode,
   initialNotice,
   redirectTo = "/dashboard",
+  googleEnabled = false,
 }: AuthFormProps) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -114,6 +116,31 @@ export function AuthForm({
     }
   }
 
+  async function handleGoogleSignIn() {
+    if (isSubmitting || !googleEnabled) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    setNoticeMessage(null);
+
+    try {
+      const result = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: redirectTo,
+      });
+
+      if (result.error) {
+        setErrorMessage(
+          result.error.message ?? "Unable to start Google sign-in right now.",
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
@@ -130,6 +157,35 @@ export function AuthForm({
         </div>
 
         <form onSubmit={handleSubmit} className="mt-10 space-y-5" aria-busy={isSubmitting}>
+          {googleEnabled ? (
+            <>
+              <button
+                type="button"
+                onClick={() => void handleGoogleSignIn()}
+                disabled={isSubmitting}
+                className="inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-black/10 bg-white px-5 py-3.5 text-base font-semibold text-black transition hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-5 w-5 items-center justify-center rounded-full border border-black/10 bg-white text-xs font-semibold"
+                >
+                  G
+                </span>
+                {mode === "sign-up"
+                  ? "Continue with Google"
+                  : "Sign in with Google"}
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-black/10" />
+                <span className="text-xs font-medium tracking-[0.18em] text-black/40 uppercase">
+                  or use email
+                </span>
+                <div className="h-px flex-1 bg-black/10" />
+              </div>
+            </>
+          ) : null}
+
           {mode === "sign-up" ? (
             <label className="block space-y-2">
               <span className="text-sm font-medium text-black/80">Name</span>

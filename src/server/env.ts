@@ -16,6 +16,8 @@ const envSchema = z.object({
     .trim()
     .min(32, "BETTER_AUTH_SECRET must be at least 32 characters."),
   BETTER_AUTH_API_KEY: z.string().trim().min(1).optional(),
+  GOOGLE_CLIENT_ID: optionalEnvString,
+  GOOGLE_CLIENT_SECRET: optionalEnvString,
   BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
   NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
   RESEND_API_KEY: optionalEnvString,
@@ -52,6 +54,8 @@ export function getEnv() {
       DIRECT_URL: process.env.DIRECT_URL,
       BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
       BETTER_AUTH_API_KEY: process.env.BETTER_AUTH_API_KEY,
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
       BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
       RESEND_API_KEY: process.env.RESEND_API_KEY,

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AuthForm } from "@/components/auth/auth-form";
 import { getServerSession } from "@/server/auth/session";
+import { getEnv } from "@/server/env";
 
 function getNoticeMessage(params: { reset?: string; verified?: string }) {
   if (params.reset) {
@@ -20,6 +21,7 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ reset?: string; verified?: string; redirect?: string }>;
 }) {
+  const env = getEnv();
   const session = await getServerSession();
   const params = await searchParams;
   const redirectTo = params.redirect || "/dashboard";
@@ -34,6 +36,7 @@ export default async function SignInPage({
         mode="sign-in"
         initialNotice={getNoticeMessage(params)}
         redirectTo={redirectTo}
+        googleEnabled={Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)}
       />
     </div>
   );
