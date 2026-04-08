@@ -17,6 +17,7 @@ export const submissionCreateBaseSchema = z.object({
     "LISTING_ONLY",
     "FREE_LAUNCH",
     "FEATURED_LAUNCH",
+    "RELAUNCH",
   ]),
   requestedSlug: optionalTrimmedString,
   preferredLaunchDate: z.coerce.date().optional(),

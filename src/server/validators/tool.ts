@@ -70,16 +70,11 @@ export const founderToolUpdateSchema = z.object({
   tagIds: z.array(cuidSchema).min(1).max(5),
   logo: mediaInputSchema.optional(),
   screenshots: z.array(mediaInputSchema).max(3).optional(),
-  affiliateUrl: z.url().optional(),
-  affiliateSource: optionalTrimmedString,
   hasAffiliateProgram: z.boolean().default(false),
   founderXUrl: z.url().optional(),
   founderGithubUrl: z.url().optional(),
   founderLinkedinUrl: z.url().optional(),
   founderFacebookUrl: z.url().optional(),
-  metaTitle: optionalTrimmedString,
-  metaDescription: optionalTrimmedString,
-  canonicalUrl: z.url().optional(),
   existingScreenshotIds: z.array(cuidSchema).max(3).default([]),
 });
 

@@ -6,19 +6,18 @@ import { getServerSession } from "@/server/auth/session";
 export default async function VerifyEmailPage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ email?: string; redirect?: string }>;
 }) {
   const session = await getServerSession();
+  const { email, redirect: redirectTo } = await searchParams;
 
   if (session?.user.emailVerified) {
-    redirect("/dashboard");
+    redirect(redirectTo || "/dashboard");
   }
-
-  const { email } = await searchParams;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 px-6 py-16 sm:py-20">
-      <VerifyEmailPanel initialEmail={email} />
+      <VerifyEmailPanel initialEmail={email} redirectTo={redirectTo} />
     </div>
   );
 }

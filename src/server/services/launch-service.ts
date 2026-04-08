@@ -2,8 +2,12 @@ import { subDays } from "@/server/services/time";
 import { prisma } from "@/server/db/client";
 import { sendLaunchLiveEmailMessage } from "@/server/email/transactional";
 import { getEnv } from "@/server/env";
+import { getPublicLaunchWhere } from "@/server/services/public-tool-visibility";
 
-export async function listLaunchBoard(board: "daily" | "weekly" | "monthly") {
+export async function listLaunchBoard(
+  board: "daily" | "weekly" | "monthly",
+  options?: { viewerUserId?: string | null },
+) {
   const now = new Date();
   const windowStart =
     board === "daily"
@@ -12,20 +16,23 @@ export async function listLaunchBoard(board: "daily" | "weekly" | "monthly") {
         ? subDays(now, 7)
         : subDays(now, 30);
 
-  return prisma.launch.findMany({
+  const launches = await prisma.launch.findMany({
     where: {
       launchDate: {
         gte: windowStart,
         lte: now,
       },
-      status: {
-        in: ["LIVE", "ENDED"],
-      },
+      ...getPublicLaunchWhere(now),
     },
     include: {
       tool: {
         include: {
           logoMedia: true,
+          _count: {
+            select: {
+              toolVotes: true,
+            },
+          },
           toolCategories: {
             include: {
               category: true,
@@ -36,6 +43,30 @@ export async function listLaunchBoard(board: "daily" | "weekly" | "monthly") {
     },
     orderBy: [{ priorityWeight: "desc" }, { launchDate: "desc" }],
   });
+
+  const viewerVotes = options?.viewerUserId
+    ? await prisma.toolVote.findMany({
+        where: {
+          userId: options.viewerUserId,
+          toolId: {
+            in: launches.map((launch) => launch.toolId),
+          },
+        },
+        select: {
+          toolId: true,
+        },
+      })
+    : [];
+  const viewerVotedToolIds = new Set(viewerVotes.map((vote) => vote.toolId));
+
+  return launches.map((launch) => ({
+    ...launch,
+    tool: {
+      ...launch.tool,
+      upvoteCount: launch.tool._count.toolVotes,
+      hasUpvoted: viewerVotedToolIds.has(launch.toolId),
+    },
+  }));
 }
 
 export async function publishDueLaunches(now = new Date()) {

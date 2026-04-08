@@ -65,6 +65,12 @@ export function AppHeader() {
 
         <nav className="flex items-center gap-3">
           <Link
+            href="/pricing"
+            className="rounded-full px-4 py-2 text-sm font-medium text-black/70 transition hover:bg-black/5 hover:text-black"
+          >
+            Pricing
+          </Link>
+          <Link
             href="/dashboard"
             className="rounded-full px-4 py-2 text-sm font-medium text-black/70 transition hover:bg-black/5 hover:text-black"
           >

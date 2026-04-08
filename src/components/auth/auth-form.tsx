@@ -11,6 +11,7 @@ type AuthMode = "sign-in" | "sign-up";
 type AuthFormProps = {
   mode: AuthMode;
   initialNotice?: string | null;
+  redirectTo?: string;
 };
 
 function getTitle(mode: AuthMode) {
@@ -33,7 +34,11 @@ function getPendingCta(mode: AuthMode) {
   return mode === "sign-up" ? "Creating account..." : "Signing in...";
 }
 
-export function AuthForm({ mode, initialNotice }: AuthFormProps) {
+export function AuthForm({
+  mode,
+  initialNotice,
+  redirectTo = "/dashboard",
+}: AuthFormProps) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -61,7 +66,7 @@ export function AuthForm({ mode, initialNotice }: AuthFormProps) {
           name,
           email,
           password,
-          callbackURL: "/dashboard",
+          callbackURL: redirectTo,
         });
 
         if (result.error) {
@@ -71,7 +76,9 @@ export function AuthForm({ mode, initialNotice }: AuthFormProps) {
           return;
         }
 
-        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        router.push(
+          `/verify-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectTo)}`,
+        );
         router.refresh();
         return;
       }
@@ -79,7 +86,7 @@ export function AuthForm({ mode, initialNotice }: AuthFormProps) {
       const result = await authClient.signIn.email({
         email,
         password,
-        callbackURL: "/dashboard",
+        callbackURL: redirectTo,
       });
 
       if (result.error) {
@@ -87,7 +94,9 @@ export function AuthForm({ mode, initialNotice }: AuthFormProps) {
           result.error.status === 403 ||
           result.error.message?.toLowerCase().includes("verify")
         ) {
-          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+          router.push(
+            `/verify-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectTo)}`,
+          );
           router.refresh();
           return;
         }
@@ -98,7 +107,7 @@ export function AuthForm({ mode, initialNotice }: AuthFormProps) {
         return;
       }
 
-      router.push("/dashboard");
+      router.push(redirectTo);
       router.refresh();
     } finally {
       setIsSubmitting(false);
@@ -217,7 +226,11 @@ export function AuthForm({ mode, initialNotice }: AuthFormProps) {
         <p className="mt-6 text-sm text-black/60">
           {mode === "sign-up" ? "Already have an account?" : "New here?"}{" "}
           <Link
-            href={mode === "sign-up" ? "/sign-in" : "/sign-up"}
+            href={
+              mode === "sign-up"
+                ? `/sign-in?redirect=${encodeURIComponent(redirectTo)}`
+                : `/sign-up?redirect=${encodeURIComponent(redirectTo)}`
+            }
             aria-disabled={isSubmitting}
             className="font-semibold text-[#9f4f1d] underline decoration-[#9f4f1d]/35 underline-offset-4 aria-disabled:pointer-events-none aria-disabled:opacity-50"
           >

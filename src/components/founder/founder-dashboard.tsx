@@ -39,7 +39,32 @@ type FounderToolSummary = {
   publicationStatus: "UNPUBLISHED" | "PUBLISHED" | "ARCHIVED";
   isFeatured: boolean;
   updatedAt: string;
+  launches: Array<{
+    id: string;
+    launchType: "FREE" | "FEATURED" | "RELAUNCH";
+    status: "PENDING" | "APPROVED" | "LIVE" | "ENDED" | "REJECTED";
+    launchDate: string;
+  }>;
   logoMedia: { url: string } | null;
+};
+
+type FounderListingClaim = {
+  id: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
+  claimEmail: string;
+  claimDomain: string;
+  websiteDomain: string;
+  founderVisibleNote: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  tool: {
+    id: string;
+    slug: string;
+    name: string;
+    tagline: string;
+    websiteUrl: string;
+    logoMedia: { url: string } | null;
+  };
 };
 
 type SubmissionStateSummary = {
@@ -198,18 +223,21 @@ function isFutureFeaturedLaunch(submission: FounderSubmission) {
 export function FounderDashboard({
   initialSubmissions,
   initialTools,
+  initialClaims,
   founderEmail,
   founderRole,
   initialSuccessMessage,
 }: {
   initialSubmissions: FounderSubmission[];
   initialTools: FounderToolSummary[];
+  initialClaims: FounderListingClaim[];
   founderEmail: string;
   founderRole: string;
   initialSuccessMessage?: string | null;
 }) {
   const [submissions, setSubmissions] = useState(initialSubmissions);
   const [tools, setTools] = useState(initialTools);
+  const [claims, setClaims] = useState(initialClaims);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(
     initialSuccessMessage ?? null,
@@ -246,6 +274,7 @@ export function FounderDashboard({
   const approvedCount = submissions.filter(
     (submission) => submission.reviewStatus === "APPROVED",
   ).length;
+  const pendingClaimCount = claims.filter((claim) => claim.status === "PENDING").length;
 
   function updateSubmission(nextSubmission: FounderSubmission) {
     setSubmissions((current) =>
@@ -271,8 +300,12 @@ export function FounderDashboard({
         const nextTools = await apiRequest<FounderToolSummary[]>(
           "/api/founder/tools",
         );
+        const nextClaims = await apiRequest<FounderListingClaim[]>(
+          "/api/listing-claims",
+        );
         setSubmissions(nextSubmissions);
         setTools(nextTools);
+        setClaims(nextClaims);
         setRescheduleDrafts(
           Object.fromEntries(
             nextSubmissions
@@ -438,7 +471,7 @@ export function FounderDashboard({
 
   return (
     <div className="grid gap-8">
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <div className="rounded-[1.75rem] border border-black/10 bg-[#fff9ef] p-5">
           <p className="text-sm text-black/55">Founder email</p>
           <p className="mt-2 text-lg font-semibold text-black">{founderEmail}</p>
@@ -456,6 +489,10 @@ export function FounderDashboard({
           <p className="mt-2 text-3xl font-semibold text-black">
             {approvedCount} / {awaitingPaymentCount}
           </p>
+        </div>
+        <div className="rounded-[1.75rem] border border-black/10 bg-[#eef6ff] p-5">
+          <p className="text-sm text-black/55">Pending claims</p>
+          <p className="mt-2 text-3xl font-semibold text-black">{pendingClaimCount}</p>
         </div>
       </div>
 
@@ -513,6 +550,76 @@ export function FounderDashboard({
           </div>
         </aside>
       </div>
+
+      <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
+              Listing claims
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-black">
+              Ownership requests in review
+            </h2>
+          </div>
+          <span className="rounded-full border border-black/10 bg-black/[0.03] px-4 py-2 text-sm text-black/60">
+            {claims.length} total
+          </span>
+        </div>
+
+        <div className="mt-8 space-y-4">
+          {claims.map((claim) => (
+            <article
+              key={claim.id}
+              className="rounded-[1.75rem] border border-black/10 bg-[#fffdf8] p-5"
+            >
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex rounded-full border border-black/10 bg-black/[0.03] px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase text-black/65">
+                      {claim.status}
+                    </span>
+                    <span className="inline-flex rounded-full border border-black/10 bg-[#fff9ef] px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase text-black/65">
+                      {claim.websiteDomain}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-black">{claim.tool.name}</h3>
+                    <p className="mt-1 text-sm text-black/58">{claim.tool.tagline}</p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-black/42">
+                      Requested {formatDate(claim.createdAt)}
+                    </p>
+                  </div>
+                  <div className="grid gap-2 text-sm text-black/62 sm:grid-cols-2">
+                    <p>Claim email: {claim.claimEmail}</p>
+                    <p>Domain match: {claim.claimDomain}</p>
+                    {claim.reviewedAt ? (
+                      <p>Reviewed: {formatDate(claim.reviewedAt)}</p>
+                    ) : null}
+                    {claim.founderVisibleNote ? (
+                      <p className="sm:col-span-2">Review note: {claim.founderVisibleNote}</p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href={`/tools/${claim.tool.slug}`}
+                    className="rounded-2xl border border-black/10 px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03]"
+                  >
+                    View listing
+                  </Link>
+                </div>
+              </div>
+            </article>
+          ))}
+
+          {claims.length === 0 ? (
+            <div className="rounded-[1.75rem] border border-dashed border-black/15 bg-black/[0.02] px-5 py-10 text-center text-sm text-black/55">
+              No listing claims yet. Claim a seeded public listing to manage it from this dashboard.
+            </div>
+          ) : null}
+        </div>
+      </section>
 
       <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
         <div className="flex items-center justify-between gap-4">

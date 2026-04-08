@@ -5,7 +5,10 @@ import { uploadImageToCloudinary } from "@/server/cloudinary";
 import { requireSession } from "@/server/auth/session";
 import { getEnv } from "@/server/env";
 import { errorResponse, ok } from "@/server/http/response";
-import { updateFounderTool } from "@/server/services/tool-service";
+import {
+  deleteFounderTool,
+  updateFounderTool,
+} from "@/server/services/tool-service";
 import { founderToolUpdateSchema } from "@/server/validators/tool";
 
 type RouteContext = {
@@ -21,16 +24,11 @@ function serializeFounderTool(tool: Awaited<ReturnType<typeof updateFounderTool>
     websiteUrl: tool.websiteUrl,
     richDescription: tool.richDescription,
     pricingModel: tool.pricingModel,
-    affiliateUrl: tool.affiliateUrl,
-    affiliateSource: tool.affiliateSource,
     hasAffiliateProgram: tool.hasAffiliateProgram,
     founderXUrl: tool.founderXUrl,
     founderGithubUrl: tool.founderGithubUrl,
     founderLinkedinUrl: tool.founderLinkedinUrl,
     founderFacebookUrl: tool.founderFacebookUrl,
-    metaTitle: tool.metaTitle,
-    metaDescription: tool.metaDescription,
-    canonicalUrl: tool.canonicalUrl,
     logoMedia: tool.logoMedia
       ? {
           id: tool.logoMedia.id,
@@ -166,8 +164,6 @@ async function parseMultipartFounderUpdate(request: NextRequest) {
     pricingModel: getStringValue(formData, "pricingModel"),
     categoryIds: parseJsonStringArray(formData, "categoryIds"),
     tagIds: parseJsonStringArray(formData, "tagIds"),
-    affiliateUrl: toOptionalString(getStringValue(formData, "affiliateUrl")),
-    affiliateSource: toOptionalString(getStringValue(formData, "affiliateSource")),
     hasAffiliateProgram: getStringValue(formData, "hasAffiliateProgram") === "true",
     founderXUrl: toOptionalString(getStringValue(formData, "founderXUrl")),
     founderGithubUrl: toOptionalString(getStringValue(formData, "founderGithubUrl")),
@@ -177,11 +173,6 @@ async function parseMultipartFounderUpdate(request: NextRequest) {
     founderFacebookUrl: toOptionalString(
       getStringValue(formData, "founderFacebookUrl"),
     ),
-    metaTitle: toOptionalString(getStringValue(formData, "metaTitle")),
-    metaDescription: toOptionalString(
-      getStringValue(formData, "metaDescription"),
-    ),
-    canonicalUrl: toOptionalString(getStringValue(formData, "canonicalUrl")),
     existingScreenshotIds: parseJsonStringArray(formData, "existingScreenshotIds"),
   });
 
@@ -210,6 +201,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const tool = await updateFounderTool(session.user.id, toolId, body);
     return ok(serializeFounderTool(tool));
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  try {
+    getEnv();
+    const session = await requireSession(request);
+    const { toolId } = await context.params;
+
+    const deleted = await deleteFounderTool(session.user.id, toolId);
+    return ok(deleted);
   } catch (error) {
     return errorResponse(error);
   }

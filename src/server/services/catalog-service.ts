@@ -1,5 +1,6 @@
 import { prisma } from "@/server/db/client";
 import { AppError } from "@/server/http/app-error";
+import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
 import { slugify } from "@/server/services/slug";
 import type {
   CategoryCreateInput,
@@ -47,8 +48,7 @@ export function listPublicCategories() {
       toolCategories: {
         some: {
           tool: {
-            publicationStatus: "PUBLISHED",
-            moderationStatus: "APPROVED",
+            ...getPubliclyVisibleToolWhere(),
           },
         },
       },
@@ -138,8 +138,7 @@ export function getPublicCategoryBySlug(slug: string) {
       toolCategories: {
         where: {
           tool: {
-            publicationStatus: "PUBLISHED",
-            moderationStatus: "APPROVED",
+            ...getPubliclyVisibleToolWhere(),
           },
         },
         orderBy: [{ sortOrder: "asc" }, { tool: { isFeatured: "desc" } }],
@@ -169,6 +168,67 @@ export function getPublicCategoryBySlug(slug: string) {
       },
     },
   });
+}
+
+export async function getPublicCategoryPageBySlug(slug: string) {
+  const category = await getPublicCategoryBySlug(slug);
+
+  if (!category) {
+    return null;
+  }
+
+  const toolIds = category.toolCategories.map((item) => item.tool.id);
+  const featuredTools = category.toolCategories
+    .map((item) => item.tool)
+    .filter((tool) => tool.isFeatured)
+    .slice(0, 3);
+
+  const topTagsMap = new Map<
+    string,
+    { id: string; name: string; slug: string; isActive: boolean; count: number }
+  >();
+
+  for (const item of category.toolCategories) {
+    for (const tag of item.tool.toolTags) {
+      const current = topTagsMap.get(tag.tag.id);
+      topTagsMap.set(tag.tag.id, {
+        id: tag.tag.id,
+        name: tag.tag.name,
+        slug: tag.tag.slug,
+        isActive: tag.tag.isActive,
+        count: (current?.count ?? 0) + 1,
+      });
+    }
+  }
+
+  const relatedCategories = toolIds.length
+    ? await prisma.category.findMany({
+        where: {
+          id: {
+            not: category.id,
+          },
+          isActive: true,
+          toolCategories: {
+            some: {
+              toolId: {
+                in: toolIds,
+              },
+            },
+          },
+        },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        take: 4,
+      })
+    : [];
+
+  return {
+    ...category,
+    featuredTools,
+    relatedCategories,
+    topTags: [...topTagsMap.values()]
+      .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+      .slice(0, 6),
+  };
 }
 
 export async function createTag(input: TagCreateInput) {

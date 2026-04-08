@@ -1,15 +1,30 @@
 import Link from "next/link";
 
+import { HomeLeadMagnetForm } from "@/components/public/home-lead-magnet-form";
 import { LaunchBoard } from "@/components/public/launch-board";
+import { HomeSearchModal } from "@/components/public/home-search-modal";
 import { listPublicCategories } from "@/server/services/catalog-service";
 import { getServerSession } from "@/server/auth/session";
 import { listLaunchBoard } from "@/server/services/launch-service";
+import { getDailyVotesRemaining } from "@/server/services/upvote-service";
 
-export default async function Home() {
+type HomePageProps = {
+  searchParams?: Promise<{
+    q?: string;
+  }>;
+};
+
+export default async function Home({ searchParams }: HomePageProps) {
   const session = await getServerSession();
-  const [dailyLaunches, categories] = await Promise.all([
-    listLaunchBoard("daily"),
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const [dailyLaunches, categories, dailyVotesRemaining] = await Promise.all([
+    listLaunchBoard("daily", {
+      viewerUserId: session?.user.id ?? null,
+    }),
     listPublicCategories(),
+    session?.user.id
+      ? getDailyVotesRemaining(session.user.id)
+      : Promise.resolve(null),
   ]);
 
   return (
@@ -46,6 +61,10 @@ export default async function Home() {
               {session ? "Submit your product" : "Sign in"}
             </Link>
           </div>
+
+          <HomeSearchModal initialQuery={resolvedSearchParams?.q} />
+
+          <HomeLeadMagnetForm />
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-[1.75rem] border border-black/10 bg-white/90 p-5 shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
@@ -108,7 +127,11 @@ export default async function Home() {
       </div>
 
       <div className="mt-14 grid gap-8">
-        <LaunchBoard board="daily" launches={dailyLaunches} />
+        <LaunchBoard
+          board="daily"
+          launches={dailyLaunches}
+          dailyVotesRemaining={dailyVotesRemaining}
+        />
 
         <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
           <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">

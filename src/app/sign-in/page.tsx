@@ -18,19 +18,23 @@ function getNoticeMessage(params: { reset?: string; verified?: string }) {
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string; verified?: string }>;
+  searchParams: Promise<{ reset?: string; verified?: string; redirect?: string }>;
 }) {
   const session = await getServerSession();
+  const params = await searchParams;
+  const redirectTo = params.redirect || "/dashboard";
 
   if (session) {
-    redirect("/dashboard");
+    redirect(redirectTo);
   }
-
-  const params = await searchParams;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 px-6 py-16 sm:py-20">
-      <AuthForm mode="sign-in" initialNotice={getNoticeMessage(params)} />
+      <AuthForm
+        mode="sign-in"
+        initialNotice={getNoticeMessage(params)}
+        redirectTo={redirectTo}
+      />
     </div>
   );
 }

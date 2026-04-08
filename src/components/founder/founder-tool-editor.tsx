@@ -38,16 +38,11 @@ type ToolEditorData = {
   websiteUrl: string;
   richDescription: string;
   pricingModel: PricingModel;
-  affiliateUrl: string | null;
-  affiliateSource: string | null;
   hasAffiliateProgram: boolean;
   founderXUrl: string | null;
   founderGithubUrl: string | null;
   founderLinkedinUrl: string | null;
   founderFacebookUrl: string | null;
-  metaTitle: string | null;
-  metaDescription: string | null;
-  canonicalUrl: string | null;
   logoMedia: ExistingImage | null;
   screenshots: ExistingImage[];
   toolCategories: Array<{ categoryId: string }>;
@@ -77,16 +72,11 @@ type FormState = {
   websiteUrl: string;
   richDescription: string;
   pricingModel: PricingModel;
-  affiliateUrl: string;
-  affiliateSource: string;
   hasAffiliateProgram: boolean;
   founderXUrl: string;
   founderGithubUrl: string;
   founderLinkedinUrl: string;
   founderFacebookUrl: string;
-  metaTitle: string;
-  metaDescription: string;
-  canonicalUrl: string;
   categoryIds: string[];
   tagIds: string[];
 };
@@ -107,16 +97,11 @@ function createFormState(tool: ToolEditorData): FormState {
     websiteUrl: tool.websiteUrl,
     richDescription: tool.richDescription,
     pricingModel: tool.pricingModel,
-    affiliateUrl: tool.affiliateUrl ?? "",
-    affiliateSource: tool.affiliateSource ?? "",
     hasAffiliateProgram: tool.hasAffiliateProgram,
     founderXUrl: tool.founderXUrl ?? "",
     founderGithubUrl: tool.founderGithubUrl ?? "",
     founderLinkedinUrl: tool.founderLinkedinUrl ?? "",
     founderFacebookUrl: tool.founderFacebookUrl ?? "",
-    metaTitle: tool.metaTitle ?? "",
-    metaDescription: tool.metaDescription ?? "",
-    canonicalUrl: tool.canonicalUrl ?? "",
     categoryIds: tool.toolCategories.map((item) => item.categoryId),
     tagIds: tool.toolTags.map((item) => item.tagId),
   };
@@ -256,6 +241,9 @@ export function FounderToolEditor({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const submitLockRef = useRef(false);
   const newLogoRef = useRef<LocalImage | null>(null);
   const newScreenshotsRef = useRef<LocalImage[]>([]);
@@ -387,8 +375,6 @@ export function FounderToolEditor({
         formData.append("pricingModel", form.pricingModel);
         formData.append("categoryIds", JSON.stringify(form.categoryIds));
         formData.append("tagIds", JSON.stringify(form.tagIds));
-        formData.append("affiliateUrl", form.affiliateUrl);
-        formData.append("affiliateSource", form.affiliateSource);
         formData.append(
           "hasAffiliateProgram",
           String(form.hasAffiliateProgram),
@@ -397,9 +383,6 @@ export function FounderToolEditor({
         formData.append("founderGithubUrl", form.founderGithubUrl);
         formData.append("founderLinkedinUrl", form.founderLinkedinUrl);
         formData.append("founderFacebookUrl", form.founderFacebookUrl);
-        formData.append("metaTitle", form.metaTitle);
-        formData.append("metaDescription", form.metaDescription);
-        formData.append("canonicalUrl", form.canonicalUrl);
         formData.append(
           "existingScreenshotIds",
           JSON.stringify(existingScreenshots.map((image) => image.id)),
@@ -454,6 +437,50 @@ export function FounderToolEditor({
     })();
   }
 
+  function handleDeleteListing() {
+    if (isSubmitting || isDeleting) {
+      return;
+    }
+    setDeleteConfirmationText("");
+    setIsDeleteModalOpen(true);
+  }
+
+  function confirmDeleteListing() {
+    if (
+      isSubmitting ||
+      isDeleting ||
+      deleteConfirmationText.trim() !== tool.name
+    ) {
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsDeleting(true);
+
+    void (async () => {
+      try {
+        const response = await fetch(`/api/founder/tools/${tool.id}`, {
+          method: "DELETE",
+        });
+        const payload = (await response.json().catch(() => null)) as ApiErrorPayload | null;
+
+        if (!response.ok) {
+          throw new Error(payload?.error ?? "Unable to delete listing.");
+        }
+
+        setIsDeleteModalOpen(false);
+        router.push("/dashboard");
+        router.refresh();
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : "Unable to delete listing.",
+        );
+        setIsDeleting(false);
+      }
+    })();
+  }
+
   function getFieldError(field: keyof FormState | "logo" | "screenshots") {
     return fieldErrors[field]?.[0] ?? null;
   }
@@ -477,7 +504,7 @@ export function FounderToolEditor({
         </p>
 
         <fieldset
-          disabled={isSubmitting}
+          disabled={isSubmitting || isDeleting}
           className="mt-8 space-y-6 disabled:cursor-not-allowed disabled:opacity-70"
         >
           <div className="grid gap-4 md:grid-cols-2">
@@ -570,33 +597,7 @@ export function FounderToolEditor({
                 ))}
               </select>
             </Field>
-            <Field label="Affiliate URL" error={getFieldError("affiliateUrl")}>
-              <input
-                type="url"
-                value={form.affiliateUrl}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    affiliateUrl: event.target.value,
-                  }))
-                }
-                className={inputClassName()}
-              />
-            </Field>
           </div>
-
-          <Field label="Affiliate source">
-            <input
-              value={form.affiliateSource}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  affiliateSource: event.target.value,
-                }))
-              }
-              className={inputClassName()}
-            />
-          </Field>
 
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Founder X URL">
@@ -655,48 +656,6 @@ export function FounderToolEditor({
               />
             </Field>
           </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Meta title">
-              <input
-                value={form.metaTitle}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    metaTitle: event.target.value,
-                  }))
-                }
-                className={inputClassName()}
-              />
-            </Field>
-            <Field label="Canonical URL">
-              <input
-                type="url"
-                value={form.canonicalUrl}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    canonicalUrl: event.target.value,
-                  }))
-                }
-                className={inputClassName()}
-              />
-            </Field>
-          </div>
-
-          <Field label="Meta description">
-            <textarea
-              value={form.metaDescription}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  metaDescription: event.target.value,
-                }))
-              }
-              rows={3}
-              className={inputClassName()}
-            />
-          </Field>
 
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-[1.5rem] border border-black/10 bg-[#fffdf8] p-4">
@@ -842,6 +801,12 @@ export function FounderToolEditor({
             </div>
           ) : null}
 
+          {isDeleting ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              Deleting listing permanently. Shipboost is removing related records and cleaning media.
+            </div>
+          ) : null}
+
           {errorMessage ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {errorMessage}
@@ -857,7 +822,7 @@ export function FounderToolEditor({
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isDeleting}
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#143f35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2e26] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? (
@@ -869,9 +834,24 @@ export function FounderToolEditor({
                 "Save changes"
               )}
             </button>
+            <button
+              type="button"
+              onClick={handleDeleteListing}
+              disabled={isSubmitting || isDeleting}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isDeleting ? (
+                <>
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-rose-300 border-t-rose-700" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete listing"
+              )}
+            </button>
             <Link
               href="/dashboard"
-              aria-disabled={isSubmitting}
+              aria-disabled={isSubmitting || isDeleting}
               className="inline-flex items-center justify-center rounded-2xl border border-black/10 px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03] aria-disabled:pointer-events-none aria-disabled:opacity-50"
             >
               Back to dashboard
@@ -879,6 +859,73 @@ export function FounderToolEditor({
           </div>
         </fieldset>
       </form>
+
+      {isDeleteModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-8">
+          <div className="w-full max-w-xl rounded-[2rem] border border-black/10 bg-[#fffdf8] p-8 shadow-[0_30px_120px_rgba(0,0,0,0.2)]">
+            <p className="text-sm font-semibold tracking-[0.24em] text-rose-700 uppercase">
+              Delete listing
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-black">
+              Delete {tool.name} permanently?
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-black/66">
+              This permanently removes the listing, launches, submissions, votes,
+              claims, and stored media. Type{" "}
+              <span className="font-semibold text-black">{tool.name}</span> to
+              confirm.
+            </p>
+
+            <div className="mt-6">
+              <Field
+                label="Type the product name to confirm"
+                hint="The delete button only unlocks when the name matches exactly."
+              >
+                <input
+                  value={deleteConfirmationText}
+                  onChange={(event) => setDeleteConfirmationText(event.target.value)}
+                  className={inputClassName()}
+                  autoFocus
+                />
+              </Field>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  if (isDeleting) {
+                    return;
+                  }
+                  setIsDeleteModalOpen(false);
+                  setDeleteConfirmationText("");
+                }}
+                disabled={isDeleting}
+                className="inline-flex items-center justify-center rounded-2xl border border-black/10 px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteListing}
+                disabled={
+                  isDeleting || deleteConfirmationText.trim() !== tool.name
+                }
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeleting ? (
+                  <>
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-rose-300 border-t-rose-700" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete permanently"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <aside className="rounded-[2rem] bg-[#143f35] p-8 text-[#f8efe3] shadow-[0_24px_80px_rgba(20,63,53,0.24)] sm:p-10">
         <p className="text-sm font-semibold tracking-[0.25em] text-[#f3c781] uppercase">

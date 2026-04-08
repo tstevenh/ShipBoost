@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { buildTrackedToolOutboundUrl } from "@/lib/tool-outbound";
+import { ToolUpvoteButton } from "@/components/public/tool-upvote-button";
+
 type LaunchItem = {
   id: string;
   launchType: "FREE" | "FEATURED" | "RELAUNCH";
@@ -7,11 +10,14 @@ type LaunchItem = {
   launchDate: Date;
   priorityWeight: number;
   tool: {
+    id: string;
     slug: string;
     name: string;
     tagline: string;
     websiteUrl: string;
     logoMedia: { url: string } | null;
+    upvoteCount: number;
+    hasUpvoted: boolean;
     toolCategories: Array<{
       category: { name: string; slug: string };
     }>;
@@ -33,9 +39,11 @@ function toneClassName(launchType: LaunchItem["launchType"]) {
 export function LaunchBoard({
   board,
   launches,
+  dailyVotesRemaining,
 }: {
   board: "daily" | "weekly" | "monthly";
   launches: LaunchItem[];
+  dailyVotesRemaining?: number | null;
 }) {
   return (
     <div className="space-y-6">
@@ -103,14 +111,27 @@ export function LaunchBoard({
                 </div>
               </div>
 
-              <a
-                href={launch.tool.websiteUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-black transition hover:bg-black/[0.04]"
-              >
-                Visit site
-              </a>
+              <div className="flex items-center gap-3">
+                <ToolUpvoteButton
+                  toolId={launch.tool.id}
+                  initialCount={launch.tool.upvoteCount}
+                  initialHasUpvoted={launch.tool.hasUpvoted}
+                  initialDailyVotesRemaining={dailyVotesRemaining ?? null}
+                  compact
+                />
+                <a
+                  href={buildTrackedToolOutboundUrl(
+                    launch.tool.id,
+                    "website",
+                    "launch_board",
+                  )}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-black transition hover:bg-black/[0.04]"
+                >
+                  Visit site
+                </a>
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">

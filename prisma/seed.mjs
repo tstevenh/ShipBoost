@@ -3,7 +3,68 @@ import path from "node:path";
 
 import { PrismaClient } from "@prisma/client";
 
+import { normalizedTags } from "../scripts/tag-taxonomy.mjs";
+
 const prisma = new PrismaClient();
+
+const canonicalCategories = [
+  {
+    slug: "marketing",
+    name: "Marketing",
+    description: "Tools for attracting, converting, and retaining customers.",
+    seoIntro: "Marketing tools for SaaS teams that need clearer traction and stronger distribution.",
+    sortOrder: 1,
+  },
+  {
+    slug: "sales",
+    name: "Sales",
+    description: "Software for pipeline management, outreach, demos, and closing revenue.",
+    seoIntro: "Sales tools for founders who need to move from interest to revenue without a bulky stack.",
+    sortOrder: 2,
+  },
+  {
+    slug: "analytics",
+    name: "Analytics",
+    description: "Products for measuring behavior, performance, attribution, and conversion.",
+    seoIntro: "Analytics tools for founders who need signal, not dashboard theater.",
+    sortOrder: 3,
+  },
+  {
+    slug: "support",
+    name: "Support",
+    description: "Tools for customer service, help docs, live chat, and issue resolution.",
+    seoIntro: "Support software for teams that want fast response loops and cleaner customer operations.",
+    sortOrder: 4,
+  },
+  {
+    slug: "productivity",
+    name: "Productivity",
+    description: "Apps that help teams organize work, automate tasks, and stay aligned.",
+    seoIntro: "Productivity tools for lean teams that need better execution without extra overhead.",
+    sortOrder: 5,
+  },
+  {
+    slug: "development",
+    name: "Development",
+    description: "Developer tools for building, shipping, testing, and maintaining software.",
+    seoIntro: "Development tools for modern SaaS builders shipping fast with small teams.",
+    sortOrder: 6,
+  },
+  {
+    slug: "design",
+    name: "Design",
+    description: "Products for UI design, prototyping, creative assets, and visual systems.",
+    seoIntro: "Design tools for teams that care about product polish, speed, and consistency.",
+    sortOrder: 7,
+  },
+  {
+    slug: "finance",
+    name: "Finance",
+    description: "Software for billing, accounting, cash flow, pricing, and financial operations.",
+    seoIntro: "Finance tools for founders managing revenue, cash, and operational clarity.",
+    sortOrder: 8,
+  },
+];
 
 function loadDotenvLocal() {
   const envPath = path.join(process.cwd(), ".env.local");
@@ -64,50 +125,25 @@ async function seedAdmin() {
 }
 
 async function seedCategories() {
-  const categories = [
-    {
-      slug: "distribution",
-      name: "Distribution",
-      description: "Tools that help bootstrapped founders acquire reach and attention.",
-      seoIntro: "Distribution tools for bootstrapped SaaS founders who need more than one launch-day spike.",
-      sortOrder: 1,
-    },
-    {
-      slug: "marketing",
-      name: "Marketing",
-      description: "Products that help founders attract, convert, and retain customers.",
-      seoIntro: "Marketing software for lean SaaS teams that need traction without an in-house growth team.",
-      sortOrder: 2,
-    },
-    {
-      slug: "analytics",
-      name: "Analytics",
-      description: "Tools for understanding user behavior, performance, and conversion.",
-      seoIntro: "Analytics tools for bootstrapped founders who need signal, not dashboard theater.",
-      sortOrder: 3,
-    },
-  ];
-
-  for (const category of categories) {
+  for (const category of canonicalCategories) {
     await prisma.category.upsert({
       where: { slug: category.slug },
       update: category,
       create: category,
     });
   }
+
+  await prisma.category.deleteMany({
+    where: {
+      slug: {
+        notIn: canonicalCategories.map((category) => category.slug),
+      },
+    },
+  });
 }
 
 async function seedTags() {
-  const tags = [
-    { slug: "bootstrapped", name: "Bootstrapped" },
-    { slug: "launch", name: "Launch" },
-    { slug: "growth", name: "Growth" },
-    { slug: "marketing", name: "Marketing" },
-    { slug: "seo", name: "SEO" },
-    { slug: "founder-tools", name: "Founder Tools" },
-  ];
-
-  for (const tag of tags) {
+  for (const tag of normalizedTags) {
     await prisma.tag.upsert({
       where: { slug: tag.slug },
       update: tag,

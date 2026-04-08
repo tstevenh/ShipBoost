@@ -1,6 +1,9 @@
 import Link from "next/link";
 
+import { buildTrackedToolOutboundUrl, type ToolOutboundSource } from "@/lib/tool-outbound";
+
 type ToolCardTool = {
+  id: string;
   slug: string;
   name: string;
   tagline: string;
@@ -22,7 +25,13 @@ function badgeClassName(featured: boolean) {
     : "border-black/10 bg-black/[0.03] text-black/65";
 }
 
-export function PublicToolCard({ tool }: { tool: ToolCardTool }) {
+export function PublicToolCard({
+  tool,
+  sourceSurface = "category_page",
+}: {
+  tool: ToolCardTool;
+  sourceSurface?: ToolOutboundSource;
+}) {
   return (
     <article className="rounded-[1.75rem] border border-black/10 bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.06)]">
       <div className="flex items-start justify-between gap-4">
@@ -94,7 +103,11 @@ export function PublicToolCard({ tool }: { tool: ToolCardTool }) {
       {tool.affiliateUrl ? (
         <div className="mt-5">
           <a
-            href={tool.affiliateUrl}
+            href={buildTrackedToolOutboundUrl(
+              tool.id,
+              "affiliate",
+              sourceSurface,
+            )}
             target="_blank"
             rel="noreferrer"
             className="text-sm font-semibold text-[#9f4f1d] underline decoration-[#9f4f1d]/30 underline-offset-4"

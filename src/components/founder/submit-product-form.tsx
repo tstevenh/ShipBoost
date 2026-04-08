@@ -20,7 +20,11 @@ type TagOption = {
   description: string | null;
 };
 
-type SubmissionType = "LISTING_ONLY" | "FREE_LAUNCH" | "FEATURED_LAUNCH";
+type SubmissionType =
+  | "LISTING_ONLY"
+  | "FREE_LAUNCH"
+  | "FEATURED_LAUNCH"
+  | "RELAUNCH";
 type PricingModel = "FREE" | "FREEMIUM" | "PAID" | "CUSTOM" | "CONTACT_SALES";
 
 type SubmitProductFormProps = {
@@ -64,8 +68,20 @@ type ApiErrorPayload = {
   details?: {
     fieldErrors?: FieldErrors;
     formErrors?: string[];
+    duplicateTool?: {
+      id: string;
+      slug: string;
+      name: string;
+      ownedByYou: boolean;
+      ctaHref: string | null;
+      ctaLabel: string | null;
+    };
   };
 };
+
+type DuplicateToolAction = NonNullable<
+  NonNullable<ApiErrorPayload["details"]>["duplicateTool"]
+>;
 
 type SavedSubmission = {
   id: string;
@@ -162,6 +178,7 @@ function readValidationErrors(payload: ApiErrorPayload | null) {
 
   return {
     fieldErrors,
+    duplicateTool: payload?.details?.duplicateTool ?? null,
     message:
       formErrors[0] ??
       firstFieldError ??
@@ -243,6 +260,9 @@ export function SubmitProductForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [duplicateToolAction, setDuplicateToolAction] = useState<
+    DuplicateToolAction | null
+  >(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
   const [isVerifyingBadge, setIsVerifyingBadge] = useState(false);
@@ -481,6 +501,7 @@ export function SubmitProductForm({
     setErrorMessage(null);
     setSuccessMessage(null);
     setFieldErrors({});
+    setDuplicateToolAction(null);
 
     if (!logo) {
       throw new Error("Upload a logo before saving your draft.");
@@ -499,6 +520,7 @@ export function SubmitProductForm({
     if (!response.ok) {
       const next = readValidationErrors(payload);
       setFieldErrors(next.fieldErrors);
+      setDuplicateToolAction(next.duplicateTool);
       throw new Error(next.message);
     }
 
@@ -511,6 +533,7 @@ export function SubmitProductForm({
     setDraftSubmissionId(savedDraft.id);
     setDraftBadgeVerification(savedDraft.badgeVerification);
     setSuccessMessage("Draft saved. You can come back to it later from your dashboard.");
+    setDuplicateToolAction(null);
 
     return savedDraft;
   }
@@ -560,6 +583,7 @@ export function SubmitProductForm({
         if (result.verified) {
           setSuccessMessage(result.message);
           setErrorMessage(null);
+          setDuplicateToolAction(null);
         } else {
           setSuccessMessage(null);
           setErrorMessage(result.message);
@@ -1137,7 +1161,22 @@ export function SubmitProductForm({
 
           {errorMessage ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              {errorMessage}
+              <p>{errorMessage}</p>
+              {duplicateToolAction ? (
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                  <span className="text-rose-700/80">
+                    Existing listing: {duplicateToolAction.name}
+                  </span>
+                  {duplicateToolAction.ctaHref && duplicateToolAction.ctaLabel ? (
+                    <Link
+                      href={duplicateToolAction.ctaHref}
+                      className="inline-flex items-center justify-center rounded-xl border border-rose-300 bg-white px-3 py-2 font-semibold text-rose-700 transition hover:bg-rose-100"
+                    >
+                      {duplicateToolAction.ctaLabel}
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           ) : null}
 

@@ -491,3 +491,44 @@ export async function sendLaunchLiveEmailMessage(input: {
     ].join("\n"),
   });
 }
+
+export async function sendStartupDirectoriesLeadMagnetEmail(input: {
+  to: string;
+  name?: string | null;
+  directoriesUrl: string;
+}) {
+  const subject = "Your 800+ startup directories list is ready";
+  const preview = "Use this list to find more places to submit your startup.";
+  const greeting = input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, ";
+  const html = renderEmailDocument({
+    title: subject,
+    preview,
+    content: [
+      h1("Here’s your startup directories list"),
+      paragraph(
+        `${greeting}here is the 800+ startup directories list you requested from Shipboost.`,
+      ),
+      paragraph(
+        "Use it to find relevant places to submit your startup and build compounding distribution over time.",
+      ),
+      ctaButton(input.directoriesUrl, "Open the directories list"),
+      paragraph(
+        "You’ll also get occasional startup growth and distribution emails from Shipboost. You can unsubscribe any time.",
+      ),
+    ].join(""),
+  });
+
+  await sendTransactionalEmail({
+    to: input.to,
+    subject,
+    html,
+    text: [
+      input.name ? `Hi ${input.name},` : "Hi,",
+      "",
+      "Here is your 800+ startup directories list:",
+      input.directoriesUrl,
+      "",
+      "You’ll also get occasional startup growth and distribution emails from Shipboost. You can unsubscribe any time.",
+    ].join("\n"),
+  });
+}

@@ -7,11 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
     "prisma:generate": "prisma generate",
     "prisma:format": "prisma format",
     "prisma:studio": "node scripts/run-with-env.mjs prisma studio",
     "db:migrate": "node scripts/run-with-env.mjs prisma migrate dev",
     "db:seed": "node prisma/seed.mjs",
+    "tools:import-csv": "node scripts/run-with-env.mjs node scripts/import-seeded-tools.mjs",
+    "tags:prune-category-duplicates": "node scripts/run-with-env.mjs node scripts/prune-category-duplicate-tags.mjs",
+    "tags:sync": "node scripts/run-with-env.mjs node scripts/sync-tag-taxonomy.mjs",
+    "tags:sync:deactivate-missing": "node scripts/run-with-env.mjs node scripts/sync-tag-taxonomy.mjs --deactivate-missing",
     "auth:promote-admin": "node scripts/promote-admin.mjs"
   },
   "dependencies": {
@@ -33,13 +38,19 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "jsdom": "^26.1.0",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.4"
   }
 }

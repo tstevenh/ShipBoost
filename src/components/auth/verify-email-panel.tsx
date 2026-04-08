@@ -9,8 +9,10 @@ function inputClassName() {
 
 export function VerifyEmailPanel({
   initialEmail,
+  redirectTo,
 }: {
   initialEmail?: string;
+  redirectTo?: string;
 }) {
   const [email, setEmail] = useState(initialEmail ?? "");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export function VerifyEmailPanel({
             },
             body: JSON.stringify({
               email,
-              callbackURL: `${origin}/dashboard`,
+              callbackURL: `${origin}${redirectTo || "/dashboard"}`,
             }),
           });
 
@@ -116,7 +118,11 @@ export function VerifyEmailPanel({
         <p className="mt-6 text-sm text-black/60">
           Already verified?{" "}
           <Link
-            href="/sign-in"
+            href={
+              redirectTo
+                ? `/sign-in?redirect=${encodeURIComponent(redirectTo)}`
+                : "/sign-in"
+            }
             className="font-semibold text-[#9f4f1d] underline decoration-[#9f4f1d]/35 underline-offset-4"
           >
             Sign in
