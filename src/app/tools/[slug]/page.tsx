@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronRight, Globe, Info, Zap, User as UserIcon, Calendar, Trophy, ArrowRight, Star, ChevronUp, MessageSquare, Tag, Layout } from "lucide-react";
 
 import { MarkdownContent } from "@/components/content/markdown-content";
 import { ClaimListingCard } from "@/components/public/claim-listing-card";
-import { PublicToolCard } from "@/components/public/public-tool-card";
 import { ToolUpvoteButton } from "@/components/public/tool-upvote-button";
 import { buildTrackedToolOutboundUrl } from "@/lib/tool-outbound";
 import { getServerSession } from "@/server/auth/session";
 import { getEnv } from "@/server/env";
 import { hasAlternativesSeoPage } from "@/server/services/seo-service";
 import { getListingClaimState } from "@/server/services/listing-claim-service";
-import { getDailyVotesRemaining } from "@/server/services/upvote-service";
+import { getDailyVotesRemaining, listUserUpvotedToolIds } from "@/server/services/upvote-service";
 import {
   getPublishedToolBySlug,
   listRelatedPublishedTools,
 } from "@/server/services/tool-service";
+import { Footer } from "@/components/ui/footer";
+import { cn } from "@/lib/utils";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
@@ -174,18 +176,13 @@ export default async function ToolPage(context: RouteContext) {
     tagIds: tool.toolTags.map((item) => item.tag.id),
     take: 4,
   });
-  const launchHistory = tool.launches.slice(0, 5);
-  const bestFor = [
-    ...new Set([
-      ...tool.toolCategories.map((item) => item.category.name),
-      ...tool.toolTags.map((item) => item.tag.name),
-    ]),
-  ].slice(0, 5);
+  
   const screenshots = tool.media.filter((media) => media.type === "SCREENSHOT");
   const claimState = await getListingClaimState(tool.id, {
     userId: session?.user.id ?? null,
     email: session?.user.email ?? null,
   });
+  
   const serializedClaimState =
     "reviewedAt" in claimState
       ? {
@@ -193,16 +190,18 @@ export default async function ToolPage(context: RouteContext) {
           reviewedAt: claimState.reviewedAt?.toISOString() ?? null,
         }
       : claimState;
+  
   const claimRedirect = `/tools/${tool.slug}?claim=1`;
   const showClaimCard =
     claimState.status !== "OWNED" && claimState.status !== "OWNED_BY_YOU";
 
   return (
-    <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-16 sm:py-20">
-      <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-          <div className="flex items-start gap-5">
-            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.75rem] bg-[#f3f0ea]">
+    <main className="flex-1 bg-background pt-28">
+      {/* Tool Header Section */}
+      <section className="bg-card border-b border-border py-8">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-8">
+            <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-border bg-muted flex items-center justify-center">
               {tool.logoMedia ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -211,316 +210,171 @@ export default async function ToolPage(context: RouteContext) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <span className="text-xl font-semibold text-black/45">
+                <span className="text-3xl font-black text-muted-foreground/40">
                   {tool.name.slice(0, 2).toUpperCase()}
                 </span>
               )}
             </div>
-            <div>
-              <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-                Published tool
-              </p>
-              <h1 className="mt-3 text-4xl font-semibold tracking-tight text-black">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-5xl font-black tracking-tight text-foreground mb-3">
                 {tool.name}
               </h1>
-              <p className="mt-3 max-w-3xl text-lg leading-8 text-black/66">
+              <p className="text-xl font-medium text-muted-foreground leading-relaxed">
                 {tool.tagline}
               </p>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="mt-8 flex flex-wrap gap-2">
-            {tool.toolCategories.map((item) => (
-              <Link
-                key={item.category.slug}
-                href={`/categories/${item.category.slug}`}
-                className="rounded-full border border-black/10 bg-[#fff9ef] px-3 py-1.5 text-xs font-medium text-black/72"
-              >
-                {item.category.name}
-              </Link>
-            ))}
-            {tool.toolTags.map((item) => (
-              <span
-                key={item.tag.slug}
-                className="rounded-full border border-black/10 bg-black/[0.03] px-3 py-1.5 text-xs font-medium text-black/56"
-              >
-                {item.tag.name}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-8">
-            <ToolUpvoteButton
-              toolId={tool.id}
-              initialCount={tool.upvoteCount}
-              initialHasUpvoted={tool.hasUpvoted}
-              initialDailyVotesRemaining={dailyVotesRemaining}
-            />
-          </div>
-
-          <div className="mt-8 max-w-none">
-            <MarkdownContent content={tool.richDescription} />
-          </div>
-
-          <div className="mt-10 rounded-[1.5rem] border border-black/10 bg-[#fff9ef] p-6">
-            <p className="text-sm font-semibold tracking-[0.22em] text-[#9f4f1d] uppercase">
-              Best for
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {bestFor.map((label) => (
-                <span
-                  key={label}
-                  className="rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-medium text-black/68"
-                >
-                  {label}
-                </span>
-              ))}
-              {bestFor.length === 0 ? (
-                <span className="text-sm text-black/55">
-                  Category and use-case tags will appear here later.
-                </span>
-              ) : null}
-            </div>
-          </div>
-
-          {screenshots.length > 0 ? (
-            <div className="mt-10 grid gap-4 sm:grid-cols-2">
-              {screenshots.map((media) => (
-                <div
-                  key={media.id}
-                  className="overflow-hidden rounded-[1.5rem] border border-black/10 bg-[#f3f0ea]"
-                >
+      <section className="mx-auto flex w-full max-w-7xl flex-1 px-6 py-12">
+        <div className="grid gap-12 lg:grid-cols-[1fr_320px] w-full">
+          {/* Main Content */}
+          <div className="min-w-0 space-y-12">
+            {/* Screenshot Gallery */}
+            {screenshots.length > 0 && (
+              <div className="space-y-4">
+                <div className="aspect-video w-full rounded-2xl overflow-hidden border border-border bg-muted shadow-2xl shadow-black/5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={media.url}
-                    alt={`${tool.name} screenshot`}
+                    src={screenshots[0].url}
+                    alt={`${tool.name} primary screenshot`}
                     className="h-full w-full object-cover"
                   />
                 </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
+                {screenshots.length > 1 && (
+                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                    {screenshots.slice(1).map((media) => (
+                      <div
+                        key={media.id}
+                        className="h-24 w-40 shrink-0 rounded-xl overflow-hidden border border-border bg-muted cursor-pointer transition-opacity hover:opacity-80"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={media.url}
+                          alt={`${tool.name} screenshot`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
-        <aside className="space-y-6">
-          <div className="rounded-[2rem] bg-[#143f35] p-8 text-[#f8efe3] shadow-[0_24px_80px_rgba(20,63,53,0.24)] sm:p-10">
-            <p className="text-sm font-semibold tracking-[0.25em] text-[#f3c781] uppercase">
-              Quick facts
-            </p>
-            <div className="mt-6 space-y-4 text-sm leading-7 text-[#f8efe3]/82">
-              <p>Pricing model: {tool.pricingModel}</p>
-              <p>Affiliate program: {tool.hasAffiliateProgram ? "Yes" : "No"}</p>
-              <p>Featured: {tool.isFeatured ? "Yes" : "No"}</p>
-              <p>Launch history entries: {launchHistory.length}</p>
+            <div className="prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-p:text-muted-foreground/90">
+              <MarkdownContent content={tool.richDescription} />
             </div>
 
-            <div className="mt-8 flex flex-col gap-3">
+            {showClaimCard && (
+              <ClaimListingCard
+                toolId={tool.id}
+                toolSlug={tool.slug}
+                toolName={tool.name}
+                claimState={serializedClaimState}
+                viewerEmail={session?.user.email ?? null}
+                signInHref={`/sign-in?redirect=${encodeURIComponent(claimRedirect)}`}
+                signUpHref={`/submit?redirect=${encodeURIComponent(claimRedirect)}`}
+              />
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <aside className="space-y-8">
+            <div className="space-y-4">
+              <ToolUpvoteButton
+                toolId={tool.id}
+                initialCount={tool._count.toolVotes}
+                initialHasUpvoted={tool.hasUpvoted}
+                initialDailyVotesRemaining={dailyVotesRemaining}
+                variant="large"
+              />
+              
               <a
                 href={buildTrackedToolOutboundUrl(tool.id, "website", "tool_page")}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-[#143f35] transition hover:bg-[#f5eadc]"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-border bg-card px-6 py-4 text-sm font-black text-foreground transition-all hover:bg-muted active:scale-95 shadow-sm group"
               >
+                <Globe size={18} />
                 Visit website
               </a>
-              {tool.affiliateUrl ? (
-                <a
-                  href={buildTrackedToolOutboundUrl(
-                    tool.id,
-                    "affiliate",
-                    "tool_page",
-                  )}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
-                >
-                  Explore affiliate offer
-                </a>
-              ) : null}
-              {hasAlternativesSeoPage(tool.slug) ? (
-                <Link
-                  href={`/alternatives/${tool.slug}`}
-                  className="inline-flex items-center justify-center rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
-                >
-                  Compare alternatives
-                </Link>
-              ) : null}
             </div>
-          </div>
 
-          <div className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
-            <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-              Founder links
-            </p>
-            <div className="mt-5 space-y-3 text-sm text-black/68">
-              {tool.founderXUrl ? (
-                <a
-                  href={tool.founderXUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block hover:text-[#9f4f1d]"
-                >
-                  X profile
-                </a>
-              ) : null}
-              {tool.founderGithubUrl ? (
-                <a
-                  href={tool.founderGithubUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block hover:text-[#9f4f1d]"
-                >
-                  GitHub
-                </a>
-              ) : null}
-              {tool.founderLinkedinUrl ? (
-                <a
-                  href={tool.founderLinkedinUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block hover:text-[#9f4f1d]"
-                >
-                  LinkedIn
-                </a>
-              ) : null}
-              {tool.founderFacebookUrl ? (
-                <a
-                  href={tool.founderFacebookUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block hover:text-[#9f4f1d]"
-                >
-                  Facebook
-                </a>
-              ) : null}
-              {!tool.founderXUrl &&
-              !tool.founderGithubUrl &&
-              !tool.founderLinkedinUrl &&
-              !tool.founderFacebookUrl ? (
-                <p>No public founder links provided yet.</p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
-            <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-              Launch history
-            </p>
-            <div className="mt-5 space-y-3 text-sm text-black/66">
-              {launchHistory.map((launch) => (
-                <div
-                  key={launch.id}
-                  className="rounded-[1.25rem] border border-black/10 bg-[#fffdf8] px-4 py-3"
-                >
-                  <p className="font-semibold text-black">
-                    {launch.launchType} • {launch.status}
-                  </p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.16em] text-black/42">
-                    {new Intl.DateTimeFormat("en", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(new Date(launch.launchDate))}
-                  </p>
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-6">Details</h3>
+              <div className="space-y-5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-muted-foreground">Launch Date</span>
+                  <span className="font-black tabular-nums">
+                    {new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(tool.createdAt))}
+                  </span>
                 </div>
-              ))}
-              {launchHistory.length === 0 ? (
-                <p>No public launch history yet.</p>
-              ) : null}
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      {showClaimCard ? (
-        <div className="mt-8">
-          <ClaimListingCard
-            toolId={tool.id}
-            toolSlug={tool.slug}
-            toolName={tool.name}
-            claimState={serializedClaimState}
-            viewerEmail={session?.user.email ?? null}
-            signInHref={`/sign-in?redirect=${encodeURIComponent(claimRedirect)}`}
-            signUpHref={`/sign-up?redirect=${encodeURIComponent(claimRedirect)}`}
-          />
-        </div>
-      ) : null}
-
-      <div className="mt-8 grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-        <section className="rounded-[2rem] bg-[#143f35] p-8 text-[#f8efe3] shadow-[0_24px_80px_rgba(20,63,53,0.24)]">
-          <p className="text-sm font-semibold tracking-[0.25em] text-[#f3c781] uppercase">
-            Category context
-          </p>
-          <div className="mt-6 space-y-4 text-sm leading-7 text-[#f8efe3]/82">
-            <p>
-              {tool.name} is published on Shipboost as a live{" "}
-              {primaryCategory?.name.toLowerCase() ?? "SaaS"} listing for
-              bootstrapped founders.
-            </p>
-            <p>
-              Use the category links above to compare adjacent tools, or jump to
-              the launch boards for recent visibility proof.
-            </p>
-          </div>
-          <div className="mt-6 flex flex-wrap gap-3">
-            {primaryCategory ? (
-              <Link
-                href={`/categories/${primaryCategory.slug}`}
-                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#143f35] transition hover:bg-[#f5eadc]"
-              >
-                Explore {primaryCategory.name}
-              </Link>
-            ) : null}
-            <Link
-              href="/launches/daily"
-              className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/5"
-            >
-              Daily launches
-            </Link>
-            <Link
-              href="/launches/weekly"
-              className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/5"
-            >
-              Weekly launches
-            </Link>
-          </div>
-        </section>
-
-        <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-                Related tools
-              </p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-black">
-                Similar listings founders also compare
-              </h2>
-            </div>
-            {primaryCategory ? (
-              <Link
-                href={`/categories/${primaryCategory.slug}`}
-                className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-black transition hover:bg-black/[0.04]"
-              >
-                More in {primaryCategory.name}
-              </Link>
-            ) : null}
-          </div>
-
-          <div className="mt-6 grid gap-4">
-            {relatedTools.map((relatedTool) => (
-              <PublicToolCard
-                key={relatedTool.slug}
-                tool={relatedTool}
-                sourceSurface="tool_page_related"
-              />
-            ))}
-            {relatedTools.length === 0 ? (
-              <div className="rounded-[1.75rem] border border-dashed border-black/15 bg-black/[0.02] px-5 py-10 text-center text-sm text-black/55">
-                Related tools will appear once more overlapping listings go live.
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-muted-foreground">Category</span>
+                  <Link href={`/categories/${primaryCategory?.slug}`} className="font-black text-foreground hover:underline">
+                    {primaryCategory?.name}
+                  </Link>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-muted-foreground">Pricing</span>
+                  <span className="px-2 py-0.5 rounded-full bg-muted border border-border text-foreground font-black text-[10px] uppercase">
+                    {tool.pricingModel}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-muted-foreground">For Sale</span>
+                  <span className="font-black">No</span>
+                </div>
               </div>
-            ) : null}
-          </div>
-        </section>
-      </div>
-    </section>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Tags</h3>
+              <div className="flex flex-wrap gap-2">
+                {tool.toolTags.map((item) => (
+                  <Link
+                    key={item.tag.slug}
+                    href={`/best/tag/${item.tag.slug}`}
+                    className="px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-bold text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
+                  >
+                    #{item.tag.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {relatedTools.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Similar products</h3>
+                <div className="grid gap-3">
+                  {relatedTools.map((relatedTool) => (
+                    <Link
+                      key={relatedTool.id}
+                      href={`/tools/${relatedTool.slug}`}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:border-foreground/20 transition-all group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 border border-border overflow-hidden">
+                        {relatedTool.logoMedia ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={relatedTool.logoMedia.url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-xs font-black text-muted-foreground/40">{relatedTool.name.slice(0, 2).toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-black text-foreground truncate group-hover:opacity-70 transition-opacity">{relatedTool.name}</p>
+                        <p className="text-[10px] font-medium text-muted-foreground/60 line-clamp-1">{relatedTool.tagline}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
+      </section>
+      <Footer />
+    </main>
   );
 }

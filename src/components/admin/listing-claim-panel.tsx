@@ -1,5 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import Link from "next/link";
+import { ExternalLink, Check, X, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import {
   Field,
@@ -54,18 +56,18 @@ export function ListingClaimPanel({
 
   return (
     <SectionCard
-      eyebrow="Ownership review"
+      eyebrow="Ownership"
       title="Listing claims"
-      description="Approve ownership transfers for seeded listings without taking them off the public site."
+      description="Approve ownership transfers."
     >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="grid gap-4 sm:grid-cols-2 lg:w-[32rem]">
-          <Field label="Search claims">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-6">
+        <div className="grid gap-3 sm:grid-cols-2 lg:w-[32rem]">
+          <Field label="Search">
             <input
               value={claimSearch}
               onChange={(event) => onClaimSearchChange(event.target.value)}
               className={textInputClassName()}
-              placeholder="Search by tool or claimant email"
+              placeholder="Tool or email..."
             />
           </Field>
           <Field label="Status">
@@ -76,34 +78,33 @@ export function ListingClaimPanel({
               }
               className={textInputClassName()}
             >
-              <option value="">All statuses</option>
+              <option value="">All</option>
               <option value="PENDING">Pending</option>
               <option value="APPROVED">Approved</option>
               <option value="REJECTED">Rejected</option>
-              <option value="CANCELED">Canceled</option>
             </select>
           </Field>
         </div>
 
-        <div className="rounded-full border border-black/10 bg-black/[0.03] px-4 py-2 text-sm text-black/60">
+        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-lg border border-border">
           {claims.length} claims
         </div>
       </div>
 
-      {claimError ? (
-        <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+      {claimError && (
+        <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-bold text-destructive uppercase tracking-widest">
           {claimError}
         </div>
-      ) : null}
+      )}
 
-      <div className="mt-8 space-y-4">
+      <div className="grid gap-4">
         {claims.map((claim) => {
           const draft = getClaimDraft(claim);
 
           return (
             <article
               key={claim.id}
-              className="rounded-[1.75rem] border border-black/10 bg-[#fffdf8] p-5"
+              className="rounded-2xl border border-border bg-muted/20 p-5 sm:p-6"
             >
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -121,43 +122,44 @@ export function ListingClaimPanel({
                                 : "slate"
                         }
                       />
-                      <span className="inline-flex rounded-full border border-black/10 bg-[#fff9ef] px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase text-black/65">
+                      <span className="px-2 py-0.5 rounded border border-border bg-card text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                         {claim.websiteDomain}
                       </span>
                     </div>
 
-                    <div>
-                      <h3 className="text-xl font-semibold text-black">{claim.tool.name}</h3>
-                      <p className="mt-1 text-sm text-black/58">{claim.tool.tagline}</p>
-                      <p className="mt-2 text-xs uppercase tracking-[0.18em] text-black/42">
-                        Requested {formatDate(claim.createdAt)}
-                      </p>
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-card flex items-center justify-center border border-border shrink-0 overflow-hidden">
+                        {claim.tool.logoMedia ? (
+                          <img src={claim.tool.logoMedia.url} className="w-full h-full object-cover" />
+                        ) : <RefreshCw size={16} className="text-muted-foreground" />}
+                      </div>
+                      <div className="space-y-0.5">
+                        <h3 className="text-base font-black text-foreground">{claim.tool.name}</h3>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                          Requested {formatDate(claim.createdAt)}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="grid gap-2 text-sm text-black/62 sm:grid-cols-2">
+                    <div className="grid gap-2 text-[10px] font-bold text-muted-foreground/80">
                       <p>Claimant: {claim.claimantUser.email}</p>
-                      <p>Claim domain: {claim.claimDomain}</p>
-                      {claim.reviewedAt ? (
-                        <p>Reviewed: {formatDate(claim.reviewedAt)}</p>
-                      ) : null}
-                      {claim.reviewedBy ? (
-                        <p>Reviewed by: {claim.reviewedBy.email}</p>
-                      ) : null}
+                      <p>Domain match: {claim.claimDomain}</p>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-3 sm:flex-row">
+                  <div className="flex flex-col gap-2 min-w-[140px]">
                     <Link
                       href={`/tools/${claim.tool.slug}`}
-                      className="rounded-2xl border border-black/10 px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03]"
+                      target="_blank"
+                      className="flex items-center justify-center gap-2 w-full border border-border bg-card px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all"
                     >
-                      View listing
+                      <ExternalLink size={12} /> View Page
                     </Link>
                   </div>
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <Field label="Founder-visible note">
+                <div className="grid gap-4 lg:grid-cols-2 pt-4 border-t border-border">
+                  <Field label="Founder note">
                     <textarea
                       value={draft.founderVisibleNote}
                       onChange={(event) =>
@@ -169,11 +171,12 @@ export function ListingClaimPanel({
                           },
                         }))
                       }
-                      rows={3}
-                      className={textInputClassName()}
+                      rows={2}
+                      className={cn(textInputClassName(), "text-xs")}
+                      placeholder="Visible to founder..."
                     />
                   </Field>
-                  <Field label="Internal admin note">
+                  <Field label="Internal note">
                     <textarea
                       value={draft.internalAdminNote}
                       onChange={(event) =>
@@ -185,56 +188,55 @@ export function ListingClaimPanel({
                           },
                         }))
                       }
-                      rows={3}
-                      className={textInputClassName()}
+                      rows={2}
+                      className={cn(textInputClassName(), "text-xs")}
+                      placeholder="Internal only..."
                     />
                   </Field>
                 </div>
 
-                {claim.status === "PENDING" ? (
-                  <div className="flex flex-wrap gap-3">
+                {claim.status === "PENDING" && (
+                  <div className="flex flex-wrap gap-2 pt-2">
                     <button
                       type="button"
                       disabled={hasPendingAction}
                       onClick={() => void handleClaimReview(claim.id, "APPROVE")}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#143f35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2e26] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-black/10 transition hover:opacity-90 disabled:opacity-50"
                     >
                       {isActionPending(`claim:${claim.id}:APPROVE`) ? (
-                        <>
-                          <span className={pendingSpinnerClassName()} />
-                          Approving...
-                        </>
+                        <RefreshCw className="animate-spin" size={12} />
                       ) : (
-                        "Approve claim"
+                        <Check size={12} />
                       )}
+                      Approve
                     </button>
                     <button
                       type="button"
                       disabled={hasPendingAction}
                       onClick={() => void handleClaimReview(claim.id, "REJECT")}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-destructive transition hover:bg-destructive/20 disabled:opacity-50"
                     >
                       {isActionPending(`claim:${claim.id}:REJECT`) ? (
-                        <>
-                          <span className={pendingSpinnerClassName()} />
-                          Rejecting...
-                        </>
+                        <RefreshCw className="animate-spin" size={12} />
                       ) : (
-                        "Reject claim"
+                        <X size={12} />
                       )}
+                      Reject
                     </button>
                   </div>
-                ) : null}
+                )}
               </div>
             </article>
           );
         })}
 
-        {claims.length === 0 ? (
-          <div className="rounded-[1.75rem] border border-dashed border-black/15 bg-black/[0.02] px-5 py-10 text-center text-sm text-black/55">
-            No claims match the current filter.
+        {claims.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-5 py-10 text-center">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+              No claims.
+            </p>
           </div>
-        ) : null}
+        )}
       </div>
     </SectionCard>
   );

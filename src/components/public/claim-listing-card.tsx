@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 type ClaimState =
   | {
@@ -109,98 +111,87 @@ export function ClaimListingCard({
   }, [claimState.status, searchParams, submitClaim]);
 
   return (
-    <div className="rounded-[2rem] border border-[#9f4f1d]/12 bg-[#fff7ea] p-8 shadow-[0_24px_80px_rgba(159,79,29,0.08)]">
-      <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
+    <div className="rounded-3xl border border-border bg-muted/20 p-8 shadow-xl shadow-black/5">
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
         Claim this listing
       </p>
-      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-black">
-        Take ownership of {toolName} on Shipboost
+      <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">
+        Take ownership of {toolName}
       </h2>
-      <p className="mt-4 text-sm leading-7 text-black/66">
+      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
         Claiming requires a company email that matches the listing domain{" "}
-        <span className="font-semibold text-black">{claimState.websiteDomain}</span>.
+        <span className="font-bold text-foreground underline decoration-border underline-offset-4">{claimState.websiteDomain}</span>.
       </p>
 
       {claimState.status === "SIGN_IN_REQUIRED" ? (
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link
             href={signInHref}
-            className="inline-flex items-center justify-center rounded-2xl bg-[#143f35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2e26]"
+            className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-black/10 transition-opacity hover:opacity-90"
           >
             Sign in to claim
           </Link>
           <Link
             href={signUpHref}
-            className="inline-flex items-center justify-center rounded-2xl border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03]"
+            className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-6 py-3 text-sm font-black transition-colors hover:bg-muted"
           >
-            Create founder account
+            Create account
           </Link>
         </div>
       ) : null}
 
       {claimState.status === "AVAILABLE" ? (
-        <div className="mt-6 space-y-4">
-          <div className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm text-black/68">
-            Signed in as {viewerEmail}. Claim will be reviewed before editing is unlocked.
+        <div className="mt-8 space-y-4">
+          <div className="rounded-xl border border-border bg-card px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+            Signed in as <span className="text-foreground font-black">{viewerEmail}</span>
           </div>
           <button
             type="button"
             onClick={() => void submitClaim()}
             disabled={isSubmitting}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#143f35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2e26] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-black text-primary-foreground shadow-xl shadow-black/10 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? (
-              <>
-                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Submitting claim...
-              </>
+              <Loader2 className="animate-spin" size={18} />
             ) : (
-              "Claim this listing"
+              "Claim this listing now"
             )}
           </button>
         </div>
       ) : null}
 
       {claimState.status === "DOMAIN_MISMATCH" ? (
-        <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          Signed in as {viewerEmail}, but this listing can only be claimed from a{" "}
-          {claimState.websiteDomain} company email. Current email domain:{" "}
-          {claimState.claimDomain}.
+        <div className="mt-8 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive uppercase tracking-widest">
+          Domain mismatch. Requires a {claimState.websiteDomain} email.
         </div>
       ) : null}
 
       {claimState.status === "PENDING_YOURS" ? (
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          Claim request received. Shipboost is reviewing it now.
-          {claimState.founderVisibleNote ? ` ${claimState.founderVisibleNote}` : ""}
+        <div className="mt-8 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs font-bold text-amber-700 uppercase tracking-widest">
+          Claim request received. Reviewing now.
+          {claimState.founderVisibleNote ? ` • ${claimState.founderVisibleNote}` : ""}
         </div>
       ) : null}
 
       {claimState.status === "REJECTED_YOURS" ? (
-        <div className="mt-6 space-y-4">
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            Your previous claim was rejected.
-            {claimState.founderVisibleNote ? ` ${claimState.founderVisibleNote}` : ""}
+        <div className="mt-8 space-y-4">
+          <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive uppercase tracking-widest">
+            Previous claim rejected.
+            {claimState.founderVisibleNote ? ` • ${claimState.founderVisibleNote}` : ""}
           </div>
           <button
             type="button"
             onClick={() => void submitClaim()}
             disabled={isSubmitting}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#143f35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2e26] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-black text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? "Retrying..." : "Retry claim"}
+            {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : "Retry claim"}
           </button>
         </div>
       ) : null}
 
-      {claimState.status === "PENDING_OTHER" ? (
-        <div className="mt-6 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm text-black/68">
-          Another founder is already claiming this listing. Check back after review.
-        </div>
-      ) : null}
-
       {errorMessage ? (
-        <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="mt-8 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive uppercase tracking-widest">
           {errorMessage}
         </div>
       ) : null}

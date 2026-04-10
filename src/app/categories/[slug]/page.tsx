@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronRight, Home as HomeIcon, Layers } from "lucide-react";
 
-import { PublicToolCard } from "@/components/public/public-tool-card";
+import { ToolCard } from "@/components/ToolCard";
 import { getEnv } from "@/server/env";
 import { getPublicCategoryPageBySlug } from "@/server/services/catalog-service";
+import { ShowcaseLayout } from "@/components/public/showcase-layout";
+import { getServerSession } from "@/server/auth/session";
+import { getDailyVotesRemaining, listUserUpvotedToolIds } from "@/server/services/upvote-service";
+import { Footer } from "@/components/ui/footer";
+import { SortButton } from "@/components/public/sort-button";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ q?: string; sort?: string }>;
 };
 
 export async function generateMetadata(
@@ -56,191 +63,148 @@ export async function generateMetadata(
 
 export default async function CategoryPage(context: RouteContext) {
   const { slug } = await context.params;
-  const category = await getPublicCategoryPageBySlug(slug);
+  const resolvedSearchParams = context.searchParams ? await context.searchParams : {};
+  const currentSort = (resolvedSearchParams.sort as "newest" | "top") || "newest";
+  
+  const category = await getPublicCategoryPageBySlug(slug, currentSort);
 
-  if (!category) {
+  if (!category || !category.toolCategories) {
     notFound();
   }
+
+  const session = await getServerSession();
+  
+  const allToolIds = [
+    ...(category.featuredTools || []).map(t => t.id),
+    ...category.toolCategories.map(tc => tc.tool.id)
+  ];
+
+  const [dailyVotesRemaining, upvotedToolIds] = await Promise.all([
+    session?.user.id ? getDailyVotesRemaining(session.user.id) : Promise.resolve(null),
+    session?.user.id ? listUserUpvotedToolIds(allToolIds, session.user.id) : Promise.resolve(new Set<string>()),
+  ]);
 
   const publishedCount = category.toolCategories.length;
 
   return (
-    <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-16 sm:py-20">
-      <div className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-        <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-          Category
-        </p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-black">
-          {category.name}
-        </h1>
-        <p className="mt-4 max-w-3xl text-base leading-7 text-black/66">
-          {category.seoIntro ??
-            category.description ??
-            `Published ${category.name} tools for bootstrapped SaaS founders.`}
-        </p>
+    <main className="flex-1">
+      <ShowcaseLayout searchParams={resolvedSearchParams}>
+        <div className="space-y-10">
+          {/* Breadcrumbs */}
+          <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
+            <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
+              <HomeIcon size={12} /> Home
+            </Link>
+            <ChevronRight size={12} />
+            <Link href="/categories" className="hover:text-primary transition-colors">
+              Categories
+            </Link>
+            <ChevronRight size={12} />
+            <span className="text-primary font-black">
+              {category.name}
+            </span>
+          </nav>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-[1.5rem] border border-black/10 bg-[#fff9ef] p-4">
-            <p className="text-xs font-semibold tracking-[0.18em] text-[#9f4f1d] uppercase">
-              Published tools
+          {/* Header Section (Unboxed) */}
+          <div className="max-w-4xl">
+            <h1 className="text-5xl font-black tracking-tight text-foreground mb-6">
+              {category.name} Tools
+            </h1>
+            <p className="text-lg font-medium leading-relaxed text-muted-foreground/80 mb-8 whitespace-pre-wrap">
+              {category.seoIntro ?? category.description ?? `Explore our curated list of ${category.name} tools specifically for bootstrapped founders.`}
             </p>
-            <p className="mt-2 text-3xl font-semibold text-black">{publishedCount}</p>
-          </div>
-          <div className="rounded-[1.5rem] border border-black/10 bg-[#fff9ef] p-4">
-            <p className="text-xs font-semibold tracking-[0.18em] text-[#9f4f1d] uppercase">
-              Featured picks
-            </p>
-            <p className="mt-2 text-3xl font-semibold text-black">
-              {category.featuredTools.length}
-            </p>
-          </div>
-          <div className="rounded-[1.5rem] border border-black/10 bg-[#fff9ef] p-4">
-            <p className="text-xs font-semibold tracking-[0.18em] text-[#9f4f1d] uppercase">
-              Strongest tags
-            </p>
-            <p className="mt-2 text-sm leading-7 text-black/66">
-              {category.topTags.slice(0, 3).map((tag) => tag.name).join(", ") || "Still growing"}
-            </p>
-          </div>
-        </div>
-      </div>
+            
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-4 py-2 px-4 bg-primary/5 rounded-xl border border-primary/10">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Tools</span>
+                  <span className="text-xl font-black text-primary">{publishedCount}</span>
+                </div>
+                <div className="w-px h-8 bg-primary/10" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Featured</span>
+                  <span className="text-xl font-black text-primary">{(category.featuredTools || []).length}</span>
+                </div>
+              </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-8">
-          {category.featuredTools.length > 0 ? (
-            <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
-              <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-                Featured tools
-              </p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-black">
-                Best-known launches in {category.name}
-              </h2>
-              <div className="mt-6 grid gap-4">
-                {category.featuredTools.map((tool) => (
-                  <PublicToolCard
-                    key={tool.slug}
-                    tool={tool}
-                    sourceSurface="category_featured"
+              <Link 
+                href="/categories"
+                className="flex items-center gap-2 text-sm font-black text-primary hover:opacity-80 transition-opacity"
+              >
+                <Layers size={16} />
+                Browse all categories
+              </Link>
+            </div>
+          </div>
+
+          <div className="space-y-12">
+            {(category.featuredTools || []).length > 0 ? (
+              <section className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                  <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase">
+                    Featured picks
+                  </p>
+                </div>
+                <div className="grid gap-5">
+                  {(category.featuredTools || []).map((tool) => (
+                    <ToolCard
+                      key={`featured-${tool.slug}`}
+                      toolId={tool.id}
+                      name={tool.name}
+                      tagline={tool.tagline}
+                      logoUrl={tool.logoMedia?.url}
+                      slug={tool.slug}
+                      votes={tool._count?.toolVotes ?? 0}
+                      hasUpvoted={upvotedToolIds.has(tool.id)}
+                      tags={(tool.toolTags || []).map(tt => tt.tag?.name).filter((name): name is string => Boolean(name))}
+                      initialDailyVotesRemaining={dailyVotesRemaining}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <section className="space-y-6">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase">
+                    Directory
+                  </p>
+                  <h2 className="mt-2 text-2xl font-extrabold tracking-tight">
+                    All {category.name} tools
+                  </h2>
+                </div>
+                <SortButton />
+              </div>
+
+              <div className="grid gap-5">
+                {category.toolCategories.map((item) => (
+                  <ToolCard
+                    key={item.tool.slug}
+                    toolId={item.tool.id}
+                    name={item.tool.name}
+                    tagline={item.tool.tagline}
+                    logoUrl={item.tool.logoMedia?.url}
+                    slug={item.tool.slug}
+                    votes={item.tool._count?.toolVotes ?? 0}
+                    hasUpvoted={upvotedToolIds.has(item.tool.id)}
+                    tags={(item.tool.toolTags || []).map(tt => tt.tag?.name).filter((name): name is string => Boolean(name))}
+                    initialDailyVotesRemaining={dailyVotesRemaining}
                   />
                 ))}
+
+                {category.toolCategories.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border bg-card px-5 py-16 text-center text-sm font-medium text-muted-foreground">
+                    No tools published in this category yet.
+                  </div>
+                ) : null}
               </div>
             </section>
-          ) : null}
-
-          <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-                  All published tools
-                </p>
-                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-black">
-                  Browse live listings in {category.name}
-                </h2>
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs">
-                <Link
-                  href="/launches/daily"
-                  className="rounded-full border border-black/10 px-3 py-1.5 font-medium text-black/65 transition hover:bg-black/[0.04]"
-                >
-                  Daily board
-                </Link>
-                <Link
-                  href="/launches/weekly"
-                  className="rounded-full border border-black/10 px-3 py-1.5 font-medium text-black/65 transition hover:bg-black/[0.04]"
-                >
-                  Weekly board
-                </Link>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-4">
-              {category.toolCategories.map((item) => (
-                <PublicToolCard
-                  key={item.tool.slug}
-                  tool={item.tool}
-                  sourceSurface="category_page"
-                />
-              ))}
-
-              {category.toolCategories.length === 0 ? (
-                <div className="rounded-[1.75rem] border border-dashed border-black/15 bg-black/[0.02] px-5 py-10 text-center text-sm text-black/55">
-                  No published tools in this category yet.
-                </div>
-              ) : null}
-            </div>
-          </section>
+          </div>
         </div>
-
-        <aside className="space-y-6">
-          <section className="rounded-[2rem] bg-[#143f35] p-8 text-[#f8efe3] shadow-[0_24px_80px_rgba(20,63,53,0.24)]">
-            <p className="text-sm font-semibold tracking-[0.25em] text-[#f3c781] uppercase">
-              Category context
-            </p>
-            <div className="mt-6 space-y-4 text-sm leading-7 text-[#f8efe3]/82">
-              <p>
-                This page curates {category.name.toLowerCase()} tools that are already
-                published on Shipboost, so founders can compare real listings instead of
-                dead directories.
-              </p>
-              <p>
-                Use the featured block to spot stronger entries fast, then browse the full
-                list for adjacent alternatives.
-              </p>
-            </div>
-          </section>
-
-          <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
-            <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-              Popular tags
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {category.topTags.map((tag) =>
-                tag.isActive ? (
-                  <Link
-                    key={tag.id}
-                    href={`/best/tag/${tag.slug}`}
-                    className="rounded-full border border-black/10 bg-[#fff9ef] px-3 py-1.5 text-xs font-medium text-black transition hover:border-black/20 hover:bg-[#fff3de]"
-                  >
-                    {tag.name} ({tag.count})
-                  </Link>
-                ) : (
-                  <span
-                    key={tag.id}
-                    className="rounded-full border border-black/10 bg-black/[0.03] px-3 py-1.5 text-xs font-medium text-black/62"
-                  >
-                    {tag.name} ({tag.count})
-                  </span>
-                ),
-              )}
-              {category.topTags.length === 0 ? (
-                <p className="text-sm text-black/55">No strong tag pattern yet.</p>
-              ) : null}
-            </div>
-          </section>
-
-          <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
-            <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-              Related categories
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {category.relatedCategories.map((item) => (
-                <Link
-                  key={item.id}
-                  href={`/categories/${item.slug}`}
-                  className="rounded-full border border-black/10 bg-[#fff9ef] px-4 py-2 text-sm font-medium text-black transition hover:border-black/20 hover:bg-[#fff3de]"
-                >
-                  {item.name}
-                </Link>
-              ))}
-              {category.relatedCategories.length === 0 ? (
-                <p className="text-sm text-black/55">
-                  Related categories will appear after more tools overlap.
-                </p>
-              ) : null}
-            </div>
-          </section>
-        </aside>
-      </div>
-    </section>
+      </ShowcaseLayout>
+      <Footer />
+    </main>
   );
 }

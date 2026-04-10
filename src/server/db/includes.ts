@@ -39,5 +39,10 @@ export const toolDetailsInclude = {
       launchDate: "desc" as const,
     },
   },
+  _count: {
+    select: {
+      toolVotes: true,
+    },
+  },
 };
 

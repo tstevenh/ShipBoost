@@ -29,8 +29,9 @@ function resolveTargetUrl(
   },
   target: ToolOutboundTarget,
 ) {
+  // If user requested standard website link, prioritize affiliate link if we have one
   if (target === "website") {
-    return tool.websiteUrl;
+    return tool.affiliateUrl || tool.websiteUrl;
   }
 
   if (!tool.affiliateUrl) {

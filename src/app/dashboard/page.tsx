@@ -8,6 +8,7 @@ import {
   reconcileFeaturedLaunchCheckout,
 } from "@/server/services/submission-service";
 import { listFounderTools } from "@/server/services/tool-service";
+import { Footer } from "@/components/ui/footer";
 
 type DashboardPageProps = {
   searchParams?: Promise<{
@@ -21,6 +22,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   if (!session) {
     redirect("/sign-in");
+  }
+
+  if (session.user.role === "ADMIN") {
+    redirect("/admin");
   }
 
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -100,15 +105,18 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }));
 
   return (
-    <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-16 sm:py-20">
-      <FounderDashboard
-        initialSubmissions={serializedSubmissions}
-        initialTools={serializedTools}
-        initialClaims={serializedClaims}
-        founderEmail={session.user.email}
-        founderRole={session.user.role ?? "FOUNDER"}
-        initialSuccessMessage={initialSuccessMessage}
-      />
-    </section>
+    <main className="flex-1 flex flex-col bg-secondary/30 pt-32">
+      <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 mb-32">
+        <FounderDashboard
+          initialSubmissions={serializedSubmissions}
+          initialTools={serializedTools}
+          initialClaims={serializedClaims}
+          founderEmail={session.user.email}
+          founderRole={session.user.role ?? "FOUNDER"}
+          initialSuccessMessage={initialSuccessMessage}
+        />
+      </section>
+      <Footer className="mt-auto" />
+    </main>
   );
 }

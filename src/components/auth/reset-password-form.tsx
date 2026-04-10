@@ -3,10 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-
-function inputClassName() {
-  return "w-full rounded-2xl border border-black/10 bg-[#fffdf8] px-4 py-3 text-base outline-none transition focus:border-[#9f4f1d] focus:ring-4 focus:ring-[#9f4f1d]/10";
-}
+import { Loader2, ArrowRight } from "lucide-react";
 
 export function ResetPasswordForm({
   token,
@@ -86,89 +83,92 @@ export function ResetPasswordForm({
   }
 
   return (
-    <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-      <div className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-        <p className="text-sm font-semibold tracking-[0.25em] text-[#9f4f1d] uppercase">
-          Choose a new password
-        </p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-black sm:text-5xl">
-          Reset your password
-        </h1>
-        <p className="mt-4 max-w-xl text-base leading-7 text-black/65 sm:text-lg">
-          Set a new password for your Shipboost founder account.
-        </p>
+    <div className="flex w-full max-w-md flex-col items-center justify-center py-12 mx-auto">
+      <div className="mb-12 flex items-center gap-2">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary font-black text-primary-foreground text-xl">
+          S
+        </span>
+        <span className="text-2xl font-black tracking-tight text-foreground lowercase">
+          ShipBoost
+        </span>
+      </div>
 
-        <form onSubmit={handleSubmit} className="mt-10 space-y-5">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-black/80">New password</span>
+      <div className="w-full space-y-2 text-center">
+        <h1 className="text-4xl font-black tracking-tight text-foreground">
+          New password
+        </h1>
+        <p className="text-sm font-medium text-muted-foreground">
+          Choose a secure new password for your account.
+        </p>
+      </div>
+
+      <div className="mt-10 w-full space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+              New Password
+            </label>
             <input
               required
               type="password"
-              autoComplete="new-password"
+              disabled={isPending}
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className={inputClassName()}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium outline-none transition focus:border-foreground focus:ring-4 focus:ring-foreground/5"
               placeholder="At least 8 characters"
             />
-          </label>
+          </div>
 
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-black/80">
-              Confirm password
-            </span>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+              Confirm Password
+            </label>
             <input
               required
               type="password"
-              autoComplete="new-password"
+              disabled={isPending}
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              className={inputClassName()}
-              placeholder="Repeat your new password"
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium outline-none transition focus:border-foreground focus:ring-4 focus:ring-foreground/5"
+              placeholder="Repeat your password"
             />
-          </label>
+          </div>
 
-          {successMessage ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              {successMessage}
-            </div>
-          ) : null}
-
-          {errorMessage ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {errorMessage && (
+            <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-xs font-bold text-destructive">
               {errorMessage}
             </div>
-          ) : null}
+          )}
+
+          {successMessage && (
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-bold text-emerald-700">
+              {successMessage}
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={isPending || !token}
-            className="w-full rounded-2xl bg-[#143f35] px-5 py-3.5 text-base font-semibold text-white transition hover:bg-[#0d2e26] disabled:cursor-not-allowed disabled:opacity-60"
+            className="group flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-4 text-sm font-black text-primary-foreground shadow-xl shadow-black/10 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
           >
-            {isPending ? "Updating..." : "Update password"}
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                Update password
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </>
+            )}
           </button>
         </form>
 
-        <p className="mt-6 text-sm text-black/60">
+        <p className="text-center text-[10px] font-medium text-muted-foreground">
           Need a fresh link?{" "}
-          <Link
-            href="/forgot-password"
-            className="font-semibold text-[#9f4f1d] underline decoration-[#9f4f1d]/35 underline-offset-4"
-          >
-            Request another reset email
+          <Link href="/forgot-password" accent-foreground className="font-bold text-foreground hover:underline">
+            Request another
           </Link>
         </p>
       </div>
-
-      <aside className="rounded-[2rem] bg-[#143f35] p-8 text-[#f8efe3] shadow-[0_24px_80px_rgba(20,63,53,0.25)] sm:p-10">
-        <p className="text-sm font-semibold tracking-[0.25em] text-[#f3c781] uppercase">
-          Good passwords
-        </p>
-        <div className="mt-8 space-y-4 text-sm leading-7 text-[#f8efe3]/78">
-          <p>Use a unique password you do not reuse across other tools or accounts.</p>
-          <p>After a successful reset, Shipboost can revoke existing sessions if you choose to tighten that later.</p>
-          <p>Invalid or expired links will need a new reset request.</p>
-        </div>
-      </aside>
-    </section>
+    </div>
   );
 }

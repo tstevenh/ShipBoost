@@ -1,4 +1,6 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
+import { Plus, Search, ExternalLink, RefreshCw, Check, Star } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import {
   Field,
@@ -84,14 +86,18 @@ export function ToolOpsPanel({
 }) {
   return (
     <SectionCard
-      eyebrow="Tool ops"
-      title="Create and tune directory listings"
-      description="Seed listings manually, then use quick controls to keep publication state and featured placement aligned."
+      eyebrow="Inventory"
+      title="Directory Tuning"
+      description="Manage listings and featured placement."
     >
-      <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-        <form onSubmit={handleCreateTool} className="space-y-4">
+      <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <form onSubmit={handleCreateTool} className="space-y-6 bg-muted/20 p-6 rounded-2xl border border-border">
+          <div className="space-y-1">
+            <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Create New Listing</h3>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Tool name">
+            <Field label="Name">
               <input
                 value={toolDraft.name}
                 onChange={(event) =>
@@ -99,9 +105,10 @@ export function ToolOpsPanel({
                 }
                 className={textInputClassName()}
                 required
+                placeholder="Product Name"
               />
             </Field>
-            <Field label="Optional slug">
+            <Field label="Slug (optional)">
               <input
                 value={toolDraft.slug}
                 onChange={(event) =>
@@ -121,6 +128,7 @@ export function ToolOpsPanel({
               }
               className={textInputClassName()}
               required
+              placeholder="Short catchy description"
             />
           </Field>
 
@@ -137,6 +145,7 @@ export function ToolOpsPanel({
                 }
                 className={textInputClassName()}
                 required
+                placeholder="https://..."
               />
             </Field>
             <Field label="Logo URL">
@@ -148,11 +157,12 @@ export function ToolOpsPanel({
                 }
                 className={textInputClassName()}
                 required
+                placeholder="https://..."
               />
             </Field>
           </div>
 
-          <Field label="Rich description">
+          <Field label="Rich Description">
             <textarea
               value={toolDraft.richDescription}
               onChange={(event) =>
@@ -161,14 +171,15 @@ export function ToolOpsPanel({
                   richDescription: event.target.value,
                 }))
               }
-              rows={5}
-              className={textInputClassName()}
+              rows={4}
+              className={cn(textInputClassName(), "text-xs")}
               required
+              placeholder="Detailed product overview..."
             />
           </Field>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Pricing model">
+            <Field label="Pricing">
               <select
                 value={toolDraft.pricingModel}
                 onChange={(event) =>
@@ -186,7 +197,7 @@ export function ToolOpsPanel({
                 ))}
               </select>
             </Field>
-            <Field label="Screenshot URLs">
+            <Field label="Screenshots" hint="One per line">
               <textarea
                 value={toolDraft.screenshotUrls}
                 onChange={(event) =>
@@ -195,110 +206,22 @@ export function ToolOpsPanel({
                     screenshotUrls: event.target.value,
                   }))
                 }
-                rows={3}
-                className={textInputClassName()}
-                placeholder="One URL per line"
-              />
-            </Field>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Affiliate URL">
-              <input
-                type="url"
-                value={toolDraft.affiliateUrl}
-                onChange={(event) =>
-                  setToolDraft((current) => ({
-                    ...current,
-                    affiliateUrl: event.target.value,
-                  }))
-                }
-                className={textInputClassName()}
-              />
-            </Field>
-            <Field label="Affiliate source">
-              <input
-                value={toolDraft.affiliateSource}
-                onChange={(event) =>
-                  setToolDraft((current) => ({
-                    ...current,
-                    affiliateSource: event.target.value,
-                  }))
-                }
-                className={textInputClassName()}
-              />
-            </Field>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Founder X URL">
-              <input
-                type="url"
-                value={toolDraft.founderXUrl}
-                onChange={(event) =>
-                  setToolDraft((current) => ({
-                    ...current,
-                    founderXUrl: event.target.value,
-                  }))
-                }
-                className={textInputClassName()}
-              />
-            </Field>
-            <Field label="Founder GitHub URL">
-              <input
-                type="url"
-                value={toolDraft.founderGithubUrl}
-                onChange={(event) =>
-                  setToolDraft((current) => ({
-                    ...current,
-                    founderGithubUrl: event.target.value,
-                  }))
-                }
-                className={textInputClassName()}
-              />
-            </Field>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Founder LinkedIn URL">
-              <input
-                type="url"
-                value={toolDraft.founderLinkedinUrl}
-                onChange={(event) =>
-                  setToolDraft((current) => ({
-                    ...current,
-                    founderLinkedinUrl: event.target.value,
-                  }))
-                }
-                className={textInputClassName()}
-              />
-            </Field>
-            <Field label="Founder Facebook URL">
-              <input
-                type="url"
-                value={toolDraft.founderFacebookUrl}
-                onChange={(event) =>
-                  setToolDraft((current) => ({
-                    ...current,
-                    founderFacebookUrl: event.target.value,
-                  }))
-                }
-                className={textInputClassName()}
+                rows={2}
+                className={cn(textInputClassName(), "text-xs")}
+                placeholder="https://..."
               />
             </Field>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-[1.5rem] border border-black/10 bg-[#fffdf8] p-4">
-              <p className="text-sm font-semibold text-black">Categories</p>
-              <div className="mt-3 grid gap-2">
+            <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Categories</p>
+              <div className="grid gap-1.5 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                 {categories.map((category) => (
-                  <label
-                    key={category.id}
-                    className="flex items-center gap-3 text-sm text-black/70"
-                  >
+                  <label key={category.id} className="flex items-center gap-2 text-[10px] font-bold text-foreground/70 cursor-pointer hover:text-primary">
                     <input
                       type="checkbox"
+                      className="rounded border-border text-primary focus:ring-primary/20"
                       checked={toolDraft.categoryIds.includes(category.id)}
                       onChange={() => handleCategorySelection(category.id)}
                     />
@@ -308,16 +231,14 @@ export function ToolOpsPanel({
               </div>
             </div>
 
-            <div className="rounded-[1.5rem] border border-black/10 bg-[#fffdf8] p-4">
-              <p className="text-sm font-semibold text-black">Tags</p>
-              <div className="mt-3 grid gap-2">
+            <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Tags</p>
+              <div className="grid gap-1.5 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                 {tags.map((tag) => (
-                  <label
-                    key={tag.id}
-                    className="flex items-center gap-3 text-sm text-black/70"
-                  >
+                  <label key={tag.id} className="flex items-center gap-2 text-[10px] font-bold text-foreground/70 cursor-pointer hover:text-primary">
                     <input
                       type="checkbox"
+                      className="rounded border-border text-primary focus:ring-primary/20"
                       checked={toolDraft.tagIds.includes(tag.id)}
                       onChange={() => handleTagSelection(tag.id)}
                     />
@@ -328,109 +249,88 @@ export function ToolOpsPanel({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-5">
-            <label className="flex items-center gap-3 text-sm text-black/70">
-              <input
-                type="checkbox"
-                checked={toolDraft.hasAffiliateProgram}
-                onChange={(event) =>
-                  setToolDraft((current) => ({
-                    ...current,
-                    hasAffiliateProgram: event.target.checked,
-                  }))
-                }
-              />
-              Has affiliate program
-            </label>
-            <label className="flex items-center gap-3 text-sm text-black/70">
-              <input
-                type="checkbox"
-                checked={toolDraft.publish}
-                onChange={(event) =>
-                  setToolDraft((current) => ({
-                    ...current,
-                    publish: event.target.checked,
-                  }))
-                }
-              />
-              Publish immediately
-            </label>
-            <label className="flex items-center gap-3 text-sm text-black/70">
-              <input
-                type="checkbox"
-                checked={toolDraft.isFeatured}
-                onChange={(event) =>
-                  setToolDraft((current) => ({
-                    ...current,
-                    isFeatured: event.target.checked,
-                  }))
-                }
-              />
-              Mark featured
-            </label>
+          <div className="flex flex-wrap items-center gap-4">
+            {[
+              { id: 'hasAffiliateProgram', label: 'Affiliate' },
+              { id: 'publish', label: 'Publish' },
+              { id: 'isFeatured', label: 'Featured' }
+            ].map(cb => (
+              <label key={cb.id} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="rounded border-border text-primary focus:ring-primary/20"
+                  checked={(toolDraft as any)[cb.id]}
+                  onChange={(event) =>
+                    setToolDraft((current) => ({
+                      ...current,
+                      [cb.id]: event.target.checked,
+                    }))
+                  }
+                />
+                {cb.label}
+              </label>
+            ))}
           </div>
 
-          {toolError ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {toolError && (
+            <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-bold text-destructive uppercase tracking-widest">
               {toolError}
             </div>
-          ) : null}
+          )}
 
           <button
             type="submit"
             disabled={hasPendingAction}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#143f35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2e26] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-primary px-4 py-2.5 text-xs font-black text-primary-foreground shadow-xl shadow-black/10 transition hover:opacity-90 disabled:opacity-50"
           >
             {isActionPending("tool:create") ? (
-              <>
-                <span className={pendingSpinnerClassName()} />
-                Creating tool...
-              </>
+              <RefreshCw className="animate-spin" size={14} />
             ) : (
-              "Create tool"
+              <Plus size={14} />
             )}
+            Create Listing
           </button>
         </form>
 
         <div className="space-y-4">
-          <input
-            value={toolSearch}
-            onChange={(event) => onToolSearchChange(event.target.value)}
-            placeholder="Search tools by name, slug, or tagline"
-            className={textInputClassName()}
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+            <input
+              value={toolSearch}
+              onChange={(event) => onToolSearchChange(event.target.value)}
+              placeholder="Search directory..."
+              className={cn(textInputClassName(), "pl-10 py-2 text-xs")}
+            />
+          </div>
 
-          <div className="space-y-4">
+          <div className="grid gap-3 max-h-[1000px] overflow-y-auto pr-2 custom-scrollbar">
             {tools.map((tool) => (
               <article
                 key={tool.id}
-                className="rounded-[1.5rem] border border-black/10 bg-[#fffdf8] p-5"
+                className="rounded-2xl border border-border bg-muted/20 p-4 hover:border-primary/20 transition-colors"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-semibold text-black">{tool.name}</h3>
-                      {tool.isFeatured ? (
+                      <h3 className="text-sm font-black text-foreground">{tool.name}</h3>
+                      {tool.isFeatured && (
                         <StatusChip label="Featured" tone="amber" />
-                      ) : null}
+                      )}
                     </div>
-                    <p className="mt-1 text-sm text-black/55">{tool.tagline}</p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-black/42">
-                      {tool.slug}
-                    </p>
+                    <p className="text-[10px] font-medium text-muted-foreground line-clamp-1">{tool.tagline}</p>
                   </div>
                   <a
                     href={tool.websiteUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-black transition hover:bg-black/[0.04]"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-primary transition-colors shadow-sm"
                   >
-                    Open
+                    <ExternalLink size={14} />
                   </a>
                 </div>
 
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <Field label="Moderation">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Field label="Mod">
                     <select
                       value={tool.moderationStatus}
                       onChange={(event) =>
@@ -440,7 +340,7 @@ export function ToolOpsPanel({
                         })
                       }
                       disabled={hasPendingAction}
-                      className={textInputClassName()}
+                      className={cn(textInputClassName(), "text-[10px] py-1")}
                     >
                       {moderationStatuses.map((status) => (
                         <option key={status} value={status}>
@@ -449,7 +349,7 @@ export function ToolOpsPanel({
                       ))}
                     </select>
                   </Field>
-                  <Field label="Publication">
+                  <Field label="Pub">
                     <select
                       value={tool.publicationStatus}
                       onChange={(event) =>
@@ -459,7 +359,7 @@ export function ToolOpsPanel({
                         })
                       }
                       disabled={hasPendingAction}
-                      className={textInputClassName()}
+                      className={cn(textInputClassName(), "text-[10px] py-1")}
                     >
                       {publicationStatuses.map((status) => (
                         <option key={status} value={status}>
@@ -470,10 +370,11 @@ export function ToolOpsPanel({
                   </Field>
                 </div>
 
-                <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-black/68">
-                  <label className="flex items-center gap-3">
+                <div className="mt-4 flex items-center justify-between pt-3 border-t border-border">
+                  <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer">
                     <input
                       type="checkbox"
+                      className="rounded border-border text-primary focus:ring-primary/20"
                       checked={tool.isFeatured}
                       onChange={(event) =>
                         void handleToolStatusUpdate(tool.id, `tool:${tool.id}:featured`, {
@@ -484,36 +385,24 @@ export function ToolOpsPanel({
                     />
                     Featured
                   </label>
-                  <span>
-                    Categories:{" "}
-                    {tool.toolCategories.map((item) => item.category.name).join(", ") ||
-                      "None"}
-                  </span>
-                  <span>
-                    Tags: {tool.toolTags.map((item) => item.tag.name).join(", ") || "None"}
-                  </span>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+                    {tool.toolCategories.length}C • {tool.toolTags.length}T
+                  </div>
                 </div>
 
-                {isActionGroupPending(`tool:${tool.id}:`) ? (
-                  <p className="text-sm font-medium text-[#8a4b1b]">
-                    Saving tool changes...
-                  </p>
-                ) : null}
-
                 <div className="mt-4 space-y-2">
-                  <Field label="Internal note">
-                    <textarea
-                      value={toolNotes[tool.id] ?? getToolNote(tool)}
-                      onChange={(event) =>
-                        setToolNotes((current) => ({
-                          ...current,
-                          [tool.id]: event.target.value,
-                        }))
-                      }
-                      rows={3}
-                      className={textInputClassName()}
-                    />
-                  </Field>
+                  <textarea
+                    value={toolNotes[tool.id] ?? getToolNote(tool)}
+                    onChange={(event) =>
+                      setToolNotes((current) => ({
+                        ...current,
+                        [tool.id]: event.target.value,
+                      }))
+                    }
+                    rows={1}
+                    className={cn(textInputClassName(), "text-[10px] py-1.5")}
+                    placeholder="Admin note..."
+                  />
                   <button
                     type="button"
                     onClick={() =>
@@ -522,16 +411,14 @@ export function ToolOpsPanel({
                       })
                     }
                     disabled={hasPendingAction}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-black/10 px-4 py-2 text-sm font-semibold text-black transition hover:bg-black/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 w-full rounded-lg border border-border bg-card px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-foreground hover:bg-muted transition-all disabled:opacity-50 shadow-sm"
                   >
                     {isActionPending(`tool:${tool.id}:note`) ? (
-                      <>
-                        <span className={pendingSpinnerClassName()} />
-                        Saving note...
-                      </>
+                      <RefreshCw className="animate-spin" size={10} />
                     ) : (
-                      "Save note"
+                      <Check size={10} />
                     )}
+                    Save Note
                   </button>
                 </div>
               </article>

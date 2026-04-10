@@ -1,10 +1,15 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
+import { Menu, X, ChevronDown, Rocket, Tag, Layers, LogOut, User, Star, Hash } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import { ThemeToggle } from "./theme-toggle";
+import { cn } from "@/lib/utils";
 
 function getInitials(name: string | null | undefined) {
   if (!name) {
@@ -24,6 +29,38 @@ export function AppHeader() {
   const { data: session, isPending } = authClient.useSession();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSigningOut, startSignOutTransition] = useTransition();
+  
+  const [menuState, setMenuState] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
+  const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    
+    // Fetch categories for dropdown
+    fetch("/api/categories")
+      .then(res => {
+        if (!res.ok) throw new Error("API error");
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          return res.json();
+        }
+        throw new Error("Not JSON");
+      })
+      .then(payload => {
+        if (payload.data) setCategories(payload.data);
+      })
+      .catch(err => {
+        console.warn("Categories fetch failed:", err.message);
+      });
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   function handleSignOut() {
     startSignOutTransition(() => {
@@ -46,86 +83,202 @@ export function AppHeader() {
   const isBusy = isPending || isSigningOut;
 
   return (
-    <header className="border-b border-black/10 bg-[#fffdf7]/90 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-4">
-        <div className="space-y-1">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-3 text-sm font-semibold tracking-[0.28em] text-[#9f4f1d] uppercase"
-          >
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#9f4f1d] text-sm tracking-normal text-white">
-              SB
-            </span>
-            Shipboost
-          </Link>
-          <p className="text-sm text-black/60">
-            Distribution workflows for bootstrapped SaaS founders.
-          </p>
-        </div>
-
-        <nav className="flex items-center gap-3">
-          <Link
-            href="/pricing"
-            className="rounded-full px-4 py-2 text-sm font-medium text-black/70 transition hover:bg-black/5 hover:text-black"
-          >
-            Pricing
-          </Link>
-          <Link
-            href="/dashboard"
-            className="rounded-full px-4 py-2 text-sm font-medium text-black/70 transition hover:bg-black/5 hover:text-black"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/admin"
-            className="rounded-full px-4 py-2 text-sm font-medium text-black/70 transition hover:bg-black/5 hover:text-black"
-          >
-            Admin
-          </Link>
-
-          {session ? (
-            <div className="flex items-center gap-3 rounded-full border border-black/10 bg-white px-2 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#143f35] text-sm font-semibold text-[#f8efe3]">
-                {getInitials(session.user.name)}
-              </div>
-              <div className="hidden pr-2 sm:block">
-                <p className="text-sm font-semibold text-black">
-                  {session.user.name}
-                </p>
-                <p className="text-xs text-black/55">
-                  {session.user.role === "ADMIN" ? "Admin" : "Founder"}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                disabled={isBusy}
-                className="rounded-full bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/85 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSigningOut ? "Signing out..." : "Sign out"}
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Link
-                href="/sign-in"
-                className="rounded-full px-4 py-2 text-sm font-medium text-black/70 transition hover:bg-black/5 hover:text-black"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/sign-up"
-                className="rounded-full bg-[#9f4f1d] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#874218]"
-              >
-                Create account
-              </Link>
-            </div>
+    <header>
+      <nav
+        data-state={menuState && "active"}
+        className="fixed z-50 w-full px-2 group top-0 left-0 right-0"
+      >
+        <div
+          className={cn(
+            "mx-auto mt-2 max-w-7xl px-6 transition-all duration-300 lg:px-12",
+            isScrolled &&
+              "bg-background/80 max-w-5xl rounded-2xl border border-border backdrop-blur-lg lg:px-5 shadow-xl shadow-foreground/5"
           )}
-        </nav>
-      </div>
+        >
+          <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
+            <div className="flex w-full justify-between lg:w-auto">
+              <Link
+                href="/"
+                aria-label="home"
+                className="flex items-center gap-4 group h-14"
+              >
+                <div className="relative h-14 w-14 shrink-0">
+                  <Image
+                    src="/logos/logo-black.png"
+                    alt=""
+                    fill
+                    className="object-contain block dark:hidden transition-transform group-hover:scale-110"
+                    priority
+                  />
+                  <Image
+                    src="/logos/logo-white.png"
+                    alt=""
+                    fill
+                    className="object-contain hidden dark:block transition-transform group-hover:scale-110"
+                    priority
+                  />
+                </div>
+                <span className="text-3xl font-black tracking-tighter text-foreground font-heading leading-none" suppressHydrationWarning>
+                  ShipBoost
+                </span>
+              </Link>
 
+              <div className="flex items-center gap-2 lg:hidden">
+                <ThemeToggle />
+                <button
+                  onClick={() => setMenuState(!menuState)}
+                  aria-label={menuState == true ? "Close Menu" : "Open Menu"}
+                  className="relative z-20 -m-2.5 p-2.5"
+                >
+                  <Menu className={cn("m-auto size-6 duration-200", menuState && "rotate-180 scale-0 opacity-0")} />
+                  <X className={cn("absolute inset-0 m-auto size-6 -rotate-180 scale-0 opacity-0 duration-200", menuState && "rotate-0 scale-100 opacity-100")} />
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Menu */}
+            <div className="absolute inset-0 m-auto hidden size-fit lg:block">
+              <ul className="flex gap-8 text-sm font-bold tracking-tight">
+                <li>
+                  <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Launchpad
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Pricing
+                  </Link>
+                </li>
+                <li className="relative group/products">
+                  <button 
+                    onMouseEnter={() => setIsProductsOpen(true)}
+                    className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    Products <ChevronDown size={14} className={cn("transition-transform duration-200", isProductsOpen && "rotate-180")} />
+                  </button>
+                  
+                  {/* Products Dropdown */}
+                  <div 
+                    onMouseLeave={() => setIsProductsOpen(false)}
+                    className={cn(
+                      "absolute top-full left-1/2 -translate-x-1/2 pt-4 transition-all duration-200",
+                      isProductsOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
+                    )}
+                  >
+                    <div className="w-[480px] bg-card border border-border rounded-2xl shadow-2xl p-6 grid grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 flex items-center gap-2">
+                          <Layers size={12} /> Categories
+                        </h3>
+                        <div className="grid gap-2">
+                          {categories.slice(0, 6).map(cat => (
+                            <Link 
+                              key={cat.id} 
+                              href={`/categories/${cat.slug}`}
+                              className="text-sm font-bold text-foreground hover:opacity-70 transition-colors block"
+                            >
+                              {cat.name}
+                            </Link>
+                          ))}
+                          <Link href="/categories" className="text-xs font-black text-foreground hover:underline pt-1">
+                            View all categories →
+                          </Link>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <div className="space-y-4">
+                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 flex items-center gap-2">
+                            Explore
+                          </h3>
+                          <Link href="/tags" className="flex items-center gap-2 text-sm font-bold text-foreground hover:opacity-70 transition-colors block">
+                            <Hash size={14} className="text-foreground" /> Tags
+                          </Link>
+                        </div>
+                        
+                        <div className="pt-4 border-t border-border">
+                          <Link 
+                            href="/submit" 
+                            className="flex items-center gap-2 text-sm font-black text-foreground hover:opacity-70 transition-colors"
+                          >
+                            <Rocket size={16} /> Submit your product
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div className={cn(
+              "bg-background mb-6 w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border border-border p-6 shadow-2xl shadow-zinc-300/20 lg:m-0 lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:shadow-none dark:lg:bg-transparent",
+              menuState ? "flex" : "hidden lg:flex"
+            )}>
+              <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-4 sm:space-y-0 md:w-fit items-center">
+                <div className="hidden lg:block">
+                  <ThemeToggle />
+                </div>
+                
+                {session ? (
+                  <div className="flex items-center gap-3">
+                    <div className="relative group/user">
+                      <button
+                        onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                        className="flex items-center gap-3 rounded-full border border-border bg-card p-1 pr-3 shadow-sm hover:border-foreground/30 transition-colors"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground">
+                          {getInitials(session.user.name)}
+                        </div>
+                        <span className="text-xs font-bold whitespace-nowrap">
+                          {session.user.name}
+                        </span>
+                        <ChevronDown size={12} className="text-muted-foreground" />
+                      </button>
+                      
+                      <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl py-2 opacity-0 invisible group-hover/user:opacity-100 group-hover/user:visible transition-all duration-200 translate-y-1 group-hover/user:translate-y-0">
+                        <Link 
+                          href={session.user.role === "ADMIN" ? "/admin" : "/dashboard"} 
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+                        >
+                          <User size={14} /> Dashboard
+                        </Link>
+                        {session.user.role === "ADMIN" && (
+                          <Link 
+                            href="/admin" 
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+                          >
+                            <Layers size={14} /> Admin Console
+                          </Link>
+                        )}
+                        <button
+                          onClick={handleSignOut}
+                          disabled={isBusy}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors border-t border-border mt-1 pt-3"
+                        >
+                          <LogOut size={14} /> {isSigningOut ? "Signing out..." : "Sign out"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <Link
+                      href="/sign-in"
+                      className="text-sm font-black bg-primary text-primary-foreground px-5 py-2.5 rounded-xl shadow-lg shadow-black/10 hover:opacity-90 active:scale-95 transition-all"
+                    >
+                      Sign in
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      
       {errorMessage ? (
-        <div className="border-t border-rose-200 bg-rose-50 px-6 py-3 text-center text-sm text-rose-700">
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] border border-destructive/20 bg-destructive/10 px-6 py-2 rounded-full text-xs font-bold text-destructive uppercase tracking-widest backdrop-blur-md">
           {errorMessage}
         </div>
       ) : null}

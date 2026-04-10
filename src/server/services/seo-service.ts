@@ -85,7 +85,10 @@ export async function getAlternativesSeoPage(slug: string) {
   };
 }
 
-export async function getBestTagSeoPage(slug: string) {
+export async function getBestTagSeoPage(
+  slug: string,
+  sort: "newest" | "top" = "newest",
+) {
   const [tag, tools] = await Promise.all([
     prisma.tag.findFirst({
       where: {
@@ -106,7 +109,10 @@ export async function getBestTagSeoPage(slug: string) {
         },
       },
       include: toolDetailsInclude,
-      orderBy: [{ isFeatured: "desc" }, { updatedAt: "desc" }, { name: "asc" }],
+      orderBy:
+        sort === "top"
+          ? [{ toolVotes: { _count: "desc" } }, { isFeatured: "desc" }]
+          : [{ createdAt: "desc" }, { isFeatured: "desc" }],
     }),
   ]);
 

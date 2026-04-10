@@ -3,8 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { 
+  Rocket, ShieldCheck, Star, Zap, Info, ArrowLeft, Loader2, Check, 
+  ChevronDown, Layout, Image as ImageIcon, Share2, DollarSign, ExternalLink,
+  ChevronRight, Trophy, Search, X, ArrowRight, Trash2
+} from "lucide-react";
 
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
+import { cn } from "@/lib/utils";
 
 type CategoryOption = {
   id: string;
@@ -26,6 +32,8 @@ type SubmissionType =
   | "FEATURED_LAUNCH"
   | "RELAUNCH";
 type PricingModel = "FREE" | "FREEMIUM" | "PAID" | "CUSTOM" | "CONTACT_SALES";
+type PricingModelSelection = PricingModel | "";
+type BadgeTheme = "light" | "dark";
 
 type SubmitProductFormProps = {
   categories: CategoryOption[];
@@ -43,7 +51,7 @@ type FormState = {
   tagline: string;
   websiteUrl: string;
   richDescription: string;
-  pricingModel: PricingModel;
+  pricingModel: PricingModelSelection;
   affiliateUrl: string;
   affiliateSource: string;
   hasAffiliateProgram: boolean;
@@ -79,10 +87,6 @@ type ApiErrorPayload = {
   };
 };
 
-type DuplicateToolAction = NonNullable<
-  NonNullable<ApiErrorPayload["details"]>["duplicateTool"]
->;
-
 type SavedSubmission = {
   id: string;
   submissionType: SubmissionType;
@@ -110,16 +114,28 @@ function slugify(value: string) {
 
 function ensureHttps(value: string) {
   const trimmed = value.trim();
-
-  if (!trimmed) {
-    return "";
-  }
-
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed;
-  }
-
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://${trimmed}`;
+}
+
+function isValidUrl(value: string) {
+  const normalized = ensureHttps(value);
+
+  if (!normalized || normalized === "https://") {
+    return false;
+  }
+
+  try {
+    new URL(normalized);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
 }
 
 function emptyForm(): FormState {
@@ -129,9 +145,9 @@ function emptyForm(): FormState {
     preferredLaunchDate: "",
     name: "",
     tagline: "",
-    websiteUrl: "",
+    websiteUrl: "https://",
     richDescription: "",
-    pricingModel: "FREEMIUM",
+    pricingModel: "",
     affiliateUrl: "",
     affiliateSource: "",
     hasAffiliateProgram: false,
@@ -145,66 +161,7 @@ function emptyForm(): FormState {
 }
 
 function inputClassName() {
-  return "w-full rounded-2xl border border-black/10 bg-[#fffdf8] px-4 py-3 text-sm outline-none transition focus:border-[#9f4f1d] focus:ring-4 focus:ring-[#9f4f1d]/10";
-}
-
-function Field({
-  label,
-  hint,
-  error,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  error?: string | null;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block space-y-2">
-      <span className="text-sm font-medium text-black/72">{label}</span>
-      {hint ? <span className="block text-xs text-black/48">{hint}</span> : null}
-      {children}
-      {error ? (
-        <span className="block text-xs font-medium text-rose-700">{error}</span>
-      ) : null}
-    </label>
-  );
-}
-
-function readValidationErrors(payload: ApiErrorPayload | null) {
-  const fieldErrors = payload?.details?.fieldErrors ?? {};
-  const formErrors = payload?.details?.formErrors ?? [];
-  const firstFieldError = Object.values(fieldErrors).flat().find(Boolean);
-
-  return {
-    fieldErrors,
-    duplicateTool: payload?.details?.duplicateTool ?? null,
-    message:
-      formErrors[0] ??
-      firstFieldError ??
-      payload?.error ??
-      "Unable to submit your product.",
-  };
-}
-
-async function apiRequest<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const response = await fetch(input, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-  });
-
-  const payload = (await response.json().catch(() => null)) as
-    | { data?: T; error?: string }
-    | null;
-
-  if (!response.ok) {
-    throw new Error(payload?.error ?? "Request failed.");
-  }
-
-  return payload?.data as T;
+  return "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium outline-none transition focus:border-foreground focus:ring-4 focus:ring-foreground/5 disabled:opacity-50";
 }
 
 function LocalPreview({
@@ -217,30 +174,25 @@ function LocalPreview({
   onRemove: () => void;
 }) {
   return (
-    <div className="rounded-[1.25rem] border border-black/10 bg-white p-3">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-xl border border-border bg-muted/30 p-3">
+      <div className="flex items-start justify-between gap-3 mb-3">
         <div>
-          <p className="text-sm font-semibold text-black">{label}</p>
-          <p className="mt-1 text-xs text-black/48">
-            {image.file.type || "image"} •{" "}
+          <p className="text-xs font-bold text-foreground">{label}</p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
             {(image.file.size / 1024 / 1024).toFixed(2)} MB
           </p>
         </div>
         <button
           type="button"
           onClick={onRemove}
-          className="text-xs font-semibold text-black/45 transition hover:text-rose-700"
+          className="text-[10px] font-black uppercase tracking-widest text-muted-foreground transition hover:text-destructive"
         >
           Remove
         </button>
       </div>
-      <div className="mt-3 overflow-hidden rounded-2xl border border-black/10 bg-[#f3f0ea]">
+      <div className="overflow-hidden rounded-lg border border-border bg-background">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={image.previewUrl}
-          alt={label}
-          className="h-40 w-full object-cover"
-        />
+        <img src={image.previewUrl} alt={label} className="h-32 w-full object-cover" />
       </div>
     </div>
   );
@@ -254,1034 +206,835 @@ export function SubmitProductForm({
   supportEmail,
 }: SubmitProductFormProps) {
   const router = useRouter();
+  const [step, setStep] = useState<1 | 2>(1);
+  const [activeTab, setActiveTab] = useState<"general" | "media" | "socials">("general");
   const [form, setForm] = useState<FormState>(emptyForm);
   const [logo, setLogo] = useState<LocalImage | null>(null);
   const [screenshots, setScreenshots] = useState<LocalImage[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [duplicateToolAction, setDuplicateToolAction] = useState<
-    DuplicateToolAction | null
-  >(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
   const [isVerifyingBadge, setIsVerifyingBadge] = useState(false);
-  const [slugStatus, setSlugStatus] = useState<string>("Slug will appear here.");
+  const [slugStatus, setSlugStatus] = useState<string>("");
   const [isSlugLoading, setIsSlugLoading] = useState(false);
-  const actionLockRef = useRef(false);
-  const logoRef = useRef<LocalImage | null>(null);
-  const screenshotsRef = useRef<LocalImage[]>([]);
-  const slugEditedRef = useRef(false);
   const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(null);
-  const [draftBadgeVerification, setDraftBadgeVerification] = useState<
-    SavedSubmission["badgeVerification"]
-  >("PENDING");
+  const [draftBadgeVerification, setDraftBadgeVerification] = useState<SavedSubmission["badgeVerification"]>("PENDING");
+  const [badgeTheme, setBadgeTheme] = useState<BadgeTheme>("light");
+  const [copiedBadgeSnippet, setCopiedBadgeSnippet] = useState(false);
+  
+  const [catSearch, setCatSearch] = useState("");
+  const [tagSearch, setTagSearch] = useState("");
+  const [isCatOpen, setIsCatOpen] = useState(false);
+  const [isTagOpen, setIsTagOpen] = useState(false);
 
   const isBusy = isSavingDraft || isSubmittingDraft || isVerifyingBadge;
-  const manualVerificationHref = `mailto:${encodeURIComponent(
-    supportEmail,
-  )}?subject=${encodeURIComponent(
-    `Manual Shipboost badge verification for ${form.name || "my launch draft"}`,
-  )}&body=${encodeURIComponent(
-    [
-      "Hi Shipboost,",
-      "",
-      "Automatic badge verification did not work. Please review this free launch badge manually.",
-      "",
-      `Founder email: ${founderEmail}`,
-      `Product name: ${form.name || "-"}`,
-      `Website URL: ${ensureHttps(form.websiteUrl) || "-"}`,
-      `Draft submission ID: ${draftSubmissionId ?? "-"}`,
-      "",
-      "Thanks.",
-    ].join("\n"),
-  )}`;
-  const freeLaunchBadgeSnippet = `<a href="${appUrl}" data-shipboost-badge="free-launch" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(20,63,53,0.18);background:#143f35;color:#fff8ef;font:600 13px/1.2 Inter,sans-serif;text-decoration:none;">Launching soon on Shipboost</a>`;
+  const normalizedAppUrl = appUrl.replace(/\/$/, "");
+  const shipboostUrl = "https://shipboost.io";
+  const badgeAssetPath =
+    badgeTheme === "light"
+      ? "/ShipBoost-Badge/ShipBoost-Light-Badge.svg"
+      : "/ShipBoost-Badge/ShipBoost-Dark-Badge.svg";
+  const badgePreviewSrc = badgeAssetPath;
+  const freeLaunchBadgeSnippet = `<a href="${shipboostUrl}" data-shipboost-badge="free-launch" target="_blank" rel="noopener">
+  <img src="${normalizedAppUrl}${badgeAssetPath}" alt="Launching soon on Shipboost" style="height: 54px; width: auto;" />
+</a>`;
+  const submissionChecklist = [
+    { label: "Name", complete: form.name.trim().length >= 2 },
+    { label: "Slug", complete: form.requestedSlug.trim().length > 0 },
+    { label: "URL", complete: isValidUrl(form.websiteUrl) },
+    { label: "Pricing", complete: Boolean(form.pricingModel) },
+    { label: "Category", complete: form.categoryIds.length > 0 },
+    { label: "Tags", complete: form.tagIds.length > 0 },
+    { label: "Tagline", complete: form.tagline.trim().length >= 10 },
+    { label: "Rich Description", complete: form.richDescription.trim().length >= 40 },
+    { label: "Logo", complete: Boolean(logo) },
+  ];
+  const incompleteChecklistItems = submissionChecklist
+    .filter((item) => !item.complete)
+    .map((item) => item.label);
+  const minFeaturedLaunchDate = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
-    logoRef.current = logo;
-    screenshotsRef.current = screenshots;
-  }, [logo, screenshots]);
-
-  useEffect(() => {
-    return () => {
-      if (logoRef.current) {
-        URL.revokeObjectURL(logoRef.current.previewUrl);
-      }
-
-      screenshotsRef.current.forEach((image) => {
-        URL.revokeObjectURL(image.previewUrl);
-      });
-    };
-  }, []);
-
-  useEffect(() => {
-    if (slugEditedRef.current) {
-      setSlugStatus("Custom slug will be checked again on submit.");
-
-      return;
-    }
-
-    const localSlug = slugify(form.name) || "tool";
-    setSlugStatus(localSlug ? `Suggested slug: ${localSlug}` : "Slug will appear here.");
-
-    if (!form.name.trim()) {
-      setForm((current) =>
-        current.requestedSlug === "" ? current : { ...current, requestedSlug: "" },
-      );
-      setIsSlugLoading(false);
-      setSlugStatus("Slug will appear here.");
-      return;
-    }
-
+    if (!form.name.trim()) return;
     const controller = new AbortController();
-    const timer = window.setTimeout(() => {
+    const timer = window.setTimeout(async () => {
       setIsSlugLoading(true);
-
-      void (async () => {
-        try {
-          const response = await fetch(
-            `/api/tools/slug-suggestion?value=${encodeURIComponent(form.name)}`,
-            {
-              signal: controller.signal,
-            },
-          );
-          const payload = (await response.json().catch(() => null)) as
-            | { data?: { slug?: string }; error?: string }
-            | null;
-
-          if (!response.ok) {
-            throw new Error(payload?.error ?? "Unable to generate slug.");
-          }
-
-          const nextSlug = payload?.data?.slug ?? localSlug;
-
-          setForm((current) => ({ ...current, requestedSlug: nextSlug }));
-          setSlugStatus(`Suggested slug: ${nextSlug}`);
-        } catch (error) {
-          if (controller.signal.aborted) {
-            return;
-          }
-
-          setForm((current) => ({ ...current, requestedSlug: localSlug }));
-          setSlugStatus(
-            error instanceof Error
-              ? error.message
-              : `Suggested slug: ${localSlug}`,
-          );
-        } finally {
-          if (!controller.signal.aborted) {
-            setIsSlugLoading(false);
-          }
+      try {
+        const response = await fetch(`/api/tools/slug-suggestion?value=${encodeURIComponent(form.name)}`, { signal: controller.signal });
+        const payload = await response.json();
+        if (response.ok && payload.data?.slug) {
+          setForm(prev => ({ ...prev, requestedSlug: payload.data.slug }));
+          setSlugStatus(`Suggested: ${payload.data.slug}`);
         }
-      })();
+      } catch (err) {} finally { setIsSlugLoading(false); }
     }, 250);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timer);
-    };
+    return () => { controller.abort(); clearTimeout(timer); };
   }, [form.name]);
 
-  function toggleCategory(categoryId: string) {
-    setFieldErrors((current) => ({ ...current, categoryIds: undefined }));
-    setForm((current) => ({
-      ...current,
-      categoryIds: current.categoryIds.includes(categoryId)
-        ? current.categoryIds.filter((id) => id !== categoryId)
-        : [...current.categoryIds, categoryId].slice(0, 3),
-    }));
+  async function handleCopyBadgeSnippet() {
+    try {
+      await navigator.clipboard.writeText(freeLaunchBadgeSnippet);
+      setCopiedBadgeSnippet(true);
+      window.setTimeout(() => setCopiedBadgeSnippet(false), 1500);
+    } catch {
+      setErrorMessage("Unable to copy the badge snippet.");
+    }
   }
 
-  function toggleTag(tagId: string) {
-    setFieldErrors((current) => ({ ...current, tagIds: undefined }));
-    setForm((current) => ({
-      ...current,
-      tagIds: current.tagIds.includes(tagId)
-        ? current.tagIds.filter((id) => id !== tagId)
-        : [...current.tagIds, tagId].slice(0, 5),
-    }));
+  async function saveDraft(overrides: Partial<FormState> = {}) {
+    if (!logo) throw new Error("Please upload a logo first.");
+    const nextForm = { ...form, ...overrides };
+    setIsSavingDraft(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("submissionId", draftSubmissionId ?? "");
+      formData.append("submissionType", nextForm.submissionType);
+      formData.append("requestedSlug", nextForm.requestedSlug);
+      formData.append("preferredLaunchDate", nextForm.preferredLaunchDate);
+      formData.append("name", nextForm.name);
+      formData.append("tagline", nextForm.tagline);
+      formData.append("websiteUrl", ensureHttps(nextForm.websiteUrl));
+      formData.append("richDescription", nextForm.richDescription);
+      formData.append("pricingModel", nextForm.pricingModel);
+      formData.append("categoryIds", JSON.stringify(nextForm.categoryIds));
+      formData.append("tagIds", JSON.stringify(nextForm.tagIds));
+      formData.append("affiliateUrl", ensureHttps(nextForm.affiliateUrl));
+      formData.append("affiliateSource", nextForm.affiliateSource);
+      formData.append("hasAffiliateProgram", String(nextForm.hasAffiliateProgram));
+      formData.append("founderXUrl", ensureHttps(nextForm.founderXUrl));
+      formData.append("founderGithubUrl", ensureHttps(nextForm.founderGithubUrl));
+      formData.append("founderLinkedinUrl", ensureHttps(nextForm.founderLinkedinUrl));
+      formData.append("founderFacebookUrl", ensureHttps(nextForm.founderFacebookUrl));
+      formData.append("logo", logo.file);
+      screenshots.forEach((s) => formData.append("screenshots", s.file));
+
+      const response = await fetch("/api/submissions", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Save failed.");
+      setForm(nextForm);
+      setDraftSubmissionId(payload.data.id);
+      setDraftBadgeVerification(payload.data.badgeVerification);
+      return payload.data as SavedSubmission & { id: string };
+    } finally {
+      setIsSavingDraft(false);
+    }
   }
 
-  function replaceLogo(fileList: FileList | null) {
-    if (!fileList?.[0]) {
-      return;
-    }
-
-    const file = fileList[0];
-
-    if (logo) {
-      URL.revokeObjectURL(logo.previewUrl);
-    }
-
-    setLogo({
-      id: crypto.randomUUID(),
-      file,
-      previewUrl: URL.createObjectURL(file),
-    });
-  }
-
-  function appendScreenshots(fileList: FileList | null) {
-    if (!fileList?.length) {
-      return;
-    }
-
-    const incoming = Array.from(fileList);
-
-    if (screenshots.length + incoming.length > 3) {
-      setErrorMessage("You can upload up to 3 screenshots.");
-      return;
-    }
-
+  async function handleProceedToPlan() {
     setErrorMessage(null);
-    setFieldErrors((current) => ({ ...current, screenshots: undefined }));
-
-    const nextImages = incoming.map((file) => ({
-      id: crypto.randomUUID(),
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }));
-
-    setScreenshots((current) => [...current, ...nextImages]);
-  }
-
-  function removeLogo() {
-    if (!logo) {
-      return;
-    }
-
-    URL.revokeObjectURL(logo.previewUrl);
-    setLogo(null);
-  }
-
-  function removeScreenshot(imageId: string) {
-    setScreenshots((current) => {
-      const target = current.find((image) => image.id === imageId);
-
-      if (target) {
-        URL.revokeObjectURL(target.previewUrl);
+    try {
+      if (incompleteChecklistItems.length > 0) {
+        throw new Error(
+          `Please complete: ${incompleteChecklistItems.join(", ")}.`,
+        );
       }
-
-      return current.filter((image) => image.id !== imageId);
-    });
+      await saveDraft({
+        submissionType: "FREE_LAUNCH",
+        preferredLaunchDate: "",
+      });
+      setStep(2);
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, "Unable to save your draft."));
+    }
   }
 
-  function buildMultipartFormData(submissionId?: string | null) {
-    const formData = new FormData();
-    const normalizedWebsiteUrl = ensureHttps(form.websiteUrl);
-
-    formData.append("submissionId", submissionId ?? "");
-    formData.append("submissionType", form.submissionType);
-    formData.append("requestedSlug", form.requestedSlug);
-    formData.append("preferredLaunchDate", form.preferredLaunchDate);
-    formData.append("name", form.name);
-    formData.append("tagline", form.tagline);
-    formData.append("websiteUrl", normalizedWebsiteUrl);
-    formData.append("richDescription", form.richDescription);
-    formData.append("pricingModel", form.pricingModel);
-    formData.append("categoryIds", JSON.stringify(form.categoryIds));
-    formData.append("tagIds", JSON.stringify(form.tagIds));
-    formData.append("affiliateUrl", form.affiliateUrl);
-    formData.append("affiliateSource", form.affiliateSource);
-    formData.append("hasAffiliateProgram", String(form.hasAffiliateProgram));
-    formData.append("founderXUrl", form.founderXUrl);
-    formData.append("founderGithubUrl", form.founderGithubUrl);
-    formData.append("founderLinkedinUrl", form.founderLinkedinUrl);
-    formData.append("founderFacebookUrl", form.founderFacebookUrl);
-    formData.append("logo", logo!.file);
-
-    screenshots.forEach((image) => {
-      formData.append("screenshots", image.file);
-    });
-
-    return formData;
+  async function handleVerifyBadge() {
+    if (!draftSubmissionId) return;
+    setIsVerifyingBadge(true);
+    try {
+      const res = await fetch(`/api/submissions/${draftSubmissionId}/verify-badge`, { method: "POST" });
+      const payload = await res.json();
+      setDraftBadgeVerification(payload.data.submission.badgeVerification);
+      if (payload.data.verified) setSuccessMessage(payload.data.message);
+      else setErrorMessage(payload.data.message || "Badge not found. Make sure it's in your footer.");
+    } catch (err) { setErrorMessage("Verification failed."); }
+    finally { setIsVerifyingBadge(false); }
   }
 
-  async function saveDraft() {
+  async function handleFinalSubmit(type: SubmissionType) {
     setErrorMessage(null);
     setSuccessMessage(null);
-    setFieldErrors({});
-    setDuplicateToolAction(null);
+    setIsSubmittingDraft(true);
 
-    if (!logo) {
-      throw new Error("Upload a logo before saving your draft.");
-    }
+    try {
+      if (type === "FEATURED_LAUNCH") {
+        if (!form.preferredLaunchDate) {
+          throw new Error("Please choose your preferred launch date first.");
+        }
 
-    setIsSavingDraft(true);
-    const response = await fetch("/api/submissions", {
-      method: "POST",
-      body: buildMultipartFormData(draftSubmissionId),
-    });
-
-    const payload = (await response.json().catch(() => null)) as
-      | ({ data?: SavedSubmission } & ApiErrorPayload)
-      | null;
-
-    if (!response.ok) {
-      const next = readValidationErrors(payload);
-      setFieldErrors(next.fieldErrors);
-      setDuplicateToolAction(next.duplicateTool);
-      throw new Error(next.message);
-    }
-
-    const savedDraft = payload?.data;
-
-    if (!savedDraft) {
-      throw new Error("Draft saved but could not be reloaded.");
-    }
-
-    setDraftSubmissionId(savedDraft.id);
-    setDraftBadgeVerification(savedDraft.badgeVerification);
-    setSuccessMessage("Draft saved. You can come back to it later from your dashboard.");
-    setDuplicateToolAction(null);
-
-    return savedDraft;
-  }
-
-  function runAction(task: () => Promise<void>) {
-    if (actionLockRef.current || isBusy) {
-      return;
-    }
-
-    actionLockRef.current = true;
-    void task().finally(() => {
-      actionLockRef.current = false;
-      setIsSavingDraft(false);
-      setIsSubmittingDraft(false);
-      setIsVerifyingBadge(false);
-    });
-  }
-
-  function handleSaveDraft() {
-    runAction(async () => {
-      try {
-        await saveDraft();
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error ? error.message : "Unable to save your draft.",
-        );
-      }
-    });
-  }
-
-  function handleVerifyBadge() {
-    runAction(async () => {
-      try {
-        const draft = await saveDraft();
-        setIsVerifyingBadge(true);
-        const result = await apiRequest<{
-          verified: boolean;
-          message: string;
-          submission: SavedSubmission;
-        }>(`/api/submissions/${draft.id}/verify-badge`, {
-          method: "POST",
+        const savedDraft = await saveDraft({
+          submissionType: type,
+          preferredLaunchDate: form.preferredLaunchDate,
         });
-
-        setDraftSubmissionId(result.submission.id);
-        setDraftBadgeVerification(result.submission.badgeVerification);
-
-        if (result.verified) {
-          setSuccessMessage(result.message);
-          setErrorMessage(null);
-          setDuplicateToolAction(null);
-        } else {
-          setSuccessMessage(null);
-          setErrorMessage(result.message);
-        }
-      } catch (error) {
-        setSuccessMessage(null);
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Unable to verify the Shipboost badge.",
-        );
-      }
-    });
-  }
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    runAction(async () => {
-      try {
-        const draft = await saveDraft();
-        setDraftSubmissionId(draft.id);
-
-        if (form.submissionType === "FEATURED_LAUNCH") {
-          setIsSubmittingDraft(true);
-          const result = await apiRequest<{
-            checkoutUrl: string;
-            checkoutId: string;
-          }>("/api/polar/checkout/featured-launch", {
-            method: "POST",
-            body: JSON.stringify({ submissionId: draft.id }),
-          });
-
-          window.location.href = result.checkoutUrl;
-          return;
-        }
-
-        if (
-          form.submissionType === "FREE_LAUNCH" &&
-          draftBadgeVerification !== "VERIFIED" &&
-          draft.badgeVerification !== "VERIFIED"
-        ) {
-          throw new Error(
-            "Verify the Shipboost badge on your website before submitting the free launch.",
-          );
-        }
-
-        setIsSubmittingDraft(true);
-        await apiRequest<SavedSubmission>(
-          `/api/submissions/${draft.id}/submit`,
-          {
-            method: "POST",
+        const response = await fetch("/api/polar/checkout/featured-launch", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
           },
-        );
+          body: JSON.stringify({ submissionId: savedDraft.id }),
+        });
+        const payload = await response.json();
 
-        router.push("/dashboard");
-        router.refresh();
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Unable to continue with this launch.",
-        );
+        if (!response.ok) {
+          throw new Error(payload.error || "Unable to start checkout.");
+        }
+
+        window.location.href = payload.data.checkoutUrl;
+        return;
       }
-    });
-  }
 
-  function getFieldError(field: keyof FormState | "logo" | "screenshots") {
-    return fieldErrors[field]?.[0] ?? null;
+      const savedDraft = await saveDraft({
+        submissionType: "FREE_LAUNCH",
+        preferredLaunchDate: "",
+      });
+
+      if (savedDraft.badgeVerification !== "VERIFIED") {
+        throw new Error("Badge must be verified for free launch.");
+      }
+
+      const response = await fetch(`/api/submissions/${savedDraft.id}/submit`, {
+        method: "POST",
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to submit your launch.");
+      }
+
+      setSuccessMessage("Launch submitted for review.");
+      router.push("/dashboard");
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, "Unable to continue with this launch option."));
+    }
+    finally { setIsSubmittingDraft(false); }
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-      <form
-        onSubmit={handleSubmit}
-        className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10"
-        aria-busy={isBusy}
-      >
-        <p className="text-sm font-semibold tracking-[0.25em] text-[#9f4f1d] uppercase">
-          Founder submission
-        </p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-black">
-          Submit your SaaS to Shipboost
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-black/66">
-          Shipboost stores a draft first, then only sends your launch into
-          review or checkout when the required preconditions pass.
-        </p>
+    <div className="w-full max-w-5xl mx-auto space-y-10">
+      {/* Multi-step Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-10">
+          <div className="flex items-center gap-3">
+            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-colors", step >= 1 ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>1</div>
+            <span className={cn("text-sm font-black uppercase tracking-widest", step >= 1 ? "text-foreground" : "text-muted-foreground")}>Details</span>
+          </div>
+          <div className="h-px w-12 bg-border" />
+          <div className="flex items-center gap-3">
+            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-colors", step >= 2 ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>2</div>
+            <span className={cn("text-sm font-black uppercase tracking-widest", step >= 2 ? "text-foreground" : "text-muted-foreground")}>Choose Plan</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+          <Rocket size={12} /> Step {step} of 2
+        </div>
+      </div>
 
-        <fieldset
-          disabled={isBusy}
-          className="mt-8 space-y-6 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          <Field label="Submission type">
-            <div className="grid gap-3">
-              {[
-                {
-                  value: "FREE_LAUNCH" as const,
-                  title: "Free launch with badge",
-                  body: "Best default. Save a draft, install the Shipboost badge on your homepage, verify it, then submit for review.",
-                },
-                {
-                  value: "FEATURED_LAUNCH" as const,
-                  title: "Featured launch request",
-                  body: "Save the launch as a draft, pick your launch date, then jump straight to payment when you are ready.",
-                },
-                {
-                  value: "LISTING_ONLY" as const,
-                  title: "Listing only",
-                  body: "Create a profile without placing the product on a launch board.",
-                },
-              ].map((option) => (
-                <label
-                  key={option.value}
-                  className={`rounded-[1.5rem] border p-4 transition ${
-                    form.submissionType === option.value
-                      ? "border-[#9f4f1d] bg-[#fff7ea]"
-                      : "border-black/10 bg-[#fffdf8]"
-                  }`}
+      {step === 1 ? (
+        <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+          <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-xl shadow-black/5">
+            {/* Tabs */}
+            <div className="flex border-b border-border bg-muted/30">
+              {([
+                { id: "general", label: "General", icon: Layout },
+                { id: "media", label: "Media", icon: ImageIcon },
+                { id: "socials", label: "Socials", icon: Share2 },
+              ] as const).map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-4 text-xs font-black uppercase tracking-widest transition-all border-b-2",
+                    activeTab === t.id ? "bg-card border-foreground text-foreground" : "border-transparent text-muted-foreground hover:bg-muted/50"
+                  )}
                 >
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="radio"
-                      name="submissionType"
-                      value={option.value}
-                      checked={form.submissionType === option.value}
-                      onChange={() =>
-                        setForm((current) => ({
-                          ...current,
-                          submissionType: option.value,
-                          preferredLaunchDate:
-                            option.value === "FEATURED_LAUNCH"
-                              ? current.preferredLaunchDate
-                              : "",
-                        }))
-                      }
-                    />
-                    <div>
-                      <p className="text-sm font-semibold text-black">
-                        {option.title}
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-black/58">
-                        {option.body}
-                      </p>
-                    </div>
-                  </div>
-                </label>
+                  <t.icon size={14} />
+                  <span className="hidden sm:inline">{t.label}</span>
+                </button>
               ))}
             </div>
-          </Field>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Product name" error={getFieldError("name")}>
-              <input
-                required
-                value={form.name}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, name: event.target.value }))
-                }
-                className={inputClassName()}
-              />
-            </Field>
-            <Field
-              label="Requested slug"
-              hint="Generated from your product name by default. You can still edit it before submitting."
-              error={getFieldError("requestedSlug")}
-            >
-              <input
-                value={form.requestedSlug}
-                onChange={(event) => {
-                  slugEditedRef.current = true;
-                  setForm((current) => ({
-                    ...current,
-                    requestedSlug: slugify(event.target.value),
-                  }));
-                }}
-                className={inputClassName()}
-              />
-              <div className="flex items-center justify-between gap-3 text-xs text-black/48">
-                <span>{isSlugLoading ? "Checking slug..." : slugStatus}</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    slugEditedRef.current = false;
-                    setForm((current) => ({
-                      ...current,
-                      requestedSlug: slugify(current.name),
-                    }));
-                  }}
-                  className="font-semibold text-[#9f4f1d] transition hover:text-[#7d3f17]"
-                >
-                  Reset from name
-                </button>
-              </div>
-            </Field>
-          </div>
-
-          <Field
-            label="Tagline"
-            hint="Used on cards and launch boards. Minimum 10 characters."
-            error={getFieldError("tagline")}
-          >
-            <input
-              required
-              value={form.tagline}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, tagline: event.target.value }))
-              }
-              className={inputClassName()}
-            />
-          </Field>
-
-          {form.submissionType === "FEATURED_LAUNCH" ? (
-            <Field
-              label="Preferred launch date"
-              hint="Pick the day you want the featured launch to go live once payment and approval are complete."
-              error={getFieldError("preferredLaunchDate")}
-            >
-              <input
-                required
-                type="date"
-                min={new Date().toISOString().slice(0, 10)}
-                value={form.preferredLaunchDate}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    preferredLaunchDate: event.target.value,
-                  }))
-                }
-                className={inputClassName()}
-              />
-            </Field>
-          ) : null}
-
-          <Field
-            label="Website URL"
-            hint="Type your domain only if you want. Shipboost will add https:// for you."
-            error={getFieldError("websiteUrl")}
-          >
-            <div className="flex overflow-hidden rounded-2xl border border-black/10 bg-[#fffdf8] focus-within:border-[#9f4f1d] focus-within:ring-4 focus-within:ring-[#9f4f1d]/10">
-              <span className="flex items-center border-r border-black/10 bg-[#f7f0e3] px-4 text-sm font-medium text-black/55">
-                https://
-              </span>
-              <input
-                required
-                type="text"
-                inputMode="url"
-                value={form.websiteUrl.replace(/^https?:\/\//i, "")}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    websiteUrl: event.target.value,
-                  }))
-                }
-                onBlur={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    websiteUrl: ensureHttps(event.target.value),
-                  }))
-                }
-                className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none"
-                placeholder="yourproduct.com"
-              />
-            </div>
-          </Field>
-
-          <Field
-            label="Rich description"
-            hint="Used on your product page. Supports Markdown. Minimum 40 characters."
-            error={getFieldError("richDescription")}
-          >
-            <MarkdownTextarea
-              value={form.richDescription}
-              onChange={(value) =>
-                setForm((current) => ({
-                  ...current,
-                  richDescription: value,
-                }))
-              }
-              rows={8}
-              placeholder="Explain what your SaaS does, who it helps, and the core workflows or outcomes."
-              error={getFieldError("richDescription")}
-            />
-          </Field>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Pricing model" error={getFieldError("pricingModel")}>
-              <select
-                value={form.pricingModel}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    pricingModel: event.target.value as PricingModel,
-                  }))
-                }
-                className={inputClassName()}
-              >
-                {pricingModels.map((pricingModel) => (
-                  <option key={pricingModel} value={pricingModel}>
-                    {pricingModel}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Affiliate URL" error={getFieldError("affiliateUrl")}>
-              <input
-                type="url"
-                value={form.affiliateUrl}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    affiliateUrl: event.target.value,
-                  }))
-                }
-                className={inputClassName()}
-              />
-            </Field>
-          </div>
-
-          <Field label="Affiliate source">
-            <input
-              value={form.affiliateSource}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  affiliateSource: event.target.value,
-                }))
-              }
-              className={inputClassName()}
-            />
-          </Field>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Founder X URL">
-              <input
-                type="url"
-                value={form.founderXUrl}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    founderXUrl: event.target.value,
-                  }))
-                }
-                className={inputClassName()}
-              />
-            </Field>
-            <Field label="Founder GitHub URL">
-              <input
-                type="url"
-                value={form.founderGithubUrl}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    founderGithubUrl: event.target.value,
-                  }))
-                }
-                className={inputClassName()}
-              />
-            </Field>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Founder LinkedIn URL">
-              <input
-                type="url"
-                value={form.founderLinkedinUrl}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    founderLinkedinUrl: event.target.value,
-                  }))
-                }
-                className={inputClassName()}
-              />
-            </Field>
-            <Field label="Founder Facebook URL">
-              <input
-                type="url"
-                value={form.founderFacebookUrl}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    founderFacebookUrl: event.target.value,
-                  }))
-                }
-                className={inputClassName()}
-              />
-            </Field>
-          </div>
-
-          {form.submissionType === "FREE_LAUNCH" ? (
-            <div className="rounded-[1.5rem] border border-black/10 bg-[#fff7ea] p-5">
-              <p className="text-sm font-semibold text-black">Install the Shipboost badge</p>
-              <p className="mt-2 text-sm leading-6 text-black/62">
-                Put this badge snippet on your homepage footer, then click
-                <span className="font-semibold text-black"> Verify badge now</span>.
-                Free launches only unlock submission after the badge is verified.
-              </p>
-              <textarea
-                readOnly
-                value={freeLaunchBadgeSnippet}
-                rows={5}
-                className="mt-4 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 font-mono text-xs text-black/72 outline-none"
-              />
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={handleVerifyBadge}
-                  disabled={isBusy}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#9f4f1d]/20 bg-white px-5 py-3 text-sm font-semibold text-[#9f4f1d] transition hover:bg-[#fff2df] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isVerifyingBadge ? (
-                    <>
-                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#9f4f1d]/30 border-t-[#9f4f1d]" />
-                      Verifying badge...
-                    </>
-                  ) : (
-                    "Verify badge now"
-                  )}
-                </button>
-                <a
-                  href={manualVerificationHref}
-                  className="inline-flex items-center justify-center rounded-2xl border border-black/10 px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03]"
-                >
-                  Having trouble? Contact us for manual verification
-                </a>
-              </div>
-              <p className="mt-3 text-xs font-medium text-black/52">
-                Current badge state: {draftBadgeVerification}
-              </p>
-            </div>
-          ) : null}
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-[1.5rem] border border-black/10 bg-[#fffdf8] p-4">
-              <p className="text-sm font-semibold text-black">Categories</p>
-              <p className="mt-1 text-xs text-black/48">Pick up to 3.</p>
-              {getFieldError("categoryIds") ? (
-                <p className="mt-2 text-xs font-medium text-rose-700">
-                  {getFieldError("categoryIds")}
-                </p>
-              ) : null}
-              <div className="mt-3 grid gap-2">
-                {categories.map((category) => (
-                  <label
-                    key={category.id}
-                    className="flex items-start gap-3 text-sm text-black/70"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={form.categoryIds.includes(category.id)}
-                      onChange={() => toggleCategory(category.id)}
-                    />
-                    <span>
-                      <span className="font-medium text-black">
-                        {category.name}
+            <div className="p-8 sm:p-10 space-y-8">
+              {activeTab === "general" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Product Name *</label>
+                      <input required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className={inputClassName()} placeholder="Acme SaaS" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Slug *</label>
+                      <input value={form.requestedSlug} onChange={e => setForm({...form, requestedSlug: slugify(e.target.value)})} className={inputClassName()} />
+                      <p className="text-[10px] font-bold text-muted-foreground/60">{slugStatus}</p>
+                    </div>
+                  </div>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Website URL *</label>
+                      <input required value={form.websiteUrl} onChange={e => setForm({...form, websiteUrl: e.target.value})} className={inputClassName()} placeholder="https://acme.com" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Pricing Model *</label>
+                      <select value={form.pricingModel} onChange={e => setForm({...form, pricingModel: e.target.value as PricingModelSelection})} className={inputClassName()}>
+                        <option value="">Select pricing model</option>
+                        {pricingModels.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tagline * (10-140 chars)</label>
+                    <input required maxLength={140} value={form.tagline} onChange={e => setForm({...form, tagline: e.target.value})} className={inputClassName()} placeholder="Short, punchy description of what you do" />
+                  </div>
+                  
+                  {/* Category Dropdown */}
+                  <div className="space-y-2 relative">
+                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Category * (Pick 1)</label>
+                    <button 
+                      type="button"
+                      onClick={() => setIsCatOpen(!isCatOpen)}
+                      className={cn(inputClassName(), "flex items-center justify-between text-left")}
+                    >
+                      <span className={cn(!form.categoryIds[0] && "text-muted-foreground/40")}>
+                        {categories.find(c => c.id === form.categoryIds[0])?.name || "Select a category"}
                       </span>
-                      {category.description ? (
-                        <span className="mt-1 block text-xs text-black/48">
-                          {category.description}
-                        </span>
-                      ) : null}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
+                      <ChevronDown size={16} />
+                    </button>
+                    {isCatOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 p-2 space-y-2 max-h-60 overflow-y-auto">
+                        <div className="relative">
+                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <input 
+                            value={catSearch} 
+                            onChange={e => setCatSearch(e.target.value)} 
+                            className="w-full bg-muted/50 rounded-lg pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-foreground/10" 
+                            placeholder="Search categories..."
+                          />
+                        </div>
+                        <div className="grid gap-1">
+                          {categories.filter(c => c.name.toLowerCase().includes(catSearch.toLowerCase())).map(c => (
+                            <button 
+                              key={c.id} 
+                              onClick={() => { setForm({...form, categoryIds: [c.id]}); setIsCatOpen(false); }}
+                              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors flex items-center justify-between group"
+                            >
+                              {c.name}
+                              {form.categoryIds.includes(c.id) && <Check size={14} className="text-foreground" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-            <div className="rounded-[1.5rem] border border-black/10 bg-[#fffdf8] p-4">
-              <p className="text-sm font-semibold text-black">Tags</p>
-              <p className="mt-1 text-xs text-black/48">Pick up to 5.</p>
-              {getFieldError("tagIds") ? (
-                <p className="mt-2 text-xs font-medium text-rose-700">
-                  {getFieldError("tagIds")}
+                  {/* Tags Dropdown */}
+                  <div className="space-y-2 relative">
+                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tags (Pick up to 5)</label>
+                    <button 
+                      type="button"
+                      onClick={() => setIsTagOpen(!isTagOpen)}
+                      className={cn(inputClassName(), "flex items-center justify-between text-left min-h-[46px] h-auto flex-wrap gap-2 py-2")}
+                    >
+                      <div className="flex flex-wrap gap-1.5 flex-1">
+                        {form.tagIds.length > 0 ? (
+                          form.tagIds.map(tid => (
+                            <span key={tid} className="bg-muted text-foreground text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 border border-border">
+                              {tags.find(t => t.id === tid)?.name}
+                              <X size={10} className="cursor-pointer hover:text-destructive" onClick={(e) => { e.stopPropagation(); setForm({...form, tagIds: form.tagIds.filter(id => id !== tid)}); }} />
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground/40">Select up to 5 tags</span>
+                        )}
+                      </div>
+                      <ChevronDown size={16} className="shrink-0" />
+                    </button>
+                    {isTagOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 p-2 space-y-2 max-h-60 overflow-y-auto">
+                        <div className="relative">
+                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <input 
+                            value={tagSearch} 
+                            onChange={e => setTagSearch(e.target.value)} 
+                            className="w-full bg-muted/50 rounded-lg pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-foreground/10" 
+                            placeholder="Search tags..."
+                          />
+                        </div>
+                        <div className="grid gap-1">
+                          {tags.filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase())).map(t => (
+                            <button 
+                              key={t.id} 
+                              disabled={form.tagIds.length >= 5 && !form.tagIds.includes(t.id)}
+                              onClick={() => {
+                                const nextTags = form.tagIds.includes(t.id) 
+                                  ? form.tagIds.filter(id => id !== t.id)
+                                  : [...form.tagIds, t.id];
+                                setForm({...form, tagIds: nextTags});
+                              }}
+                              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors flex items-center justify-between group disabled:opacity-30"
+                            >
+                              {t.name}
+                              {form.tagIds.includes(t.id) && <Check size={14} className="text-foreground" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Product Description * (40-5000 chars)</label>
+                    <MarkdownTextarea value={form.richDescription} onChange={v => setForm({...form, richDescription: v})} rows={6} placeholder="Describe your product outcomes..." />
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "media" && (
+                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  {/* Logo Section */}
+                  <div className="space-y-4">
+                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Logo *</label>
+                    <div className="flex items-start gap-6">
+                      {logo && (
+                        <div className="relative group">
+                          <div className="w-32 h-32 rounded-2xl overflow-hidden border border-border bg-background shadow-sm">
+                            <img src={logo.previewUrl} alt="Logo preview" className="w-full h-full object-cover" />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setLogo(null)}
+                            className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-10"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )}
+                      <label className={cn(
+                        "flex-1 max-w-[320px] aspect-square rounded-2xl border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 hover:border-foreground/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center p-6",
+                        logo && "hidden sm:flex"
+                      )}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={e => {
+                            if (e.target.files?.[0]) {
+                              setLogo({ id: 'logo', file: e.target.files[0], previewUrl: URL.createObjectURL(e.target.files[0]) });
+                            }
+                          }}
+                        />
+                        <div className="w-12 h-12 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground group-hover:text-foreground transition-colors">
+                          <ImageIcon size={24} />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-black text-foreground">Drop image or click to upload</p>
+                        </div>
+                      </label>
+                    </div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                      Use a square format, at least 128x128px.
+                    </p>
+                  </div>
+
+                  {/* Screenshots Section */}
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Images</label>
+                      <p className="text-[10px] font-bold text-muted-foreground leading-relaxed uppercase tracking-widest">
+                        Showcase your product with 1 to 3 images. Any dimensions work, but we recommend keeping the same aspect ratio for consistency. Click the preview button on the left to see how they&apos;ll look!
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-6">
+                      {screenshots.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {screenshots.map(s => (
+                            <div key={s.id} className="relative group">
+                              <div className="aspect-video rounded-2xl overflow-hidden border border-border bg-background shadow-sm">
+                                <img src={s.previewUrl} alt="Screenshot preview" className="w-full h-full object-cover" />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setScreenshots(prev => prev.filter(x => x.id !== s.id))}
+                                className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-10"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {screenshots.length < 3 && (
+                        <label className="w-full aspect-video rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 hover:border-foreground/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center p-8">
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            className="hidden"
+                            onChange={e => {
+                              if (e.target.files) {
+                                const newFiles = Array.from(e.target.files).map(f => ({
+                                  id: Math.random().toString(),
+                                  file: f,
+                                  previewUrl: URL.createObjectURL(f)
+                                }));
+                                setScreenshots(prev => [...prev, ...newFiles].slice(0, 3));
+                              }
+                            }}
+                          />
+                          <div className="w-16 h-16 rounded-2xl bg-background border border-border flex items-center justify-center text-muted-foreground group-hover:text-foreground transition-colors">
+                            <ImageIcon size={32} />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-lg font-black text-foreground">Drop images or click to upload</p>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{3 - screenshots.length} left</p>
+                          </div>
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "socials" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">X (Twitter)</label>
+                      <input value={form.founderXUrl} onChange={e => setForm({...form, founderXUrl: e.target.value})} className={inputClassName()} placeholder="https://x.com/..." />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">LinkedIn</label>
+                      <input value={form.founderLinkedinUrl} onChange={e => setForm({...form, founderLinkedinUrl: e.target.value})} className={inputClassName()} placeholder="https://linkedin.com/..." />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">GitHub</label>
+                      <input value={form.founderGithubUrl} onChange={e => setForm({...form, founderGithubUrl: e.target.value})} className={inputClassName()} placeholder="https://github.com/..." />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Facebook</label>
+                      <input value={form.founderFacebookUrl} onChange={e => setForm({...form, founderFacebookUrl: e.target.value})} className={inputClassName()} placeholder="https://facebook.com/..." />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-10 border-t border-border flex justify-between items-center">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  * Required fields
                 </p>
-              ) : null}
-              <div className="mt-3 grid gap-2">
-                {tags.map((tag) => (
-                  <label
-                    key={tag.id}
-                    className="flex items-start gap-3 text-sm text-black/70"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={form.tagIds.includes(tag.id)}
-                      onChange={() => toggleTag(tag.id)}
-                    />
-                    <span>
-                      <span className="font-medium text-black">{tag.name}</span>
-                      {tag.description ? (
-                        <span className="mt-1 block text-xs text-black/48">
-                          {tag.description}
-                        </span>
-                      ) : null}
-                    </span>
-                  </label>
-                ))}
+                <button
+                  onClick={handleProceedToPlan}
+                  disabled={isBusy}
+                  className="flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-black text-sm shadow-xl shadow-black/10 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {isBusy ? <Loader2 size={18} className="animate-spin" /> : "Save & Choose Plan"}
+                  {!isBusy && <ArrowRight size={18} />}
+                </button>
+              </div>
+              {errorMessage && <p className="mt-4 text-xs font-bold text-destructive text-center">{errorMessage}</p>}
+            </div>
+          </div>
+
+          <aside className="space-y-6">
+            <div className="bg-primary p-8 rounded-[2rem] text-primary-foreground shadow-2xl shadow-black/10">
+              <h3 className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-6">Preview</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden">
+                    {logo ? <img src={logo.previewUrl} className="w-full h-full object-cover" /> : <Rocket size={20} />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-black text-sm truncate">{form.name || "Product Name"}</p>
+                    <p className="text-[10px] font-bold opacity-60 uppercase">{form.pricingModel || "Pricing"}</p>
+                  </div>
+                </div>
+                <p className="text-xs font-medium opacity-80 leading-relaxed line-clamp-2">
+                  {form.tagline || "Your product tagline will appear here."}
+                </p>
               </div>
             </div>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-[1.5rem] border border-black/10 bg-[#fffdf8] p-4">
-              <Field
-                label="Logo upload"
-                hint="Upload PNG, JPEG, or WebP. WebP is the delivery format; founders can still upload a PNG source."
-                error={getFieldError("logo")}
-              >
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={(event) => replaceLogo(event.target.files)}
-                  className={inputClassName()}
-                />
-              </Field>
-              <p className="mt-2 text-xs text-black/48">
-                {logo ? "Logo ready for submit." : "No logo selected yet."}
-              </p>
-              {logo ? (
-                <div className="mt-4">
-                  <LocalPreview
-                    label="Logo"
-                    image={logo}
-                    onRemove={removeLogo}
-                  />
-                </div>
-              ) : null}
+            
+            <div className="bg-card border border-border p-6 rounded-2xl">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4">Submission Guide</h4>
+              <ul className="space-y-4">
+                {[
+                  "Use high-quality PNG for logo",
+                  "Pick the most relevant category",
+                  "Describe outcomes, not features"
+                ].map((txt, i) => (
+                  <li key={i} className="flex gap-2 text-xs font-bold text-muted-foreground leading-relaxed">
+                    <span className="text-foreground font-black">•</span> {txt}
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            <div className="rounded-[1.5rem] border border-black/10 bg-[#fffdf8] p-4">
-              <Field
-                label="Screenshot uploads"
-                hint="Upload up to 3 screenshots. They stay local until final submit."
-                error={getFieldError("screenshots")}
-              >
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  multiple
-                  onChange={(event) => appendScreenshots(event.target.files)}
-                  className={inputClassName()}
-                />
-              </Field>
-              <p className="mt-2 text-xs text-black/48">
-                {screenshots.length}/3 screenshots selected.
-              </p>
-              {screenshots.length > 0 ? (
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {screenshots.map((image, index) => (
-                    <LocalPreview
-                      key={image.id}
-                      label={`Screenshot ${index + 1}`}
-                      image={image}
-                      onRemove={() => removeScreenshot(image.id)}
-                    />
-                  ))}
-                </div>
-              ) : null}
+            <div className="bg-card border border-border p-6 rounded-2xl">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                  Completion Checklist
+                </h4>
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  {submissionChecklist.filter((item) => item.complete).length}/{submissionChecklist.length}
+                </span>
+              </div>
+              <ul className="space-y-3">
+                {submissionChecklist.map((item) => (
+                  <li
+                    key={item.label}
+                    className="flex items-center justify-between gap-3 text-xs font-bold"
+                  >
+                    <span className={cn(item.complete ? "text-foreground" : "text-muted-foreground")}>
+                      {item.label}
+                    </span>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-widest",
+                        item.complete
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-rose-100 text-rose-700",
+                      )}
+                    >
+                      {item.complete ? <Check size={12} /> : <X size={12} />}
+                      {item.complete ? "Done" : "Missing"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
+          </aside>
+        </div>
+      ) : (
+        /* STEP 2: CHOOSE PLAN */
+        <div className="space-y-12 animate-in fade-in zoom-in-95 duration-500">
+          <div className="text-center space-y-4">
+            <h2 className="text-4xl font-black tracking-tight lowercase">Choose your launch path</h2>
+            <p className="text-muted-foreground font-medium max-w-xl mx-auto">
+              Ready to go live? Choose a plan that fits your goals. 
+              Verified badges help you build authority with our community.
+            </p>
           </div>
-
-          <label className="flex items-center gap-3 text-sm text-black/70">
-            <input
-              type="checkbox"
-              checked={form.hasAffiliateProgram}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  hasAffiliateProgram: event.target.checked,
-                }))
-              }
-            />
-            This product already has an affiliate program
-          </label>
 
           {errorMessage ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              <p>{errorMessage}</p>
-              {duplicateToolAction ? (
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-                  <span className="text-rose-700/80">
-                    Existing listing: {duplicateToolAction.name}
-                  </span>
-                  {duplicateToolAction.ctaHref && duplicateToolAction.ctaLabel ? (
-                    <Link
-                      href={duplicateToolAction.ctaHref}
-                      className="inline-flex items-center justify-center rounded-xl border border-rose-300 bg-white px-3 py-2 font-semibold text-rose-700 transition hover:bg-rose-100"
-                    >
-                      {duplicateToolAction.ctaLabel}
-                    </Link>
-                  ) : null}
-                </div>
-              ) : null}
+            <div className="max-w-4xl mx-auto rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+              {errorMessage}
             </div>
           ) : null}
 
           {successMessage ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <div className="max-w-4xl mx-auto rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
               {successMessage}
             </div>
           ) : null}
 
-          {isBusy ? (
-            <div className="rounded-2xl border border-[#9f4f1d]/15 bg-[#fff7ea] px-4 py-3 text-sm text-[#7d3f17]">
-              {isVerifyingBadge
-                ? "Shipboost is checking your website for the launch badge now."
-                : isSubmittingDraft
-                  ? form.submissionType === "FEATURED_LAUNCH"
-                    ? "Creating your launch draft and opening Polar checkout."
-                    : "Submitting your launch draft into the review queue."
-                  : "Saving your draft and syncing media to Cloudinary."}
+          <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+            {/* FREE PLAN */}
+            <div className={cn(
+              "p-8 rounded-[2.5rem] border transition-all flex flex-col h-full",
+              form.submissionType === "FREE_LAUNCH" ? "border-foreground bg-card ring-4 ring-foreground/5 shadow-2xl" : "border-border bg-card hover:border-foreground/30"
+            )}
+            onClick={() => setForm({ ...form, submissionType: "FREE_LAUNCH" })}
+            >
+              <div className="flex items-center justify-between mb-8">
+                <div className="bg-muted text-foreground p-3 rounded-2xl border border-border"><Zap size={24} /></div>
+                <span className="text-4xl font-black">$0</span>
+              </div>
+              <h3 className="text-2xl font-black mb-2">Free Launch</h3>
+              <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
+                Launch for free by including our trust badge on your website. 
+                Best for early-stage bootstrapped founders.
+              </p>
+              <ul className="space-y-4 mb-10">
+                {["Public listing forever", "Category placement", "Founder verified badge", "Requires backlink"].map(p => (
+                  <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
+                    <Check size={16} className="text-emerald-500 mt-0.5" /> {p}
+                  </li>
+                ))}
+              </ul>
+              
+              <button 
+                onClick={() => handleFinalSubmit("FREE_LAUNCH")}
+                disabled={draftBadgeVerification !== "VERIFIED" || isBusy}
+                className={cn(
+                  "w-full py-4 rounded-2xl font-black text-sm transition-all",
+                  draftBadgeVerification === "VERIFIED" && !isBusy
+                    ? "bg-primary text-primary-foreground shadow-xl shadow-black/10 hover:opacity-90 active:scale-95" 
+                    : "bg-muted text-muted-foreground/50 cursor-not-allowed border border-border"
+                )}
+              >
+                {isSubmittingDraft
+                  ? "Submitting..."
+                  : draftBadgeVerification === "VERIFIED"
+                    ? "Submit Free Launch"
+                    : "Verify Badge First"}
+              </button>
             </div>
-          ) : null}
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={handleSaveDraft}
-              disabled={isBusy}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-black/10 px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
+            {/* PREMIUM PLAN */}
+            <div className={cn(
+              "p-8 rounded-[2.5rem] border transition-all flex flex-col h-full relative",
+              form.submissionType === "FEATURED_LAUNCH" ? "border-foreground bg-card ring-4 ring-foreground/5 shadow-2xl" : "border-border bg-card hover:border-foreground/30"
+            )}
+            onClick={() => setForm({ ...form, submissionType: "FEATURED_LAUNCH" })}
             >
-              {isSavingDraft && !isSubmittingDraft && !isVerifyingBadge ? (
-                <>
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
-                  Saving draft...
-                </>
-              ) : (
-                "Save draft"
-              )}
-            </button>
-            <button
-              type="submit"
-              disabled={
-                isBusy ||
-                (form.submissionType === "FREE_LAUNCH" &&
-                  draftBadgeVerification !== "VERIFIED")
-              }
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#143f35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2e26] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmittingDraft ? (
-                <>
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  {form.submissionType === "FEATURED_LAUNCH"
-                    ? "Opening checkout..."
-                    : "Submitting..."}
-                </>
-              ) : (
-                form.submissionType === "FEATURED_LAUNCH"
-                  ? "Launch and pay"
-                  : "Submit for review"
-              )}
-            </button>
-            <Link
-              href="/dashboard"
-              aria-disabled={isBusy}
-              className="inline-flex items-center justify-center rounded-2xl border border-black/10 px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03] aria-disabled:pointer-events-none aria-disabled:opacity-50"
-            >
-              Back to dashboard
-            </Link>
-          </div>
-        </fieldset>
-      </form>
-
-      <aside className="rounded-[2rem] bg-[#143f35] p-8 text-[#f8efe3] shadow-[0_24px_80px_rgba(20,63,53,0.24)] sm:p-10">
-        <p className="text-sm font-semibold tracking-[0.25em] text-[#f3c781] uppercase">
-          Submission guidance
-        </p>
-
-        <div className="mt-8 space-y-6">
-          <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-            <p className="text-lg font-semibold text-white">Why this flow is cleaner</p>
-            <p className="mt-2 text-sm leading-7 text-[#f8efe3]/78">
-              Media is only uploaded if the founder actually submits. That
-              avoids abandoned Cloudinary assets and removes the need for a
-              pre-submit delete endpoint.
-            </p>
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-lg">Most Popular</div>
+              <div className="flex items-center justify-between mb-8">
+                <div className="bg-primary text-primary-foreground p-3 rounded-2xl shadow-xl shadow-black/10"><Star size={24} /></div>
+                <span className="text-4xl font-black">$9</span>
+              </div>
+              <h3 className="text-2xl font-black mb-2">Featured Boost</h3>
+              <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
+                Get priority placement, scheduled launch date, and higher visibility 
+                across the entire platform. No badge required.
+              </p>
+              <ul className="space-y-4 mb-10">
+                {["Priority weighting", "Scheduled launch date", "Featured badge", "No backlink required", "Direct distribution support"].map(p => (
+                  <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
+                    <Check size={16} className="text-foreground mt-0.5" /> {p}
+                  </li>
+                ))}
+              </ul>
+              <div className="mb-6 space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  Preferred launch date *
+                </label>
+                <input
+                  type="date"
+                  min={minFeaturedLaunchDate}
+                  value={form.preferredLaunchDate}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      submissionType: "FEATURED_LAUNCH",
+                      preferredLaunchDate: event.target.value,
+                    })
+                  }
+                  className={inputClassName()}
+                />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  This is only required for the featured plan.
+                </p>
+              </div>
+              <button 
+                onClick={() => handleFinalSubmit("FEATURED_LAUNCH")}
+                disabled={isBusy}
+                className="w-full py-4 rounded-2xl bg-foreground text-background font-black text-sm shadow-xl shadow-black/10 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {isSubmittingDraft ? "Starting checkout..." : "Featured Launch & Pay"}
+              </button>
+            </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-            <p className="text-lg font-semibold text-white">Logo format</p>
-            <p className="mt-2 text-sm leading-7 text-[#f8efe3]/78">
-              For now, founders should upload a high-quality PNG if they have
-              one. Shipboost will deliver a WebP version. WebP is fine for
-              raster logos, but SVG is still the sharpest option if you later
-              choose to support vector logos separately.
-            </p>
-          </div>
-
-          <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-            <p className="text-lg font-semibold text-white">Free launch</p>
-            <p className="mt-2 text-sm leading-7 text-[#f8efe3]/78">
-              Best starting point for bootstrapped founders. Install the
-              Shipboost badge on your homepage, verify it, then submit the
-              launch draft into the free queue.
-            </p>
+          {/* Badge Verification Section */}
+          <div className="max-w-4xl mx-auto bg-muted/20 border border-border rounded-[2.5rem] p-10 space-y-8">
+            <div className="flex flex-col md:flex-row gap-10 items-center">
+              <div className="flex-1 space-y-4 text-center md:text-left">
+                <h3 className="text-xl font-black">Free Launch Badge</h3>
+                <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                  To launch for free, please add our trust badge to your website footer. 
+                  We verify the same website URL you entered in step 1.
+                </p>
+                <div className="rounded-2xl border border-border bg-background p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+                    Website URL being checked
+                  </p>
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm font-medium text-foreground">
+                    <span className="truncate">{ensureHttps(form.websiteUrl) || "Add your website URL in step 1"}</span>
+                    {isValidUrl(form.websiteUrl) ? (
+                      <a
+                        href={ensureHttps(form.websiteUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-muted-foreground transition hover:text-foreground"
+                      >
+                        <ExternalLink size={16} />
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Badge theme
+                  </p>
+                  <div className="flex flex-wrap gap-5 text-sm font-bold text-foreground">
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="badge-theme"
+                        checked={badgeTheme === "light"}
+                        onChange={() => setBadgeTheme("light")}
+                      />
+                      Light badge
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="badge-theme"
+                        checked={badgeTheme === "dark"}
+                        onChange={() => setBadgeTheme("dark")}
+                      />
+                      Dark badge
+                    </label>
+                  </div>
+                </div>
+                <div className="pt-4 flex flex-wrap gap-4 justify-center md:justify-start">
+                  <button 
+                    onClick={handleVerifyBadge}
+                    disabled={isVerifyingBadge || !draftSubmissionId || !isValidUrl(form.websiteUrl)}
+                    className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-black text-xs shadow-lg shadow-black/10 hover:opacity-90 disabled:opacity-50 transition-all"
+                  >
+                    {isVerifyingBadge ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                    {isVerifyingBadge ? "Verifying..." : "Verify Badge Now"}
+                  </button>
+                  <Link href={`mailto:${supportEmail}`} className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">
+                    Need help? Contact support →
+                  </Link>
+                </div>
+              </div>
+                <div className="shrink-0 space-y-4 text-center">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Badge Preview</p>
+                <div className={cn("w-72 rounded-2xl border border-border p-6", badgeTheme === "dark" ? "bg-white" : "bg-background")}>
+                  <a href={shipboostUrl} target="_blank" rel="noopener">
+                    <img src={badgePreviewSrc} alt={`${badgeTheme} Shipboost badge preview`} className="mx-auto h-auto max-h-16 w-auto" />
+                  </a>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Badge Snippet</p>
+                  <button
+                    type="button"
+                    onClick={() => void handleCopyBadgeSnippet()}
+                    className="text-[10px] font-black uppercase tracking-widest text-foreground underline decoration-border underline-offset-4"
+                  >
+                    {copiedBadgeSnippet ? "Copied" : "Copy"}
+                  </button>
+                </div>
+                <textarea 
+                  readOnly 
+                  value={freeLaunchBadgeSnippet} 
+                  className="w-72 h-32 rounded-xl bg-background border border-border p-4 text-[10px] font-mono text-muted-foreground/60 leading-relaxed outline-none focus:border-foreground"
+                />
+              </div>
+            </div>
+            
+            <div className="pt-8 border-t border-border flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest">
+                <span className="text-muted-foreground/60">Status:</span>
+                <span className={cn(draftBadgeVerification === "VERIFIED" ? "text-emerald-500" : "text-foreground")}>
+                  {draftBadgeVerification}
+                </span>
+              </div>
+              <button onClick={() => setStep(1)} className="text-xs font-bold text-muted-foreground hover:text-foreground underline decoration-border underline-offset-4">
+                Back to Details
+              </button>
+            </div>
           </div>
         </div>
-      </aside>
+      )}
     </div>
   );
 }

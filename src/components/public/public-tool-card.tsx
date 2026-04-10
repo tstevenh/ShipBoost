@@ -21,8 +21,8 @@ type ToolCardTool = {
 
 function badgeClassName(featured: boolean) {
   return featured
-    ? "border-amber-200 bg-amber-50 text-amber-700"
-    : "border-black/10 bg-black/[0.03] text-black/65";
+    ? "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+    : "border-border bg-muted/50 text-muted-foreground";
 }
 
 export function PublicToolCard({
@@ -33,10 +33,10 @@ export function PublicToolCard({
   sourceSurface?: ToolOutboundSource;
 }) {
   return (
-    <article className="rounded-[1.75rem] border border-black/10 bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.06)]">
+    <article className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-foreground/20 hover:shadow-lg hover:shadow-black/5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-[#f3f0ea]">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted border border-border">
             {tool.logoMedia ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -45,28 +45,28 @@ export function PublicToolCard({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <span className="text-sm font-semibold text-black/45">
+              <span className="text-sm font-black text-muted-foreground/40">
                 {tool.name.slice(0, 2).toUpperCase()}
               </span>
             )}
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/tools/${tool.slug}`}
-                className="text-lg font-semibold text-black transition hover:text-[#9f4f1d]"
+                className="text-lg font-black transition-colors hover:text-foreground/70"
               >
                 {tool.name}
               </Link>
               <span
-                className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.16em] uppercase ${badgeClassName(
+                className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black tracking-widest uppercase ${badgeClassName(
                   tool.isFeatured,
                 )}`}
               >
                 {tool.isFeatured ? "Featured" : tool.pricingModel}
               </span>
             </div>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-black/62">
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground font-medium leading-relaxed">
               {tool.tagline}
             </p>
           </div>
@@ -74,18 +74,18 @@ export function PublicToolCard({
 
         <Link
           href={`/tools/${tool.slug}`}
-          className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-black transition hover:bg-black/[0.04]"
+          className="rounded-full border border-border bg-background px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-muted"
         >
           View
         </Link>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-1.5">
         {tool.toolCategories.map((item) => (
           <Link
             key={item.category.slug}
             href={`/categories/${item.category.slug}`}
-            className="rounded-full border border-black/10 bg-[#fff9ef] px-3 py-1.5 text-xs font-medium text-black/72 transition hover:border-black/20"
+            className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
           >
             {item.category.name}
           </Link>
@@ -93,7 +93,7 @@ export function PublicToolCard({
         {tool.toolTags.slice(0, 3).map((item) => (
           <span
             key={item.tag.slug}
-            className="rounded-full border border-black/10 bg-black/[0.03] px-3 py-1.5 text-xs font-medium text-black/55"
+            className="rounded-md border border-border bg-background px-2 py-0.5 text-[10px] font-bold text-muted-foreground/60"
           >
             {item.tag.name}
           </span>
@@ -101,7 +101,7 @@ export function PublicToolCard({
       </div>
 
       {tool.affiliateUrl ? (
-        <div className="mt-5">
+        <div className="mt-5 pt-4 border-t border-border">
           <a
             href={buildTrackedToolOutboundUrl(
               tool.id,
@@ -110,9 +110,9 @@ export function PublicToolCard({
             )}
             target="_blank"
             rel="noreferrer"
-            className="text-sm font-semibold text-[#9f4f1d] underline decoration-[#9f4f1d]/30 underline-offset-4"
+            className="text-xs font-black text-foreground hover:underline underline-offset-4 decoration-border"
           >
-            Explore offer
+            Explore special offer →
           </a>
         </div>
       ) : null}

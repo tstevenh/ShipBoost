@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export type Category = {
   id: string;
@@ -177,16 +178,18 @@ export function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[2rem] border border-black/10 bg-white p-6 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-8">
-      <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-        {eyebrow}
-      </p>
-      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-black">
-        {title}
-      </h2>
-      <p className="mt-3 max-w-3xl text-sm leading-7 text-black/62">
-        {description}
-      </p>
+    <section className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xl shadow-black/5">
+      <div className="max-w-3xl">
+        <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40 uppercase mb-2">
+          {eyebrow}
+        </p>
+        <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl lowercase">
+          {title}
+        </h2>
+        <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground/80">
+          {description}
+        </p>
+      </div>
       <div className="mt-8">{children}</div>
     </section>
   );
@@ -195,15 +198,24 @@ export function SectionCard({
 export function Field({
   label,
   children,
+  hint,
 }: {
   label: string;
   children: ReactNode;
+  hint?: string;
 }) {
   return (
-    <label className="block space-y-2">
-      <span className="text-sm font-medium text-black/72">{label}</span>
+    <div className="space-y-2">
+      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+        {label}
+      </label>
+      {hint && (
+        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ml-1">
+          {hint}
+        </p>
+      )}
       {children}
-    </label>
+    </div>
   );
 }
 
@@ -223,11 +235,14 @@ export function StatusChip({
           ? "bg-rose-50 text-rose-700 border-rose-200"
           : tone === "slate"
             ? "bg-slate-100 text-slate-700 border-slate-200"
-            : "bg-black/[0.04] text-black/70 border-black/10";
+            : "bg-muted/30 text-muted-foreground border-border";
 
   return (
     <span
-      className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase ${className}`}
+      className={cn(
+        "inline-flex rounded-full border px-3 py-1 text-[10px] font-black tracking-widest uppercase",
+        className
+      )}
     >
       {label}
     </span>
@@ -235,7 +250,7 @@ export function StatusChip({
 }
 
 export function textInputClassName() {
-  return "w-full rounded-2xl border border-black/10 bg-[#fffdf8] px-4 py-3 text-sm outline-none transition focus:border-[#9f4f1d] focus:ring-4 focus:ring-[#9f4f1d]/10";
+  return "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium outline-none transition focus:border-foreground focus:ring-4 focus:ring-foreground/5 disabled:opacity-50";
 }
 
 export function pendingSpinnerClassName() {

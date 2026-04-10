@@ -34,6 +34,16 @@ function getStringValue(formData: FormData, key: string) {
   return value;
 }
 
+function getOptionalStringValue(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  return value;
+}
+
 function toOptionalString(value: string) {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
@@ -89,11 +99,15 @@ function assertValidFile(
 async function parseMultipartSubmission(request: NextRequest) {
   const formData = await request.formData();
     const parsedFields = submissionCreateFieldsSchema.parse({
-      submissionId: toOptionalString(getStringValue(formData, "submissionId")),
+      submissionId: toOptionalString(
+        getOptionalStringValue(formData, "submissionId") ?? "",
+      ),
       submissionType: getStringValue(formData, "submissionType"),
-      requestedSlug: toOptionalString(getStringValue(formData, "requestedSlug")),
+      requestedSlug: toOptionalString(
+        getOptionalStringValue(formData, "requestedSlug") ?? "",
+      ),
       preferredLaunchDate: toOptionalDateString(
-        getStringValue(formData, "preferredLaunchDate"),
+        getOptionalStringValue(formData, "preferredLaunchDate") ?? "",
       ),
       name: getStringValue(formData, "name"),
       tagline: getStringValue(formData, "tagline"),
@@ -102,19 +116,27 @@ async function parseMultipartSubmission(request: NextRequest) {
       pricingModel: getStringValue(formData, "pricingModel"),
       categoryIds: parseJsonStringArray(formData, "categoryIds"),
       tagIds: parseJsonStringArray(formData, "tagIds"),
-      affiliateUrl: toOptionalString(getStringValue(formData, "affiliateUrl")),
-      affiliateSource: toOptionalString(getStringValue(formData, "affiliateSource")),
-      hasAffiliateProgram:
-        getStringValue(formData, "hasAffiliateProgram") === "true",
-      founderXUrl: toOptionalString(getStringValue(formData, "founderXUrl")),
+      affiliateUrl: toOptionalString(
+        getOptionalStringValue(formData, "affiliateUrl") ?? "",
+      ),
+      affiliateSource: toOptionalString(
+        getOptionalStringValue(formData, "affiliateSource") ?? "",
+      ),
+      hasAffiliateProgram: (getOptionalStringValue(
+        formData,
+        "hasAffiliateProgram",
+      ) ?? "") === "true",
+      founderXUrl: toOptionalString(
+        getOptionalStringValue(formData, "founderXUrl") ?? "",
+      ),
       founderGithubUrl: toOptionalString(
-        getStringValue(formData, "founderGithubUrl"),
+        getOptionalStringValue(formData, "founderGithubUrl") ?? "",
       ),
       founderLinkedinUrl: toOptionalString(
-        getStringValue(formData, "founderLinkedinUrl"),
+        getOptionalStringValue(formData, "founderLinkedinUrl") ?? "",
       ),
       founderFacebookUrl: toOptionalString(
-        getStringValue(formData, "founderFacebookUrl"),
+        getOptionalStringValue(formData, "founderFacebookUrl") ?? "",
       ),
     });
 

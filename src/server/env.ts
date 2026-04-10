@@ -42,6 +42,7 @@ const envSchema = z.object({
   CRON_SECRET: optionalEnvString,
   ADMIN_EMAIL: z.email().optional(),
   ADMIN_NAME: z.string().trim().min(1).optional(),
+  NEXT_PUBLIC_PRELAUNCH_MODE: optionalEnvString,
 });
 
 let cachedEnv: z.infer<typeof envSchema> | null = null;
@@ -80,6 +81,7 @@ export function getEnv() {
       CRON_SECRET: process.env.CRON_SECRET,
       ADMIN_EMAIL: process.env.ADMIN_EMAIL,
       ADMIN_NAME: process.env.ADMIN_NAME,
+      NEXT_PUBLIC_PRELAUNCH_MODE: process.env.NEXT_PUBLIC_PRELAUNCH_MODE,
     });
   }
 

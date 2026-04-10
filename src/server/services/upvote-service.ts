@@ -63,6 +63,29 @@ export async function hasUserUpvotedTool(
   return Boolean(vote);
 }
 
+export async function listUserUpvotedToolIds(
+  toolIds: string[],
+  userId: string | null | undefined,
+) {
+  if (!userId || toolIds.length === 0) {
+    return new Set<string>();
+  }
+
+  const votes = await prisma.toolVote.findMany({
+    where: {
+      userId,
+      toolId: {
+        in: toolIds,
+      },
+    },
+    select: {
+      toolId: true,
+    },
+  });
+
+  return new Set(votes.map((vote) => vote.toolId));
+}
+
 export async function getDailyVotesRemaining(
   userId: string,
   now = new Date(),

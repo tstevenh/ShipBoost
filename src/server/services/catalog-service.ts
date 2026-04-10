@@ -128,6 +128,42 @@ export function listTags() {
   });
 }
 
+export async function listPublicTags() {
+  const tags = await prisma.tag.findMany({
+    where: {
+      isActive: true,
+      toolTags: {
+        some: {
+          tool: {
+            ...getPubliclyVisibleToolWhere(),
+          },
+        },
+      },
+    },
+    include: {
+      _count: {
+        select: {
+          toolTags: {
+            where: {
+              tool: {
+                ...getPubliclyVisibleToolWhere(),
+              },
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  return tags.map(tag => ({
+    ...tag,
+    count: tag._count.toolTags,
+  }));
+}
+
 export function getPublicCategoryBySlug(slug: string) {
   return prisma.category.findFirst({
     where: {
@@ -162,6 +198,11 @@ export function getPublicCategoryBySlug(slug: string) {
                   sortOrder: "asc",
                 },
               },
+              _count: {
+                select: {
+                  toolVotes: true,
+                },
+              },
             },
           },
         },
@@ -170,14 +211,65 @@ export function getPublicCategoryBySlug(slug: string) {
   });
 }
 
-export async function getPublicCategoryPageBySlug(slug: string) {
-  const category = await getPublicCategoryBySlug(slug);
+export async function getPublicCategoryPageBySlug(
+  slug: string,
+  sort: "newest" | "top" = "newest",
+) {
+  const category = await prisma.category.findFirst({
+    where: {
+      slug,
+      isActive: true,
+    },
+    include: {
+      toolCategories: {
+        where: {
+          tool: {
+            ...getPubliclyVisibleToolWhere(),
+          },
+        },
+        orderBy:
+          sort === "top"
+            ? [{ tool: { toolVotes: { _count: "desc" } } }, { tool: { isFeatured: "desc" } }]
+            : [{ tool: { createdAt: "desc" } }, { tool: { isFeatured: "desc" } }],
+        include: {
+          tool: {
+            include: {
+              logoMedia: true,
+              toolCategories: {
+                include: {
+                  category: true,
+                },
+                orderBy: {
+                  sortOrder: "asc",
+                },
+              },
+              toolTags: {
+                include: {
+                  tag: true,
+                },
+                orderBy: {
+                  sortOrder: "asc",
+                },
+              },
+              _count: {
+                select: {
+                  toolVotes: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 
   if (!category) {
     return null;
   }
 
   const toolIds = category.toolCategories.map((item) => item.tool.id);
+  
+  // Featured tools always at the top of their section, regardless of sort
   const featuredTools = category.toolCategories
     .map((item) => item.tool)
     .filter((tool) => tool.isFeatured)

@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Loader2, ArrowRight } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 
 type AuthMode = "sign-in" | "sign-up";
 
@@ -17,22 +19,18 @@ type AuthFormProps = {
 
 function getTitle(mode: AuthMode) {
   return mode === "sign-up"
-    ? "Create your founder account"
-    : "Sign in to Shipboost";
+    ? "Create your account"
+    : "Login to ShipBoost";
 }
 
 function getSubtitle(mode: AuthMode) {
   return mode === "sign-up"
-    ? "Get access to submissions, launch workflows, and founder-only distribution tools."
-    : "Pick up where you left off and manage listings, launches, and distribution requests.";
+    ? "Already have an account?"
+    : "Don't have an account?";
 }
 
 function getCta(mode: AuthMode) {
-  return mode === "sign-up" ? "Create account" : "Sign in";
-}
-
-function getPendingCta(mode: AuthMode) {
-  return mode === "sign-up" ? "Creating account..." : "Signing in...";
+  return mode === "sign-up" ? "Continue" : "Continue";
 }
 
 export function AuthForm({
@@ -142,188 +140,161 @@ export function AuthForm({
   }
 
   return (
-    <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-      <div className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-        <div className="space-y-3">
-          <p className="text-sm font-semibold tracking-[0.25em] text-[#9f4f1d] uppercase">
-            Founder access
-          </p>
-          <h1 className="max-w-lg text-4xl font-semibold tracking-tight text-black sm:text-5xl">
-            {getTitle(mode)}
-          </h1>
-          <p className="max-w-xl text-base leading-7 text-black/65 sm:text-lg">
-            {getSubtitle(mode)}
-          </p>
-        </div>
+    <div className="flex w-full max-w-md flex-col items-center justify-center py-12 mx-auto">
+      <div className="mb-12 flex items-center gap-2">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary font-black text-primary-foreground text-xl">
+          S
+        </span>
+        <span className="text-2xl font-black tracking-tight text-foreground lowercase">
+          ShipBoost
+        </span>
+      </div>
 
-        <form onSubmit={handleSubmit} className="mt-10 space-y-5" aria-busy={isSubmitting}>
-          {googleEnabled ? (
-            <>
-              <button
-                type="button"
-                onClick={() => void handleGoogleSignIn()}
-                disabled={isSubmitting}
-                className="inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-black/10 bg-white px-5 py-3.5 text-base font-semibold text-black transition hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <span
-                  aria-hidden="true"
-                  className="flex h-5 w-5 items-center justify-center rounded-full border border-black/10 bg-white text-xs font-semibold"
-                >
-                  G
-                </span>
-                {mode === "sign-up"
-                  ? "Continue with Google"
-                  : "Sign in with Google"}
-              </button>
-
-              <div className="flex items-center gap-3">
-                <div className="h-px flex-1 bg-black/10" />
-                <span className="text-xs font-medium tracking-[0.18em] text-black/40 uppercase">
-                  or use email
-                </span>
-                <div className="h-px flex-1 bg-black/10" />
-              </div>
-            </>
-          ) : null}
-
-          {mode === "sign-up" ? (
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-black/80">Name</span>
-              <input
-                required
-                disabled={isSubmitting}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                className="w-full rounded-2xl border border-black/10 bg-[#fffdf8] px-4 py-3 text-base outline-none transition focus:border-[#9f4f1d] focus:ring-4 focus:ring-[#9f4f1d]/10"
-                placeholder="Your name"
-              />
-            </label>
-          ) : null}
-
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-black/80">Email</span>
-            <input
-              required
-              type="email"
-              autoComplete="email"
-              disabled={isSubmitting}
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-2xl border border-black/10 bg-[#fffdf8] px-4 py-3 text-base outline-none transition focus:border-[#9f4f1d] focus:ring-4 focus:ring-[#9f4f1d]/10"
-              placeholder="you@example.com"
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-black/80">Password</span>
-            <input
-              required
-              type="password"
-              autoComplete={
-                mode === "sign-up" ? "new-password" : "current-password"
-              }
-              minLength={8}
-              disabled={isSubmitting}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-2xl border border-black/10 bg-[#fffdf8] px-4 py-3 text-base outline-none transition focus:border-[#9f4f1d] focus:ring-4 focus:ring-[#9f4f1d]/10"
-              placeholder="At least 8 characters"
-            />
-          </label>
-
-          {mode === "sign-in" ? (
-            <div className="flex justify-end">
-              <Link
-                href="/forgot-password"
-                aria-disabled={isSubmitting}
-                className="text-sm font-medium text-[#9f4f1d] underline decoration-[#9f4f1d]/35 underline-offset-4 aria-disabled:pointer-events-none aria-disabled:opacity-50"
-              >
-                Forgot password?
-              </Link>
-            </div>
-          ) : null}
-
-          {noticeMessage ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              {noticeMessage}
-            </div>
-          ) : null}
-
-          {errorMessage ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              {errorMessage}
-            </div>
-          ) : null}
-
-          {isSubmitting ? (
-            <div className="rounded-2xl border border-[#d9c7aa] bg-[#fff8ea] px-4 py-3 text-sm text-[#8a4b1b]">
-              {mode === "sign-up"
-                ? "Creating your account and preparing verification."
-                : "Signing you in now. Shipboost is checking your session."}
-            </div>
-          ) : null}
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#143f35] px-5 py-3.5 text-base font-semibold text-white transition hover:bg-[#0d2e26] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? (
-              <>
-                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                {getPendingCta(mode)}
-              </>
-            ) : (
-              getCta(mode)
-            )}
-          </button>
-        </form>
-
-        <p className="mt-6 text-sm text-black/60">
-          {mode === "sign-up" ? "Already have an account?" : "New here?"}{" "}
+      <div className="w-full space-y-2 text-center">
+        <h1 className="text-4xl font-black tracking-tight text-foreground">
+          {getTitle(mode)}
+        </h1>
+        <p className="text-sm font-medium text-muted-foreground">
+          {getSubtitle(mode)}{" "}
           <Link
-            href={
-              mode === "sign-up"
-                ? `/sign-in?redirect=${encodeURIComponent(redirectTo)}`
-                : `/sign-up?redirect=${encodeURIComponent(redirectTo)}`
-            }
-            aria-disabled={isSubmitting}
-            className="font-semibold text-[#9f4f1d] underline decoration-[#9f4f1d]/35 underline-offset-4 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+            href={mode === "sign-up" ? "/sign-in" : "/sign-up"}
+            className="text-primary font-bold hover:underline"
           >
-            {mode === "sign-up" ? "Sign in" : "Create an account"}
+            {mode === "sign-up" ? "Login" : "Sign up"}
           </Link>
         </p>
       </div>
 
-      <aside className="rounded-[2rem] bg-[#143f35] p-8 text-[#f8efe3] shadow-[0_24px_80px_rgba(20,63,53,0.25)] sm:p-10">
-        <p className="text-sm font-semibold tracking-[0.25em] text-[#f3c781] uppercase">
-          What you unlock
-        </p>
-        <div className="mt-8 space-y-8">
-          <div>
-            <h2 className="text-2xl font-semibold">Founder workflow first</h2>
-            <p className="mt-3 text-base leading-7 text-[#f8efe3]/75">
-              Track submissions, prepare a launch, and move into distribution
-              services from one account instead of juggling spreadsheets and
-              DMs.
-            </p>
-          </div>
-          <div className="space-y-4 text-sm leading-7 text-[#f8efe3]/78">
-            <p>
-              Free launch submissions with badge requirement to compound trust
-              and visibility.
-            </p>
-            <p>
-              Done-for-you distribution requests designed for bootstrapped SaaS
-              teams that need leverage, not more busywork.
-            </p>
-            <p>
-              Featured launch slots and affiliate-ready listings once your
-              product profile is live.
-            </p>
-          </div>
+      <div className="mt-10 w-full space-y-6">
+        {googleEnabled && (
+          <button
+            type="button"
+            onClick={() => void handleGoogleSignIn()}
+            disabled={isSubmitting}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-bold transition-all hover:bg-muted active:scale-[0.98] disabled:opacity-50"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.48-.98 7.31-2.64l-3.57-2.77c-.99.66-2.26 1.06-3.74 1.06-2.87 0-5.29-1.94-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.16H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.84l3.66-2.75z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.16l3.66 2.84c.87-2.6 3.3-4.62 6.16-4.62z"
+                fill="#EA4335"
+              />
+            </svg>
+            Continue with Google
+          </button>
+        )}
+
+        <div className="relative flex items-center">
+          <div className="h-px flex-1 bg-border" />
+          <span className="mx-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+            or
+          </span>
+          <div className="h-px flex-1 bg-border" />
         </div>
-      </aside>
-    </section>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === "sign-up" && (
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+                Name
+              </label>
+              <input
+                required
+                disabled={isSubmitting}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/5"
+                placeholder="Full name"
+              />
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+              Email
+            </label>
+            <input
+              required
+              type="email"
+              disabled={isSubmitting}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/5"
+              placeholder="you@email.com"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between px-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                Password
+              </label>
+              {mode === "sign-in" && (
+                <Link
+                  href="/forgot-password"
+                  className="text-[10px] font-bold text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              )}
+            </div>
+            <input
+              required
+              type="password"
+              disabled={isSubmitting}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/5"
+              placeholder="••••••••"
+            />
+          </div>
+
+          {errorMessage && (
+            <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-xs font-bold text-destructive">
+              {errorMessage}
+            </div>
+          )}
+
+          {noticeMessage && (
+            <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-xs font-bold text-primary">
+              {noticeMessage}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="group flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-4 text-sm font-black text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                {getCta(mode)}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </>
+            )}
+          </button>
+        </form>
+
+        <p className="text-center text-[10px] font-medium text-muted-foreground">
+          By signing in, you agree to our{" "}
+          <Link href="/terms" className="font-bold text-foreground hover:underline">
+            Terms of Service
+          </Link>.
+        </p>
+      </div>
+    </div>
   );
 }
