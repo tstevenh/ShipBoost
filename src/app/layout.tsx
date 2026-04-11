@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Manrope, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppHeader } from "@/components/app/app-header";
+import { getCachedPublicHeaderCategories } from "@/server/cache/public-content";
 import "./globals.css";
 
 const inter = Inter({
@@ -24,11 +25,13 @@ export const metadata: Metadata = {
   description: "ShipBoost helps bootstrapped SaaS founders earn trust, visibility, and momentum through curated distribution.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerCategories = await getCachedPublicHeaderCategories();
+
   return (
     <html
       lang="en"
@@ -42,7 +45,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AppHeader />
+          <AppHeader categories={headerCategories.slice(0, 6)} />
           <main className="flex-1 flex flex-col">{children}</main>
         </ThemeProvider>
       </body>

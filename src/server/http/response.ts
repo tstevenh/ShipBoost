@@ -3,6 +3,11 @@ import { ZodError } from "zod";
 
 import { AppError } from "@/server/http/app-error";
 
+type RouteTiming = {
+  label: string;
+  startedAt: number;
+};
+
 export function ok<T>(data: T, init?: ResponseInit) {
   return NextResponse.json({ data }, init);
 }
@@ -40,3 +45,25 @@ export function errorResponse(error: unknown) {
   );
 }
 
+export function startRouteTiming(label: string): RouteTiming {
+  return {
+    label,
+    startedAt: performance.now(),
+  };
+}
+
+export function withRouteTiming<T extends Response>(
+  response: T,
+  timing: RouteTiming,
+) {
+  const duration = Math.max(0, performance.now() - timing.startedAt);
+  const serverTimingLabel = timing.label.replaceAll('"', "'");
+
+  response.headers.append(
+    "Server-Timing",
+    `app;dur=${duration.toFixed(1)};desc="${serverTimingLabel}"`,
+  );
+  response.headers.set("X-ShipBoost-Route-Time-Ms", duration.toFixed(1));
+
+  return response;
+}

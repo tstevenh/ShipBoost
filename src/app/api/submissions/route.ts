@@ -1,10 +1,6 @@
 import type { NextRequest } from "next/server";
 
 import { AppError } from "@/server/http/app-error";
-import {
-  deleteImageFromCloudinary,
-  uploadImageToCloudinary,
-} from "@/server/cloudinary";
 import { requireSession } from "@/server/auth/session";
 import { getEnv } from "@/server/env";
 import { errorResponse, ok } from "@/server/http/response";
@@ -17,12 +13,10 @@ import {
   submissionCreateSchema,
   submissionListQuerySchema,
 } from "@/server/validators/submission";
-
-const allowedMimeTypes = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-]);
+import {
+  cleanupUploadedSubmissionAssets,
+  uploadSubmissionMedia,
+} from "@/server/uploads/submission-media";
 
 function getStringValue(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -75,70 +69,48 @@ function parseJsonStringArray(formData: FormData, key: string) {
   }
 }
 
-function assertValidFile(
-  file: File,
-  options: { kind: "logo" | "screenshot"; maxBytes: number },
-) {
-  if (!allowedMimeTypes.has(file.type)) {
-    throw new AppError(
-      400,
-      "Only PNG, JPEG, and WebP images are allowed.",
-    );
-  }
-
-  if (file.size > options.maxBytes) {
-    throw new AppError(
-      400,
-      options.kind === "logo"
-        ? "Logo files must be 3MB or smaller."
-        : "Screenshot files must be 8MB or smaller.",
-    );
-  }
-}
-
 async function parseMultipartSubmission(request: NextRequest) {
   const formData = await request.formData();
-    const parsedFields = submissionCreateFieldsSchema.parse({
-      submissionId: toOptionalString(
-        getOptionalStringValue(formData, "submissionId") ?? "",
-      ),
-      submissionType: getStringValue(formData, "submissionType"),
-      requestedSlug: toOptionalString(
-        getOptionalStringValue(formData, "requestedSlug") ?? "",
-      ),
-      preferredLaunchDate: toOptionalDateString(
-        getOptionalStringValue(formData, "preferredLaunchDate") ?? "",
-      ),
-      name: getStringValue(formData, "name"),
-      tagline: getStringValue(formData, "tagline"),
-      websiteUrl: getStringValue(formData, "websiteUrl"),
-      richDescription: getStringValue(formData, "richDescription"),
-      pricingModel: getStringValue(formData, "pricingModel"),
-      categoryIds: parseJsonStringArray(formData, "categoryIds"),
-      tagIds: parseJsonStringArray(formData, "tagIds"),
-      affiliateUrl: toOptionalString(
-        getOptionalStringValue(formData, "affiliateUrl") ?? "",
-      ),
-      affiliateSource: toOptionalString(
-        getOptionalStringValue(formData, "affiliateSource") ?? "",
-      ),
-      hasAffiliateProgram: (getOptionalStringValue(
-        formData,
-        "hasAffiliateProgram",
-      ) ?? "") === "true",
-      founderXUrl: toOptionalString(
-        getOptionalStringValue(formData, "founderXUrl") ?? "",
-      ),
-      founderGithubUrl: toOptionalString(
-        getOptionalStringValue(formData, "founderGithubUrl") ?? "",
-      ),
-      founderLinkedinUrl: toOptionalString(
-        getOptionalStringValue(formData, "founderLinkedinUrl") ?? "",
-      ),
-      founderFacebookUrl: toOptionalString(
-        getOptionalStringValue(formData, "founderFacebookUrl") ?? "",
-      ),
-    });
+  const parsedFields = submissionCreateFieldsSchema.parse({
+    submissionId: toOptionalString(
+      getOptionalStringValue(formData, "submissionId") ?? "",
+    ),
+    submissionType: getStringValue(formData, "submissionType"),
+    requestedSlug: toOptionalString(
+      getOptionalStringValue(formData, "requestedSlug") ?? "",
+    ),
+    preferredLaunchDate: toOptionalDateString(
+      getOptionalStringValue(formData, "preferredLaunchDate") ?? "",
+    ),
+    name: getStringValue(formData, "name"),
+    tagline: getStringValue(formData, "tagline"),
+    websiteUrl: getStringValue(formData, "websiteUrl"),
+    richDescription: getStringValue(formData, "richDescription"),
+    pricingModel: getStringValue(formData, "pricingModel"),
+    categoryIds: parseJsonStringArray(formData, "categoryIds"),
+    tagIds: parseJsonStringArray(formData, "tagIds"),
+    affiliateUrl: toOptionalString(
+      getOptionalStringValue(formData, "affiliateUrl") ?? "",
+    ),
+    affiliateSource: toOptionalString(
+      getOptionalStringValue(formData, "affiliateSource") ?? "",
+    ),
+    hasAffiliateProgram:
+      (getOptionalStringValue(formData, "hasAffiliateProgram") ?? "") ===
+      "true",
+    founderXUrl: toOptionalString(
+      getOptionalStringValue(formData, "founderXUrl") ?? "",
+    ),
+    founderGithubUrl: toOptionalString(
+      getOptionalStringValue(formData, "founderGithubUrl") ?? "",
+    ),
+    founderLinkedinUrl: toOptionalString(
+      getOptionalStringValue(formData, "founderLinkedinUrl") ?? "",
+    ),
+    founderFacebookUrl: toOptionalString(
+      getOptionalStringValue(formData, "founderFacebookUrl") ?? "",
+    ),
+  });
 
   const logoFile = formData.get("logo");
   const screenshotFiles = formData.getAll("screenshots");
@@ -157,52 +129,20 @@ async function parseMultipartSubmission(request: NextRequest) {
     throw new AppError(400, "You can upload up to 3 screenshots.");
   }
 
-  assertValidFile(logoFile, { kind: "logo", maxBytes: 3 * 1024 * 1024 });
-  typedScreenshots.forEach((file) =>
-    assertValidFile(file, {
-      kind: "screenshot",
-      maxBytes: 8 * 1024 * 1024,
-    }),
-  );
+  const { logo, screenshots } = await uploadSubmissionMedia({
+    logoFile,
+    screenshotFiles: typedScreenshots,
+  });
 
-  const [logo, screenshots] = await Promise.all([
-    uploadImageToCloudinary(Buffer.from(await logoFile.arrayBuffer()), {
-      kind: "logo",
-      filename: logoFile.name,
-    }),
-    Promise.all(
-      typedScreenshots.map(async (file) =>
-        uploadImageToCloudinary(Buffer.from(await file.arrayBuffer()), {
-          kind: "screenshot",
-          filename: file.name,
-        }),
-      ),
-    ),
-  ]);
+  if (!logo) {
+    throw new AppError(400, "A logo file is required.");
+  }
 
   return {
     ...parsedFields,
     logo,
     screenshots,
   };
-}
-
-async function cleanupUploadedAssets(body: {
-  logo?: { publicId?: string };
-  screenshots?: Array<{ publicId?: string }>;
-}) {
-  const publicIds = [
-    body.logo?.publicId,
-    ...(body.screenshots?.map((asset) => asset.publicId) ?? []),
-  ].filter((value): value is string => Boolean(value));
-
-  if (publicIds.length === 0) {
-    return;
-  }
-
-  await Promise.allSettled(
-    publicIds.map((publicId) => deleteImageFromCloudinary(publicId)),
-  );
 }
 
 export async function GET(request: NextRequest) {
@@ -235,7 +175,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (error) {
       if (contentType.includes("multipart/form-data")) {
-        await cleanupUploadedAssets(body);
+        await cleanupUploadedSubmissionAssets(body);
       }
 
       throw error;

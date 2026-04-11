@@ -20,14 +20,10 @@ function serializeClaim(
     reviewedAt: claim.reviewedAt?.toISOString() ?? null,
     createdAt: claim.createdAt.toISOString(),
     claimantUser: claim.claimantUser,
-    reviewedBy: claim.reviewedBy,
     tool: {
       id: claim.tool.id,
       slug: claim.tool.slug,
       name: claim.tool.name,
-      tagline: claim.tool.tagline,
-      websiteUrl: claim.tool.websiteUrl,
-      ownerUserId: claim.tool.ownerUserId,
       logoMedia: claim.tool.logoMedia
         ? {
             url: claim.tool.logoMedia.url,

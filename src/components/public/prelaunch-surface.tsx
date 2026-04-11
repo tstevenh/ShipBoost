@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { 
   Rocket, ArrowRight, ShieldCheck, 
   Zap, Star, Sparkles, Layout,
@@ -21,7 +22,11 @@ export function PrelaunchSurface({ tools }: { tools: PrelaunchTool[] }) {
   return (
     <div className="space-y-24 animate-in fade-in duration-700">
       {/* Primary Goal: Lead Magnet */}
-      <HomeLeadMagnetForm />
+      <Suspense
+        fallback={<div className="min-h-[280px] rounded-3xl border border-border bg-card shadow-sm" />}
+      >
+        <HomeLeadMagnetForm />
+      </Suspense>
 
       {/* Secondary Goal: Founder Conversion */}
       <section className="grid gap-12 lg:grid-cols-[1fr_400px] items-start">

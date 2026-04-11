@@ -1,11 +1,9 @@
-"use client";
-
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { HomeSearchModal } from "./home-search-modal";
 import { Rocket } from "lucide-react";
+import { DeferredHomeSearchModal } from "@/components/public/deferred-home-search-modal";
 
-export function SponsorSlot({ className }: { className?: string }) {
+export function SponsorSlot() {
   return null;
   /* return (
     <div className={cn("bg-card border border-border rounded-2xl p-5 shadow-sm", className)}>
@@ -55,7 +53,15 @@ export function SidebarLeadMagnet() {
   );
 }
 
-export function ShowcaseLayout({ children, searchParams, isHomePage, isPrelaunch }: { children: React.ReactNode, searchParams?: any, isHomePage?: boolean, isPrelaunch?: boolean }) {
+export function ShowcaseLayout({
+  children,
+  isHomePage,
+  isPrelaunch,
+}: {
+  children: React.ReactNode;
+  isHomePage?: boolean;
+  isPrelaunch?: boolean;
+}) {
   return (
     <section className={cn("pb-20 bg-muted/20 min-h-screen", isHomePage ? "pt-8" : "pt-24")}>
       <div className="mx-auto max-w-[1600px] px-6">
@@ -82,7 +88,7 @@ export function ShowcaseLayout({ children, searchParams, isHomePage, isPrelaunch
           {/* Right Column: Search + Submit + Sponsors */}
           {!isPrelaunch && (
             <aside className="hidden xl:flex flex-col gap-4 sticky top-[100px] h-fit self-start">
-              <HomeSearchModal initialQuery={searchParams?.q} />
+              <DeferredHomeSearchModal />
               
               <Link 
                 href="/submit"

@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { AlertCircle, Check } from "lucide-react";
 
 const source = "homepage_directory_list";
 const leadMagnet = "startup-directories-800";

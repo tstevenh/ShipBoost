@@ -1,26 +1,35 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Home as HomeIcon, ListFilter, ArrowRight, ExternalLink } from "lucide-react";
+import { ChevronRight, Home as HomeIcon, ListFilter, ExternalLink } from "lucide-react";
 
-import { ToolCard } from "@/components/ToolCard";
+import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
 import { getEnv } from "@/server/env";
-import { getAlternativesSeoPage } from "@/server/services/seo-service";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
-import { getServerSession } from "@/server/auth/session";
-import { getDailyVotesRemaining, listUserUpvotedToolIds } from "@/server/services/upvote-service";
+import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { Footer } from "@/components/ui/footer";
+import {
+  getAlternativesStaticParams,
+  getCachedAlternativesPage,
+} from "@/server/cache/public-content";
+
+export const revalidate = 1800;
+export const dynamicParams = false;
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
-  searchParams?: Promise<{ q?: string }>;
 };
+
+export function generateStaticParams() {
+  return getAlternativesStaticParams();
+}
 
 export async function generateMetadata(
   context: RouteContext,
 ): Promise<Metadata> {
   const { slug } = await context.params;
-  const page = await getAlternativesSeoPage(slug);
+  const page = await getCachedAlternativesPage(slug);
 
   if (!page) {
     return {
@@ -53,25 +62,19 @@ export async function generateMetadata(
 
 export default async function AlternativesPage(context: RouteContext) {
   const { slug } = await context.params;
-  const resolvedSearchParams = context.searchParams ? await context.searchParams : {};
-  const page = await getAlternativesSeoPage(slug);
+  const page = await getCachedAlternativesPage(slug);
 
   if (!page || !page.tools) {
     notFound();
   }
 
-  const session = await getServerSession();
   const allToolIds = (page.tools || []).map(t => t.id);
-
-  const [dailyVotesRemaining, upvotedToolIds] = await Promise.all([
-    session?.user.id ? getDailyVotesRemaining(session.user.id) : Promise.resolve(null),
-    session?.user.id ? listUserUpvotedToolIds(allToolIds, session.user.id) : Promise.resolve(new Set<string>()),
-  ]);
 
   return (
     <main className="flex-1">
-      <ShowcaseLayout searchParams={resolvedSearchParams}>
-        <div className="space-y-10">
+      <ViewerVoteStateProvider toolIds={allToolIds}>
+        <ShowcaseLayout>
+          <div className="space-y-10">
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em]">
             <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
@@ -97,8 +100,15 @@ export default async function AlternativesPage(context: RouteContext) {
             <div className="flex items-center gap-4 p-6 bg-primary/5 rounded-2xl border border-primary/10 group hover:border-primary/20 transition-all">
               <div className="shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                 {page.anchorTool.logoMedia ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={page.anchorTool.logoMedia.url} alt="" className="w-full h-full object-cover rounded-xl" />
+                  <div className="relative h-full w-full overflow-hidden rounded-xl">
+                    <Image
+                      src={page.anchorTool.logoMedia.url}
+                      alt={`${page.anchorTool.name} logo`}
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <span className="font-black text-xs">{page.anchorTool.name.slice(0, 2).toUpperCase()}</span>
                 )}
@@ -128,7 +138,7 @@ export default async function AlternativesPage(context: RouteContext) {
 
             <div className="grid gap-5">
               {page.tools.map((tool) => (
-                <ToolCard
+                <PublicDirectoryToolCard
                   key={tool.id}
                   toolId={tool.id}
                   name={tool.name}
@@ -136,15 +146,14 @@ export default async function AlternativesPage(context: RouteContext) {
                   logoUrl={tool.logoMedia?.url}
                   slug={tool.slug}
                   votes={tool._count?.toolVotes ?? 0}
-                  hasUpvoted={upvotedToolIds.has(tool.id)}
                   tags={(tool.toolTags || []).map(tt => tt.tag?.name).filter((name): name is string => Boolean(name))}
-                  initialDailyVotesRemaining={dailyVotesRemaining}
                 />
               ))}
             </div>
           </div>
-        </div>
-      </ShowcaseLayout>
+          </div>
+        </ShowcaseLayout>
+      </ViewerVoteStateProvider>
       <Footer />
     </main>
   );

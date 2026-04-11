@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   Rocket, ShieldCheck, Star, Zap, Info, ArrowLeft, Loader2, Check, 
   ChevronDown, Layout, Image as ImageIcon, Share2, DollarSign, ExternalLink,
@@ -63,10 +63,19 @@ type FormState = {
   tagIds: string[];
 };
 
-type LocalImage = {
+type UploadedMediaAsset = {
+  url: string;
+  publicId?: string;
+  format?: string;
+  width?: number;
+  height?: number;
+};
+
+type DraftImage = {
   id: string;
-  file: File;
   previewUrl: string;
+  file?: File;
+  asset?: UploadedMediaAsset;
 };
 
 type FieldErrors = Record<string, string[] | undefined>;
@@ -93,6 +102,11 @@ type SavedSubmission = {
   reviewStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
   paymentStatus: "NOT_REQUIRED" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
   badgeVerification: "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "FAILED";
+};
+
+type UploadedDraftMediaPayload = {
+  logo?: UploadedMediaAsset;
+  screenshots: UploadedMediaAsset[];
 };
 
 const pricingModels: PricingModel[] = [
@@ -164,38 +178,48 @@ function inputClassName() {
   return "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium outline-none transition focus:border-foreground focus:ring-4 focus:ring-foreground/5 disabled:opacity-50";
 }
 
-function LocalPreview({
-  label,
-  image,
-  onRemove,
-}: {
-  label: string;
-  image: LocalImage;
-  onRemove: () => void;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-muted/30 p-3">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
-          <p className="text-xs font-bold text-foreground">{label}</p>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-            {(image.file.size / 1024 / 1024).toFixed(2)} MB
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="text-[10px] font-black uppercase tracking-widest text-muted-foreground transition hover:text-destructive"
-        >
-          Remove
-        </button>
-      </div>
-      <div className="overflow-hidden rounded-lg border border-border bg-background">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={image.previewUrl} alt={label} className="h-32 w-full object-cover" />
-      </div>
-    </div>
-  );
+function createDraftImage(file: File): DraftImage {
+  return {
+    id: crypto.randomUUID(),
+    file,
+    previewUrl: URL.createObjectURL(file),
+  };
+}
+
+function maybeRevokeObjectUrl(url: string) {
+  if (url.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function buildSubmissionPayload(
+  form: FormState,
+  submissionId: string | null,
+  logo: UploadedMediaAsset,
+  screenshots: UploadedMediaAsset[],
+) {
+  return {
+    submissionId: submissionId ?? undefined,
+    submissionType: form.submissionType,
+    requestedSlug: form.requestedSlug || undefined,
+    preferredLaunchDate: form.preferredLaunchDate || undefined,
+    name: form.name,
+    tagline: form.tagline,
+    websiteUrl: ensureHttps(form.websiteUrl),
+    richDescription: form.richDescription,
+    pricingModel: form.pricingModel,
+    categoryIds: form.categoryIds,
+    tagIds: form.tagIds,
+    affiliateUrl: ensureHttps(form.affiliateUrl) || undefined,
+    affiliateSource: form.affiliateSource || undefined,
+    hasAffiliateProgram: form.hasAffiliateProgram,
+    founderXUrl: ensureHttps(form.founderXUrl) || undefined,
+    founderGithubUrl: ensureHttps(form.founderGithubUrl) || undefined,
+    founderLinkedinUrl: ensureHttps(form.founderLinkedinUrl) || undefined,
+    founderFacebookUrl: ensureHttps(form.founderFacebookUrl) || undefined,
+    logo,
+    screenshots,
+  };
 }
 
 export function SubmitProductForm({
@@ -209,8 +233,8 @@ export function SubmitProductForm({
   const [step, setStep] = useState<1 | 2>(1);
   const [activeTab, setActiveTab] = useState<"general" | "media" | "socials">("general");
   const [form, setForm] = useState<FormState>(emptyForm);
-  const [logo, setLogo] = useState<LocalImage | null>(null);
-  const [screenshots, setScreenshots] = useState<LocalImage[]>([]);
+  const [logo, setLogo] = useState<DraftImage | null>(null);
+  const [screenshots, setScreenshots] = useState<DraftImage[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -220,6 +244,8 @@ export function SubmitProductForm({
   const [isSlugLoading, setIsSlugLoading] = useState(false);
   const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(null);
   const [draftBadgeVerification, setDraftBadgeVerification] = useState<SavedSubmission["badgeVerification"]>("PENDING");
+  const [lastSavedDraft, setLastSavedDraft] = useState<SavedSubmission | null>(null);
+  const [lastSavedPayloadSignature, setLastSavedPayloadSignature] = useState<string | null>(null);
   const [badgeTheme, setBadgeTheme] = useState<BadgeTheme>("light");
   const [copiedBadgeSnippet, setCopiedBadgeSnippet] = useState(false);
   
@@ -282,44 +308,147 @@ export function SubmitProductForm({
     }
   }
 
+  async function uploadPendingMedia(currentLogo: DraftImage | null, currentScreenshots: DraftImage[]) {
+    const pendingLogo = currentLogo?.file && !currentLogo.asset ? currentLogo : null;
+    const pendingScreenshots = currentScreenshots.filter(
+      (image) => image.file && !image.asset,
+    );
+
+    if (!pendingLogo && pendingScreenshots.length === 0) {
+      return {
+        logo: currentLogo,
+        screenshots: currentScreenshots,
+      };
+    }
+
+    const formData = new FormData();
+
+    if (pendingLogo?.file) {
+      formData.append("logo", pendingLogo.file);
+    }
+
+    pendingScreenshots.forEach((image) => {
+      if (image.file) {
+        formData.append("screenshots", image.file);
+      }
+    });
+
+    const response = await fetch("/api/submissions/media", {
+      method: "POST",
+      body: formData,
+    });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error || "Unable to upload media.");
+    }
+
+    const uploaded = payload.data as UploadedDraftMediaPayload;
+
+    if (pendingLogo && !uploaded.logo) {
+      throw new Error("Logo upload did not complete.");
+    }
+
+    if (uploaded.screenshots.length !== pendingScreenshots.length) {
+      throw new Error("Screenshot upload did not complete.");
+    }
+
+    const nextLogo: DraftImage | null =
+      pendingLogo && uploaded.logo && currentLogo
+        ? {
+            ...currentLogo,
+            asset: uploaded.logo,
+            previewUrl: uploaded.logo.url,
+            file: undefined,
+          }
+        : currentLogo;
+
+    if (pendingLogo && currentLogo) {
+      maybeRevokeObjectUrl(currentLogo.previewUrl);
+    }
+
+    let uploadedScreenshotIndex = 0;
+    const nextScreenshots = currentScreenshots.map((image) => {
+      if (!image.file || image.asset) {
+        return image;
+      }
+
+      const uploadedAsset = uploaded.screenshots[uploadedScreenshotIndex];
+
+      if (!uploadedAsset) {
+        throw new Error("Screenshot upload did not complete.");
+      }
+
+      uploadedScreenshotIndex += 1;
+      maybeRevokeObjectUrl(image.previewUrl);
+
+      return {
+        ...image,
+        asset: uploadedAsset,
+        previewUrl: uploadedAsset.url,
+        file: undefined,
+      };
+    });
+
+    setLogo(nextLogo);
+    setScreenshots(nextScreenshots);
+
+    return {
+      logo: nextLogo,
+      screenshots: nextScreenshots,
+    };
+  }
+
   async function saveDraft(overrides: Partial<FormState> = {}) {
     if (!logo) throw new Error("Please upload a logo first.");
     const nextForm = { ...form, ...overrides };
     setIsSavingDraft(true);
 
     try {
-      const formData = new FormData();
-      formData.append("submissionId", draftSubmissionId ?? "");
-      formData.append("submissionType", nextForm.submissionType);
-      formData.append("requestedSlug", nextForm.requestedSlug);
-      formData.append("preferredLaunchDate", nextForm.preferredLaunchDate);
-      formData.append("name", nextForm.name);
-      formData.append("tagline", nextForm.tagline);
-      formData.append("websiteUrl", ensureHttps(nextForm.websiteUrl));
-      formData.append("richDescription", nextForm.richDescription);
-      formData.append("pricingModel", nextForm.pricingModel);
-      formData.append("categoryIds", JSON.stringify(nextForm.categoryIds));
-      formData.append("tagIds", JSON.stringify(nextForm.tagIds));
-      formData.append("affiliateUrl", ensureHttps(nextForm.affiliateUrl));
-      formData.append("affiliateSource", nextForm.affiliateSource);
-      formData.append("hasAffiliateProgram", String(nextForm.hasAffiliateProgram));
-      formData.append("founderXUrl", ensureHttps(nextForm.founderXUrl));
-      formData.append("founderGithubUrl", ensureHttps(nextForm.founderGithubUrl));
-      formData.append("founderLinkedinUrl", ensureHttps(nextForm.founderLinkedinUrl));
-      formData.append("founderFacebookUrl", ensureHttps(nextForm.founderFacebookUrl));
-      formData.append("logo", logo.file);
-      screenshots.forEach((s) => formData.append("screenshots", s.file));
+      const uploadedMedia = await uploadPendingMedia(logo, screenshots);
+
+      if (!uploadedMedia.logo?.asset) {
+        throw new Error("Please upload a logo first.");
+      }
+
+      const payloadBody = buildSubmissionPayload(
+        nextForm,
+        draftSubmissionId,
+        uploadedMedia.logo.asset,
+        uploadedMedia.screenshots.flatMap((image) =>
+          image.asset ? [image.asset] : [],
+        ),
+      );
+      const payloadSignature = JSON.stringify(payloadBody);
+
+      if (draftSubmissionId && payloadSignature === lastSavedPayloadSignature && lastSavedDraft) {
+        setForm(nextForm);
+        setDraftBadgeVerification(lastSavedDraft.badgeVerification);
+        return lastSavedDraft;
+      }
 
       const response = await fetch("/api/submissions", {
         method: "POST",
-        body: formData,
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(payloadBody),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Save failed.");
+      const savedDraft = payload.data as SavedSubmission;
+
       setForm(nextForm);
-      setDraftSubmissionId(payload.data.id);
-      setDraftBadgeVerification(payload.data.badgeVerification);
-      return payload.data as SavedSubmission & { id: string };
+      setDraftSubmissionId(savedDraft.id);
+      setDraftBadgeVerification(savedDraft.badgeVerification);
+      setLastSavedDraft(savedDraft);
+      setLastSavedPayloadSignature(
+        JSON.stringify({
+          ...payloadBody,
+          submissionId: savedDraft.id,
+        }),
+      );
+      return savedDraft;
     } finally {
       setIsSavingDraft(false);
     }
@@ -350,6 +479,14 @@ export function SubmitProductForm({
       const res = await fetch(`/api/submissions/${draftSubmissionId}/verify-badge`, { method: "POST" });
       const payload = await res.json();
       setDraftBadgeVerification(payload.data.submission.badgeVerification);
+      setLastSavedDraft((current) =>
+        current && current.id === draftSubmissionId
+          ? {
+              ...current,
+              badgeVerification: payload.data.submission.badgeVerification,
+            }
+          : current,
+      );
       if (payload.data.verified) setSuccessMessage(payload.data.message);
       else setErrorMessage(payload.data.message || "Badge not found. Make sure it's in your footer.");
     } catch (err) { setErrorMessage("Verification failed."); }
@@ -605,7 +742,10 @@ export function SubmitProductForm({
                           </div>
                           <button
                             type="button"
-                            onClick={() => setLogo(null)}
+                            onClick={() => {
+                              maybeRevokeObjectUrl(logo.previewUrl);
+                              setLogo(null);
+                            }}
                             className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-10"
                           >
                             <Trash2 size={14} />
@@ -622,7 +762,11 @@ export function SubmitProductForm({
                           className="hidden"
                           onChange={e => {
                             if (e.target.files?.[0]) {
-                              setLogo({ id: 'logo', file: e.target.files[0], previewUrl: URL.createObjectURL(e.target.files[0]) });
+                              if (logo) {
+                                maybeRevokeObjectUrl(logo.previewUrl);
+                              }
+
+                              setLogo(createDraftImage(e.target.files[0]));
                             }
                           }}
                         />
@@ -658,7 +802,12 @@ export function SubmitProductForm({
                               </div>
                               <button
                                 type="button"
-                                onClick={() => setScreenshots(prev => prev.filter(x => x.id !== s.id))}
+                                onClick={() =>
+                                  setScreenshots((prev) => {
+                                    maybeRevokeObjectUrl(s.previewUrl);
+                                    return prev.filter((x) => x.id !== s.id);
+                                  })
+                                }
                                 className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-10"
                               >
                                 <Trash2 size={14} />
@@ -677,11 +826,7 @@ export function SubmitProductForm({
                             className="hidden"
                             onChange={e => {
                               if (e.target.files) {
-                                const newFiles = Array.from(e.target.files).map(f => ({
-                                  id: Math.random().toString(),
-                                  file: f,
-                                  previewUrl: URL.createObjectURL(f)
-                                }));
+                                const newFiles = Array.from(e.target.files).map(createDraftImage);
                                 setScreenshots(prev => [...prev, ...newFiles].slice(0, 3));
                               }
                             }}

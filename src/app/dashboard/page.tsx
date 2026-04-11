@@ -48,14 +48,26 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         : "Checkout completed. Shipboost is syncing your featured launch payment now."
       : null;
   const serializedSubmissions = submissions.map((submission) => ({
-    ...submission,
-    createdAt: submission.createdAt.toISOString(),
+    id: submission.id,
+    submissionType: submission.submissionType,
+    reviewStatus: submission.reviewStatus,
     preferredLaunchDate: submission.preferredLaunchDate?.toISOString() ?? null,
-    paidAt: submission.paidAt?.toISOString() ?? null,
+    paymentStatus: submission.paymentStatus,
+    badgeVerification: submission.badgeVerification,
     tool: {
-      ...submission.tool,
+      id: submission.tool.id,
+      slug: submission.tool.slug,
+      name: submission.tool.name,
+      websiteUrl: submission.tool.websiteUrl,
+      logoMedia: submission.tool.logoMedia
+        ? {
+            url: submission.tool.logoMedia.url,
+          }
+        : null,
       launches: submission.tool.launches.map((launch) => ({
-        ...launch,
+        id: launch.id,
+        launchType: launch.launchType,
+        status: launch.status,
         launchDate: launch.launchDate.toISOString(),
       })),
     },
@@ -65,16 +77,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     slug: tool.slug,
     name: tool.name,
     tagline: tool.tagline,
-    moderationStatus: tool.moderationStatus,
     publicationStatus: tool.publicationStatus,
-    isFeatured: tool.isFeatured,
-    updatedAt: tool.updatedAt.toISOString(),
-    launches: tool.launches.map((launch) => ({
-      id: launch.id,
-      launchType: launch.launchType,
-      status: launch.status,
-      launchDate: launch.launchDate.toISOString(),
-    })),
     logoMedia: tool.logoMedia
       ? {
           url: tool.logoMedia.url,
@@ -84,18 +87,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const serializedClaims = claims.map((claim) => ({
     id: claim.id,
     status: claim.status,
-    claimEmail: claim.claimEmail,
-    claimDomain: claim.claimDomain,
     websiteDomain: claim.websiteDomain,
-    founderVisibleNote: claim.founderVisibleNote,
-    reviewedAt: claim.reviewedAt?.toISOString() ?? null,
-    createdAt: claim.createdAt.toISOString(),
     tool: {
       id: claim.tool.id,
       slug: claim.tool.slug,
       name: claim.tool.name,
-      tagline: claim.tool.tagline,
-      websiteUrl: claim.tool.websiteUrl,
       logoMedia: claim.tool.logoMedia
         ? {
             url: claim.tool.logoMedia.url,

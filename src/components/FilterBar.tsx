@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Timer } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const periods = [
   { label: "Today", value: "daily" },
@@ -14,8 +14,11 @@ const periods = [
 
 export function FilterBar() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const activePeriod = searchParams.get("period") || "daily";
+  const pathname = usePathname();
+  const activePeriod = React.useMemo(() => {
+    const board = pathname.match(/^\/launches\/(daily|weekly|monthly|yearly)$/)?.[1];
+    return board || "daily";
+  }, [pathname]);
   const [timeLeft, setTimeLeft] = React.useState("");
 
   React.useEffect(() => {
@@ -49,9 +52,9 @@ export function FilterBar() {
   }, []);
 
   const handlePeriodChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("period", value);
-    router.push(`/?${params.toString()}`, { scroll: false });
+    router.push(value === "daily" ? "/" : `/launches/${value}`, {
+      scroll: false,
+    });
   };
 
   return (

@@ -1,10 +1,17 @@
 import type { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 
 import { AppError } from "@/server/http/app-error";
 import { uploadImageToCloudinary } from "@/server/cloudinary";
 import { requireSession } from "@/server/auth/session";
 import { getEnv } from "@/server/env";
-import { errorResponse, ok } from "@/server/http/response";
+import {
+  errorResponse,
+  ok,
+  startRouteTiming,
+  withRouteTiming,
+} from "@/server/http/response";
+import { revalidateAllPublicContent } from "@/server/cache/public-content";
 import {
   deleteFounderTool,
   updateFounderTool,
@@ -38,15 +45,13 @@ function serializeFounderTool(tool: Awaited<ReturnType<typeof updateFounderTool>
           height: tool.logoMedia.height,
         }
       : null,
-    screenshots: tool.media
-      .filter((media) => media.type === "SCREENSHOT")
-      .map((media) => ({
-        id: media.id,
-        url: media.url,
-        format: media.format,
-        width: media.width,
-        height: media.height,
-      })),
+    screenshots: tool.media.map((media) => ({
+      id: media.id,
+      url: media.url,
+      format: media.format,
+      width: media.width,
+      height: media.height,
+    })),
     toolCategories: tool.toolCategories.map((item) => ({
       categoryId: item.categoryId,
     })),
@@ -56,11 +61,7 @@ function serializeFounderTool(tool: Awaited<ReturnType<typeof updateFounderTool>
   };
 }
 
-const allowedMimeTypes = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-]);
+const allowedMimeTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 function getStringValue(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -156,25 +157,31 @@ async function parseMultipartFounderUpdate(request: NextRequest) {
       screenshots: true,
     })
     .parse({
-    slug: toOptionalString(getStringValue(formData, "slug")),
-    name: getStringValue(formData, "name"),
-    tagline: getStringValue(formData, "tagline"),
-    websiteUrl: getStringValue(formData, "websiteUrl"),
-    richDescription: getStringValue(formData, "richDescription"),
-    pricingModel: getStringValue(formData, "pricingModel"),
-    categoryIds: parseJsonStringArray(formData, "categoryIds"),
-    tagIds: parseJsonStringArray(formData, "tagIds"),
-    hasAffiliateProgram: getStringValue(formData, "hasAffiliateProgram") === "true",
-    founderXUrl: toOptionalString(getStringValue(formData, "founderXUrl")),
-    founderGithubUrl: toOptionalString(getStringValue(formData, "founderGithubUrl")),
-    founderLinkedinUrl: toOptionalString(
-      getStringValue(formData, "founderLinkedinUrl"),
-    ),
-    founderFacebookUrl: toOptionalString(
-      getStringValue(formData, "founderFacebookUrl"),
-    ),
-    existingScreenshotIds: parseJsonStringArray(formData, "existingScreenshotIds"),
-  });
+      slug: toOptionalString(getStringValue(formData, "slug")),
+      name: getStringValue(formData, "name"),
+      tagline: getStringValue(formData, "tagline"),
+      websiteUrl: getStringValue(formData, "websiteUrl"),
+      richDescription: getStringValue(formData, "richDescription"),
+      pricingModel: getStringValue(formData, "pricingModel"),
+      categoryIds: parseJsonStringArray(formData, "categoryIds"),
+      tagIds: parseJsonStringArray(formData, "tagIds"),
+      hasAffiliateProgram:
+        getStringValue(formData, "hasAffiliateProgram") === "true",
+      founderXUrl: toOptionalString(getStringValue(formData, "founderXUrl")),
+      founderGithubUrl: toOptionalString(
+        getStringValue(formData, "founderGithubUrl"),
+      ),
+      founderLinkedinUrl: toOptionalString(
+        getStringValue(formData, "founderLinkedinUrl"),
+      ),
+      founderFacebookUrl: toOptionalString(
+        getStringValue(formData, "founderFacebookUrl"),
+      ),
+      existingScreenshotIds: parseJsonStringArray(
+        formData,
+        "existingScreenshotIds",
+      ),
+    });
 
   return {
     ...parsedFields,
@@ -183,26 +190,37 @@ async function parseMultipartFounderUpdate(request: NextRequest) {
   };
 }
 
+async function parseFounderUpdate(request: NextRequest) {
+  const contentType = request.headers.get("content-type") ?? "";
+
+  if (contentType.includes("multipart/form-data")) {
+    return parseMultipartFounderUpdate(request);
+  }
+
+  if (contentType.includes("application/json")) {
+    return founderToolUpdateSchema.parse(await request.json());
+  }
+
+  throw new AppError(
+    400,
+    "Founder listing updates must be submitted as JSON or multipart form data.",
+  );
+}
+
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  const timing = startRouteTiming("founder-tool-save");
+
   try {
     getEnv();
     const session = await requireSession(request);
     const { toolId } = await context.params;
-
-    const contentType = request.headers.get("content-type") ?? "";
-    if (!contentType.includes("multipart/form-data")) {
-      throw new AppError(
-        400,
-        "Founder listing updates must be submitted as multipart form data.",
-      );
-    }
-
-    const body = await parseMultipartFounderUpdate(request);
+    const body = await parseFounderUpdate(request);
 
     const tool = await updateFounderTool(session.user.id, toolId, body);
-    return ok(serializeFounderTool(tool));
+    revalidateAllPublicContent();
+    return withRouteTiming(ok(serializeFounderTool(tool)), timing);
   } catch (error) {
-    return errorResponse(error);
+    return withRouteTiming(errorResponse(error), timing);
   }
 }
 
@@ -213,6 +231,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const { toolId } = await context.params;
 
     const deleted = await deleteFounderTool(session.user.id, toolId);
+    revalidateAllPublicContent();
     return ok(deleted);
   } catch (error) {
     return errorResponse(error);

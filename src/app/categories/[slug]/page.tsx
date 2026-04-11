@@ -1,27 +1,96 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { ChevronRight, Home as HomeIcon, Layers } from "lucide-react";
 
 import { ToolCard } from "@/components/ToolCard";
+import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
 import { getEnv } from "@/server/env";
-import { getPublicCategoryPageBySlug } from "@/server/services/catalog-service";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
-import { getServerSession } from "@/server/auth/session";
-import { getDailyVotesRemaining, listUserUpvotedToolIds } from "@/server/services/upvote-service";
+import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { Footer } from "@/components/ui/footer";
 import { SortButton } from "@/components/public/sort-button";
+import {
+  SortableToolGrid,
+  type SortableToolGridItem,
+} from "@/components/public/sortable-tool-grid";
+import {
+  getCachedCategoryPage,
+  getCachedCategoryStaticParams,
+} from "@/server/cache/public-content";
+
+export const revalidate = 1800;
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
-  searchParams?: Promise<{ q?: string; sort?: string }>;
 };
+
+function mapToolToGridItem(tool: {
+  id: string;
+  slug: string;
+  name: string;
+  tagline: string;
+  createdAt: Date | string;
+  isFeatured: boolean;
+  logoMedia: { url: string } | null;
+  toolTags: { tag: { name: string | null } }[];
+  _count?: { toolVotes?: number };
+}): SortableToolGridItem {
+  return {
+    id: tool.id,
+    slug: tool.slug,
+    name: tool.name,
+    tagline: tool.tagline,
+    logoUrl: tool.logoMedia?.url ?? undefined,
+    votes: tool._count?.toolVotes ?? 0,
+    tags: tool.toolTags
+      .map((item) => item.tag?.name)
+      .filter((name): name is string => Boolean(name)),
+    isFeatured: tool.isFeatured,
+    createdAt: new Date(tool.createdAt).toISOString(),
+  };
+}
+
+function renderStaticToolGrid(
+  tools: SortableToolGridItem[],
+  emptyMessage: string,
+) {
+  if (tools.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card px-5 py-16 text-center text-sm font-medium text-muted-foreground">
+        {emptyMessage}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-5">
+      {tools.map((tool) => (
+        <PublicDirectoryToolCard
+          key={tool.id}
+          toolId={tool.id}
+          name={tool.name}
+          tagline={tool.tagline}
+          logoUrl={tool.logoUrl}
+          slug={tool.slug}
+          votes={tool.votes}
+          tags={tool.tags}
+        />
+      ))}
+    </div>
+  );
+}
+
+export async function generateStaticParams() {
+  return getCachedCategoryStaticParams();
+}
 
 export async function generateMetadata(
   context: RouteContext,
 ): Promise<Metadata> {
   const { slug } = await context.params;
-  const category = await getPublicCategoryPageBySlug(slug);
+  const category = await getCachedCategoryPage(slug);
 
   if (!category) {
     return {
@@ -63,33 +132,28 @@ export async function generateMetadata(
 
 export default async function CategoryPage(context: RouteContext) {
   const { slug } = await context.params;
-  const resolvedSearchParams = context.searchParams ? await context.searchParams : {};
-  const currentSort = (resolvedSearchParams.sort as "newest" | "top") || "newest";
-  
-  const category = await getPublicCategoryPageBySlug(slug, currentSort);
+  const category = await getCachedCategoryPage(slug);
 
   if (!category || !category.toolCategories) {
     notFound();
   }
 
-  const session = await getServerSession();
-  
   const allToolIds = [
     ...(category.featuredTools || []).map(t => t.id),
     ...category.toolCategories.map(tc => tc.tool.id)
   ];
 
-  const [dailyVotesRemaining, upvotedToolIds] = await Promise.all([
-    session?.user.id ? getDailyVotesRemaining(session.user.id) : Promise.resolve(null),
-    session?.user.id ? listUserUpvotedToolIds(allToolIds, session.user.id) : Promise.resolve(new Set<string>()),
-  ]);
-
   const publishedCount = category.toolCategories.length;
+  const directoryTools = category.toolCategories.map((item) =>
+    mapToolToGridItem(item.tool),
+  );
+  const featuredTools = (category.featuredTools || []).map(mapToolToGridItem);
 
   return (
     <main className="flex-1">
-      <ShowcaseLayout searchParams={resolvedSearchParams}>
-        <div className="space-y-10">
+      <ViewerVoteStateProvider toolIds={allToolIds}>
+        <ShowcaseLayout>
+          <div className="space-y-10">
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
             <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
@@ -138,7 +202,7 @@ export default async function CategoryPage(context: RouteContext) {
           </div>
 
           <div className="space-y-12">
-            {(category.featuredTools || []).length > 0 ? (
+            {featuredTools.length > 0 ? (
               <section className="space-y-6">
                 <div className="flex items-center gap-3">
                   <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
@@ -147,18 +211,16 @@ export default async function CategoryPage(context: RouteContext) {
                   </p>
                 </div>
                 <div className="grid gap-5">
-                  {(category.featuredTools || []).map((tool) => (
-                    <ToolCard
-                      key={`featured-${tool.slug}`}
+                  {featuredTools.map((tool) => (
+                    <PublicDirectoryToolCard
+                      key={`featured-${tool.id}`}
                       toolId={tool.id}
                       name={tool.name}
                       tagline={tool.tagline}
-                      logoUrl={tool.logoMedia?.url}
+                      logoUrl={tool.logoUrl}
                       slug={tool.slug}
-                      votes={tool._count?.toolVotes ?? 0}
-                      hasUpvoted={upvotedToolIds.has(tool.id)}
-                      tags={(tool.toolTags || []).map(tt => tt.tag?.name).filter((name): name is string => Boolean(name))}
-                      initialDailyVotesRemaining={dailyVotesRemaining}
+                      votes={tool.votes}
+                      tags={tool.tags}
                     />
                   ))}
                 </div>
@@ -175,35 +237,31 @@ export default async function CategoryPage(context: RouteContext) {
                     All {category.name} tools
                   </h2>
                 </div>
-                <SortButton />
+                <Suspense
+                  fallback={
+                    <div className="h-10 w-32 rounded-xl border border-border bg-card shadow-sm" />
+                  }
+                >
+                  <SortButton />
+                </Suspense>
               </div>
 
-              <div className="grid gap-5">
-                {category.toolCategories.map((item) => (
-                  <ToolCard
-                    key={item.tool.slug}
-                    toolId={item.tool.id}
-                    name={item.tool.name}
-                    tagline={item.tool.tagline}
-                    logoUrl={item.tool.logoMedia?.url}
-                    slug={item.tool.slug}
-                    votes={item.tool._count?.toolVotes ?? 0}
-                    hasUpvoted={upvotedToolIds.has(item.tool.id)}
-                    tags={(item.tool.toolTags || []).map(tt => tt.tag?.name).filter((name): name is string => Boolean(name))}
-                    initialDailyVotesRemaining={dailyVotesRemaining}
-                  />
-                ))}
-
-                {category.toolCategories.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-border bg-card px-5 py-16 text-center text-sm font-medium text-muted-foreground">
-                    No tools published in this category yet.
-                  </div>
-                ) : null}
-              </div>
+              <Suspense
+                fallback={renderStaticToolGrid(
+                  directoryTools,
+                  "No tools published in this category yet.",
+                )}
+              >
+                <SortableToolGrid
+                  tools={directoryTools}
+                  emptyMessage="No tools published in this category yet."
+                />
+              </Suspense>
             </section>
           </div>
-        </div>
-      </ShowcaseLayout>
+          </div>
+        </ShowcaseLayout>
+      </ViewerVoteStateProvider>
       <Footer />
     </main>
   );

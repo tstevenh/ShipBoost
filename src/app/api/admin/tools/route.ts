@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { requireAdmin } from "@/server/auth/request-context";
+import { revalidateAllPublicContent } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
 import { created, errorResponse, ok } from "@/server/http/response";
 import {
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
 
     const body = adminToolCreateSchema.parse(await request.json());
     const tool = await createAdminTool(body);
+    revalidateAllPublicContent();
 
     return created(tool);
   } catch (error) {

@@ -112,19 +112,20 @@ export type ListingClaim = {
     name: string | null;
     email: string;
   };
-  reviewedBy: {
-    id: string;
-    name: string | null;
-    email: string;
-  } | null;
   tool: {
     id: string;
     slug: string;
     name: string;
-    tagline: string;
-    websiteUrl: string;
-    ownerUserId: string | null;
     logoMedia: { url: string } | null;
+  };
+};
+
+export type SubmissionReviewResult = {
+  submission: Submission;
+  tool: {
+    id: string;
+    moderationStatus: Tool["moderationStatus"];
+    publicationStatus: Tool["publicationStatus"];
   };
 };
 

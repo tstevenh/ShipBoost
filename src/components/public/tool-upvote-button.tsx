@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { ChevronUp, Loader2 } from "lucide-react";
 
+import { useViewerVoteState } from "@/components/public/viewer-vote-state-provider";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +13,7 @@ type ToolUpvoteButtonProps = {
   initialCount: number;
   initialHasUpvoted?: boolean;
   initialDailyVotesRemaining?: number | null;
-  variant?: "default" | "compact" | "large";
+  variant?: "default" | "compact" | "large" | "card";
 };
 
 export function ToolUpvoteButton({
@@ -25,6 +26,7 @@ export function ToolUpvoteButton({
   const router = useRouter();
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
+  const viewerVoteState = useViewerVoteState(toolId);
   const [count, setCount] = useState(initialCount);
   const [hasUpvoted, setHasUpvoted] = useState(initialHasUpvoted);
   const [dailyVotesRemaining, setDailyVotesRemaining] = useState<number | null>(
@@ -44,6 +46,28 @@ export function ToolUpvoteButton({
   useEffect(() => {
     setDailyVotesRemaining(initialDailyVotesRemaining);
   }, [initialDailyVotesRemaining]);
+
+  useEffect(() => {
+    if (viewerVoteState.isLoading) {
+      return;
+    }
+
+    if (!viewerVoteState.isAuthenticated) {
+      setHasUpvoted(initialHasUpvoted);
+      setDailyVotesRemaining(initialDailyVotesRemaining);
+      return;
+    }
+
+    setHasUpvoted(viewerVoteState.hasUpvoted);
+    setDailyVotesRemaining(viewerVoteState.dailyVotesRemaining);
+  }, [
+    initialDailyVotesRemaining,
+    initialHasUpvoted,
+    viewerVoteState.dailyVotesRemaining,
+    viewerVoteState.hasUpvoted,
+    viewerVoteState.isAuthenticated,
+    viewerVoteState.isLoading,
+  ]);
 
   function handleVote() {
     if (!session?.user.id) {
@@ -77,6 +101,7 @@ export function ToolUpvoteButton({
           setHasUpvoted(payload.data.hasUpvoted);
           setCount(payload.data.upvoteCount);
           setDailyVotesRemaining(payload.data.dailyVotesRemaining);
+          viewerVoteState.applyVoteResult?.(toolId, payload.data);
         } catch (error) {
           const message =
             error instanceof Error ? error.message : "Unable to update upvote.";
@@ -121,6 +146,42 @@ export function ToolUpvoteButton({
           )}
         </button>
         {errorMessage && <p className="mt-3 text-xs font-bold text-destructive text-center">{errorMessage}</p>}
+      </div>
+    );
+  }
+
+  if (variant === "card") {
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <button
+          type="button"
+          onClick={handleVote}
+          disabled={isDisabled}
+          className={cn(
+            "flex h-14 min-w-[56px] flex-col items-center justify-center rounded-lg border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50",
+            hasUpvoted
+              ? "border-foreground bg-foreground text-background shadow-sm shadow-black/10"
+              : "border-border bg-background text-muted-foreground hover:border-foreground hover:text-foreground",
+          )}
+        >
+          {isPending ? (
+            <Loader2 size={18} className="mb-0.5 animate-spin" />
+          ) : (
+            <ChevronUp
+              className={cn(
+                "mb-0.5 size-5 transition-transform",
+                hasUpvoted && "scale-110",
+              )}
+            />
+          )}
+          <span className="text-sm font-black leading-none">{count}</span>
+        </button>
+
+        {errorMessage ? (
+          <p className="max-w-[8rem] text-right text-[10px] font-medium text-destructive">
+            {errorMessage}
+          </p>
+        ) : null}
       </div>
     );
   }

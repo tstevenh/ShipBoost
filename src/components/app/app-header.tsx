@@ -11,6 +11,12 @@ import { authClient } from "@/lib/auth-client";
 import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
 
+type AppHeaderCategory = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 function getInitials(name: string | null | undefined) {
   if (!name) {
     return "SB";
@@ -24,7 +30,11 @@ function getInitials(name: string | null | undefined) {
     .join("");
 }
 
-export function AppHeader() {
+export function AppHeader({
+  categories,
+}: {
+  categories: AppHeaderCategory[];
+}) {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,7 +42,6 @@ export function AppHeader() {
   
   const [menuState, setMenuState] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -41,23 +50,6 @@ export function AppHeader() {
       setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener("scroll", handleScroll);
-    
-    // Fetch categories for dropdown
-    fetch("/api/categories")
-      .then(res => {
-        if (!res.ok) throw new Error("API error");
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          return res.json();
-        }
-        throw new Error("Not JSON");
-      })
-      .then(payload => {
-        if (payload.data) setCategories(payload.data);
-      })
-      .catch(err => {
-        console.warn("Categories fetch failed:", err.message);
-      });
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);

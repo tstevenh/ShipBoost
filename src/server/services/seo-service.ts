@@ -1,5 +1,5 @@
-import { toolDetailsInclude } from "@/server/db/includes";
 import { prisma } from "@/server/db/client";
+import { publicToolCardSelect } from "@/server/db/public-selects";
 import {
   alternativesSeoRegistry,
   bestTagSeoRegistry,
@@ -22,7 +22,7 @@ async function getPublishedToolsBySlugs(slugs: string[]) {
       },
       ...getPubliclyVisibleToolWhere(),
     },
-    include: toolDetailsInclude,
+    select: publicToolCardSelect,
   });
 
   const toolsBySlug = new Map(tools.map((tool) => [tool.slug, tool]));
@@ -69,7 +69,7 @@ export async function getAlternativesSeoPage(slug: string) {
         slug: entry.anchorToolSlug,
         ...getPubliclyVisibleToolWhere(),
       },
-      include: toolDetailsInclude,
+      select: publicToolCardSelect,
     }),
     getPublishedToolsBySlugs(entry.toolSlugs),
   ]);
@@ -108,7 +108,7 @@ export async function getBestTagSeoPage(
           },
         },
       },
-      include: toolDetailsInclude,
+      select: publicToolCardSelect,
       orderBy:
         sort === "top"
           ? [{ toolVotes: { _count: "desc" } }, { isFeatured: "desc" }]

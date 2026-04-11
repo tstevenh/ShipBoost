@@ -1,20 +1,22 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 
 import type { PublicToolSearchResult } from "@/server/services/tool-service";
 
-type HomeSearchModalProps = {
-  initialQuery?: string;
-};
-
 const MIN_QUERY_LENGTH = 2;
 const SEARCH_DEBOUNCE_MS = 250;
 
-export function HomeSearchModal({ initialQuery = "" }: HomeSearchModalProps) {
-  const normalizedInitialQuery = initialQuery.trim();
+export function HomeSearchModal() {
+  const searchParams = useSearchParams();
+  const normalizedInitialQuery = useMemo(
+    () => (searchParams.get("q") ?? "").trim(),
+    [searchParams],
+  );
   const [isOpen, setIsOpen] = useState(normalizedInitialQuery.length >= MIN_QUERY_LENGTH);
   const [query, setQuery] = useState(normalizedInitialQuery);
   const [results, setResults] = useState<PublicToolSearchResult[]>([]);
@@ -219,12 +221,15 @@ export function HomeSearchModal({ initialQuery = "" }: HomeSearchModalProps) {
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-background border border-border">
                       {tool.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={tool.logoUrl}
-                          alt={`${tool.name} logo`}
-                          className="h-full w-full object-cover"
-                        />
+                        <div className="relative h-full w-full">
+                          <Image
+                            src={tool.logoUrl}
+                            alt={`${tool.name} logo`}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
+                        </div>
                       ) : (
                         <span className="text-sm font-bold text-muted-foreground">
                           {tool.name.slice(0, 2).toUpperCase()}

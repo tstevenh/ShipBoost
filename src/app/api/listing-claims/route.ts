@@ -24,8 +24,6 @@ function serializeClaim(claim: Awaited<ReturnType<typeof createListingClaim>>) {
       id: claim.tool.id,
       slug: claim.tool.slug,
       name: claim.tool.name,
-      tagline: claim.tool.tagline,
-      websiteUrl: claim.tool.websiteUrl,
       logoMedia: claim.tool.logoMedia
         ? {
             url: claim.tool.logoMedia.url,

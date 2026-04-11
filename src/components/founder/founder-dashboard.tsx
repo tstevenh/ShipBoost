@@ -5,7 +5,8 @@ import { useState } from "react";
 import { 
   Rocket, Mail, Shield, Activity, CreditCard, ClipboardList, 
   ExternalLink, Edit, RefreshCw, Check, Clock, AlertCircle, Zap, Star,
-  Layout, Package, Send, Fingerprint, ChevronRight, Info
+  Layout, Package, Send, Fingerprint, ChevronRight, Info,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,16 +16,11 @@ type FounderSubmission = {
   reviewStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
   preferredLaunchDate: string | null;
   paymentStatus: "NOT_REQUIRED" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
-  badgeFooterUrl: string | null;
   badgeVerification: "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "FAILED";
-  founderVisibleNote: string | null;
-  internalReviewNote: string | null;
-  createdAt: string;
   tool: {
     id: string;
     slug: string;
     name: string;
-    tagline: string;
     websiteUrl: string;
     logoMedia: { url: string } | null;
     launches: Array<{
@@ -41,34 +37,18 @@ type FounderToolSummary = {
   slug: string;
   name: string;
   tagline: string;
-  moderationStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "HIDDEN";
   publicationStatus: "UNPUBLISHED" | "PUBLISHED" | "ARCHIVED";
-  isFeatured: boolean;
-  updatedAt: string;
-  launches: Array<{
-    id: string;
-    launchType: "FREE" | "FEATURED" | "RELAUNCH";
-    status: "PENDING" | "APPROVED" | "LIVE" | "ENDED" | "REJECTED";
-    launchDate: string;
-  }>;
   logoMedia: { url: string } | null;
 };
 
 type FounderListingClaim = {
   id: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
-  claimEmail: string;
-  claimDomain: string;
   websiteDomain: string;
-  founderVisibleNote: string | null;
-  reviewedAt: string | null;
-  createdAt: string;
   tool: {
     id: string;
     slug: string;
     name: string;
-    tagline: string;
-    websiteUrl: string;
     logoMedia: { url: string } | null;
   };
 };
@@ -76,6 +56,13 @@ type FounderListingClaim = {
 type SubmissionStateSummary = {
   label: string;
   tone: "green" | "amber" | "rose" | "slate";
+};
+
+type FounderNavItem = {
+  id: "overview" | "products" | "submissions" | "claims";
+  label: string;
+  icon: LucideIcon;
+  count?: number;
 };
 
 function formatDate(value: string) {
@@ -307,12 +294,12 @@ export function FounderDashboard({
     })();
   }
 
-  const navItems = [
+  const navItems: FounderNavItem[] = [
     { id: "overview", label: "Overview", icon: Layout },
     { id: "products", label: "My Products", icon: Package, count: tools.length },
     { id: "submissions", label: "Submissions", icon: Send, count: submissions.length },
     { id: "claims", label: "Ownership", icon: Fingerprint, count: claims.length },
-  ] as const;
+  ];
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 items-start">

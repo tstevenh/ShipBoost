@@ -2,8 +2,8 @@ import { notFound, redirect } from "next/navigation";
 
 import { FounderToolEditor } from "@/components/founder/founder-tool-editor";
 import { getServerSession } from "@/server/auth/session";
-import { listCategories, listTags } from "@/server/services/catalog-service";
-import { getFounderToolById } from "@/server/services/tool-service";
+import { getCachedCatalogOptions } from "@/server/cache/catalog-options";
+import { getFounderToolEditorById } from "@/server/services/tool-service";
 import { Footer } from "@/components/ui/footer";
 
 type RouteContext = {
@@ -18,11 +18,11 @@ export default async function FounderToolEditorPage(context: RouteContext) {
   }
 
   const { toolId } = await context.params;
-  const [tool, categories, tags] = await Promise.all([
-    getFounderToolById(session.user.id, toolId),
-    listCategories(),
-    listTags(),
+  const [tool, catalogOptions] = await Promise.all([
+    getFounderToolEditorById(session.user.id, toolId),
+    getCachedCatalogOptions(),
   ]);
+  const { categories, tags } = catalogOptions;
 
   if (!tool) {
     notFound();
@@ -36,16 +36,11 @@ export default async function FounderToolEditorPage(context: RouteContext) {
     websiteUrl: tool.websiteUrl,
     richDescription: tool.richDescription,
     pricingModel: tool.pricingModel,
-    affiliateUrl: tool.affiliateUrl,
-    affiliateSource: tool.affiliateSource,
     hasAffiliateProgram: tool.hasAffiliateProgram,
     founderXUrl: tool.founderXUrl,
     founderGithubUrl: tool.founderGithubUrl,
     founderLinkedinUrl: tool.founderLinkedinUrl,
     founderFacebookUrl: tool.founderFacebookUrl,
-    metaTitle: tool.metaTitle,
-    metaDescription: tool.metaDescription,
-    canonicalUrl: tool.canonicalUrl,
     logoMedia: tool.logoMedia
       ? {
           id: tool.logoMedia.id,
@@ -55,9 +50,7 @@ export default async function FounderToolEditorPage(context: RouteContext) {
           height: tool.logoMedia.height,
         }
       : null,
-    screenshots: tool.media
-      .filter((media) => media.type === "SCREENSHOT")
-      .map((media) => ({
+    screenshots: tool.media.map((media) => ({
         id: media.id,
         url: media.url,
         format: media.format,

@@ -4,7 +4,8 @@ import { useDeferredValue, useEffect, useEffectEvent, useMemo, useState } from "
 import { 
   Activity, Layers, Tag, Rocket, ClipboardList, 
   Search, Shield, AlertCircle, RefreshCw, Check,
-  Layout, Send, Fingerprint, Package, Archive, Settings
+  Layout, Send, Fingerprint, Package, Archive, Settings,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ import {
   type Category,
   type CategoryDraft,
   type Submission,
+  type SubmissionReviewResult,
   type Tag as TagType,
   type TagDraft,
   type Tool,
@@ -70,6 +72,12 @@ function emptyTagDraft(): TagDraft {
 }
 
 type AdminNavSection = "overview" | "moderate" | "inventory" | "taxonomy";
+type AdminNavItem = {
+  id: AdminNavSection;
+  label: string;
+  icon: LucideIcon;
+  count?: number;
+};
 
 export function AdminConsole() {
   const [activeNav, setActiveNav] = useState<AdminNavSection>("overview");
@@ -140,6 +148,51 @@ export function AdminConsole() {
 
   function isActionGroupPending(prefix: string) {
     return pendingAction?.startsWith(prefix) ?? false;
+  }
+
+  function matchesSubmissionFilters(
+    submission: Submission,
+    search: string,
+    status: "" | Submission["reviewStatus"],
+  ) {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    if (status && submission.reviewStatus !== status) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    return [
+      submission.user.email,
+      submission.user.name ?? "",
+      submission.tool.name,
+      submission.tool.slug,
+    ].some((value) => value.toLowerCase().includes(normalizedSearch));
+  }
+
+  function matchesClaimFilters(
+    claim: ListingClaim,
+    search: string,
+    status: "" | ListingClaim["status"],
+  ) {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    if (status && claim.status !== status) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    return [
+      claim.claimEmail,
+      claim.tool.name,
+      claim.tool.slug,
+    ].some((value) => value.toLowerCase().includes(normalizedSearch));
   }
 
   async function refreshCatalog() {
@@ -582,7 +635,7 @@ export function AdminConsole() {
         submissions.find((submission) => submission.id === submissionId)!,
       );
 
-      await apiRequest<Submission>(
+      const result = await apiRequest<SubmissionReviewResult>(
         `/api/admin/submissions/${submissionId}/review`,
         {
           method: "POST",
@@ -595,8 +648,32 @@ export function AdminConsole() {
           }),
         },
       );
-
-      await Promise.all([refreshSubmissions(), refreshTools()]);
+      setSubmissions((current) =>
+        current
+          .map((submission) =>
+            submission.id === result.submission.id
+              ? result.submission
+              : submission,
+          )
+          .filter((submission) =>
+            matchesSubmissionFilters(
+              submission,
+              deferredSubmissionSearch,
+              submissionFilter,
+            ),
+          ),
+      );
+      setTools((current) =>
+        current.map((tool) =>
+          tool.id === result.tool.id
+            ? {
+                ...tool,
+                moderationStatus: result.tool.moderationStatus,
+                publicationStatus: result.tool.publicationStatus,
+              }
+            : tool,
+        ),
+      );
     } catch (error) {
       setSubmissionError(toErrorMessage(error));
     } finally {
@@ -622,7 +699,7 @@ export function AdminConsole() {
           internalAdminNote: "",
         };
 
-      await apiRequest<ListingClaim>(`/api/admin/listing-claims/${claimId}`, {
+      const claim = await apiRequest<ListingClaim>(`/api/admin/listing-claims/${claimId}`, {
         method: "PATCH",
         body: JSON.stringify({
           action,
@@ -630,8 +707,13 @@ export function AdminConsole() {
           internalAdminNote: draft.internalAdminNote || undefined,
         }),
       });
-
-      await Promise.all([refreshClaims(), refreshTools()]);
+      setClaims((current) =>
+        current
+          .map((item) => (item.id === claim.id ? claim : item))
+          .filter((item) =>
+            matchesClaimFilters(item, deferredClaimSearch, claimFilter),
+          ),
+      );
     } catch (error) {
       setClaimError(toErrorMessage(error));
     } finally {
@@ -650,12 +732,12 @@ export function AdminConsole() {
     );
   }
 
-  const navItems = [
+  const navItems: AdminNavItem[] = [
     { id: "overview", label: "Dashboard", icon: Layout },
     { id: "moderate", label: "Moderate", icon: Shield, count: totalPending + pendingClaimCount },
     { id: "inventory", label: "Inventory", icon: Package, count: tools.length },
     { id: "taxonomy", label: "Taxonomy", icon: Layers, count: categories.length + tags.length },
-  ] as const;
+  ];
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 items-start">

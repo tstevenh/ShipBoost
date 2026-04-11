@@ -20,8 +20,16 @@ export const alternativesSeoRegistry: Record<string, AlternativesSeoEntry> = {
     title: "Best DirStarter Alternatives",
     intro: "Compare the best DirStarter alternatives for building SEO-ready directory businesses and resource hubs.",
     metaTitle: "Best DirStarter Alternatives for Directory Sites | Shipboost",
-    metaDescription: "Find the best DirStarter alternatives like Directify, DirectoryFast, and more to launch your niche directory business fast.",
-    toolSlugs: ["directify", "mksaas-directoryfast", "supastarter-directoryeasy", "saasbrella-directorystack", "goilerplate-next-js-directory"],
+    metaDescription: "Find the best DirStarter alternatives like DirectoryFast, DirectoryEasy, and more to launch your niche directory business fast.",
+    toolSlugs: [
+      "directoryfast",
+      "directoryeasy",
+      "directorystack",
+      "nextjs-directory",
+      "mkdirs",
+      "supastarter",
+      "goilerplate",
+    ],
   },
   tapfiliate: {
     slug: "tapfiliate",

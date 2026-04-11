@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Loader2, ArrowRight } from "lucide-react";
 
+import { AuthBrand } from "@/components/auth/auth-brand";
+
 export function ResetPasswordForm({
   token,
   initialError,
@@ -84,14 +86,7 @@ export function ResetPasswordForm({
 
   return (
     <div className="flex w-full max-w-md flex-col items-center justify-center py-12 mx-auto">
-      <div className="mb-12 flex items-center gap-2">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary font-black text-primary-foreground text-xl">
-          S
-        </span>
-        <span className="text-2xl font-black tracking-tight text-foreground lowercase">
-          ShipBoost
-        </span>
-      </div>
+      <AuthBrand />
 
       <div className="w-full space-y-2 text-center">
         <h1 className="text-4xl font-black tracking-tight text-foreground">

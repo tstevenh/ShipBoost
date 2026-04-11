@@ -1,12 +1,12 @@
 import { subDays } from "@/server/services/time";
 import { prisma } from "@/server/db/client";
+import { publicLaunchCardSelect } from "@/server/db/public-selects";
 import { sendLaunchLiveEmailMessage } from "@/server/email/transactional";
 import { getEnv } from "@/server/env";
 import { getPublicLaunchWhere } from "@/server/services/public-tool-visibility";
 
 export async function listLaunchBoard(
   board: "daily" | "weekly" | "monthly" | "yearly",
-  options?: { viewerUserId?: string | null },
 ) {
   const now = new Date();
   const windowStart =
@@ -26,54 +26,21 @@ export async function listLaunchBoard(
       },
       ...getPublicLaunchWhere(now),
     },
-    include: {
-      tool: {
-        include: {
-          logoMedia: true,
-          _count: {
-            select: {
-              toolVotes: true,
-            },
-          },
-          toolCategories: {
-            include: {
-              category: true,
-            },
-          },
-        },
-      },
-    },
+    select: publicLaunchCardSelect,
     orderBy: [{ priorityWeight: "desc" }, { launchDate: "desc" }],
   });
-
-  const viewerVotes = options?.viewerUserId
-    ? await prisma.toolVote.findMany({
-        where: {
-          userId: options.viewerUserId,
-          toolId: {
-            in: launches.map((launch) => launch.toolId),
-          },
-        },
-        select: {
-          toolId: true,
-        },
-      })
-    : [];
-  const viewerVotedToolIds = new Set(viewerVotes.map((vote) => vote.toolId));
 
   return launches.map((launch) => ({
     ...launch,
     tool: {
       ...launch.tool,
       upvoteCount: launch.tool._count.toolVotes,
-      hasUpvoted: viewerVotedToolIds.has(launch.toolId),
+      hasUpvoted: false,
     },
   }));
 }
 
-export async function listPastLaunches(
-  options?: { viewerUserId?: string | null; limit?: number },
-) {
+export async function listPastLaunches(options?: { limit?: number }) {
   const now = new Date();
   const windowEnd = subDays(now, 1); // Older than 24 hours
 
@@ -84,48 +51,17 @@ export async function listPastLaunches(
       },
       ...getPublicLaunchWhere(now),
     },
-    include: {
-      tool: {
-        include: {
-          logoMedia: true,
-          _count: {
-            select: {
-              toolVotes: true,
-            },
-          },
-          toolCategories: {
-            include: {
-              category: true,
-            },
-          },
-        },
-      },
-    },
+    select: publicLaunchCardSelect,
     orderBy: [{ launchDate: "desc" }, { priorityWeight: "desc" }],
     take: options?.limit ?? 10,
   });
-
-  const viewerVotes = options?.viewerUserId
-    ? await prisma.toolVote.findMany({
-        where: {
-          userId: options.viewerUserId,
-          toolId: {
-            in: launches.map((launch) => launch.toolId),
-          },
-        },
-        select: {
-          toolId: true,
-        },
-      })
-    : [];
-  const viewerVotedToolIds = new Set(viewerVotes.map((vote) => vote.toolId));
 
   return launches.map((launch) => ({
     ...launch,
     tool: {
       ...launch.tool,
       upvoteCount: launch.tool._count.toolVotes,
-      hasUpvoted: viewerVotedToolIds.has(launch.toolId),
+      hasUpvoted: false,
     },
   }));
 }

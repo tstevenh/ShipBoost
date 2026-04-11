@@ -1,4 +1,5 @@
 import { prisma } from "@/server/db/client";
+import { publicToolCardSelect } from "@/server/db/public-selects";
 import { AppError } from "@/server/http/app-error";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
 import { slugify } from "@/server/services/slug";
@@ -170,7 +171,14 @@ export function getPublicCategoryBySlug(slug: string) {
       slug,
       isActive: true,
     },
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      seoIntro: true,
+      metaTitle: true,
+      metaDescription: true,
       toolCategories: {
         where: {
           tool: {
@@ -178,32 +186,9 @@ export function getPublicCategoryBySlug(slug: string) {
           },
         },
         orderBy: [{ sortOrder: "asc" }, { tool: { isFeatured: "desc" } }],
-        include: {
+        select: {
           tool: {
-            include: {
-              logoMedia: true,
-              toolCategories: {
-                include: {
-                  category: true,
-                },
-                orderBy: {
-                  sortOrder: "asc",
-                },
-              },
-              toolTags: {
-                include: {
-                  tag: true,
-                },
-                orderBy: {
-                  sortOrder: "asc",
-                },
-              },
-              _count: {
-                select: {
-                  toolVotes: true,
-                },
-              },
-            },
+            select: publicToolCardSelect,
           },
         },
       },
@@ -220,7 +205,14 @@ export async function getPublicCategoryPageBySlug(
       slug,
       isActive: true,
     },
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      seoIntro: true,
+      metaTitle: true,
+      metaDescription: true,
       toolCategories: {
         where: {
           tool: {
@@ -231,32 +223,9 @@ export async function getPublicCategoryPageBySlug(
           sort === "top"
             ? [{ tool: { toolVotes: { _count: "desc" } } }, { tool: { isFeatured: "desc" } }]
             : [{ tool: { createdAt: "desc" } }, { tool: { isFeatured: "desc" } }],
-        include: {
+        select: {
           tool: {
-            include: {
-              logoMedia: true,
-              toolCategories: {
-                include: {
-                  category: true,
-                },
-                orderBy: {
-                  sortOrder: "asc",
-                },
-              },
-              toolTags: {
-                include: {
-                  tag: true,
-                },
-                orderBy: {
-                  sortOrder: "asc",
-                },
-              },
-              _count: {
-                select: {
-                  toolVotes: true,
-                },
-              },
-            },
+            select: publicToolCardSelect,
           },
         },
       },
@@ -294,9 +263,9 @@ export async function getPublicCategoryPageBySlug(
   }
 
   const relatedCategories = toolIds.length
-    ? await prisma.category.findMany({
-        where: {
-          id: {
+      ? await prisma.category.findMany({
+          where: {
+            id: {
             not: category.id,
           },
           isActive: true,
@@ -306,11 +275,16 @@ export async function getPublicCategoryPageBySlug(
                 in: toolIds,
               },
             },
+            },
           },
-        },
-        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-        take: 4,
-      })
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+          orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+          take: 4,
+        })
     : [];
 
   return {

@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { formatLaunchDateForEmail } from "@/server/services/submission-service-shared";
+
 const {
   prismaMock,
   getSubmissionByIdMock,
   sendSubmissionApprovedEmailMessageMock,
   sendSubmissionRejectedEmailMessageMock,
-  sendProductEmailSafelyMock,
   scheduleNextFreeLaunchDateMock,
 } = vi.hoisted(() => ({
   prismaMock: {
@@ -23,7 +24,6 @@ const {
   getSubmissionByIdMock: vi.fn(),
   sendSubmissionApprovedEmailMessageMock: vi.fn(),
   sendSubmissionRejectedEmailMessageMock: vi.fn(),
-  sendProductEmailSafelyMock: vi.fn(),
   scheduleNextFreeLaunchDateMock: vi.fn(),
 }));
 
@@ -49,7 +49,6 @@ vi.mock("@/server/services/submission-service-shared", async () => {
   return {
     ...actual,
     getDashboardUrl: () => "https://app.shipboost.test/dashboard",
-    sendProductEmailSafely: sendProductEmailSafelyMock,
   };
 });
 
@@ -73,25 +72,34 @@ describe("submission-review-service", () => {
       reviewStatus: "PENDING",
       preferredLaunchDate: new Date("2026-04-10T00:00:00.000Z"),
       user: {
+        id: "user_1",
         email: "founder@acme.com",
         name: "Founder",
       },
+      paymentStatus: "NOT_REQUIRED",
+      badgeFooterUrl: null,
+      badgeVerification: "NOT_REQUIRED",
+      createdAt: new Date("2026-04-01T00:00:00.000Z"),
       tool: {
+        id: "tool_1",
+        slug: "acme",
         name: "Acme",
+        tagline: "Ship faster",
+        websiteUrl: "https://acme.test",
+        logoMedia: null,
+        publicationStatus: "PUBLISHED",
+        moderationStatus: "APPROVED",
         launches: [],
       },
     };
 
-    getSubmissionByIdMock
-      .mockResolvedValueOnce(submission)
-      .mockResolvedValueOnce({
-        ...submission,
-        reviewStatus: "APPROVED",
-        tool: {
-          ...submission.tool,
-          launches: [{ launchDate: new Date("2026-04-10T00:00:00.000Z") }],
-        },
-      });
+    getSubmissionByIdMock.mockResolvedValueOnce(submission);
+    prismaMock.launch.create.mockResolvedValue({
+      id: "launch_1",
+      launchType: "RELAUNCH",
+      status: "LIVE",
+      launchDate: new Date("2026-04-10T00:00:00.000Z"),
+    });
     prismaMock.$transaction.mockImplementation(
       async (
         callback: (tx: {
@@ -112,10 +120,7 @@ describe("submission-review-service", () => {
         },
         }),
     );
-    sendSubmissionApprovedEmailMessageMock.mockReturnValue(Promise.resolve());
-    sendProductEmailSafelyMock.mockResolvedValue(undefined);
-
-    await reviewSubmission(
+    const result = await reviewSubmission(
       "submission_1",
       {
         action: "APPROVE",
@@ -127,12 +132,28 @@ describe("submission-review-service", () => {
       "admin_1",
     );
 
-    expect(prismaMock.launch.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        toolId: "tool_1",
-        createdById: "admin_1",
-        launchType: "RELAUNCH",
+    expect(prismaMock.launch.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          toolId: "tool_1",
+          createdById: "admin_1",
+          launchType: "RELAUNCH",
+        }),
       }),
+    );
+    expect(sendSubmissionApprovedEmailMessageMock).not.toHaveBeenCalled();
+
+    sendSubmissionApprovedEmailMessageMock.mockReturnValue(Promise.resolve());
+    await result.emailTask();
+
+    expect(sendSubmissionApprovedEmailMessageMock).toHaveBeenCalledWith({
+      to: "founder@acme.com",
+      name: "Founder",
+      dashboardUrl: "https://app.shipboost.test/dashboard",
+      toolName: "Acme",
+      launchDate: formatLaunchDateForEmail(
+        new Date("2026-04-10T00:00:00.000Z"),
+      ),
     });
   });
 
@@ -144,24 +165,28 @@ describe("submission-review-service", () => {
       reviewStatus: "PENDING",
       preferredLaunchDate: null,
       user: {
+        id: "user_2",
         email: "founder@acme.com",
         name: "Founder",
       },
+      paymentStatus: "NOT_REQUIRED",
+      badgeFooterUrl: null,
+      badgeVerification: "NOT_REQUIRED",
+      createdAt: new Date("2026-04-01T00:00:00.000Z"),
       tool: {
+        id: "tool_2",
+        slug: "acme",
         name: "Acme",
+        tagline: "Ship faster",
+        websiteUrl: "https://acme.test",
+        logoMedia: null,
         publicationStatus: "PUBLISHED",
         moderationStatus: "APPROVED",
         launches: [],
       },
     };
 
-    getSubmissionByIdMock
-      .mockResolvedValueOnce(submission)
-      .mockResolvedValueOnce({
-        ...submission,
-        reviewStatus: "REJECTED",
-        founderVisibleNote: "Needs stronger update",
-      });
+    getSubmissionByIdMock.mockResolvedValueOnce(submission);
     prismaMock.$transaction.mockImplementation(
       async (
         callback: (tx: {
@@ -182,10 +207,7 @@ describe("submission-review-service", () => {
           },
         }),
     );
-    sendSubmissionRejectedEmailMessageMock.mockReturnValue(Promise.resolve());
-    sendProductEmailSafelyMock.mockResolvedValue(undefined);
-
-    await reviewSubmission(
+    const result = await reviewSubmission(
       "submission_2",
       {
         action: "REJECT",
@@ -202,6 +224,18 @@ describe("submission-review-service", () => {
       data: {
         internalNote: "keep listing live",
       },
+    });
+    expect(sendSubmissionRejectedEmailMessageMock).not.toHaveBeenCalled();
+
+    sendSubmissionRejectedEmailMessageMock.mockReturnValue(Promise.resolve());
+    await result.emailTask();
+
+    expect(sendSubmissionRejectedEmailMessageMock).toHaveBeenCalledWith({
+      to: "founder@acme.com",
+      name: "Founder",
+      dashboardUrl: "https://app.shipboost.test/dashboard",
+      toolName: "Acme",
+      founderVisibleNote: "Needs stronger update",
     });
   });
 });

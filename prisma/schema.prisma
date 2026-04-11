@@ -109,11 +109,11 @@ model User {
   linkedinUrl String?
   facebookUrl String?
 
-  tools       Tool[]       @relation("OwnedTools")
-  submissions Submission[]
-  launches    Launch[]     @relation("LaunchCreatedBy")
-  toolVotes   ToolVote[]
-  listingClaims ListingClaim[] @relation("ListingClaimClaimant")
+  tools                 Tool[]         @relation("OwnedTools")
+  submissions           Submission[]
+  launches              Launch[]       @relation("LaunchCreatedBy")
+  toolVotes             ToolVote[]
+  listingClaims         ListingClaim[] @relation("ListingClaimClaimant")
   reviewedListingClaims ListingClaim[] @relation("ListingClaimReviewer")
 
   createdAt DateTime  @default(now())
@@ -173,6 +173,8 @@ model Tool {
   @@index([ownerUserId])
   @@index([moderationStatus])
   @@index([publicationStatus])
+  @@index([publicationStatus, moderationStatus, updatedAt])
+  @@index([publicationStatus, moderationStatus, createdAt])
 }
 
 model ToolMedia {
@@ -239,6 +241,7 @@ model ToolCategory {
 
   @@unique([toolId, categoryId])
   @@index([categoryId])
+  @@index([categoryId, sortOrder])
 }
 
 model ToolTag {
@@ -253,24 +256,25 @@ model ToolTag {
 
   @@unique([toolId, tagId])
   @@index([tagId])
+  @@index([tagId, sortOrder])
 }
 
 model Submission {
-  id                 String                  @id @default(cuid())
-  userId             String
-  toolId             String
-  submissionType     SubmissionType
-  requestedSlug      String?
+  id                  String                  @id @default(cuid())
+  userId              String
+  toolId              String
+  submissionType      SubmissionType
+  requestedSlug       String?
   preferredLaunchDate DateTime?
-  paymentStatus      PaymentStatus           @default(NOT_REQUIRED)
-  polarCheckoutId    String?
-  polarOrderId       String?
-  paidAt             DateTime?
-  badgeFooterUrl     String?
-  badgeVerification  BadgeVerificationStatus @default(NOT_REQUIRED)
-  reviewStatus       ReviewStatus            @default(PENDING)
-  founderVisibleNote String?
-  internalReviewNote String?
+  paymentStatus       PaymentStatus           @default(NOT_REQUIRED)
+  polarCheckoutId     String?
+  polarOrderId        String?
+  paidAt              DateTime?
+  badgeFooterUrl      String?
+  badgeVerification   BadgeVerificationStatus @default(NOT_REQUIRED)
+  reviewStatus        ReviewStatus            @default(PENDING)
+  founderVisibleNote  String?
+  internalReviewNote  String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   tool Tool @relation(fields: [toolId], references: [id], onDelete: Cascade)
@@ -279,6 +283,7 @@ model Submission {
   updatedAt DateTime @updatedAt
 
   @@index([userId, reviewStatus])
+  @@index([userId, createdAt])
   @@index([toolId])
 }
 
@@ -301,6 +306,7 @@ model Launch {
 
   @@index([toolId, status])
   @@index([launchDate])
+  @@index([status, launchDate, priorityWeight])
 }
 
 model ListingClaim {

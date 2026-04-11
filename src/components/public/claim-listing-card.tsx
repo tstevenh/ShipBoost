@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
-type ClaimState =
+export type ClaimState =
   | {
       status: "AVAILABLE";
       websiteDomain: string;
@@ -46,6 +45,7 @@ export function ClaimListingCard({
   viewerEmail,
   signInHref,
   signUpHref,
+  onSubmitted,
 }: {
   toolId: string;
   toolSlug: string;
@@ -54,6 +54,7 @@ export function ClaimListingCard({
   viewerEmail: string | null;
   signInHref: string;
   signUpHref: string;
+  onSubmitted?: () => Promise<void> | void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -87,7 +88,12 @@ export function ClaimListingCard({
       }
 
       router.replace(`/tools/${toolSlug}`);
-      router.refresh();
+
+      if (onSubmitted) {
+        await onSubmitted();
+      } else {
+        router.refresh();
+      }
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Unable to submit claim.",
@@ -95,7 +101,7 @@ export function ClaimListingCard({
     } finally {
       setIsSubmitting(false);
     }
-  }, [claimState.canSubmit, isSubmitting, router, toolId, toolSlug]);
+  }, [claimState.canSubmit, isSubmitting, onSubmitted, router, toolId, toolSlug]);
 
   useEffect(() => {
     if (attemptedAutoSubmit.current) {

@@ -36,6 +36,14 @@ type ExistingImage = {
   height: number | null;
 };
 
+type UploadedMediaAsset = {
+  url: string;
+  publicId?: string;
+  format?: string;
+  width?: number;
+  height?: number;
+};
+
 type ToolEditorData = {
   id: string;
   slug: string;
@@ -55,9 +63,10 @@ type ToolEditorData = {
   toolTags: Array<{ tagId: string }>;
 };
 
-type LocalImage = {
+type EditableImage = {
   id: string;
-  file: File;
+  file?: File;
+  asset?: UploadedMediaAsset;
   previewUrl: string;
 };
 
@@ -69,6 +78,11 @@ type ApiErrorPayload = {
     fieldErrors?: FieldErrors;
     formErrors?: string[];
   };
+};
+
+type UploadedToolMediaPayload = {
+  logo?: UploadedMediaAsset;
+  screenshots: UploadedMediaAsset[];
 };
 
 type FormState = {
@@ -94,6 +108,17 @@ const pricingModels: PricingModel[] = [
   "CUSTOM",
   "CONTACT_SALES",
 ];
+
+function toOptionalString(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function revokePreviewUrl(url: string) {
+  if (url.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+}
 
 function createFormState(tool: ToolEditorData): FormState {
   return {
@@ -155,6 +180,32 @@ function readValidationErrors(payload: ApiErrorPayload | null) {
   };
 }
 
+function buildToolUpdatePayload(
+  form: FormState,
+  existingScreenshots: ExistingImage[],
+  logo?: UploadedMediaAsset,
+  screenshots: UploadedMediaAsset[] = [],
+) {
+  return {
+    slug: toOptionalString(form.slug),
+    name: form.name,
+    tagline: form.tagline,
+    websiteUrl: form.websiteUrl,
+    richDescription: form.richDescription,
+    pricingModel: form.pricingModel,
+    categoryIds: form.categoryIds,
+    tagIds: form.tagIds,
+    hasAffiliateProgram: form.hasAffiliateProgram,
+    founderXUrl: toOptionalString(form.founderXUrl),
+    founderGithubUrl: toOptionalString(form.founderGithubUrl),
+    founderLinkedinUrl: toOptionalString(form.founderLinkedinUrl),
+    founderFacebookUrl: toOptionalString(form.founderFacebookUrl),
+    existingScreenshotIds: existingScreenshots.map((image) => image.id),
+    logo,
+    screenshots,
+  };
+}
+
 export function FounderToolEditor({
   tool,
   categories,
@@ -170,11 +221,11 @@ export function FounderToolEditor({
   const [existingLogo, setExistingLogo] = useState<ExistingImage | null>(
     tool.logoMedia,
   );
-  const [newLogo, setNewLogo] = useState<LocalImage | null>(null);
+  const [newLogo, setNewLogo] = useState<EditableImage | null>(null);
   const [existingScreenshots, setExistingScreenshots] = useState<ExistingImage[]>(
     tool.screenshots,
   );
-  const [newScreenshots, setNewScreenshots] = useState<LocalImage[]>([]);
+  const [newScreenshots, setNewScreenshots] = useState<EditableImage[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -183,8 +234,8 @@ export function FounderToolEditor({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const submitLockRef = useRef(false);
-  const newLogoRef = useRef<LocalImage | null>(null);
-  const newScreenshotsRef = useRef<LocalImage[]>([]);
+  const newLogoRef = useRef<EditableImage | null>(null);
+  const newScreenshotsRef = useRef<EditableImage[]>([]);
 
   useEffect(() => {
     newLogoRef.current = newLogo;
@@ -194,11 +245,11 @@ export function FounderToolEditor({
   useEffect(() => {
     return () => {
       if (newLogoRef.current) {
-        URL.revokeObjectURL(newLogoRef.current.previewUrl);
+        revokePreviewUrl(newLogoRef.current.previewUrl);
       }
 
       newScreenshotsRef.current.forEach((image) => {
-        URL.revokeObjectURL(image.previewUrl);
+        revokePreviewUrl(image.previewUrl);
       });
     };
   }, []);
@@ -229,7 +280,7 @@ export function FounderToolEditor({
     }
 
     if (newLogo) {
-      URL.revokeObjectURL(newLogo.previewUrl);
+      revokePreviewUrl(newLogo.previewUrl);
     }
 
     setNewLogo({
@@ -264,6 +315,100 @@ export function FounderToolEditor({
     setNewScreenshots((current) => [...current, ...nextImages]);
   }
 
+  async function uploadPendingMedia(
+    currentLogo: EditableImage | null,
+    currentScreenshots: EditableImage[],
+  ) {
+    const pendingLogo = currentLogo?.file && !currentLogo.asset ? currentLogo : null;
+    const pendingScreenshots = currentScreenshots.filter(
+      (image) => image.file && !image.asset,
+    );
+
+    if (!pendingLogo && pendingScreenshots.length === 0) {
+      return {
+        logo: currentLogo,
+        screenshots: currentScreenshots,
+      };
+    }
+
+    const formData = new FormData();
+
+    if (pendingLogo?.file) {
+      formData.append("logo", pendingLogo.file);
+    }
+
+    pendingScreenshots.forEach((image) => {
+      if (image.file) {
+        formData.append("screenshots", image.file);
+      }
+    });
+
+    const response = await fetch(`/api/founder/tools/${tool.id}/media`, {
+      method: "POST",
+      body: formData,
+    });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error || "Unable to upload media.");
+    }
+
+    const uploaded = payload.data as UploadedToolMediaPayload;
+
+    if (pendingLogo && !uploaded.logo) {
+      throw new Error("Logo upload did not complete.");
+    }
+
+    if (uploaded.screenshots.length !== pendingScreenshots.length) {
+      throw new Error("Screenshot upload did not complete.");
+    }
+
+    const nextLogo: EditableImage | null =
+      pendingLogo && uploaded.logo && currentLogo
+        ? {
+            ...currentLogo,
+            asset: uploaded.logo,
+            previewUrl: uploaded.logo.url,
+            file: undefined,
+          }
+        : currentLogo;
+
+    if (pendingLogo && currentLogo) {
+      revokePreviewUrl(currentLogo.previewUrl);
+    }
+
+    let uploadedScreenshotIndex = 0;
+    const nextScreenshots = currentScreenshots.map((image) => {
+      if (!image.file || image.asset) {
+        return image;
+      }
+
+      const uploadedAsset = uploaded.screenshots[uploadedScreenshotIndex];
+
+      if (!uploadedAsset) {
+        throw new Error("Screenshot upload did not complete.");
+      }
+
+      uploadedScreenshotIndex += 1;
+      revokePreviewUrl(image.previewUrl);
+
+      return {
+        ...image,
+        asset: uploadedAsset,
+        previewUrl: uploadedAsset.url,
+        file: undefined,
+      };
+    });
+
+    setNewLogo(nextLogo);
+    setNewScreenshots(nextScreenshots);
+
+    return {
+      logo: nextLogo,
+      screenshots: nextScreenshots,
+    };
+  }
+
   function removeExistingScreenshot(imageId: string) {
     setExistingScreenshots((current) =>
       current.filter((image) => image.id !== imageId),
@@ -275,7 +420,7 @@ export function FounderToolEditor({
       const target = current.find((image) => image.id === imageId);
 
       if (target) {
-        URL.revokeObjectURL(target.previewUrl);
+        revokePreviewUrl(target.previewUrl);
       }
 
       return current.filter((image) => image.id !== imageId);
@@ -303,40 +448,22 @@ export function FounderToolEditor({
 
     void (async () => {
       try {
-        const formData = new FormData();
-
-        formData.append("slug", form.slug);
-        formData.append("name", form.name);
-        formData.append("tagline", form.tagline);
-        formData.append("websiteUrl", form.websiteUrl);
-        formData.append("richDescription", form.richDescription);
-        formData.append("pricingModel", form.pricingModel);
-        formData.append("categoryIds", JSON.stringify(form.categoryIds));
-        formData.append("tagIds", JSON.stringify(form.tagIds));
-        formData.append(
-          "hasAffiliateProgram",
-          String(form.hasAffiliateProgram),
+        const uploadedMedia = await uploadPendingMedia(newLogo, newScreenshots);
+        const requestPayload = buildToolUpdatePayload(
+          form,
+          existingScreenshots,
+          uploadedMedia.logo?.asset,
+          uploadedMedia.screenshots.flatMap((image) =>
+            image.asset ? [image.asset] : [],
+          ),
         );
-        formData.append("founderXUrl", form.founderXUrl);
-        formData.append("founderGithubUrl", form.founderGithubUrl);
-        formData.append("founderLinkedinUrl", form.founderLinkedinUrl);
-        formData.append("founderFacebookUrl", form.founderFacebookUrl);
-        formData.append(
-          "existingScreenshotIds",
-          JSON.stringify(existingScreenshots.map((image) => image.id)),
-        );
-
-        if (newLogo) {
-          formData.append("logo", newLogo.file);
-        }
-
-        newScreenshots.forEach((image) => {
-          formData.append("screenshots", image.file);
-        });
 
         const response = await fetch(`/api/founder/tools/${tool.id}`, {
           method: "PATCH",
-          body: formData,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestPayload),
         });
 
         const payload = (await response.json().catch(() => null)) as
@@ -351,10 +478,12 @@ export function FounderToolEditor({
 
         const updated = payload.data;
 
-        if (newLogo) {
-          URL.revokeObjectURL(newLogo.previewUrl);
+        if (newLogo?.file) {
+          revokePreviewUrl(newLogo.previewUrl);
         }
-        newScreenshots.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+        newScreenshots
+          .filter((image) => image.file)
+          .forEach((image) => revokePreviewUrl(image.previewUrl));
 
         setForm(createFormState(updated));
         setExistingLogo(updated.logoMedia);
@@ -364,7 +493,6 @@ export function FounderToolEditor({
         setSuccessMessage("Listing updated.");
         submitLockRef.current = false;
         setIsSubmitting(false);
-        router.refresh();
       } catch (error) {
         submitLockRef.current = false;
         setIsSubmitting(false);
@@ -637,7 +765,7 @@ export function FounderToolEditor({
                             type="button"
                             onClick={() => {
                               if (newLogo) {
-                                URL.revokeObjectURL(newLogo.previewUrl);
+                                revokePreviewUrl(newLogo.previewUrl);
                                 setNewLogo(null);
                               } else {
                                 setExistingLogo(null);
