@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { VerifyEmailPanel } from "@/components/auth/verify-email-panel";
 import { getServerSession } from "@/server/auth/session";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default async function VerifyEmailPage({
   searchParams,

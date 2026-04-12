@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { FounderToolEditor } from "@/components/founder/founder-tool-editor";
@@ -5,6 +6,13 @@ import { getServerSession } from "@/server/auth/session";
 import { getCachedCatalogOptions } from "@/server/cache/catalog-options";
 import { getFounderToolEditorById } from "@/server/services/tool-service";
 import { Footer } from "@/components/ui/footer";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 type RouteContext = {
   params: Promise<{ toolId: string }>;
@@ -66,8 +74,8 @@ export default async function FounderToolEditorPage(context: RouteContext) {
   };
 
   return (
-    <main className="flex-1 flex flex-col bg-secondary/30 pt-32">
-      <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 mb-32">
+    <main className="flex flex-1 flex-col overflow-x-hidden bg-secondary/30 pt-32">
+      <section className="mx-auto mb-32 flex w-full max-w-7xl flex-1 flex-col px-4 sm:px-6">
         <FounderToolEditor
           tool={serializedTool}
           categories={categories}

@@ -1,7 +1,9 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { FounderDashboard } from "@/components/founder/founder-dashboard";
 import { getServerSession } from "@/server/auth/session";
+import { getEnv } from "@/server/env";
 import { listFounderListingClaims } from "@/server/services/listing-claim-service";
 import {
   listFounderSubmissions,
@@ -9,6 +11,13 @@ import {
 } from "@/server/services/submission-service";
 import { listFounderTools } from "@/server/services/tool-service";
 import { Footer } from "@/components/ui/footer";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 type DashboardPageProps = {
   searchParams?: Promise<{
@@ -19,6 +28,7 @@ type DashboardPageProps = {
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const session = await getServerSession();
+  const isPrelaunch = getEnv().NEXT_PUBLIC_PRELAUNCH_MODE === "true";
 
   if (!session) {
     redirect("/sign-in");
@@ -44,8 +54,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const initialSuccessMessage =
     resolvedSearchParams?.checkout === "success"
       ? reconciledCheckoutSubmission?.paymentStatus === "PAID"
-        ? "Checkout completed. Shipboost confirmed your featured launch payment."
-        : "Checkout completed. Shipboost is syncing your featured launch payment now."
+        ? "Checkout completed. ShipBoost confirmed your premium launch payment."
+        : "Checkout completed. ShipBoost is syncing your premium launch payment now."
       : null;
   const serializedSubmissions = submissions.map((submission) => ({
     id: submission.id,
@@ -101,8 +111,20 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }));
 
   return (
-    <main className="flex-1 flex flex-col bg-secondary/30 pt-32">
-      <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 mb-32">
+    <main className="flex flex-1 flex-col overflow-x-hidden bg-secondary/30 pt-32">
+      <section className="mx-auto mb-32 flex w-full max-w-7xl flex-1 flex-col px-4 sm:px-6">
+        {isPrelaunch ? (
+          <div className="mb-8 rounded-[2rem] border border-primary/20 bg-primary/5 px-6 py-5">
+            <p className="text-[10px] font-black  tracking-[0.3em] text-primary">
+              Prelaunch Mode
+            </p>
+            <p className="mt-3 text-sm font-bold leading-relaxed text-foreground">
+              ShipBoost opens on May 1, 2026 UTC. Your free launches are being
+              queued into weekly cohorts, and premium launches can reserve
+              their preferred launch week ahead of go-live.
+            </p>
+          </div>
+        ) : null}
         <FounderDashboard
           initialSubmissions={serializedSubmissions}
           initialTools={serializedTools}
