@@ -1,11 +1,15 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { JsonLdScript } from "@/components/seo/json-ld";
 import { FilterBar } from "@/components/FilterBar";
-import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
+import { LaunchpadShowcase } from "@/components/public/launchpad-showcase";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
 import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { Footer } from "@/components/ui/footer";
+import MinimalHero from "@/components/ui/hero-minimalism";
+import { getEnv } from "@/server/env";
+import { buildCollectionListingSchema } from "@/server/seo/page-schema";
 import {
   getCachedLaunchBoard,
   getLaunchBoardStaticParams,
@@ -25,6 +29,7 @@ export function generateStaticParams() {
 
 export default async function LaunchBoardPage(context: RouteContext) {
   const { board } = await context.params;
+  const env = getEnv();
 
   if (!isPublicLaunchBoard(board)) {
     notFound();
@@ -32,58 +37,29 @@ export default async function LaunchBoardPage(context: RouteContext) {
 
   const launches = await getCachedLaunchBoard(board);
   const toolIds = launches.map((launch) => launch.tool.id);
-
-  const boardLabels: Record<string, string> = {
-    daily: "Today",
-    weekly: "This Week",
-    monthly: "This Month",
-    yearly: "This Year"
-  };
+  const schema = buildCollectionListingSchema({
+    name: `${board[0]?.toUpperCase()}${board.slice(1)} launches`,
+    description: `Browse ${board} launches on ShipBoost.`,
+    url: `${env.NEXT_PUBLIC_APP_URL}/launches/${board}`,
+    items: launches.map((launch) => ({
+      name: launch.tool.name,
+      url: `${env.NEXT_PUBLIC_APP_URL}/tools/${launch.tool.slug}`,
+    })),
+  });
 
   return (
     <main className="flex-1">
+      <JsonLdScript data={schema} />
+      <MinimalHero />
       <Suspense
         fallback={<div className="h-[73px] border-b border-border bg-background" />}
       >
-        <FilterBar />
+        <FilterBar launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT} />
       </Suspense>
       <ViewerVoteStateProvider toolIds={toolIds}>
-        <ShowcaseLayout>
+        <ShowcaseLayout isHomePage>
           <div className="space-y-12">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h2 className="text-3xl font-extrabold tracking-tight">
-                  Launch Pad
-                </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider">
-                  {boardLabels[board]}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid gap-5">
-              {launches.map((launch, idx) => (
-                <PublicDirectoryToolCard
-                  key={launch.id} 
-                  toolId={launch.tool.id}
-                  name={launch.tool.name}
-                  tagline={launch.tool.tagline}
-                  logoUrl={launch.tool.logoMedia?.url}
-                  slug={launch.tool.slug}
-                  votes={launch.tool.upvoteCount}
-                  tags={launch.tool.toolCategories.map(tc => tc.category.name)}
-                  rank={idx + 1}
-                  imagePriority={idx < 3}
-                />
-              ))}
-              {launches.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-32 bg-card rounded-2xl border border-dashed border-border">
-                  <p className="text-muted-foreground font-medium">
-                    No launches found for this period.
-                  </p>
-                </div>
-              )}
-            </div>
+            <LaunchpadShowcase board={board} launches={launches} />
           </div>
         </ShowcaseLayout>
       </ViewerVoteStateProvider>

@@ -2,23 +2,37 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Home as HomeIcon, Hash } from "lucide-react";
 
+import { JsonLdScript } from "@/components/seo/json-ld";
 import { listPublicTags } from "@/server/services/catalog-service";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
 import { Footer } from "@/components/ui/footer";
+import { getEnv } from "@/server/env";
+import { buildCollectionListingSchema } from "@/server/seo/page-schema";
 
 export const metadata: Metadata = {
-  title: "Browse Tags | Shipboost",
+  title: "Browse Tags | ShipBoost",
   description: "Explore SaaS products by specific features and tags.",
 };
 
 export default async function TagsPage() {
   const tags = await listPublicTags();
+  const env = getEnv();
+  const schema = buildCollectionListingSchema({
+    name: "Browse by Tag",
+    description: "Explore SaaS products by specific features and tags.",
+    url: `${env.NEXT_PUBLIC_APP_URL}/tags`,
+    items: tags.map((tag) => ({
+      name: tag.name,
+      url: `${env.NEXT_PUBLIC_APP_URL}/best/tag/${tag.slug}`,
+    })),
+  });
 
   return (
     <main className="flex-1">
+      <JsonLdScript data={schema} />
       <ShowcaseLayout>
         <div className="pb-10">
-          <nav className="flex items-center gap-2 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+          <nav className="flex items-center gap-2 text-[10px] font-black text-muted-foreground/60  tracking-widest">
             <Link href="/" className="hover:text-foreground transition-colors flex items-center gap-1">
               <HomeIcon size={12} /> Home
             </Link>
@@ -55,7 +69,7 @@ export default async function TagsPage() {
                   <span className="text-sm font-black group-hover:text-foreground transition-colors">
                     {tag.name}
                   </span>
-                  <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">
+                  <span className="text-[10px] font-bold text-muted-foreground/50  tracking-widest">
                     {tag.count} tools
                   </span>
                 </div>

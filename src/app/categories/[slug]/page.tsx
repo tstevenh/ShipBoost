@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { ChevronRight, Home as HomeIcon, Layers } from "lucide-react";
 
 import { ToolCard } from "@/components/ToolCard";
+import { JsonLdScript } from "@/components/seo/json-ld";
 import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
 import { getEnv } from "@/server/env";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
@@ -19,6 +20,7 @@ import {
   getCachedCategoryPage,
   getCachedCategoryStaticParams,
 } from "@/server/cache/public-content";
+import { buildCollectionWithBreadcrumbSchema } from "@/server/seo/page-schema";
 
 export const revalidate = 1800;
 
@@ -94,19 +96,19 @@ export async function generateMetadata(
 
   if (!category) {
     return {
-      title: "Category not found | Shipboost",
+      title: "Category not found | ShipBoost",
     };
   }
 
   const env = getEnv();
   const title =
     category.metaTitle?.trim() ||
-    `${category.name} tools for bootstrapped SaaS founders | Shipboost`;
+    `${category.name} tools for bootstrapped SaaS founders | ShipBoost`;
   const description =
     category.metaDescription?.trim() ||
     category.seoIntro?.trim() ||
     category.description?.trim() ||
-    `Browse ${category.name} tools curated for bootstrapped SaaS founders on Shipboost.`;
+    `Browse ${category.name} tools curated for bootstrapped SaaS founders on ShipBoost.`;
   const canonical = `${env.NEXT_PUBLIC_APP_URL}/categories/${category.slug}`;
 
   return {
@@ -119,7 +121,7 @@ export async function generateMetadata(
       title,
       description,
       url: canonical,
-      siteName: "Shipboost",
+      siteName: "ShipBoost",
       type: "website",
     },
     twitter: {
@@ -148,14 +150,36 @@ export default async function CategoryPage(context: RouteContext) {
     mapToolToGridItem(item.tool),
   );
   const featuredTools = (category.featuredTools || []).map(mapToolToGridItem);
+  const env = getEnv();
+  const canonical = `${env.NEXT_PUBLIC_APP_URL}/categories/${category.slug}`;
+  const description =
+    category.metaDescription?.trim() ||
+    category.seoIntro?.trim() ||
+    category.description?.trim() ||
+    `Browse ${category.name} tools curated for bootstrapped SaaS founders on ShipBoost.`;
+  const schema = buildCollectionWithBreadcrumbSchema({
+    name: `${category.name} Tools`,
+    description,
+    url: canonical,
+    breadcrumbs: [
+      { name: "Home", url: env.NEXT_PUBLIC_APP_URL },
+      { name: "Categories", url: `${env.NEXT_PUBLIC_APP_URL}/categories` },
+      { name: category.name, url: canonical },
+    ],
+    items: category.toolCategories.map((item) => ({
+      name: item.tool.name,
+      url: `${env.NEXT_PUBLIC_APP_URL}/tools/${item.tool.slug}`,
+    })),
+  });
 
   return (
     <main className="flex-1">
       <ViewerVoteStateProvider toolIds={allToolIds}>
+        <JsonLdScript data={schema} />
         <ShowcaseLayout>
           <div className="space-y-10">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
+          <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground/60  tracking-widest">
             <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
               <HomeIcon size={12} /> Home
             </Link>
@@ -181,12 +205,12 @@ export default async function CategoryPage(context: RouteContext) {
             <div className="flex flex-wrap items-center gap-6">
               <div className="flex items-center gap-4 py-2 px-4 bg-primary/5 rounded-xl border border-primary/10">
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Tools</span>
+                  <span className="text-[10px] font-black  tracking-widest text-primary/60">Tools</span>
                   <span className="text-xl font-black text-primary">{publishedCount}</span>
                 </div>
                 <div className="w-px h-8 bg-primary/10" />
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Featured</span>
+                  <span className="text-[10px] font-black  tracking-widest text-primary/60">Featured</span>
                   <span className="text-xl font-black text-primary">{(category.featuredTools || []).length}</span>
                 </div>
               </div>
@@ -206,7 +230,7 @@ export default async function CategoryPage(context: RouteContext) {
               <section className="space-y-6">
                 <div className="flex items-center gap-3">
                   <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                  <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase">
+                  <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground ">
                     Featured picks
                   </p>
                 </div>
@@ -230,7 +254,7 @@ export default async function CategoryPage(context: RouteContext) {
             <section className="space-y-6">
               <div className="flex items-end justify-between gap-4">
                 <div>
-                  <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase">
+                  <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground ">
                     Directory
                   </p>
                   <h2 className="mt-2 text-2xl font-extrabold tracking-tight">

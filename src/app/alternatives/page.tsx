@@ -2,24 +2,39 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Home as HomeIcon, Search } from "lucide-react";
 
+import { JsonLdScript } from "@/components/seo/json-ld";
 import { alternativesSeoRegistry } from "@/server/seo/registry";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
 import { Footer } from "@/components/ui/footer";
+import { getEnv } from "@/server/env";
+import { buildCollectionListingSchema } from "@/server/seo/page-schema";
 
 export const metadata: Metadata = {
-  title: "Product Alternatives | Shipboost",
+  title: "Product Alternatives | ShipBoost",
   description: "Find and compare the best alternatives to popular SaaS products and founder tools.",
 };
 
 export default function AlternativesIndexPage() {
   const entries = Object.values(alternativesSeoRegistry);
+  const env = getEnv();
+  const schema = buildCollectionListingSchema({
+    name: "Compare Alternatives",
+    description:
+      "Discover curated lists of top alternatives to industry-leading products.",
+    url: `${env.NEXT_PUBLIC_APP_URL}/alternatives`,
+    items: entries.map((entry) => ({
+      name: entry.title,
+      url: `${env.NEXT_PUBLIC_APP_URL}/alternatives/${entry.slug}`,
+    })),
+  });
 
   return (
     <main className="flex-1">
+      <JsonLdScript data={schema} />
       <ShowcaseLayout>
         <div className="pb-10">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+          <nav className="flex items-center gap-2 text-[10px] font-black text-muted-foreground/60  tracking-widest">
             <Link href="/" className="hover:text-foreground transition-colors flex items-center gap-1">
               <HomeIcon size={12} /> Home
             </Link>
@@ -58,7 +73,7 @@ export default function AlternativesIndexPage() {
                     <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                       {entry.metaDescription}
                     </p>
-                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest pt-2">
+                    <p className="text-[10px] font-bold text-muted-foreground/50  tracking-widest pt-2">
                       {entry.toolSlugs.length + 1} products compared
                     </p>
                   </div>

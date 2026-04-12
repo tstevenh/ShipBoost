@@ -5,6 +5,7 @@ import { ChevronRight, Home as HomeIcon, Trophy, Hash } from "lucide-react";
 import Link from "next/link";
 
 import { ToolCard } from "@/components/ToolCard";
+import { JsonLdScript } from "@/components/seo/json-ld";
 import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
 import { getEnv } from "@/server/env";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
@@ -19,6 +20,7 @@ import {
   getCachedBestTagPage,
   getCachedBestTagStaticParams,
 } from "@/server/cache/public-content";
+import { buildCollectionWithBreadcrumbSchema } from "@/server/seo/page-schema";
 
 export const revalidate = 1800;
 
@@ -94,7 +96,7 @@ export async function generateMetadata(
 
   if (!page) {
     return {
-      title: "Page not found | Shipboost",
+      title: "Page not found | ShipBoost",
     };
   }
 
@@ -110,7 +112,7 @@ export async function generateMetadata(
       title: page.entry.metaTitle,
       description: page.entry.metaDescription,
       url: canonical,
-      siteName: "Shipboost",
+      siteName: "ShipBoost",
       type: "website",
     },
     twitter: {
@@ -131,14 +133,31 @@ export default async function BestTagPage(context: RouteContext) {
 
   const allToolIds = (page.tools || []).map(t => t.id);
   const gridTools = page.tools.map(mapToolToGridItem);
+  const env = getEnv();
+  const canonical = `${env.NEXT_PUBLIC_APP_URL}/best/tag/${slug}`;
+  const schema = buildCollectionWithBreadcrumbSchema({
+    name: `#${page.tag.name} Products`,
+    description: page.entry.metaDescription,
+    url: canonical,
+    breadcrumbs: [
+      { name: "Home", url: env.NEXT_PUBLIC_APP_URL },
+      { name: "Tags", url: `${env.NEXT_PUBLIC_APP_URL}/tags` },
+      { name: page.tag.name, url: canonical },
+    ],
+    items: page.tools.map((tool) => ({
+      name: tool.name,
+      url: `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`,
+    })),
+  });
 
   return (
     <main className="flex-1">
       <ViewerVoteStateProvider toolIds={allToolIds}>
+        <JsonLdScript data={schema} />
         <ShowcaseLayout>
           <div className="space-y-10">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
+          <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground/60  tracking-widest">
             <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
               <HomeIcon size={12} /> Home
             </Link>

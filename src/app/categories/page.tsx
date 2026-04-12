@@ -8,12 +8,15 @@ import {
   Settings, Terminal, LineChart, Mail, Calculator
 } from "lucide-react";
 
+import { JsonLdScript } from "@/components/seo/json-ld";
 import { listPublicCategories } from "@/server/services/catalog-service";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
 import { Footer } from "@/components/ui/footer";
+import { getEnv } from "@/server/env";
+import { buildCollectionListingSchema } from "@/server/seo/page-schema";
 
 export const metadata: Metadata = {
-  title: "Browse Categories | Shipboost",
+  title: "Browse Categories | ShipBoost",
   description: "Explore curated SaaS categories for bootstrapped founders.",
 };
 
@@ -46,13 +49,24 @@ function getCategoryIcon(slug: string) {
 
 export default async function CategoriesPage() {
   const categories = await listPublicCategories();
+  const env = getEnv();
+  const schema = buildCollectionListingSchema({
+    name: "Browse Categories",
+    description: "Explore curated SaaS categories for bootstrapped founders.",
+    url: `${env.NEXT_PUBLIC_APP_URL}/categories`,
+    items: categories.map((category) => ({
+      name: category.name,
+      url: `${env.NEXT_PUBLIC_APP_URL}/categories/${category.slug}`,
+    })),
+  });
 
   return (
     <main className="flex-1">
+      <JsonLdScript data={schema} />
       <ShowcaseLayout>
         <div className="pb-10">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+          <nav className="flex items-center gap-2 text-[10px] font-black text-muted-foreground/60  tracking-widest">
             <Link href="/" className="hover:text-foreground transition-colors flex items-center gap-1">
               <HomeIcon size={12} /> Home
             </Link>
