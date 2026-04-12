@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Globe } from "lucide-react";
 
 import { MarkdownContent } from "@/components/content/markdown-content";
+import { JsonLdScript } from "@/components/seo/json-ld";
 import { ToolRelatedProducts } from "@/components/public/tool-related-products";
 import { ToolScreenshotRail } from "@/components/public/tool-screenshot-rail";
 import { ToolUpvoteButton } from "@/components/public/tool-upvote-button";
@@ -13,6 +14,7 @@ import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-p
 import { buildTrackedToolOutboundUrl } from "@/lib/tool-outbound";
 import { getEnv } from "@/server/env";
 import { Footer } from "@/components/ui/footer";
+import { buildToolPageSchema } from "@/server/seo/page-schema";
 import {
   getCachedPublishedTool,
   getCachedRelatedPublishedTools,
@@ -59,6 +61,23 @@ function ensureSentence(value: string) {
   return `${trimmed}.`;
 }
 
+function trimAtWordBoundary(value: string, maxLength: number) {
+  const normalized = collapseWhitespace(value);
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  const sliced = normalized.slice(0, maxLength + 1);
+  const boundaryIndex = sliced.lastIndexOf(" ");
+  const safeSlice =
+    boundaryIndex > Math.floor(maxLength * 0.6)
+      ? sliced.slice(0, boundaryIndex)
+      : normalized.slice(0, maxLength);
+
+  return `${safeSlice.trim()}...`;
+}
+
 function extractBenefitSentence(richDescription: string, tagline: string) {
   const plain = stripMarkdown(richDescription);
   const firstSentence =
@@ -81,10 +100,10 @@ function buildToolDescription(
   tool: NonNullable<Awaited<ReturnType<typeof getCachedPublishedTool>>>,
 ) {
   if (tool.metaDescription?.trim()) {
-    return tool.metaDescription.trim();
+    return trimAtWordBoundary(tool.metaDescription.trim(), 160);
   }
 
-  const taglineSentence = ensureSentence(tool.tagline);
+  const taglineSentence = ensureSentence(trimAtWordBoundary(tool.tagline, 60));
   const benefitSentence = extractBenefitSentence(
     tool.richDescription,
     tool.tagline,
@@ -95,20 +114,20 @@ function buildToolDescription(
   }
 
   if (taglineSentence) {
-    return `Discover ${tool.name} on Shipboost - ${tool.tagline.trim()}`;
+    return `Discover ${tool.name} on ShipBoost - ${trimAtWordBoundary(tool.tagline, 60)}`;
   }
 
-  return `Discover ${tool.name} on Shipboost.`;
+  return `Discover ${tool.name} on ShipBoost.`;
 }
 
 function buildToolTitle(
   tool: NonNullable<Awaited<ReturnType<typeof getCachedPublishedTool>>>,
 ) {
   if (tool.metaTitle?.trim()) {
-    return tool.metaTitle.trim();
+    return trimAtWordBoundary(tool.metaTitle.trim(), 70);
   }
 
-  return `${tool.name} | Shipboost`;
+  return `${tool.name} | ShipBoost`;
 }
 
 export async function generateMetadata(
@@ -119,7 +138,7 @@ export async function generateMetadata(
 
   if (!tool) {
     return {
-      title: "Tool not found | Shipboost",
+      title: "Tool not found | ShipBoost",
     };
   }
 
@@ -140,7 +159,7 @@ export async function generateMetadata(
       title,
       description,
       url: canonical,
-      siteName: "Shipboost",
+      siteName: "ShipBoost",
       type: "website",
       images: tool.logoMedia
         ? [
@@ -169,6 +188,17 @@ export default async function ToolPage(context: RouteContext) {
   }
 
   const primaryCategory = tool.toolCategories[0]?.category ?? null;
+  const env = getEnv();
+  const canonical = tool.canonicalUrl?.trim()
+    ? tool.canonicalUrl
+    : `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`;
+  const toolSchema = buildToolPageSchema({
+    name: tool.name,
+    description: buildToolDescription(tool),
+    url: canonical,
+    image: tool.logoMedia?.url,
+    categoryName: primaryCategory?.name ?? null,
+  });
   const relatedTools = await getCachedRelatedPublishedTools(
     tool.id,
     tool.toolCategories.map((item) => item.category.id),
@@ -180,6 +210,7 @@ export default async function ToolPage(context: RouteContext) {
   return (
     <ViewerVoteStateProvider toolIds={[tool.id]}>
       <main className="flex-1 bg-background pt-28">
+        <JsonLdScript data={toolSchema} />
         {/* Tool Header Section */}
         <section className="bg-card border-b border-border py-8">
           <div className="mx-auto max-w-7xl px-6">
@@ -270,7 +301,7 @@ export default async function ToolPage(context: RouteContext) {
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                <h3 className="mb-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+                <h3 className="mb-6 text-[10px] font-black  tracking-[0.2em] text-muted-foreground/60">
                   Details
                 </h3>
                 <div className="space-y-5">
@@ -291,7 +322,7 @@ export default async function ToolPage(context: RouteContext) {
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-muted-foreground">Pricing</span>
-                    <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-black uppercase text-foreground">
+                    <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-black  text-foreground">
                       {tool.pricingModel}
                     </span>
                   </div>
@@ -303,7 +334,7 @@ export default async function ToolPage(context: RouteContext) {
               </div>
 
               <div className="space-y-4">
-                <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+                <h3 className="px-1 text-[10px] font-black  tracking-[0.2em] text-muted-foreground/60">
                   Tags
                 </h3>
                 <div className="flex flex-wrap gap-2">
