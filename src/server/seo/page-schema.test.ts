@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildArticlePageSchema,
   buildCollectionListingSchema,
   buildCollectionWithBreadcrumbSchema,
+  buildContactPageSchema,
+  buildFaqPageSchema,
   buildHomePageSchema,
+  buildPricingPageSchema,
+  buildSimpleWebPageSchema,
   buildToolPageSchema,
 } from "@/server/seo/page-schema";
 
@@ -74,5 +79,62 @@ describe("page-schema", () => {
       "ItemList",
       "CollectionPage",
     ]);
+  });
+
+  it("builds article schema for evergreen content", () => {
+    const schemas = buildArticlePageSchema({
+      title: "How ShipBoost Works",
+      description: "Weekly launches explained",
+      url: "https://shipboost.io/how-it-works",
+    });
+
+    expect(schemas.map((item) => item["@type"])).toEqual([
+      "BreadcrumbList",
+      "Article",
+    ]);
+  });
+
+  it("builds faq page schema", () => {
+    const schemas = buildFaqPageSchema({
+      title: "Founder FAQs",
+      description: "Answers",
+      url: "https://shipboost.io/faqs",
+      questions: [
+        { question: "Who should submit?", answer: "Bootstrapped SaaS founders." },
+      ],
+    });
+
+    expect(schemas[1]["@type"]).toBe("FAQPage");
+  });
+
+  it("builds contact page schema with organization context", () => {
+    const schemas = buildContactPageSchema({
+      title: "Contact ShipBoost",
+      description: "Support",
+      url: "https://shipboost.io/contact",
+    });
+
+    expect(schemas.map((item) => item["@type"])).toContain("ContactPage");
+  });
+
+  it("builds service schema for pricing", () => {
+    const schemas = buildPricingPageSchema({
+      title: "Pricing",
+      description: "Launch pricing",
+      url: "https://shipboost.io/pricing",
+    });
+
+    expect(schemas[0]["@type"]).toBe("Service");
+  });
+
+  it("builds thin webpage schema for legal pages", () => {
+    const schema = buildSimpleWebPageSchema({
+      type: "WebPage",
+      title: "Terms",
+      description: "Platform terms",
+      url: "https://shipboost.io/terms",
+    });
+
+    expect(schema["@type"]).toBe("WebPage");
   });
 });

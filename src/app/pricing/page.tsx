@@ -2,82 +2,123 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, ArrowRight, Star, ShieldCheck, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
+import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
+import { getEnv } from "@/server/env";
+import { buildPricingPageSchema } from "@/server/seo/page-schema";
+
+const foundingPremiumPrice = {
+  original: "$19",
+  discounted: "$9",
+  label: "Founding price for the first 100 Premium Launches",
+};
+
+const doneForYouTier = {
+  name: "Done-for-you Submission",
+  price: "From $99",
+  ctaLabel: "See partner plans",
+  ctaHref: "https://www.aidirectori.es/?via=ShipBoost",
+};
 
 const pricingTiers = [
   {
-    name: "Free listing",
+    name: "Free Launch",
     price: "$0",
     description:
-      "Get your SaaS live in the directory with a clean public profile and category/tag placement.",
-    eyebrow: "Start here",
-    ctaLabel: "Submit for free",
+      "Get into the weekly launchpad with a public listing, category placement, and a founder-managed profile after approval.",
+    eyebrow: "Weekly launchpad",
+    ctaLabel: "Reserve free launch",
     ctaHref: "/submit",
     highlight: false,
     icon: ShieldCheck,
     points: [
-      "Public tool listing on Shipboost",
-      "Category and tag visibility",
+      "Weekly launchpad placement",
+      "Public tool listing on ShipBoost",
       "Founder-managed profile after approval",
-      "Good default path for early discovery",
+      "Requires backlink verification",
     ],
   },
   {
-    name: "Featured launch",
-    price: "$9",
+    name: "Premium Launch",
+    price: foundingPremiumPrice.discounted,
+    originalPrice: foundingPremiumPrice.original,
     description:
-      "Reserve a featured launch slot and push your product into the launch board with priority treatment.",
-    eyebrow: "Fastest paid boost",
-    ctaLabel: "Book featured launch",
+      "Choose your launch week, skip badge verification, and get priority placement in the weekly launchpad.",
+    eyebrow: "Founding offer",
+    foundingSpotsLabel: "First 100 Premium Launches",
+    ctaLabel: "Reserve premium launch",
     ctaHref: "/submit",
     highlight: true,
     icon: Star,
     points: [
-      "Featured launch placement",
-      "Priority launch weighting",
-      "Scheduled launch date support",
-      "Same submission flow, with checkout",
+      "Choose your launch week",
+      "Premium placement in the weekly launchpad",
+      "No backlink required",
+      "Priority ordering over free launches",
     ],
   },
   {
-    name: "Done-for-you",
-    price: "Custom",
+    name: doneForYouTier.name,
+    price: doneForYouTier.price,
     description:
-      "Hands-on distribution support for founders who want Shipboost to help push the launch further.",
-    eyebrow: "Higher-touch service",
-    ctaLabel: "Link coming soon",
-    ctaHref: null,
+      "Handled by AI Directories: manual submission packages for 30+, 60+, or 100+ AI directories with a detailed report after delivery.",
+    eyebrow: "Partner offer",
+    ctaLabel: doneForYouTier.ctaLabel,
+    ctaHref: doneForYouTier.ctaHref,
     highlight: false,
     icon: Zap,
     points: [
-      "Productized launch support",
-      "Founder-facing distribution help",
-      "Built for teams that need leverage fast",
-      "Service link will be added later",
+      "Starter from $99 for 30+ AI directories",
+      "Pro from $149 for 60+ directories",
+      "Premium from $199 for 100+ directories",
+      "Detailed submission report",
     ],
   },
 ] as const;
 
-export const metadata: Metadata = {
-  title: "Pricing | Shipboost",
-  description:
-    "Simple launch pricing for bootstrapped SaaS founders: free listing, $9 featured launch, and done-for-you distribution support.",
-};
+export function generateMetadata(): Metadata {
+  const isPrelaunch = getEnv().NEXT_PUBLIC_PRELAUNCH_MODE === "true";
 
-export default function PricingPage() {
+  return {
+    title: "Pricing | ShipBoost",
+    description: isPrelaunch
+      ? "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a $9 Premium Launch for the May 1 opening cohort, or use our AI Directories partner service."
+      : "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a Premium Launch, or use our AI Directories partner service.",
+  };
+}
+
+export const revalidate = 300;
+
+export default async function PricingPage() {
+  const env = getEnv();
+  const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
+  const foundingSpotsLeft = await getRemainingFoundingPremiumLaunchSpots();
+  const schema = buildPricingPageSchema({
+    title: "Pricing",
+    description: isPrelaunch
+      ? "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a $9 Premium Launch for the May 1 opening cohort, or use our AI Directories partner service."
+      : "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a Premium Launch, or use our AI Directories partner service.",
+    url: `${env.NEXT_PUBLIC_APP_URL}/pricing`,
+  });
+
   return (
     <main className="flex-1 flex flex-col bg-muted/20 pt-32">
+      <JsonLdScript data={schema} />
       <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 mb-32">
         <div className="max-w-3xl">
-          <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40 uppercase mb-4">
+          <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40  mb-4">
             Pricing
           </p>
-          <h1 className="text-5xl font-black tracking-tight text-foreground sm:text-6xl lowercase">
-            Simple launch options for serious founders.
+          <h1 className="text-5xl font-black tracking-tight text-foreground sm:text-6xl ">
+            {isPrelaunch
+              ? "Launch pricing for the opening cohort."
+              : "Launch pricing for serious founders."}
           </h1>
           <p className="mt-6 text-xl font-medium leading-relaxed text-muted-foreground/80">
-            Start with a free listing, pay for a featured launch when you want a
-            stronger push, or let our operators handle your distribution.
+            {isPrelaunch
+              ? "ShipBoost opens on May 1, 2026 UTC. Start with a free weekly launch, reserve a Premium Launch week, or hand off directory submissions to our AI Directories partner."
+              : "Start with a free weekly launch, reserve a Premium Launch when you want stronger placement, or hand off directory submissions to our AI Directories partner."}
           </p>
         </div>
 
@@ -93,13 +134,13 @@ export default function PricingPage() {
               )}
             >
               {tier.highlight && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap shadow-lg shadow-black/20">
-                  Most Popular
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-[10px] font-black  tracking-widest whitespace-nowrap shadow-lg shadow-black/20">
+                  Founding offer
                 </div>
               )}
               
               <div className="flex items-center justify-between mb-6">
-                <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40 uppercase">
+                <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40 ">
                   {tier.eyebrow}
                 </p>
                 <tier.icon size={20} className={cn(tier.highlight ? "text-foreground" : "text-muted-foreground/40")} />
@@ -108,10 +149,24 @@ export default function PricingPage() {
               <h2 className="text-2xl font-black text-foreground">
                 {tier.name}
               </h2>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-5xl font-black tracking-tighter text-foreground">{tier.price}</span>
-                {tier.price.startsWith("$") && <span className="text-muted-foreground font-bold text-sm">/launch</span>}
+              <div className="mt-4 flex items-end gap-3">
+                {"originalPrice" in tier && tier.originalPrice ? (
+                  <span className="text-lg font-black text-muted-foreground line-through">
+                    {tier.originalPrice}
+                  </span>
+                ) : null}
+                <span className="text-5xl font-black tracking-tighter text-foreground">
+                  {tier.price}
+                </span>
+                {tier.price.startsWith("$") && (
+                  <span className="text-muted-foreground font-bold text-sm">/launch</span>
+                )}
               </div>
+              {"foundingSpotsLabel" in tier && tier.foundingSpotsLabel ? (
+                <p className="mt-2 text-[10px] font-black  tracking-widest text-primary">
+                  {foundingSpotsLeft} of 100 founding spots left
+                </p>
+              ) : null}
               <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
                 {tier.description}
               </p>
@@ -160,16 +215,15 @@ export default function PricingPage() {
 
         <section className="mt-20 grid gap-12 lg:grid-cols-[1.2fr_0.8fr] items-start">
           <div className="space-y-6">
-            <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40 uppercase">
+            <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40 ">
               Brand Commitment
             </p>
             <h2 className="text-3xl font-black tracking-tight text-foreground">
               Distribution over vanity. Trust first.
             </h2>
             <p className="text-lg font-medium leading-relaxed text-muted-foreground/80">
-              ShipBoost is built for operators, not hype-chasers. We keep our submission 
-              flow simple and our directory clean to ensure that when a founder 
-              launches here, they're actually building credibility.
+              ShipBoost is built for operators. The goal is simple: help founders
+              earn trust, get discovered, and turn launch into momentum.
             </p>
             <div className="pt-4">
               <Link href="/submit" className="inline-flex items-center gap-2 text-sm font-black text-foreground hover:underline underline-offset-4">
@@ -179,14 +233,14 @@ export default function PricingPage() {
           </div>
 
           <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
-            <h3 className="text-sm font-black tracking-[0.2em] text-foreground uppercase mb-6 flex items-center gap-2">
-              <Zap size={16} /> Why boost?
+            <h3 className="text-sm font-black tracking-[0.2em] text-foreground  mb-6 flex items-center gap-2">
+              <Zap size={16} /> Why ShipBoost
             </h3>
             <div className="space-y-6">
               {[
-                { title: "Priority Weighting", desc: "Featured launches stay visible longer and appear higher in the feed." },
-                { title: "Founder Claims", desc: "Verified founder tags signal trust to users and potential investors." },
-                { title: "Structured Loops", desc: "We push your product through curated distribution channels." }
+                { title: "Weekly launchpad", desc: "Weekly cohorts keep launches readable instead of burying them in a crowded daily feed." },
+                { title: "Premium priority", desc: "Premium launches reserve a week and start ahead of free launches outside the top vote slots." },
+                { title: "Founder ownership", desc: "Founder claims and clean profiles make listings easier to trust." },
               ].map((item, i) => (
                 <div key={i} className="space-y-1">
                   <h4 className="text-sm font-black text-foreground">{item.title}</h4>
