@@ -72,7 +72,28 @@ type FeaturedBadge = {
   imageStyle?: React.CSSProperties;
 };
 
+type VerificationBadge = {
+  id: string;
+  href: string;
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  rel?: string;
+  title?: string;
+  imageStyle?: React.CSSProperties;
+};
+
 const featuredBadges: FeaturedBadge[] = [
+  {
+    id: "auraplusplus",
+    href: "https://auraplusplus.com/projects/shipboost",
+    src: "https://auraplusplus.com/images/badges/featured-on-light.svg",
+    alt: "Featured on Aura++",
+    width: 265,
+    height: 58,
+    rel: "noopener",
+  },
   {
     id: "startup-fame",
     href: "https://startupfa.me/s/shipboost?utm_source=shipboost.io",
@@ -382,6 +403,130 @@ const featuredBadges: FeaturedBadge[] = [
     alt: "Best Tool Vault",
     height: 54,
   },
+  {
+    id: "toolsunderradar",
+    href: "https://toolsunderradar.com",
+    src: "https://toolsunderradar.com/assets/images/badge.png",
+    alt: "Tools Under Radar",
+    height: 54,
+  },
+  {
+    id: "milliondothomepage",
+    href: "https://milliondothomepage.com/product/shipboost",
+    src: "https://milliondothomepage.com/assets/images/badge.png",
+    alt: "Badge",
+    height: 54,
+  },
+  {
+    id: "launchclash",
+    href: "https://launchclash.com/product/shipboost",
+    src: "https://launchclash.com/static/images/badge.png",
+    alt: "Featured on Submit Your Product - LaunchClash",
+    imageStyle: { height: 54 },
+  },
+  {
+    id: "shinylaunch",
+    href: "https://shinylaunch.com/product/shipboost",
+    src: "https://shinylaunch.com/static/images/badge.png",
+    alt: "Submit Your",
+    height: 54,
+  },
+  {
+    id: "aixcollection",
+    href: "https://aixcollection.com",
+    src: "https://aixcollection.com/assets/images/badge.png",
+    alt: "AI X Collection",
+    height: 54,
+  },
+  {
+    id: "latestaiupdates",
+    href: "https://latestaiupdates.com",
+    src: "https://latestaiupdates.com/assets/images/badge.png",
+    alt: "Latest AI Updates",
+    height: 54,
+  },
+  {
+    id: "productwing",
+    href: "https://productwing.com",
+    src: "https://productwing.com/assets/images/badge.png",
+    alt: "Product Wing",
+    height: 54,
+  },
+  {
+    id: "saasroots",
+    href: "https://saasroots.com",
+    src: "https://saasroots.com/assets/images/badge.png",
+    alt: "SaaS Roots",
+    height: 54,
+  },
+  {
+    id: "startupaideas",
+    href: "https://startupaideas.com",
+    src: "https://startupaideas.com/assets/images/badge.png",
+    alt: "Startup AIdeas",
+    height: 54,
+  },
+  {
+    id: "theapptools",
+    href: "https://theapptools.com",
+    src: "https://theapptools.com/assets/images/badge.png",
+    alt: "The App Tools",
+    height: 54,
+  },
+  {
+    id: "themegatools",
+    href: "https://themegatools.com",
+    src: "https://themegatools.com/assets/images/badge.png",
+    alt: "The Mega Tools",
+    height: 54,
+  },
+  {
+    id: "toolslisthq",
+    href: "https://toolslisthq.com",
+    src: "https://toolslisthq.com/assets/images/badge.png",
+    alt: "Tools List HQ",
+    height: 54,
+  },
+];
+
+const verificationBadges: VerificationBadge[] = [
+  {
+    id: "bestsky-tools-verification",
+    href: "https://bestsky.tools?utm_source=badge",
+    src: "https://assets.bestsky.tools/badges/featured-light.svg",
+    alt: "Featured on BestskyTools",
+    width: 150,
+    imageStyle: { width: 96, height: "auto" },
+  },
+  {
+    id: "similarlabs-verification",
+    href: "https://similarlabs.com",
+    src: "https://similarlabs.com/similarlabs-embed-badge-light.svg",
+    alt: "Featured on SimilarLabs",
+    width: 124,
+    height: 40,
+    imageStyle: { width: 88, height: "auto" },
+  },
+  {
+    id: "super-launch-verification",
+    href: "https://www.superlaun.ch/products/2204",
+    src: "https://www.superlaun.ch/badge.png",
+    alt: "Featured on Super Launch",
+    width: 300,
+    height: 300,
+    rel: "noopener",
+    imageStyle: { width: 44, height: 44 },
+  },
+  {
+    id: "openhunts-verification",
+    href: "https://openhunts.com",
+    src: "https://cdn.openhunts.com/badges/club.webp",
+    alt: "OpenHunts Club Member",
+    width: 486,
+    height: 105,
+    title: "OpenHunts Club",
+    imageStyle: { width: 108, height: "auto" },
+  },
 ];
 
 function FeaturedBadgeRail() {
@@ -435,6 +580,41 @@ function FeaturedBadgeRail() {
               </a>
             ))}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VerificationBadgeRail() {
+  return (
+    <div className="border-t border-border/80 bg-muted/20 py-4">
+      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6">
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/60">
+          Verification badges
+        </p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          {verificationBadges.map((badge) => (
+            <a
+              key={badge.id}
+              href={badge.href}
+              target="_blank"
+              rel={badge.rel}
+              title={badge.title}
+            >
+              {/* Keep these as plain badge embeds for directory verification crawlers. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={badge.src}
+                alt={badge.alt}
+                width={badge.width}
+                height={badge.height}
+                style={badge.imageStyle}
+                className="h-auto w-auto opacity-90 transition-opacity hover:opacity-100"
+                decoding="async"
+              />
+            </a>
+          ))}
         </div>
       </div>
     </div>
@@ -517,6 +697,7 @@ export function FlickeringFooter({ className, ...props }: FlickeringFooterProps)
         </div>
       </div>
       <FeaturedBadgeRail />
+      <VerificationBadgeRail />
       <div className="flex flex-col items-center justify-center gap-3 border-t border-border bg-muted/30 p-6 relative z-20 sm:flex-row sm:gap-4">
         <p className="text-muted-foreground text-[10px] font-bold tracking-widest">
           © {new Date().getFullYear()} ShipBoost. All rights reserved.
