@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Manrope, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppHeader } from "@/components/app/app-header";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { getCachedPublicHeaderCategories } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
 import "./globals.css";
@@ -76,6 +77,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300" suppressHydrationWarning>
+        <GoogleAnalytics />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

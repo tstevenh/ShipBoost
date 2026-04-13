@@ -72,18 +72,6 @@ type FeaturedBadge = {
   imageStyle?: React.CSSProperties;
 };
 
-type VerificationBadge = {
-  id: string;
-  href: string;
-  src: string;
-  alt: string;
-  width?: number;
-  height?: number;
-  rel?: string;
-  title?: string;
-  imageStyle?: React.CSSProperties;
-};
-
 const featuredBadges: FeaturedBadge[] = [
   {
     id: "auraplusplus",
@@ -489,52 +477,12 @@ const featuredBadges: FeaturedBadge[] = [
   },
 ];
 
-const verificationBadges: VerificationBadge[] = [
-  {
-    id: "bestsky-tools-verification",
-    href: "https://bestsky.tools?utm_source=badge",
-    src: "https://assets.bestsky.tools/badges/featured-light.svg",
-    alt: "Featured on BestskyTools",
-    width: 150,
-    imageStyle: { width: 96, height: "auto" },
-  },
-  {
-    id: "similarlabs-verification",
-    href: "https://similarlabs.com",
-    src: "https://similarlabs.com/similarlabs-embed-badge-light.svg",
-    alt: "Featured on SimilarLabs",
-    width: 124,
-    height: 40,
-    imageStyle: { width: 88, height: "auto" },
-  },
-  {
-    id: "super-launch-verification",
-    href: "https://www.superlaun.ch/products/2204",
-    src: "https://www.superlaun.ch/badge.png",
-    alt: "Featured on Super Launch",
-    width: 300,
-    height: 300,
-    rel: "noopener",
-    imageStyle: { width: 44, height: 44 },
-  },
-  {
-    id: "openhunts-verification",
-    href: "https://openhunts.com",
-    src: "https://cdn.openhunts.com/badges/club.webp",
-    alt: "OpenHunts Club Member",
-    width: 486,
-    height: 105,
-    title: "OpenHunts Club",
-    imageStyle: { width: 108, height: "auto" },
-  },
-];
-
 function FeaturedBadgeRail() {
   const marqueeBadges = [...featuredBadges, ...featuredBadges];
 
   return (
-    <div className="border-t border-border/80 bg-muted/20 py-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6">
+    <div className="border-t border-border/80 bg-muted/20 py-5">
+      <div className="mx-auto flex max-w-7xl flex-col gap-2.5 px-6">
         <div className="flex items-center justify-between gap-4">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/60">
             Featured on
@@ -555,7 +503,7 @@ function FeaturedBadgeRail() {
                 target="_blank"
                 rel={badge.rel}
                 title={badge.title}
-                className="flex h-20 min-w-[180px] items-center justify-center rounded-2xl border border-border/70 bg-background/95 px-5 py-3 shadow-[0_10px_40px_-28px_rgba(10,10,10,0.9)] transition-transform duration-300 hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-background"
+                className="flex h-12 min-w-[118px] items-center justify-center rounded-lg border border-border/70 bg-background/95 px-2.5 py-1.5 shadow-[0_10px_40px_-28px_rgba(10,10,10,0.9)] transition-transform duration-300 hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-background"
               >
                 {badge.src ? (
                   <>
@@ -567,54 +515,19 @@ function FeaturedBadgeRail() {
                       width={badge.width}
                       height={badge.height}
                       style={badge.imageStyle}
-                      className="max-h-[60px] w-auto shrink-0 object-contain"
+                      className="max-h-[30px] w-auto shrink-0 object-contain"
                       loading="lazy"
                       decoding="async"
                     />
                   </>
                 ) : (
-                  <span className="text-sm font-black tracking-[0.18em] text-foreground/80">
+                  <span className="text-[10px] font-black tracking-[0.1em] text-foreground/80">
                     {badge.label}
                   </span>
                 )}
               </a>
             ))}
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function VerificationBadgeRail() {
-  return (
-    <div className="border-t border-border/80 bg-muted/20 py-4">
-      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6">
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/60">
-          Verification badges
-        </p>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-          {verificationBadges.map((badge) => (
-            <a
-              key={badge.id}
-              href={badge.href}
-              target="_blank"
-              rel={badge.rel}
-              title={badge.title}
-            >
-              {/* Keep these as plain badge embeds for directory verification crawlers. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={badge.src}
-                alt={badge.alt}
-                width={badge.width}
-                height={badge.height}
-                style={badge.imageStyle}
-                className="h-auto w-auto opacity-90 transition-opacity hover:opacity-100"
-                decoding="async"
-              />
-            </a>
-          ))}
         </div>
       </div>
     </div>
@@ -697,7 +610,6 @@ export function FlickeringFooter({ className, ...props }: FlickeringFooterProps)
         </div>
       </div>
       <FeaturedBadgeRail />
-      <VerificationBadgeRail />
       <div className="flex flex-col items-center justify-center gap-3 border-t border-border bg-muted/30 p-6 relative z-20 sm:flex-row sm:gap-4">
         <p className="text-muted-foreground text-[10px] font-bold tracking-widest">
           © {new Date().getFullYear()} ShipBoost. All rights reserved.
