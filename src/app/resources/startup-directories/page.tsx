@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { StartupDirectoriesResource } from "@/components/resources/startup-directories-resource";
 import { ResourceUnlockPanel } from "@/components/resources/resource-unlock-panel";
 import { startupDirectories } from "@/content/resources/startup-directories";
@@ -29,6 +31,36 @@ export default async function StartupDirectoriesPage() {
           Search it, sort it, and work through it without bouncing between tabs.
         </p>
       </div>
+
+      <section className="mt-8 rounded-[2rem] border border-primary/15 bg-primary/5 px-6 py-6 shadow-sm">
+        <div className="max-w-3xl space-y-3">
+          <p className="text-[10px] font-black tracking-[0.3em] text-primary">
+            Founder CTA
+          </p>
+          <h2 className="text-2xl font-black tracking-tight text-foreground">
+            Submit your product to ShipBoost
+          </h2>
+          <p className="text-sm font-medium leading-7 text-muted-foreground">
+            Want your startup in this directory stack too? Submit on ShipBoost
+            and choose the launch path that fits your timing: free launch with
+            badge verification or Premium Launch with priority placement.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-1">
+            <Link
+              href="/submit"
+              className="inline-flex items-center justify-center rounded-2xl bg-foreground px-5 py-3 text-sm font-black text-background transition-all hover:opacity-90 active:scale-95"
+            >
+              Submit your product
+            </Link>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center justify-center rounded-2xl border border-border bg-card px-5 py-3 text-sm font-black text-foreground transition-all hover:bg-muted active:scale-95"
+            >
+              Compare launch options
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {session ? (
         <div className="mt-8">

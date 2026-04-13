@@ -12,12 +12,16 @@
     "prisma:format": "prisma format",
     "prisma:studio": "node scripts/run-with-env.mjs prisma studio",
     "db:migrate": "node scripts/run-with-env.mjs prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "node prisma/seed.mjs",
     "tools:import-csv": "node scripts/run-with-env.mjs node scripts/import-seeded-tools.mjs",
     "tags:prune-category-duplicates": "node scripts/run-with-env.mjs node scripts/prune-category-duplicate-tags.mjs",
     "tags:sync": "node scripts/run-with-env.mjs node scripts/sync-tag-taxonomy.mjs",
     "tags:sync:deactivate-missing": "node scripts/run-with-env.mjs node scripts/sync-tag-taxonomy.mjs --deactivate-missing",
     "auth:promote-admin": "node scripts/promote-admin.mjs"
+  },
+  "engines": {
+    "node": "20.x"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

@@ -42,7 +42,7 @@ const groups: FaqGroup[] = [
           "Free Launch goes through review, requires badge verification, and is queued into the next available weekly cohort. Premium Launch lets you reserve a launch week, skips badge verification, and gets stronger baseline placement.",
       },
       {
-        question: "Do I need a backlink for Premium Launch?",
+        question: "Do I need badge verification for Premium Launch?",
         answer:
           "No. Badge verification is required for free launches, not Premium Launches.",
       },

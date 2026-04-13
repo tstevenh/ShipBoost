@@ -1087,7 +1087,7 @@ export function SubmitProductForm({
                   : "Join the weekly launchpad for free by including our trust badge on your website. Best for early-stage bootstrapped founders."}
               </p>
               <ul className="space-y-4 mb-10">
-                {["Weekly launchpad placement", "Public listing forever", "Founder verified badge", "Requires backlink"].map(p => (
+                {["Weekly launchpad placement", "Public listing forever", "Founder verified badge", "Requires badge verification"].map(p => (
                   <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
                     <Check size={16} className="text-emerald-500 mt-0.5" /> {p}
                   </li>
@@ -1135,10 +1135,10 @@ export function SubmitProductForm({
               </p>
               <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
                 Reserve your launch week, get premium placement in the weekly
-                launchpad, and skip the backlink requirement.
+                launchpad, and skip badge verification.
               </p>
               <ul className="space-y-4 mb-10">
-                {["Choose your launch week", "Premium placement", "No backlink required", "Priority ordering over free launches", "Founding offer pricing"].map(p => (
+                {["Choose your launch week", "Premium placement", "No badge required", "Priority ordering over free launches", "Founding offer pricing"].map(p => (
                   <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
                     <Check size={16} className="text-foreground mt-0.5" /> {p}
                   </li>

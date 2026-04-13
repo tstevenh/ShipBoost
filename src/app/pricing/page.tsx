@@ -37,7 +37,7 @@ const pricingTiers = [
       "Weekly launchpad placement",
       "Public tool listing on ShipBoost",
       "Founder-managed profile after approval",
-      "Requires backlink verification",
+      "Requires badge verification",
     ],
   },
   {
@@ -55,7 +55,7 @@ const pricingTiers = [
     points: [
       "Choose your launch week",
       "Premium placement in the weekly launchpad",
-      "No backlink required",
+      "No badge required",
       "Priority ordering over free launches",
     ],
   },

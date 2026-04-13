@@ -4,10 +4,20 @@ export type StartupDirectoryResourceItem = {
   url: string;
   domain: string;
   dr: number;
+  recommended?: boolean;
   searchText: string;
 };
 
 export const startupDirectories: StartupDirectoryResourceItem[] = [
+  {
+    "id": "shipboost-000",
+    "name": "ShipBoost",
+    "url": "https://shipboost.io",
+    "domain": "shipboost.io",
+    "dr": 0,
+    "recommended": true,
+    "searchText": "shipboost shipboost.io https://shipboost.io"
+  },
   {
     "id": "r-entrepreneur-001",
     "name": "r/entrepreneur",
