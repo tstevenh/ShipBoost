@@ -104,3 +104,31 @@
     @apply font-heading tracking-tight;
   }
 }
+
+@keyframes footer-badge-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(calc(-50% - 0.5rem), 0, 0);
+  }
+}
+
+@layer utilities {
+  .marquee-track {
+    animation: footer-badge-marquee 44s linear infinite;
+    will-change: transform;
+  }
+
+  .marquee-group:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      animation: none;
+      transform: none;
+    }
+  }
+}
