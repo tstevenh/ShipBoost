@@ -7,11 +7,19 @@ type ToolPageSeoInput = {
 };
 
 type ToolTimelineInput = {
-  createdAt: Date;
+  createdAt: Date | string;
   launches: Array<{
-    launchDate: Date;
+    launchDate: Date | string;
   }>;
 };
+
+function coerceDate(value: Date | string) {
+  return value instanceof Date ? value : new Date(value);
+}
+
+function isValidDate(value: Date) {
+  return !Number.isNaN(value.getTime());
+}
 
 function collapseWhitespace(value: string) {
   return value.replace(/\s+/g, " ").trim();
@@ -124,19 +132,24 @@ export function buildToolPageTitle(tool: ToolPageSeoInput) {
 }
 
 export function getToolTimelineDisplay(input: ToolTimelineInput) {
-  const latestLaunch = [...input.launches].sort(
-    (left, right) => right.launchDate.getTime() - left.launchDate.getTime(),
-  )[0];
+  const latestLaunch = input.launches
+    .map((launch) => ({
+      date: coerceDate(launch.launchDate),
+    }))
+    .filter((launch) => isValidDate(launch.date))
+    .sort((left, right) => right.date.getTime() - left.date.getTime())[0];
 
   if (latestLaunch) {
     return {
       label: "Launch Date",
-      date: latestLaunch.launchDate,
+      date: latestLaunch.date,
     };
   }
 
+  const createdAt = coerceDate(input.createdAt);
+
   return {
     label: "Listed",
-    date: input.createdAt,
+    date: isValidDate(createdAt) ? createdAt : new Date(),
   };
 }

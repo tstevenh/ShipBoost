@@ -6,6 +6,15 @@ import { StartupDirectoriesResource } from "@/components/resources/startup-direc
 vi.mock("@/content/resources/startup-directories", () => ({
   startupDirectories: [
     {
+      id: "shipboost-000",
+      name: "ShipBoost",
+      url: "https://shipboost.io",
+      domain: "shipboost.io",
+      dr: 0,
+      recommended: true,
+      searchText: "shipboost shipboost.io https://shipboost.io",
+    },
+    {
       id: "reddit-000",
       name: "r/startups",
       url: "https://reddit.com/r/startups",
@@ -70,6 +79,7 @@ describe("StartupDirectoriesResource", () => {
     render(<StartupDirectoriesResource preview />);
 
     expect(screen.queryByText("r/startups")).not.toBeInTheDocument();
+    expect(screen.getByText("ShipBoost")).toBeInTheDocument();
     expect(screen.getByText("Beta")).toBeInTheDocument();
     expect(
       screen.queryByPlaceholderText(/search name, domain, or url/i),

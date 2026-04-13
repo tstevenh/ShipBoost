@@ -28,11 +28,11 @@ type ToolPageData = {
   websiteUrl: string;
   metaTitle: string | null;
   metaDescription: string | null;
-  createdAt: Date;
+  createdAt: Date | string;
   launches: Array<{
     status: string;
     launchType: string;
-    launchDate: Date;
+    launchDate: Date | string;
   }>;
   logoMedia: { url: string } | null;
   media: { id: string; url: string }[];
