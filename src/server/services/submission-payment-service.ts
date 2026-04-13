@@ -7,7 +7,11 @@ import {
   getSubmissionByIdForFounder,
 } from "@/server/repositories/submission-repository";
 import { getPolarCheckoutUrls, getPolarClient } from "@/server/polar";
-import { startOfDay } from "@/server/services/time";
+import {
+  getLaunchpadGoLiveAtUtc,
+  isAnchoredLaunchWeekStart,
+} from "@/server/services/launch-scheduling";
+import { startOfUtcDay } from "@/server/services/time";
 import type { FeaturedLaunchRescheduleInput } from "@/server/validators/submission";
 
 import {
@@ -33,6 +37,21 @@ function readSubmissionIdFromOrder(order: PaidOrderLike) {
   }
 
   return null;
+}
+
+function assertValidPremiumLaunchWeekStart(date: Date) {
+  const goLiveFloor = getLaunchpadGoLiveAtUtc();
+  const launchWeekStart = startOfUtcDay(date);
+
+  if (launchWeekStart < goLiveFloor) {
+    throw new AppError(400, "Choose May 1, 2026 UTC or later.");
+  }
+
+  if (!isAnchoredLaunchWeekStart(launchWeekStart, { goLiveAt: goLiveFloor })) {
+    throw new AppError(400, "Choose one of the available weekly launch windows.");
+  }
+
+  return launchWeekStart;
 }
 
 async function applyFeaturedLaunchOrderPaid(order: PaidOrderLike) {
@@ -73,9 +92,10 @@ async function applyFeaturedLaunchOrderPaid(order: PaidOrderLike) {
       return null;
     }
 
-    const launchDate = submission.preferredLaunchDate
-      ? startOfDay(submission.preferredLaunchDate)
-      : startOfDay(new Date());
+    const preferredLaunchDate = submission.preferredLaunchDate
+      ? assertValidPremiumLaunchWeekStart(submission.preferredLaunchDate)
+      : getLaunchpadGoLiveAtUtc();
+    const launchDate = preferredLaunchDate;
     const now = new Date();
     const shouldGoLiveImmediately = launchDate <= now;
 
@@ -172,7 +192,7 @@ export async function createFeaturedLaunchCheckout(
   }
 
   if (!submission.preferredLaunchDate) {
-    throw new AppError(400, "Featured launch date is missing.");
+    throw new AppError(400, "Featured launch week is missing.");
   }
 
   if (submission.paymentStatus === "PAID") {
@@ -184,6 +204,14 @@ export async function createFeaturedLaunchCheckout(
       409,
       "This featured launch is already processing. Check your dashboard instead.",
     );
+  }
+
+  const preferredLaunchWeek = assertValidPremiumLaunchWeekStart(
+    submission.preferredLaunchDate,
+  );
+
+  if (preferredLaunchWeek <= new Date()) {
+    throw new AppError(400, "Choose a future launch week.");
   }
 
   const env = getEnv();
@@ -205,8 +233,7 @@ export async function createFeaturedLaunchCheckout(
       shipboostSubmissionId: submission.id,
       shipboostToolId: submission.toolId,
       shipboostSubmissionType: submission.submissionType,
-      shipboostPreferredLaunchDate:
-        submission.preferredLaunchDate.toISOString(),
+      shipboostPreferredLaunchDate: preferredLaunchWeek.toISOString(),
     },
   });
 
@@ -295,10 +322,17 @@ export async function rescheduleFeaturedLaunch(
     );
   }
 
-  const nextLaunchDate = startOfDay(input.preferredLaunchDate);
+  const nextLaunchDate = assertValidPremiumLaunchWeekStart(
+    input.preferredLaunchDate,
+  );
+  const goLiveFloor = getLaunchpadGoLiveAtUtc();
+
+  if (nextLaunchDate < goLiveFloor) {
+    throw new AppError(400, "Choose May 1, 2026 UTC or later.");
+  }
 
   if (nextLaunchDate <= now) {
-    throw new AppError(400, "Choose a future launch date.");
+    throw new AppError(400, "Choose a future launch week.");
   }
 
   await prisma.$transaction(async (tx) => {

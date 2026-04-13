@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { getServerSession } from "@/server/auth/session";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 function getErrorMessage(error?: string) {
   if (!error) {

@@ -1,8 +1,14 @@
 import type { NextRequest } from "next/server";
 
 import { requireAdminUserId } from "@/server/auth/request-context";
+import { revalidatePublicToolContent } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
-import { errorResponse, ok } from "@/server/http/response";
+import {
+  errorResponse,
+  ok,
+  startRouteTiming,
+  withRouteTiming,
+} from "@/server/http/response";
 import { reviewListingClaim } from "@/server/services/listing-claim-service";
 import { listingClaimReviewSchema } from "@/server/validators/listing-claim";
 
@@ -22,14 +28,10 @@ function serializeClaim(claim: Awaited<ReturnType<typeof reviewListingClaim>>) {
     reviewedAt: claim.reviewedAt?.toISOString() ?? null,
     createdAt: claim.createdAt.toISOString(),
     claimantUser: claim.claimantUser,
-    reviewedBy: claim.reviewedBy,
     tool: {
       id: claim.tool.id,
       slug: claim.tool.slug,
       name: claim.tool.name,
-      tagline: claim.tool.tagline,
-      websiteUrl: claim.tool.websiteUrl,
-      ownerUserId: claim.tool.ownerUserId,
       logoMedia: claim.tool.logoMedia
         ? {
             url: claim.tool.logoMedia.url,
@@ -40,6 +42,8 @@ function serializeClaim(claim: Awaited<ReturnType<typeof reviewListingClaim>>) {
 }
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  const timing = startRouteTiming("admin-listing-claim-review");
+
   try {
     const adminUserId = await requireAdminUserId(request);
     getEnv();
@@ -48,8 +52,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const body = listingClaimReviewSchema.parse(await request.json());
     const claim = await reviewListingClaim(claimId, body, adminUserId);
 
-    return ok(serializeClaim(claim));
+    revalidatePublicToolContent();
+
+    return withRouteTiming(ok(serializeClaim(claim)), timing);
   } catch (error) {
-    return errorResponse(error);
+    return withRouteTiming(errorResponse(error), timing);
   }
 }

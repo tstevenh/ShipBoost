@@ -1,6 +1,13 @@
 "use client";
 
 import { useDeferredValue, useEffect, useEffectEvent, useMemo, useState } from "react";
+import { 
+  Activity, Layers, Rocket, ClipboardList,
+  Shield, AlertCircle, RefreshCw,
+  Layout, Package,
+  type LucideIcon,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import {
   apiRequest,
@@ -9,7 +16,8 @@ import {
   type Category,
   type CategoryDraft,
   type Submission,
-  type Tag,
+  type SubmissionReviewResult,
+  type Tag as TagType,
   type TagDraft,
   type Tool,
   type ToolCreateForm,
@@ -63,9 +71,18 @@ function emptyTagDraft(): TagDraft {
   };
 }
 
+type AdminNavSection = "overview" | "moderate" | "inventory" | "taxonomy";
+type AdminNavItem = {
+  id: AdminNavSection;
+  label: string;
+  icon: LucideIcon;
+  count?: number;
+};
+
 export function AdminConsole() {
+  const [activeNav, setActiveNav] = useState<AdminNavSection>("overview");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [tags, setTags] = useState<TagType[]>([]);
   const [tools, setTools] = useState<Tool[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [claims, setClaims] = useState<ListingClaim[]>([]);
@@ -129,14 +146,55 @@ export function AdminConsole() {
     return pendingAction === actionKey;
   }
 
-  function isActionGroupPending(prefix: string) {
-    return pendingAction?.startsWith(prefix) ?? false;
+  function matchesSubmissionFilters(
+    submission: Submission,
+    search: string,
+    status: "" | Submission["reviewStatus"],
+  ) {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    if (status && submission.reviewStatus !== status) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    return [
+      submission.user.email,
+      submission.user.name ?? "",
+      submission.tool.name,
+      submission.tool.slug,
+    ].some((value) => value.toLowerCase().includes(normalizedSearch));
+  }
+
+  function matchesClaimFilters(
+    claim: ListingClaim,
+    search: string,
+    status: "" | ListingClaim["status"],
+  ) {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    if (status && claim.status !== status) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    return [
+      claim.claimEmail,
+      claim.tool.name,
+      claim.tool.slug,
+    ].some((value) => value.toLowerCase().includes(normalizedSearch));
   }
 
   async function refreshCatalog() {
     const [nextCategories, nextTags] = await Promise.all([
       apiRequest<Category[]>("/api/admin/categories"),
-      apiRequest<Tag[]>("/api/admin/tags"),
+      apiRequest<TagType[]>("/api/admin/tags"),
     ]);
 
     setCategories(nextCategories);
@@ -222,7 +280,7 @@ export function AdminConsole() {
         const [nextCategories, nextTags, nextTools, nextSubmissions, nextClaims] =
           await Promise.all([
             apiRequest<Category[]>("/api/admin/categories"),
-            apiRequest<Tag[]>("/api/admin/tags"),
+            apiRequest<TagType[]>("/api/admin/tags"),
             apiRequest<Tool[]>("/api/admin/tools"),
             apiRequest<Submission[]>("/api/admin/submissions?reviewStatus=PENDING"),
             apiRequest<ListingClaim[]>("/api/admin/listing-claims?status=PENDING"),
@@ -292,7 +350,7 @@ export function AdminConsole() {
     );
   }
 
-  function getTagDraft(tag: Tag) {
+  function getTagDraft(tag: TagType) {
     return (
       editingTags[tag.id] ?? {
         name: tag.name,
@@ -353,7 +411,7 @@ export function AdminConsole() {
     setPendingAction("tag:create");
 
     try {
-      await apiRequest<Tag>("/api/admin/tags", {
+      await apiRequest<TagType>("/api/admin/tags", {
         method: "POST",
         body: JSON.stringify(tagDraft),
       });
@@ -438,7 +496,7 @@ export function AdminConsole() {
         return;
       }
 
-      await apiRequest<Tag>(`/api/admin/tags/${tagId}`, {
+      await apiRequest<TagType>(`/api/admin/tags/${tagId}`, {
         method: "PATCH",
         body: JSON.stringify(draft),
       });
@@ -573,7 +631,7 @@ export function AdminConsole() {
         submissions.find((submission) => submission.id === submissionId)!,
       );
 
-      await apiRequest<Submission>(
+      const result = await apiRequest<SubmissionReviewResult>(
         `/api/admin/submissions/${submissionId}/review`,
         {
           method: "POST",
@@ -586,8 +644,32 @@ export function AdminConsole() {
           }),
         },
       );
-
-      await Promise.all([refreshSubmissions(), refreshTools()]);
+      setSubmissions((current) =>
+        current
+          .map((submission) =>
+            submission.id === result.submission.id
+              ? result.submission
+              : submission,
+          )
+          .filter((submission) =>
+            matchesSubmissionFilters(
+              submission,
+              deferredSubmissionSearch,
+              submissionFilter,
+            ),
+          ),
+      );
+      setTools((current) =>
+        current.map((tool) =>
+          tool.id === result.tool.id
+            ? {
+                ...tool,
+                moderationStatus: result.tool.moderationStatus,
+                publicationStatus: result.tool.publicationStatus,
+              }
+            : tool,
+        ),
+      );
     } catch (error) {
       setSubmissionError(toErrorMessage(error));
     } finally {
@@ -613,7 +695,7 @@ export function AdminConsole() {
           internalAdminNote: "",
         };
 
-      await apiRequest<ListingClaim>(`/api/admin/listing-claims/${claimId}`, {
+      const claim = await apiRequest<ListingClaim>(`/api/admin/listing-claims/${claimId}`, {
         method: "PATCH",
         body: JSON.stringify({
           action,
@@ -621,8 +703,13 @@ export function AdminConsole() {
           internalAdminNote: draft.internalAdminNote || undefined,
         }),
       });
-
-      await Promise.all([refreshClaims(), refreshTools()]);
+      setClaims((current) =>
+        current
+          .map((item) => (item.id === claim.id ? claim : item))
+          .filter((item) =>
+            matchesClaimFilters(item, deferredClaimSearch, claimFilter),
+          ),
+      );
     } catch (error) {
       setClaimError(toErrorMessage(error));
     } finally {
@@ -632,107 +719,188 @@ export function AdminConsole() {
 
   if (bootError) {
     return (
-      <div className="rounded-[2rem] border border-rose-200 bg-rose-50 p-8 text-rose-700">
-        {bootError}
+      <div className="rounded-[2rem] border border-destructive/20 bg-destructive/10 p-8 text-destructive  tracking-widest text-xs font-bold">
+        <div className="flex items-center gap-3">
+          <AlertCircle size={20} />
+          {bootError}
+        </div>
       </div>
     );
   }
 
+  const navItems: AdminNavItem[] = [
+    { id: "overview", label: "Dashboard", icon: Layout },
+    { id: "moderate", label: "Moderate", icon: Shield, count: totalPending + pendingClaimCount },
+    { id: "inventory", label: "Inventory", icon: Package, count: tools.length },
+    { id: "taxonomy", label: "Taxonomy", icon: Layers, count: categories.length + tags.length },
+  ];
+
   return (
-    <div className="space-y-8">
-      <div className="grid gap-4 md:grid-cols-5">
-        <div className="rounded-[1.75rem] border border-black/10 bg-[#fff9ef] p-5">
-          <p className="text-sm text-black/55">Pending reviews</p>
-          <p className="mt-2 text-3xl font-semibold text-black">{totalPending}</p>
+    <div className="flex flex-col lg:flex-row gap-8 items-start">
+      {/* Admin Sidebar */}
+      <aside className="w-full lg:w-64 shrink-0 space-y-4 lg:sticky lg:top-32">
+        <div className="rounded-3xl border border-border bg-card p-2 shadow-sm">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveNav(item.id)}
+              className={cn(
+                "w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-black  tracking-widest transition-all group",
+                activeNav === item.id
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-black/10"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <item.icon size={16} />
+                <span>{item.label}</span>
+              </div>
+              {item.count !== undefined && (
+                <span className={cn(
+                  "px-2 py-0.5 rounded-lg text-[10px]",
+                  activeNav === item.id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-background"
+                )}>
+                  {item.count}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
-        <div className="rounded-[1.75rem] border border-black/10 bg-[#f3f8f6] p-5">
-          <p className="text-sm text-black/55">Published tools</p>
-          <p className="mt-2 text-3xl font-semibold text-black">{publishedCount}</p>
+
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm hidden lg:block">
+          <h4 className="text-[10px] font-black  tracking-widest text-muted-foreground/60 mb-4">Internal Stats</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black  tracking-widest text-muted-foreground/60">Live tools</span>
+              <span className="text-xs font-black text-foreground">{publishedCount}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black  tracking-widest text-muted-foreground/60">Categories</span>
+              <span className="text-xs font-black text-foreground">{categories.length}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black  tracking-widest text-muted-foreground/60">Tags</span>
+              <span className="text-xs font-black text-foreground">{tags.length}</span>
+            </div>
+          </div>
         </div>
-        <div className="rounded-[1.75rem] border border-black/10 bg-[#f6f2ff] p-5">
-          <p className="text-sm text-black/55">Categories</p>
-          <p className="mt-2 text-3xl font-semibold text-black">{categories.length}</p>
-        </div>
-        <div className="rounded-[1.75rem] border border-black/10 bg-[#fff6f2] p-5">
-          <p className="text-sm text-black/55">Tags</p>
-          <p className="mt-2 text-3xl font-semibold text-black">{tags.length}</p>
-        </div>
-        <div className="rounded-[1.75rem] border border-black/10 bg-[#eef6ff] p-5">
-          <p className="text-sm text-black/55">Pending claims</p>
-          <p className="mt-2 text-3xl font-semibold text-black">{pendingClaimCount}</p>
-        </div>
+      </aside>
+
+      {/* Admin Content Area */}
+      <div className="flex-1 w-full space-y-10">
+        {activeNav === "overview" && (
+          <div className="space-y-10 animate-in fade-in duration-500">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: "Reviews", val: totalPending, icon: Activity },
+                { label: "Published", val: publishedCount, icon: Rocket },
+                { label: "Claims", val: pendingClaimCount, icon: ClipboardList },
+                { label: "Actions", val: submissions.length + claims.length, icon: RefreshCw }
+              ].map((s, i) => (
+                <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                  <div className="flex items-center gap-3 text-muted-foreground mb-2">
+                    <s.icon size={14} />
+                    <p className="text-[10px] font-black  tracking-widest">{s.label}</p>
+                  </div>
+                  <p className="text-xl font-black text-foreground">{s.val}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-3xl border border-border bg-primary p-8 sm:p-10 text-primary-foreground shadow-2xl shadow-black/20">
+              <div className="max-w-2xl">
+                <p className="text-[10px] font-black tracking-[0.3em]  opacity-60 mb-3">Admin Console</p>
+                <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Moderation Hub</h1>
+                <p className="mt-4 text-base font-medium opacity-80 leading-relaxed">
+                  Manage the ShipBoost directory, review founder submissions, and maintain the catalog taxonomy from one unified surface.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeNav === "moderate" && (
+          <div className="space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <ListingClaimPanel
+              claims={claims}
+              claimSearch={claimSearch}
+              onClaimSearchChange={setClaimSearch}
+              claimFilter={claimFilter}
+              onClaimFilterChange={setClaimFilter}
+              claimError={claimError}
+              claimNotes={claimNotes}
+              setClaimNotes={setClaimNotes}
+              handleClaimReview={handleClaimReview}
+              hasPendingAction={hasPendingAction}
+              isActionPending={isActionPending}
+            />
+
+            <SubmissionReviewPanel
+              submissionSearch={submissionSearch}
+              onSubmissionSearchChange={setSubmissionSearch}
+              submissionFilter={submissionFilter}
+              onSubmissionFilterChange={setSubmissionFilter}
+              submissionError={submissionError}
+              submissions={submissions}
+              submissionNotes={submissionNotes}
+              setSubmissionNotes={setSubmissionNotes}
+              handleSubmissionReview={handleSubmissionReview}
+              hasPendingAction={hasPendingAction}
+              isActionPending={isActionPending}
+            />
+          </div>
+        )}
+
+        {activeNav === "inventory" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <ToolOpsPanel
+              categories={categories}
+              tags={tags}
+              tools={tools}
+              toolDraft={toolDraft}
+              setToolDraft={setToolDraft}
+              toolSearch={toolSearch}
+              onToolSearchChange={setToolSearch}
+              toolError={toolError}
+              toolNotes={toolNotes}
+              setToolNotes={setToolNotes}
+              handleCategorySelection={handleCategorySelection}
+              handleTagSelection={handleTagSelection}
+              handleCreateTool={handleCreateTool}
+              handleToolStatusUpdate={handleToolStatusUpdate}
+              getToolNote={getToolNote}
+              hasPendingAction={hasPendingAction}
+              isActionPending={isActionPending}
+            />
+          </div>
+        )}
+
+        {activeNav === "taxonomy" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <CatalogPanel
+              categories={categories}
+              tags={tags}
+              categoryDraft={categoryDraft}
+              setCategoryDraft={setCategoryDraft}
+              tagDraft={tagDraft}
+              setTagDraft={setTagDraft}
+              setEditingCategories={setEditingCategories}
+              setEditingTags={setEditingTags}
+              catalogError={catalogError}
+              handleCreateCategory={handleCreateCategory}
+              handleCreateTag={handleCreateTag}
+              handleSaveCategory={handleSaveCategory}
+              handleDeleteCategory={handleDeleteCategory}
+              handleSaveTag={handleSaveTag}
+              handleDeleteTag={handleDeleteTag}
+              getCategoryDraft={getCategoryDraft}
+              getTagDraft={getTagDraft}
+              hasPendingAction={hasPendingAction}
+              isActionPending={isActionPending}
+            />
+          </div>
+        )}
       </div>
-
-      <ListingClaimPanel
-        claims={claims}
-        claimSearch={claimSearch}
-        onClaimSearchChange={setClaimSearch}
-        claimFilter={claimFilter}
-        onClaimFilterChange={setClaimFilter}
-        claimError={claimError}
-        claimNotes={claimNotes}
-        setClaimNotes={setClaimNotes}
-        handleClaimReview={handleClaimReview}
-        hasPendingAction={hasPendingAction}
-        isActionPending={isActionPending}
-      />
-
-      <SubmissionReviewPanel
-        submissionSearch={submissionSearch}
-        onSubmissionSearchChange={setSubmissionSearch}
-        submissionFilter={submissionFilter}
-        onSubmissionFilterChange={setSubmissionFilter}
-        submissionError={submissionError}
-        submissions={submissions}
-        submissionNotes={submissionNotes}
-        setSubmissionNotes={setSubmissionNotes}
-        handleSubmissionReview={handleSubmissionReview}
-        hasPendingAction={hasPendingAction}
-        isActionPending={isActionPending}
-      />
-
-      <ToolOpsPanel
-        categories={categories}
-        tags={tags}
-        tools={tools}
-        toolDraft={toolDraft}
-        setToolDraft={setToolDraft}
-        toolSearch={toolSearch}
-        onToolSearchChange={setToolSearch}
-        toolError={toolError}
-        toolNotes={toolNotes}
-        setToolNotes={setToolNotes}
-        handleCategorySelection={handleCategorySelection}
-        handleTagSelection={handleTagSelection}
-        handleCreateTool={handleCreateTool}
-        handleToolStatusUpdate={handleToolStatusUpdate}
-        getToolNote={getToolNote}
-        hasPendingAction={hasPendingAction}
-        isActionPending={isActionPending}
-        isActionGroupPending={isActionGroupPending}
-      />
-
-      <CatalogPanel
-        categories={categories}
-        tags={tags}
-        categoryDraft={categoryDraft}
-        setCategoryDraft={setCategoryDraft}
-        tagDraft={tagDraft}
-        setTagDraft={setTagDraft}
-        setEditingCategories={setEditingCategories}
-        setEditingTags={setEditingTags}
-        catalogError={catalogError}
-        handleCreateCategory={handleCreateCategory}
-        handleCreateTag={handleCreateTag}
-        handleSaveCategory={handleSaveCategory}
-        handleDeleteCategory={handleDeleteCategory}
-        handleSaveTag={handleSaveTag}
-        handleDeleteTag={handleDeleteTag}
-        getCategoryDraft={getCategoryDraft}
-        getTagDraft={getTagDraft}
-        hasPendingAction={hasPendingAction}
-        isActionPending={isActionPending}
-      />
     </div>
   );
 }

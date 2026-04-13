@@ -2,9 +2,12 @@ import { betterAuth, type BetterAuthPlugin } from "better-auth";
 import { dash } from "@better-auth/infra";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { magicLink } from "better-auth/plugins";
 
 import { prisma } from "../server/db/client";
 import {
+  sendDirectoriesAccessEmailMessage,
+  sendMagicLinkSignInEmailMessage,
   sendPasswordResetConfirmationEmail,
   sendPasswordResetEmailMessage,
   sendVerificationEmailMessage,
@@ -24,7 +27,7 @@ if (env.BETTER_AUTH_API_KEY) {
 }
 
 export const auth = betterAuth({
-  appName: "Shipboost",
+  appName: "ShipBoost",
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   database: prismaAdapter(prisma, {
@@ -105,7 +108,25 @@ export const auth = betterAuth({
       },
     },
   },
-  plugins,
+  plugins: [
+    ...plugins,
+    magicLink({
+      sendMagicLink: async ({ email, url, metadata }) => {
+        if (metadata?.intent === "directories-access") {
+          await sendDirectoriesAccessEmailMessage({
+            to: email,
+            accessUrl: url,
+          });
+          return;
+        }
+
+        await sendMagicLinkSignInEmailMessage({
+          to: email,
+          signInUrl: url,
+        });
+      },
+    }),
+  ],
 });
 
 export type AuthSession = typeof auth.$Infer.Session;

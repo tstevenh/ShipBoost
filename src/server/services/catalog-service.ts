@@ -1,4 +1,5 @@
 import { prisma } from "@/server/db/client";
+import { publicToolCardSelect } from "@/server/db/public-selects";
 import { AppError } from "@/server/http/app-error";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
 import { slugify } from "@/server/services/slug";
@@ -128,13 +129,56 @@ export function listTags() {
   });
 }
 
+export async function listPublicTags() {
+  const tags = await prisma.tag.findMany({
+    where: {
+      isActive: true,
+      toolTags: {
+        some: {
+          tool: {
+            ...getPubliclyVisibleToolWhere(),
+          },
+        },
+      },
+    },
+    include: {
+      _count: {
+        select: {
+          toolTags: {
+            where: {
+              tool: {
+                ...getPubliclyVisibleToolWhere(),
+              },
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  return tags.map(tag => ({
+    ...tag,
+    count: tag._count.toolTags,
+  }));
+}
+
 export function getPublicCategoryBySlug(slug: string) {
   return prisma.category.findFirst({
     where: {
       slug,
       isActive: true,
     },
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      seoIntro: true,
+      metaTitle: true,
+      metaDescription: true,
       toolCategories: {
         where: {
           tool: {
@@ -142,27 +186,9 @@ export function getPublicCategoryBySlug(slug: string) {
           },
         },
         orderBy: [{ sortOrder: "asc" }, { tool: { isFeatured: "desc" } }],
-        include: {
+        select: {
           tool: {
-            include: {
-              logoMedia: true,
-              toolCategories: {
-                include: {
-                  category: true,
-                },
-                orderBy: {
-                  sortOrder: "asc",
-                },
-              },
-              toolTags: {
-                include: {
-                  tag: true,
-                },
-                orderBy: {
-                  sortOrder: "asc",
-                },
-              },
-            },
+            select: publicToolCardSelect,
           },
         },
       },
@@ -170,14 +196,49 @@ export function getPublicCategoryBySlug(slug: string) {
   });
 }
 
-export async function getPublicCategoryPageBySlug(slug: string) {
-  const category = await getPublicCategoryBySlug(slug);
+export async function getPublicCategoryPageBySlug(
+  slug: string,
+  sort: "newest" | "top" = "newest",
+) {
+  const category = await prisma.category.findFirst({
+    where: {
+      slug,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      seoIntro: true,
+      metaTitle: true,
+      metaDescription: true,
+      toolCategories: {
+        where: {
+          tool: {
+            ...getPubliclyVisibleToolWhere(),
+          },
+        },
+        orderBy:
+          sort === "top"
+            ? [{ tool: { toolVotes: { _count: "desc" } } }, { tool: { isFeatured: "desc" } }]
+            : [{ tool: { createdAt: "desc" } }, { tool: { isFeatured: "desc" } }],
+        select: {
+          tool: {
+            select: publicToolCardSelect,
+          },
+        },
+      },
+    },
+  });
 
   if (!category) {
     return null;
   }
 
   const toolIds = category.toolCategories.map((item) => item.tool.id);
+  
+  // Featured tools always at the top of their section, regardless of sort
   const featuredTools = category.toolCategories
     .map((item) => item.tool)
     .filter((tool) => tool.isFeatured)
@@ -202,9 +263,9 @@ export async function getPublicCategoryPageBySlug(slug: string) {
   }
 
   const relatedCategories = toolIds.length
-    ? await prisma.category.findMany({
-        where: {
-          id: {
+      ? await prisma.category.findMany({
+          where: {
+            id: {
             not: category.id,
           },
           isActive: true,
@@ -214,11 +275,16 @@ export async function getPublicCategoryPageBySlug(slug: string) {
                 in: toolIds,
               },
             },
+            },
           },
-        },
-        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-        take: 4,
-      })
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+          orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+          take: 4,
+        })
     : [];
 
   return {

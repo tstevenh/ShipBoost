@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef } from "react";
+import { cn } from "@/lib/utils";
+import { Bold, Italic, Code, Link as LinkIcon, Quote, List, ListOrdered, Heading1, Heading2 } from "lucide-react";
 
 type MarkdownTextareaProps = {
   id?: string;
@@ -14,7 +16,7 @@ type MarkdownTextareaProps = {
 };
 
 type ToolbarAction = {
-  label: string;
+  icon: React.ElementType;
   title: string;
   run: (
     value: string,
@@ -72,25 +74,25 @@ function prependLines(
 
 const toolbarActions: ToolbarAction[] = [
   {
-    label: "B",
+    icon: Bold,
     title: "Bold",
     run: (value, selectionStart, selectionEnd) =>
       wrapSelection(value, selectionStart, selectionEnd, "**", "**", "bold text"),
   },
   {
-    label: "I",
+    icon: Italic,
     title: "Italic",
     run: (value, selectionStart, selectionEnd) =>
       wrapSelection(value, selectionStart, selectionEnd, "_", "_", "italic text"),
   },
   {
-    label: "</>",
+    icon: Code,
     title: "Inline code",
     run: (value, selectionStart, selectionEnd) =>
       wrapSelection(value, selectionStart, selectionEnd, "`", "`", "code"),
   },
   {
-    label: "Link",
+    icon: LinkIcon,
     title: "Link",
     run: (value, selectionStart, selectionEnd) => {
       const selectedText = value.slice(selectionStart, selectionEnd) || "link text";
@@ -110,19 +112,19 @@ const toolbarActions: ToolbarAction[] = [
     },
   },
   {
-    label: "Quote",
+    icon: Quote,
     title: "Quote",
     run: (value, selectionStart, selectionEnd) =>
       prependLines(value, selectionStart, selectionEnd, () => "> ", "Quoted text"),
   },
   {
-    label: "• List",
+    icon: List,
     title: "Bullet list",
     run: (value, selectionStart, selectionEnd) =>
       prependLines(value, selectionStart, selectionEnd, () => "- ", "List item"),
   },
   {
-    label: "1. List",
+    icon: ListOrdered,
     title: "Numbered list",
     run: (value, selectionStart, selectionEnd) =>
       prependLines(
@@ -134,22 +136,16 @@ const toolbarActions: ToolbarAction[] = [
       ),
   },
   {
-    label: "H1",
-    title: "Heading 1",
+    icon: Heading1,
+    title: "H1",
     run: (value, selectionStart, selectionEnd) =>
       prependLines(value, selectionStart, selectionEnd, () => "# ", "Heading"),
   },
   {
-    label: "H2",
-    title: "Heading 2",
+    icon: Heading2,
+    title: "H2",
     run: (value, selectionStart, selectionEnd) =>
       prependLines(value, selectionStart, selectionEnd, () => "## ", "Heading"),
-  },
-  {
-    label: "H3",
-    title: "Heading 3",
-    run: (value, selectionStart, selectionEnd) =>
-      prependLines(value, selectionStart, selectionEnd, () => "### ", "Heading"),
   },
 ];
 
@@ -188,13 +184,14 @@ export function MarkdownTextarea({
 
   return (
     <div
-      className={`overflow-hidden rounded-2xl border bg-[#fffdf8] ${
+      className={cn(
+        "overflow-hidden rounded-xl border transition-all duration-200",
         error
-          ? "border-rose-300 ring-4 ring-rose-100"
-          : "border-black/10 focus-within:border-[#9f4f1d] focus-within:ring-4 focus-within:ring-[#9f4f1d]/10"
-      }`}
+          ? "border-destructive ring-4 ring-destructive/10"
+          : "border-border bg-background focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10"
+      )}
     >
-      <div className="flex flex-wrap items-center gap-2 border-b border-black/10 bg-[#fcf6eb] px-3 py-2">
+      <div className="flex flex-wrap items-center gap-1 border-b border-border bg-muted/30 px-2 py-1.5">
         {toolbarActions.map((action) => (
           <button
             key={action.title}
@@ -202,12 +199,12 @@ export function MarkdownTextarea({
             onClick={() => applyAction(action)}
             disabled={disabled}
             title={action.title}
-            className="rounded-lg border border-black/10 bg-white px-2.5 py-1 text-xs font-semibold text-black/70 transition hover:border-black/20 hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-50"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all disabled:opacity-30"
           >
-            {action.label}
+            <action.icon size={16} />
           </button>
         ))}
-        <span className="ml-auto text-xs text-black/45">
+        <span className="ml-auto px-2 text-[10px] font-black  tracking-widest text-muted-foreground/40">
           {value.trim().length}/{maxLength}
         </span>
       </div>
@@ -220,7 +217,7 @@ export function MarkdownTextarea({
         maxLength={maxLength}
         disabled={disabled}
         placeholder={placeholder}
-        className="w-full resize-y bg-transparent px-4 py-3 text-sm leading-7 outline-none"
+        className="w-full resize-y bg-transparent px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/40 outline-none min-h-[120px]"
       />
     </div>
   );

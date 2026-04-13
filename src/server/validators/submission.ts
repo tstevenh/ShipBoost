@@ -22,7 +22,7 @@ export const submissionCreateBaseSchema = z.object({
   requestedSlug: optionalTrimmedString,
   preferredLaunchDate: z.coerce.date().optional(),
   name: z.string().trim().min(2).max(80),
-  tagline: z.string().trim().min(10).max(140),
+  tagline: z.string().trim().min(10).max(60),
   websiteUrl: z.url(),
   richDescription: z.string().trim().min(40).max(5000),
   pricingModel: pricingModelSchema,
@@ -49,7 +49,7 @@ export const submissionCreateSchema = submissionCreateBaseSchema.superRefine(
       ctx.addIssue({
         code: "custom",
         path: ["preferredLaunchDate"],
-        message: "Featured launches require a preferred launch date.",
+        message: "Premium launches require a preferred launch week.",
       });
     }
   },

@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { AdminConsole } from "@/components/admin/admin-console";
 import { getServerSession } from "@/server/auth/session";
+import { Footer } from "@/components/ui/footer";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function AdminPage() {
   const session = await getServerSession();
@@ -15,25 +24,28 @@ export default async function AdminPage() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-16 sm:py-20">
-      <div className="mb-8 rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-        <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-          Admin access confirmed
-        </p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-black">
-          Shipboost moderation console
-        </h1>
-        <p className="mt-4 max-w-4xl text-base leading-7 text-black/68">
-          This interface now sits on top of the protected admin API. Use it to
-          process founder submissions, seed listings, and keep the catalog
-          intentionally narrow.
-        </p>
-        <div className="mt-6 inline-flex rounded-full border border-black/10 bg-[#fff9ef] px-4 py-2 text-sm text-black/70">
-          Signed in as {session.user.email}
+    <main className="flex-1 flex flex-col bg-secondary/30 pt-32">
+      <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 mb-32">
+        <div className="mb-12 rounded-[2.5rem] border border-border bg-card p-10 shadow-xl shadow-black/5">
+          <p className="text-[10px] font-black tracking-[0.3em] text-primary  mb-4">
+            Admin access confirmed
+          </p>
+          <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+            ShipBoost moderation console
+          </h1>
+          <p className="mt-6 max-w-4xl text-lg font-medium leading-relaxed text-muted-foreground/80">
+            This interface now sits on top of the protected admin API. Use it to
+            process founder submissions, seed listings, and keep the catalog
+            intentionally narrow.
+          </p>
+          <div className="mt-8 inline-flex rounded-xl border border-border bg-muted/50 px-4 py-2 text-xs font-bold text-muted-foreground  tracking-widest">
+            Signed in as {session.user.email}
+          </div>
         </div>
-      </div>
 
-      <AdminConsole />
-    </section>
+        <AdminConsole />
+      </section>
+      <Footer className="mt-auto" />
+    </main>
   );
 }

@@ -1,160 +1,237 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import MinimalHero from "@/components/ui/hero-minimalism";
+import { FilterBar } from "@/components/FilterBar";
+import { Footer } from "@/components/ui/footer";
+import { Suspense } from "react";
+import { JsonLdScript } from "@/components/seo/json-ld";
+import { ShowcaseLayout } from "@/components/public/showcase-layout";
+import { LaunchpadShowcase } from "@/components/public/launchpad-showcase";
+import { PrelaunchSurface } from "@/components/public/prelaunch-surface";
+import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
+import { getEnv } from "@/server/env";
+import { getCachedHomePageData } from "@/server/cache/public-content";
+import { buildHomePageSchema } from "@/server/seo/page-schema";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
+import { InternalLinkSection } from "@/components/seo/internal-link-section";
+import { alternativesSeoRegistry } from "@/server/seo/registry";
 
-import { HomeLeadMagnetForm } from "@/components/public/home-lead-magnet-form";
-import { LaunchBoard } from "@/components/public/launch-board";
-import { HomeSearchModal } from "@/components/public/home-search-modal";
-import { listPublicCategories } from "@/server/services/catalog-service";
-import { getServerSession } from "@/server/auth/session";
-import { listLaunchBoard } from "@/server/services/launch-service";
-import { getDailyVotesRemaining } from "@/server/services/upvote-service";
+export const revalidate = 300;
 
-type HomePageProps = {
-  searchParams?: Promise<{
-    q?: string;
-  }>;
-};
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "ShipBoost | Weekly SaaS Launches and Discovery",
+  description:
+    "Discover weekly SaaS launches, curated tools, and founder-friendly distribution paths on ShipBoost.",
+  url: "/",
+  twitterCard: "summary_large_image",
+});
 
-export default async function Home({ searchParams }: HomePageProps) {
-  const session = await getServerSession();
-  const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const [dailyLaunches, categories, dailyVotesRemaining] = await Promise.all([
-    listLaunchBoard("daily", {
-      viewerUserId: session?.user.id ?? null,
-    }),
-    listPublicCategories(),
-    session?.user.id
-      ? getDailyVotesRemaining(session.user.id)
-      : Promise.resolve(null),
-  ]);
+export default async function Home() {
+  const env = getEnv();
+  const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
+  const currentPeriod = "weekly";
+  const { launches, prelaunchTools } = await getCachedHomePageData(currentPeriod, isPrelaunch);
+  const topCategories = [...new Map(
+    launches
+      .flatMap((launch) => launch.tool.toolCategories.map((item) => item.category))
+      .map((category) => [category.slug, category]),
+  ).values()].slice(0, 4);
+  const popularComparisons = Object.values(alternativesSeoRegistry).slice(0, 4);
+  const schemaItems = isPrelaunch
+    ? prelaunchTools.map((tool) => ({
+        name: tool.name,
+        url: `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`,
+      }))
+    : launches.map((launch) => ({
+        name: launch.tool.name,
+        url: `${env.NEXT_PUBLIC_APP_URL}/tools/${launch.tool.slug}`,
+      }));
+  const homeSchema = buildHomePageSchema({
+    title: "ShipBoost | Launch smarter. Get distributed.",
+    description:
+      "ShipBoost helps bootstrapped SaaS founders earn trust, visibility, and momentum through curated distribution.",
+    url: env.NEXT_PUBLIC_APP_URL,
+    items: schemaItems,
+  });
+
+  const launchToolIds = launches.map((launch) => launch.tool.id);
 
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-16 sm:py-20">
-      <div className="grid items-start gap-10 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold tracking-[0.28em] text-[#9f4f1d] uppercase">
-              Bootstrapped SaaS growth infrastructure
-            </p>
-            <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-black sm:text-6xl">
-              Launch your SaaS, earn credible distribution, and build durable
-              visibility.
-            </h1>
-            <p className="max-w-2xl text-lg leading-8 text-black/68">
-              Shipboost is building a focused launch-and-distribution engine for
-              bootstrapped SaaS founders. Start with a listing, move into free
-              launches with a featured badge, then layer on done-for-you
-              distribution when you need more reach.
-            </p>
-          </div>
+    <main className="flex-1">
+      <JsonLdScript data={homeSchema} />
+      {/* Full Width Hero */}
+      <MinimalHero />
+      
+      {!isPrelaunch && (
+        <Suspense fallback={<div className="h-[73px] border-b border-border bg-background" />}>
+          <FilterBar launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT} />
+        </Suspense>
+      )}
+      
+      <ViewerVoteStateProvider toolIds={launchToolIds}>
+        <ShowcaseLayout isHomePage isPrelaunch={isPrelaunch}>
+          <div className="space-y-10 min-h-[600px]">
+            {isPrelaunch ? (
+              <PrelaunchSurface tools={prelaunchTools} />
+            ) : (
+              <LaunchpadShowcase board={currentPeriod} launches={launches} />
+            )}
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              href={session ? "/dashboard" : "/sign-up"}
-              className="inline-flex items-center justify-center rounded-full bg-[#143f35] px-7 py-3.5 text-base font-semibold text-white transition hover:bg-[#0d2e26]"
-            >
-              {session ? "Open dashboard" : "Create founder account"}
-            </Link>
-            <Link
-              href={session ? "/submit" : "/sign-in"}
-              className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-7 py-3.5 text-base font-semibold text-black transition hover:border-black/20 hover:bg-black/[0.03]"
-            >
-              {session ? "Submit your product" : "Sign in"}
-            </Link>
-          </div>
+            <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
+              <p className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/60">
+                Discovery
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-foreground">
+                How founders use ShipBoost after launch day
+              </h2>
+              <div className="mt-6 space-y-4 text-base font-medium leading-relaxed text-muted-foreground/80">
+                <p>
+                  ShipBoost is designed to help founders do more than chase a one-day spike. The
+                  weekly board makes launches easier to compare, while category, tag, and
+                  alternatives pages keep good products discoverable after the board rotates.
+                </p>
+                <p>
+                  For buyers and operators, that means cleaner discovery paths. For founders, it
+                  means a public listing that stays useful after the initial launch window.
+                </p>
+              </div>
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                {[
+                  {
+                    title: "Launch visibility",
+                    body: "Use weekly cohorts to stay visible longer and compete in a cleaner launch surface.",
+                  },
+                  {
+                    title: "Category discovery",
+                    body: "Keep showing up when users browse categories like marketing, development, support, and sales.",
+                  },
+                  {
+                    title: "Comparison intent",
+                    body: "Capture higher-intent traffic through alternatives pages and related tool discovery.",
+                  },
+                ].map((item) => (
+                  <article
+                    key={item.title}
+                    className="rounded-2xl border border-border bg-background p-5"
+                  >
+                    <h3 className="text-sm font-black text-foreground">{item.title}</h3>
+                    <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                      {item.body}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
 
-          <HomeSearchModal initialQuery={resolvedSearchParams?.q} />
+            <InternalLinkSection
+              eyebrow="Launch Boards"
+              title="Explore ShipBoost by time window"
+              links={[
+                {
+                  href: "/launches/weekly",
+                  label: "Weekly launches",
+                  description: "Browse the current weekly board.",
+                },
+                {
+                  href: "/launches/monthly",
+                  label: "Monthly launches",
+                  description: "See products with momentum across the month.",
+                },
+                {
+                  href: "/launches/yearly",
+                  label: "Yearly launches",
+                  description: "Review the strongest launch board entries over the year.",
+                },
+              ]}
+            />
 
-          <HomeLeadMagnetForm />
+            <InternalLinkSection
+              eyebrow="Explore"
+              title="Browse ShipBoost by path"
+              description="Move from the launch board into deeper discovery surfaces depending on whether you are comparing categories, narrowing by use case, or evaluating alternatives."
+              links={[
+                {
+                  href: "/categories",
+                  label: "Browse categories",
+                  description: "Explore curated tool collections by product area.",
+                },
+                {
+                  href: "/tags",
+                  label: "Browse tags",
+                  description: "Refine discovery by feature, use case, or founder profile.",
+                },
+                {
+                  href: "/alternatives",
+                  label: "Compare alternatives",
+                  description: "Jump into higher-intent comparison pages.",
+                },
+                {
+                  href: "/how-it-works",
+                  label: "How ShipBoost works",
+                  description: "See how launch weeks, ranking, and submissions work.",
+                },
+                {
+                  href: "/launch-guide",
+                  label: "Read the launch guide",
+                  description: "Prepare your product before launch day.",
+                },
+                {
+                  href: "/pricing",
+                  label: "Review pricing",
+                  description: "Compare Free Launch, Premium Launch, and done-for-you support.",
+                },
+              ]}
+            />
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-[1.75rem] border border-black/10 bg-white/90 p-5 shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
-              <p className="text-sm font-semibold text-[#9f4f1d]">
-                Affiliate listings
-              </p>
-              <p className="mt-2 text-sm leading-6 text-black/65">
-                Clean tool profiles that can compound discovery and monetize via
-                trusted affiliate placements.
-              </p>
-            </div>
-            <div className="rounded-[1.75rem] border border-black/10 bg-white/90 p-5 shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
-              <p className="text-sm font-semibold text-[#9f4f1d]">
-                Free launches with badge
-              </p>
-              <p className="mt-2 text-sm leading-6 text-black/65">
-                Founders can launch for free while feeding the site’s authority
-                loop through the featured badge requirement.
-              </p>
-            </div>
-            <div className="rounded-[1.75rem] border border-black/10 bg-white/90 p-5 shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
-              <p className="text-sm font-semibold text-[#9f4f1d]">
-                Done-for-you distribution
-              </p>
-              <p className="mt-2 text-sm leading-6 text-black/65">
-                The early revenue wedge: hands-on distribution support for
-                founders who need leverage faster than SEO compounds.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-[2rem] bg-[#1d1c1a] p-8 text-[#f6e8d4] shadow-[0_28px_90px_rgba(29,28,26,0.28)] sm:p-10">
-          <p className="text-sm font-semibold tracking-[0.25em] text-[#f3c781] uppercase">
-            Current auth status
-          </p>
-          <div className="mt-8 space-y-5">
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-              <p className="text-sm text-[#f6e8d4]/70">Session</p>
-              <p className="mt-2 text-2xl font-semibold text-white">
-                {session ? "Authenticated" : "Guest"}
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-              <p className="text-sm text-[#f6e8d4]/70">Role</p>
-              <p className="mt-2 text-2xl font-semibold text-white">
-                {session ? session.user.role : "No account yet"}
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-              <p className="text-sm text-[#f6e8d4]/70">Next action</p>
-              <p className="mt-2 text-base leading-7 text-[#f6e8d4]/85">
-                {session
-                  ? "Use the dashboard to test the founder session flow, then promote your account to admin if you want moderation access."
-                  : "Create an account, sign in, and then run the admin promotion script against that email when you are ready to test moderation."}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-14 grid gap-8">
-        <LaunchBoard
-          board="daily"
-          launches={dailyLaunches}
-          dailyVotesRemaining={dailyVotesRemaining}
-        />
-
-        <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-          <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-            Browse by category
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/categories/${category.slug}`}
-                className="rounded-full border border-black/10 bg-[#fff9ef] px-4 py-2 text-sm font-medium text-black transition hover:border-black/20 hover:bg-[#fff3de]"
-              >
-                {category.name}
-              </Link>
-            ))}
-            {categories.length === 0 ? (
-              <p className="text-sm text-black/55">
-                Categories will appear here once published tools are live.
-              </p>
+            {topCategories.length > 0 ? (
+              <InternalLinkSection
+                eyebrow="Popular Categories"
+                title="Start with the categories founders browse most"
+                links={topCategories.map((category) => ({
+                  href: `/categories/${category.slug}`,
+                  label: category.name,
+                  description: `Explore curated ${category.name.toLowerCase()} tools on ShipBoost.`,
+                }))}
+              />
             ) : null}
+
+            {popularComparisons.length > 0 ? (
+              <InternalLinkSection
+                eyebrow="Comparisons"
+                title="Popular alternative pages"
+                links={popularComparisons.map((entry) => ({
+                  href: `/alternatives/${entry.slug}`,
+                  label: entry.title,
+                  description: entry.metaDescription,
+                }))}
+              />
+            ) : null}
+
+            <div className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
+              <h2 className="text-3xl font-black tracking-tight text-foreground">
+                Want to launch here?
+              </h2>
+              <p className="mt-4 max-w-3xl text-base font-medium leading-relaxed text-muted-foreground/80">
+                Start with the submission flow if your product is ready, or review the launch
+                options first if you are still deciding between Free Launch and Premium Launch.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-4 text-sm font-black">
+                <Link href="/submit" className="text-foreground hover:underline underline-offset-4">
+                  Submit your product
+                </Link>
+                <Link href="/pricing" className="text-foreground hover:underline underline-offset-4">
+                  Compare launch pricing
+                </Link>
+                <Link href="/faqs" className="text-foreground hover:underline underline-offset-4">
+                  Read founder FAQs
+                </Link>
+              </div>
+            </div>
           </div>
-        </section>
-      </div>
-    </section>
+        </ShowcaseLayout>
+      </ViewerVoteStateProvider>
+      
+      <Footer />
+    </main>
   );
 }

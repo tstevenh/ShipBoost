@@ -3,9 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
   prismaMock,
   getSubmissionByIdForFounderMock,
-  getSubmissionByIdMock,
   sendSubmissionReceivedEmailMessageMock,
-  sendProductEmailSafelyMock,
 } = vi.hoisted(() => ({
   prismaMock: {
     $transaction: vi.fn(),
@@ -17,9 +15,7 @@ const {
     },
   },
   getSubmissionByIdForFounderMock: vi.fn(),
-  getSubmissionByIdMock: vi.fn(),
   sendSubmissionReceivedEmailMessageMock: vi.fn(),
-  sendProductEmailSafelyMock: vi.fn(),
 }));
 
 vi.mock("@/server/db/client", () => ({
@@ -28,7 +24,6 @@ vi.mock("@/server/db/client", () => ({
 
 vi.mock("@/server/repositories/submission-repository", () => ({
   getSubmissionByIdForFounder: getSubmissionByIdForFounderMock,
-  getSubmissionById: getSubmissionByIdMock,
 }));
 
 vi.mock("@/server/email/transactional", () => ({
@@ -44,7 +39,6 @@ vi.mock("@/server/services/submission-service-shared", async () => {
   return {
     ...actual,
     getDashboardUrl: () => "https://app.shipboost.test/dashboard",
-    sendProductEmailSafely: sendProductEmailSafelyMock,
   };
 });
 
@@ -90,14 +84,8 @@ describe("submit-relaunch-draft", () => {
           },
         }),
     );
-    getSubmissionByIdMock.mockResolvedValueOnce({
-      ...submission,
-      reviewStatus: "PENDING",
-    });
     sendSubmissionReceivedEmailMessageMock.mockReturnValue(Promise.resolve());
-    sendProductEmailSafelyMock.mockResolvedValue(undefined);
-
-    await submitSubmissionDraft("submission_1", {
+    const result = await submitSubmissionDraft("submission_1", {
       id: "founder_1",
     });
 
@@ -108,5 +96,18 @@ describe("submit-relaunch-draft", () => {
       },
     });
     expect(prismaMock.tool.update).not.toHaveBeenCalled();
+    expect(sendSubmissionReceivedEmailMessageMock).not.toHaveBeenCalled();
+
+    sendSubmissionReceivedEmailMessageMock.mockReturnValue(Promise.resolve());
+    await result.emailTask();
+
+    expect(sendSubmissionReceivedEmailMessageMock).toHaveBeenCalledWith({
+      to: "founder@acme.com",
+      name: "Founder",
+      dashboardUrl: "https://app.shipboost.test/dashboard",
+      toolName: "Acme",
+      submissionType: "RELAUNCH",
+      preferredLaunchDate: null,
+    });
   });
 });

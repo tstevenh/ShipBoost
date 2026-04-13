@@ -18,6 +18,16 @@ export type DraftSaveResult = {
   replacedScreenshotPublicIds: string[];
 };
 
+export type SavedSubmissionDraft = {
+  id: string;
+  submissionType: "LISTING_ONLY" | "FREE_LAUNCH" | "FEATURED_LAUNCH" | "RELAUNCH";
+  reviewStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+  paymentStatus: "NOT_REQUIRED" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+  badgeVerification: "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "FAILED";
+};
+
+export type DeferredEmailTask = () => Promise<void>;
+
 export const freeLaunchBadgePattern =
   /data-shipboost-badge\s*=\s*["']free-launch["']/i;
 
@@ -33,9 +43,11 @@ export function getDashboardUrl() {
   return `${env.NEXT_PUBLIC_APP_URL}/dashboard`;
 }
 
-export async function sendProductEmailSafely(task: Promise<void>) {
+export async function sendProductEmailSafely(
+  task: Promise<void> | DeferredEmailTask,
+) {
   try {
-    await task;
+    await (typeof task === "function" ? task() : task);
   } catch (error) {
     console.error("[shipboost email:error]", error);
   }

@@ -2,6 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { 
+  Rocket, Mail, Shield, Activity, CreditCard,
+  ExternalLink, Edit, RefreshCw, Check, AlertCircle, Star,
+  Layout, Package, Send, Fingerprint,
+  type LucideIcon,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type FounderSubmission = {
   id: string;
@@ -9,16 +16,11 @@ type FounderSubmission = {
   reviewStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
   preferredLaunchDate: string | null;
   paymentStatus: "NOT_REQUIRED" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
-  badgeFooterUrl: string | null;
   badgeVerification: "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "FAILED";
-  founderVisibleNote: string | null;
-  internalReviewNote: string | null;
-  createdAt: string;
   tool: {
     id: string;
     slug: string;
     name: string;
-    tagline: string;
     websiteUrl: string;
     logoMedia: { url: string } | null;
     launches: Array<{
@@ -35,34 +37,18 @@ type FounderToolSummary = {
   slug: string;
   name: string;
   tagline: string;
-  moderationStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "HIDDEN";
   publicationStatus: "UNPUBLISHED" | "PUBLISHED" | "ARCHIVED";
-  isFeatured: boolean;
-  updatedAt: string;
-  launches: Array<{
-    id: string;
-    launchType: "FREE" | "FEATURED" | "RELAUNCH";
-    status: "PENDING" | "APPROVED" | "LIVE" | "ENDED" | "REJECTED";
-    launchDate: string;
-  }>;
   logoMedia: { url: string } | null;
 };
 
 type FounderListingClaim = {
   id: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
-  claimEmail: string;
-  claimDomain: string;
   websiteDomain: string;
-  founderVisibleNote: string | null;
-  reviewedAt: string | null;
-  createdAt: string;
   tool: {
     id: string;
     slug: string;
     name: string;
-    tagline: string;
-    websiteUrl: string;
     logoMedia: { url: string } | null;
   };
 };
@@ -72,6 +58,13 @@ type SubmissionStateSummary = {
   tone: "green" | "amber" | "rose" | "slate";
 };
 
+type FounderNavItem = {
+  id: "overview" | "products" | "submissions" | "claims";
+  label: string;
+  icon: LucideIcon;
+  count?: number;
+};
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
@@ -79,91 +72,50 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function badgeTone(status: FounderSubmission["badgeVerification"]) {
-  if (status === "VERIFIED") {
-    return "bg-emerald-50 border-emerald-200 text-emerald-700";
-  }
-
-  if (status === "FAILED") {
-    return "bg-rose-50 border-rose-200 text-rose-700";
-  }
-
-  if (status === "PENDING") {
-    return "bg-amber-50 border-amber-200 text-amber-700";
-  }
-
-  return "bg-black/[0.04] border-black/10 text-black/60";
-}
-
 function getSubmissionState(submission: FounderSubmission): SubmissionStateSummary {
   const currentLaunch = submission.tool.launches[0];
-
   if (submission.reviewStatus === "DRAFT") {
-    if (
-      submission.submissionType === "FREE_LAUNCH" &&
-      submission.badgeVerification === "VERIFIED"
-    ) {
+    if (submission.submissionType === "FREE_LAUNCH" && submission.badgeVerification === "VERIFIED") {
       return { label: "Ready to submit", tone: "green" };
     }
-
     return { label: "Draft", tone: "slate" };
   }
-
   if (submission.reviewStatus === "REJECTED") {
     return { label: "Needs changes", tone: "rose" };
   }
-
-  if (
-    submission.submissionType === "FEATURED_LAUNCH" &&
-    submission.paymentStatus === "PENDING"
-  ) {
+  if (submission.submissionType === "FEATURED_LAUNCH" && submission.paymentStatus === "PENDING") {
     return { label: "Awaiting payment", tone: "amber" };
   }
-
   if (currentLaunch?.status === "LIVE") {
     return { label: "Live", tone: "green" };
   }
-
-  if (
-    submission.submissionType === "FEATURED_LAUNCH" &&
-    submission.paymentStatus === "PAID" &&
-    currentLaunch?.status === "APPROVED"
-  ) {
+  if (submission.submissionType === "FEATURED_LAUNCH" && submission.paymentStatus === "PAID" && currentLaunch?.status === "APPROVED") {
     return { label: "Scheduled", tone: "green" };
   }
-
   if (submission.reviewStatus === "APPROVED") {
     return { label: "Approved", tone: "green" };
   }
-
   return { label: "Pending review", tone: "amber" };
 }
 
 function submissionStateTone(tone: SubmissionStateSummary["tone"]) {
-  if (tone === "green") {
-    return "bg-emerald-50 border-emerald-200 text-emerald-700";
-  }
-
-  if (tone === "rose") {
-    return "bg-rose-50 border-rose-200 text-rose-700";
-  }
-
-  if (tone === "slate") {
-    return "bg-slate-100 border-slate-200 text-slate-700";
-  }
-
+  if (tone === "green") return "bg-emerald-50 border-emerald-200 text-emerald-700";
+  if (tone === "rose") return "bg-rose-50 border-rose-200 text-rose-700";
+  if (tone === "slate") return "bg-slate-100 border-slate-200 text-slate-700";
   return "bg-amber-50 border-amber-200 text-amber-700";
 }
 
-function getPaymentLabel(submission: FounderSubmission) {
-  if (
-    submission.submissionType === "FEATURED_LAUNCH" &&
-    submission.paymentStatus === "PENDING"
-  ) {
-    return "Awaiting payment";
+function getSubmissionTypeLabel(submissionType: FounderSubmission["submissionType"]) {
+  if (submissionType === "FEATURED_LAUNCH") {
+    return "Premium Launch";
   }
-
-  return submission.paymentStatus;
+  if (submissionType === "FREE_LAUNCH") {
+    return "Free Launch";
+  }
+  if (submissionType === "LISTING_ONLY") {
+    return "Listing Only";
+  }
+  return "Relaunch";
 }
 
 async function apiRequest<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
@@ -174,51 +126,14 @@ async function apiRequest<T>(input: RequestInfo, init?: RequestInit): Promise<T>
       ...(init?.headers ?? {}),
     },
   });
-
-  const payload = (await response.json().catch(() => null)) as
-    | { data?: T; error?: string }
-    | null;
-
+  const payload = (await response.json().catch(() => null)) as { data?: T; error?: string } | null;
   if (!response.ok) {
     throw new Error(payload?.error ?? "Request failed.");
   }
-
   return payload?.data as T;
 }
 
-function toDateInputValue(value: string) {
-  const date = new Date(value);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function isFutureFeaturedLaunch(submission: FounderSubmission) {
-  if (
-    submission.submissionType !== "FEATURED_LAUNCH" ||
-    submission.paymentStatus !== "PAID"
-  ) {
-    return false;
-  }
-
-  const featuredLaunch = submission.tool.launches.find(
-    (launch) => launch.launchType === "FEATURED",
-  );
-
-  if (!featuredLaunch) {
-    return false;
-  }
-
-  const launchDate = new Date(featuredLaunch.launchDate);
-  const now = new Date();
-
-  return (
-    featuredLaunch.status !== "LIVE" &&
-    featuredLaunch.status !== "ENDED" &&
-    launchDate > now
-  );
-}
+type NavSection = "overview" | "products" | "submissions" | "claims";
 
 export function FounderDashboard({
   initialSubmissions,
@@ -235,93 +150,36 @@ export function FounderDashboard({
   founderRole: string;
   initialSuccessMessage?: string | null;
 }) {
+  const [activeNav, setActiveNav] = useState<NavSection>("overview");
   const [submissions, setSubmissions] = useState(initialSubmissions);
   const [tools, setTools] = useState(initialTools);
   const [claims, setClaims] = useState(initialClaims);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(
-    initialSuccessMessage ?? null,
-  );
+  const [successMessage, setSuccessMessage] = useState<string | null>(initialSuccessMessage ?? null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [pendingCheckoutId, setPendingCheckoutId] = useState<string | null>(
-    null,
-  );
-  const [pendingVerificationId, setPendingVerificationId] = useState<string | null>(
-    null,
-  );
-  const [pendingSubmitId, setPendingSubmitId] = useState<string | null>(null);
-  const [pendingRescheduleId, setPendingRescheduleId] = useState<string | null>(
-    null,
-  );
-  const [rescheduleDrafts, setRescheduleDrafts] = useState<Record<string, string>>(
-    () =>
-      Object.fromEntries(
-        initialSubmissions
-          .filter((submission) => submission.preferredLaunchDate)
-          .map((submission) => [
-            submission.id,
-            toDateInputValue(submission.preferredLaunchDate as string),
-          ]),
-      ),
-  );
+  const [pendingCheckoutId, setPendingCheckoutId] = useState<string | null>(null);
 
-  const pendingCount = submissions.filter(
-    (submission) => getSubmissionState(submission).label === "Pending review",
-  ).length;
-  const awaitingPaymentCount = submissions.filter(
-    (submission) => getSubmissionState(submission).label === "Awaiting payment",
-  ).length;
-  const approvedCount = submissions.filter(
-    (submission) => submission.reviewStatus === "APPROVED",
-  ).length;
-  const pendingClaimCount = claims.filter((claim) => claim.status === "PENDING").length;
-
-  function updateSubmission(nextSubmission: FounderSubmission) {
-    setSubmissions((current) =>
-      current.map((submission) =>
-        submission.id === nextSubmission.id ? nextSubmission : submission,
-      ),
-    );
-  }
+  const pendingCount = submissions.filter(s => getSubmissionState(s).label === "Pending review").length;
+  const awaitingPaymentCount = submissions.filter(s => getSubmissionState(s).label === "Awaiting payment").length;
+  const pendingClaimCount = claims.filter(c => c.status === "PENDING").length;
 
   function refresh() {
-    if (isRefreshing) {
-      return;
-    }
-
+    if (isRefreshing) return;
     setIsRefreshing(true);
     void (async () => {
       try {
         setErrorMessage(null);
         setSuccessMessage(null);
-        const nextSubmissions = await apiRequest<FounderSubmission[]>(
-          "/api/submissions",
-        );
-        const nextTools = await apiRequest<FounderToolSummary[]>(
-          "/api/founder/tools",
-        );
-        const nextClaims = await apiRequest<FounderListingClaim[]>(
-          "/api/listing-claims",
-        );
-        setSubmissions(nextSubmissions);
+        const [nextSub, nextTools, nextClaims] = await Promise.all([
+          apiRequest<FounderSubmission[]>("/api/submissions"),
+          apiRequest<FounderToolSummary[]>("/api/founder/tools"),
+          apiRequest<FounderListingClaim[]>("/api/listing-claims"),
+        ]);
+        setSubmissions(nextSub);
         setTools(nextTools);
         setClaims(nextClaims);
-        setRescheduleDrafts(
-          Object.fromEntries(
-            nextSubmissions
-              .filter((submission) => submission.preferredLaunchDate)
-              .map((submission) => [
-                submission.id,
-                toDateInputValue(submission.preferredLaunchDate as string),
-              ]),
-          ),
-        );
       } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Unable to refresh submissions.",
-        );
+        setErrorMessage(error instanceof Error ? error.message : "Unable to refresh status.");
       } finally {
         setIsRefreshing(false);
       }
@@ -329,591 +187,306 @@ export function FounderDashboard({
   }
 
   function beginFeaturedCheckout(submissionId: string) {
-    if (pendingCheckoutId) {
-      return;
-    }
-
+    if (pendingCheckoutId) return;
     setPendingCheckoutId(submissionId);
     void (async () => {
       try {
         setErrorMessage(null);
-        setSuccessMessage(null);
-        const result = await apiRequest<{
-          checkoutUrl: string;
-          checkoutId: string;
-        }>("/api/polar/checkout/featured-launch", {
+        const result = await apiRequest<{ checkoutUrl: string }>("/api/polar/checkout/featured-launch", {
           method: "POST",
           body: JSON.stringify({ submissionId }),
         });
-
         window.location.href = result.checkoutUrl;
       } catch (error) {
-        setErrorMessage(
-          error instanceof Error ? error.message : "Unable to start checkout.",
-        );
+        setErrorMessage(error instanceof Error ? error.message : "Unable to start checkout.");
         setPendingCheckoutId(null);
       }
     })();
   }
 
-  function verifyDraftBadge(submissionId: string) {
-    if (pendingVerificationId) {
-      return;
-    }
-
-    setPendingVerificationId(submissionId);
-    void (async () => {
-      try {
-        setErrorMessage(null);
-        setSuccessMessage(null);
-        const result = await apiRequest<{
-          verified: boolean;
-          message: string;
-          submission: FounderSubmission;
-        }>(`/api/submissions/${submissionId}/verify-badge`, {
-          method: "POST",
-        });
-
-        updateSubmission(result.submission);
-
-        if (result.verified) {
-          setSuccessMessage(result.message);
-        } else {
-          setErrorMessage(result.message);
-        }
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Unable to verify the Shipboost badge.",
-        );
-      } finally {
-        setPendingVerificationId(null);
-      }
-    })();
-  }
-
-  function submitDraft(submissionId: string) {
-    if (pendingSubmitId) {
-      return;
-    }
-
-    setPendingSubmitId(submissionId);
-    void (async () => {
-      try {
-        setErrorMessage(null);
-        setSuccessMessage(null);
-        const result = await apiRequest<FounderSubmission>(
-          `/api/submissions/${submissionId}/submit`,
-          {
-            method: "POST",
-          },
-        );
-
-        updateSubmission(result);
-        setSuccessMessage("Launch submitted for review.");
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Unable to submit the launch draft.",
-        );
-      } finally {
-        setPendingSubmitId(null);
-      }
-    })();
-  }
-
-  function rescheduleFeaturedLaunch(submissionId: string) {
-    const preferredLaunchDate = rescheduleDrafts[submissionId];
-
-    if (!preferredLaunchDate || pendingRescheduleId) {
-      return;
-    }
-
-    setPendingRescheduleId(submissionId);
-
-    void (async () => {
-      try {
-        setErrorMessage(null);
-        setSuccessMessage(null);
-        const updatedSubmission = await apiRequest<FounderSubmission>(
-          `/api/submissions/${submissionId}/reschedule`,
-          {
-            method: "PATCH",
-            body: JSON.stringify({ preferredLaunchDate }),
-          },
-        );
-
-        setSubmissions((current) =>
-          current.map((submission) =>
-            submission.id === submissionId ? updatedSubmission : submission,
-          ),
-        );
-        setRescheduleDrafts((current) => ({
-          ...current,
-          [submissionId]: updatedSubmission.preferredLaunchDate
-            ? toDateInputValue(updatedSubmission.preferredLaunchDate)
-            : preferredLaunchDate,
-        }));
-        setSuccessMessage("Featured launch rescheduled.");
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Unable to reschedule featured launch.",
-        );
-      } finally {
-        setPendingRescheduleId(null);
-      }
-    })();
-  }
+  const navItems: FounderNavItem[] = [
+    { id: "overview", label: "Overview", icon: Layout },
+    { id: "products", label: "My Products", icon: Package, count: tools.length },
+    { id: "submissions", label: "Submissions", icon: Send, count: submissions.length },
+    { id: "claims", label: "Ownership", icon: Fingerprint, count: claims.length },
+  ];
 
   return (
-    <div className="grid gap-8">
-      <div className="grid gap-4 md:grid-cols-5">
-        <div className="rounded-[1.75rem] border border-black/10 bg-[#fff9ef] p-5">
-          <p className="text-sm text-black/55">Founder email</p>
-          <p className="mt-2 text-lg font-semibold text-black">{founderEmail}</p>
-        </div>
-        <div className="rounded-[1.75rem] border border-black/10 bg-[#f3f8f6] p-5">
-          <p className="text-sm text-black/55">Role</p>
-          <p className="mt-2 text-lg font-semibold text-black">{founderRole}</p>
-        </div>
-        <div className="rounded-[1.75rem] border border-black/10 bg-[#fff6f2] p-5">
-          <p className="text-sm text-black/55">Pending reviews</p>
-          <p className="mt-2 text-3xl font-semibold text-black">{pendingCount}</p>
-        </div>
-        <div className="rounded-[1.75rem] border border-black/10 bg-[#f6f2ff] p-5">
-          <p className="text-sm text-black/55">Approved / awaiting payment</p>
-          <p className="mt-2 text-3xl font-semibold text-black">
-            {approvedCount} / {awaitingPaymentCount}
-          </p>
-        </div>
-        <div className="rounded-[1.75rem] border border-black/10 bg-[#eef6ff] p-5">
-          <p className="text-sm text-black/55">Pending claims</p>
-          <p className="mt-2 text-3xl font-semibold text-black">{pendingClaimCount}</p>
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-          <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-            Founder workspace
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-black">
-            Track your launch pipeline.
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-black/66">
-            Submit a new SaaS for listing, free launch with badge requirement,
-            or a featured launch request. This dashboard is your operating
-            surface until the rest of the founder tooling lands.
-          </p>
-
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/submit"
-              className="inline-flex items-center justify-center rounded-2xl bg-[#143f35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2e26]"
-            >
-              Submit a product
-            </Link>
+    <div className="flex min-w-0 flex-col items-start gap-6 lg:flex-row lg:gap-8">
+      {/* Sidebar Navigation */}
+      <aside className="w-full lg:w-64 shrink-0 space-y-4 lg:sticky lg:top-32">
+        <div className="rounded-3xl border border-border bg-card p-2 shadow-sm">
+          {navItems.map((item) => (
             <button
-              type="button"
-              onClick={refresh}
-              disabled={isRefreshing}
-              className="rounded-2xl border border-black/10 px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
+              key={item.id}
+              onClick={() => setActiveNav(item.id)}
+              className={cn(
+                "w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-black  tracking-widest transition-all group",
+                activeNav === item.id
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-black/10"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
             >
-              {isRefreshing ? "Refreshing..." : "Refresh status"}
+              <div className="flex items-center gap-3">
+                <item.icon size={16} />
+                <span>{item.label}</span>
+              </div>
+              {item.count !== undefined && (
+                <span className={cn(
+                  "px-2 py-0.5 rounded-lg text-[10px]",
+                  activeNav === item.id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-background"
+                )}>
+                  {item.count}
+                </span>
+              )}
             </button>
-          </div>
-
-          {errorMessage ? (
-            <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              {errorMessage}
-            </div>
-          ) : null}
-          {successMessage ? (
-            <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              {successMessage}
-            </div>
-          ) : null}
-        </section>
-
-        <aside className="rounded-[2rem] bg-[#143f35] p-8 text-[#f8efe3] shadow-[0_24px_80px_rgba(20,63,53,0.24)] sm:p-10">
-          <p className="text-sm font-semibold tracking-[0.25em] text-[#f3c781] uppercase">
-            What converts next
-          </p>
-          <div className="mt-6 space-y-4 text-sm leading-7 text-[#f8efe3]/82">
-            <p>Use `FREE_LAUNCH` when you can place the Shipboost badge in your footer right away.</p>
-            <p>Use `FEATURED_LAUNCH` when you want priority placement and faster attention on launch day.</p>
-            <p>Use `LISTING_ONLY` when you just want a clean affiliate-ready profile without a launch request.</p>
-          </div>
-        </aside>
-      </div>
-
-      <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-              Listing claims
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-black">
-              Ownership requests in review
-            </h2>
-          </div>
-          <span className="rounded-full border border-black/10 bg-black/[0.03] px-4 py-2 text-sm text-black/60">
-            {claims.length} total
-          </span>
+          ))}
         </div>
 
-        <div className="mt-8 space-y-4">
-          {claims.map((claim) => (
-            <article
-              key={claim.id}
-              className="rounded-[1.75rem] border border-black/10 bg-[#fffdf8] p-5"
-            >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex rounded-full border border-black/10 bg-black/[0.03] px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase text-black/65">
-                      {claim.status}
-                    </span>
-                    <span className="inline-flex rounded-full border border-black/10 bg-[#fff9ef] px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase text-black/65">
-                      {claim.websiteDomain}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-black">{claim.tool.name}</h3>
-                    <p className="mt-1 text-sm text-black/58">{claim.tool.tagline}</p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-black/42">
-                      Requested {formatDate(claim.createdAt)}
-                    </p>
-                  </div>
-                  <div className="grid gap-2 text-sm text-black/62 sm:grid-cols-2">
-                    <p>Claim email: {claim.claimEmail}</p>
-                    <p>Domain match: {claim.claimDomain}</p>
-                    {claim.reviewedAt ? (
-                      <p>Reviewed: {formatDate(claim.reviewedAt)}</p>
-                    ) : null}
-                    {claim.founderVisibleNote ? (
-                      <p className="sm:col-span-2">Review note: {claim.founderVisibleNote}</p>
-                    ) : null}
-                  </div>
-                </div>
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm hidden lg:block">
+          <h4 className="text-[10px] font-black  tracking-widest text-muted-foreground/60 mb-4">Account Status</h4>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-foreground">
+                <Mail size={14} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black  tracking-widest text-muted-foreground/60">Email</p>
+                <p className="text-xs font-bold text-foreground truncate">{founderEmail}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-foreground">
+                <Shield size={14} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black  tracking-widest text-muted-foreground/60">Role</p>
+                <p className="text-xs font-bold text-foreground  tracking-widest">{founderRole}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
 
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    href={`/tools/${claim.tool.slug}`}
-                    className="rounded-2xl border border-black/10 px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03]"
-                  >
-                    View listing
+      {/* Main Content Area */}
+      <div className="flex-1 w-full min-w-0 space-y-8">
+        {errorMessage && (
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive  tracking-widest flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+            <AlertCircle size={16} /> {errorMessage}
+          </div>
+        )}
+        {successMessage && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-bold text-emerald-700  tracking-widest flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+            <Check size={16} /> {successMessage}
+          </div>
+        )}
+
+        {activeNav === "overview" && (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            <section className="rounded-[2.5rem] border border-border bg-card p-6 sm:p-8 lg:p-12 shadow-xl shadow-black/5">
+              <div className="max-w-2xl">
+                <p className="text-[10px] font-black tracking-[0.3em] text-primary  mb-4">Founder workspace</p>
+                <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">Mission Control</h1>
+                <p className="mt-6 text-lg font-medium leading-relaxed text-muted-foreground/80">
+                  Track your launch pipeline, manage directory profiles, and monitor your distribution loops.
+                </p>
+                <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+                  <Link href="/submit" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-primary-foreground shadow-xl shadow-black/10 transition hover:opacity-90 active:scale-95">
+                    <Rocket size={18} /> Submit a product
                   </Link>
+                  <button onClick={refresh} disabled={isRefreshing} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-muted/50 px-8 py-4 text-sm font-black text-foreground transition hover:bg-muted disabled:opacity-50">
+                    <RefreshCw size={18} className={cn(isRefreshing && "animate-spin")} /> {isRefreshing ? "Refreshing..." : "Refresh status"}
+                  </button>
                 </div>
               </div>
-            </article>
-          ))}
+            </section>
 
-          {claims.length === 0 ? (
-            <div className="rounded-[1.75rem] border border-dashed border-black/15 bg-black/[0.02] px-5 py-10 text-center text-sm text-black/55">
-              No listing claims yet. Claim a seeded public listing to manage it from this dashboard.
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-              My listings
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-black">
-              Edit and maintain your public profiles
-            </h2>
-          </div>
-          <span className="rounded-full border border-black/10 bg-black/[0.03] px-4 py-2 text-sm text-black/60">
-            {tools.length} listings
-          </span>
-        </div>
-
-        <div className="mt-8 space-y-4">
-          {tools.map((tool) => (
-            <article
-              key={tool.id}
-              className="rounded-[1.75rem] border border-black/10 bg-[#fffdf8] p-5"
-            >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex rounded-full border border-black/10 bg-black/[0.03] px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase text-black/65">
-                      {tool.moderationStatus}
-                    </span>
-                    <span className="inline-flex rounded-full border border-black/10 bg-[#fff9ef] px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase text-black/65">
-                      {tool.publicationStatus}
-                    </span>
-                    {tool.isFeatured ? (
-                      <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase text-amber-700">
-                        Featured
-                      </span>
-                    ) : null}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-black">{tool.name}</h3>
-                    <p className="mt-1 text-sm text-black/58">{tool.tagline}</p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-black/42">
-                      Updated {formatDate(tool.updatedAt)}
-                    </p>
-                  </div>
+            <div className="grid gap-6 sm:grid-cols-3">
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+                <div className="flex items-center gap-3 text-muted-foreground mb-3">
+                  <Activity size={16} />
+                  <p className="text-[10px] font-black  tracking-widest">Active Reviews</p>
                 </div>
-
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    href={`/dashboard/tools/${tool.id}`}
-                    className="rounded-2xl bg-[#143f35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2e26]"
-                  >
-                    Edit listing
-                  </Link>
-                  <Link
-                    href={`/tools/${tool.slug}`}
-                    className="rounded-2xl border border-black/10 px-5 py-3 text-sm font-semibold text-black transition hover:bg-black/[0.03]"
-                  >
-                    View page
-                  </Link>
-                </div>
+                <p className="text-3xl font-black text-foreground">{pendingCount}</p>
               </div>
-            </article>
-          ))}
-
-          {tools.length === 0 ? (
-            <div className="rounded-[1.75rem] border border-dashed border-black/15 bg-black/[0.02] px-5 py-10 text-center text-sm text-black/55">
-              No listings yet. Submit your first product to create one.
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+                <div className="flex items-center gap-3 text-muted-foreground mb-3">
+                  <CreditCard size={16} />
+                  <p className="text-[10px] font-black  tracking-widest">Awaiting Pay</p>
+                </div>
+                <p className="text-3xl font-black text-foreground">{awaitingPaymentCount}</p>
+              </div>
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+                <div className="flex items-center gap-3 text-muted-foreground mb-3">
+                  <Fingerprint size={16} />
+                  <p className="text-[10px] font-black  tracking-widest">Open Claims</p>
+                </div>
+                <p className="text-3xl font-black text-foreground">{pendingClaimCount}</p>
+              </div>
             </div>
-          ) : null}
-        </div>
-      </section>
-
-      <section className="rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-              Submission status
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-black">
-              Your listings and launch requests
-            </h2>
           </div>
-          <span className="rounded-full border border-black/10 bg-black/[0.03] px-4 py-2 text-sm text-black/60">
-            {submissions.length} total
-          </span>
-        </div>
+        )}
 
-        <div className="mt-8 space-y-4">
-          {submissions.map((submission) => (
-            <article
-              key={submission.id}
-              className="rounded-[1.75rem] border border-black/10 bg-[#fffdf8] p-5"
-            >
-              {(() => {
-                const canReschedule = isFutureFeaturedLaunch(submission);
-                const featuredLaunch = submission.tool.launches.find(
-                  (launch) => launch.launchType === "FEATURED",
-                );
-                const submissionState = getSubmissionState(submission);
-
-                return (
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase ${submissionStateTone(submissionState.tone)}`}
-                    >
-                      {submissionState.label}
-                    </span>
-                    <span className="inline-flex rounded-full border border-black/10 bg-black/[0.03] px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase text-black/65">
-                      {submission.submissionType}
-                    </span>
-                    <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase ${badgeTone(submission.badgeVerification)}`}
-                    >
-                      {submission.badgeVerification}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 className="text-xl font-semibold text-black">
-                      {submission.tool.name}
-                    </h3>
-                    <p className="mt-1 text-sm text-black/58">
-                      {submission.tool.tagline}
-                    </p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-black/42">
-                      Submitted {formatDate(submission.createdAt)}
-                    </p>
-                  </div>
-
-                  <div className="grid gap-2 text-sm text-black/62 sm:grid-cols-2">
-                    <p>Slug: {submission.tool.slug}</p>
-                    {submission.preferredLaunchDate ? (
-                      <p>
-                        Preferred date: {formatDate(submission.preferredLaunchDate)}
-                      </p>
-                    ) : null}
-                    <p>Payment: {getPaymentLabel(submission)}</p>
-                    <p>
-                      Badge check target: {submission.submissionType === "FREE_LAUNCH" ? "Homepage" : "Not required"}
-                    </p>
-                    {submission.tool.launches[0] ? (
-                      <p>
-                        Launch slot: {formatDate(submission.tool.launches[0].launchDate)}
-                      </p>
-                    ) : null}
-                    {submission.tool.launches[0] ? (
-                      <p>
-                        Launch status: {submission.tool.launches[0].status}
-                      </p>
-                    ) : null}
-                    {submission.founderVisibleNote ? (
-                      <p className="sm:col-span-2">
-                        Founder note: {submission.founderVisibleNote}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  {canReschedule && featuredLaunch ? (
-                    <div className="rounded-[1.25rem] border border-[#9f4f1d]/12 bg-[#fff7ea] p-4">
-                      <p className="text-sm font-semibold text-black">
-                        Reschedule featured launch
-                      </p>
-                      <p className="mt-1 text-xs leading-6 text-black/55">
-                        You can move this launch to any future date until it goes live.
-                      </p>
-                      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <input
-                          type="date"
-                          value={
-                            rescheduleDrafts[submission.id] ??
-                            (submission.preferredLaunchDate
-                              ? toDateInputValue(submission.preferredLaunchDate)
-                              : "")
-                          }
-                          min={toDateInputValue(new Date().toISOString())}
-                          onChange={(event) =>
-                            setRescheduleDrafts((current) => ({
-                              ...current,
-                              [submission.id]: event.target.value,
-                            }))
-                          }
-                          className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#9f4f1d] focus:ring-4 focus:ring-[#9f4f1d]/10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => rescheduleFeaturedLaunch(submission.id)}
-                          disabled={pendingRescheduleId !== null}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#9f4f1d]/20 bg-white px-4 py-3 text-sm font-semibold text-[#9f4f1d] transition hover:bg-[#fff2df] disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {pendingRescheduleId === submission.id ? (
-                            <>
-                              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#9f4f1d]/30 border-t-[#9f4f1d]" />
-                              Rescheduling...
-                            </>
-                          ) : (
-                            "Reschedule launch"
-                          )}
-                        </button>
+        {activeNav === "products" && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex min-w-0 items-end justify-between px-2">
+              <div className="space-y-1">
+                <h2 className="text-3xl font-black tracking-tight">Public Profiles</h2>
+                <p className="text-xs font-bold text-muted-foreground  tracking-widest">Manage your active listings</p>
+              </div>
+            </div>
+            <div className="grid gap-4">
+              {tools.map((tool) => (
+                <article key={tool.id} className="rounded-[2rem] border border-border bg-card p-5 sm:p-6 hover:shadow-xl hover:shadow-black/5 transition-all">
+                  <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                    <div className="flex min-w-0 items-start gap-4 sm:gap-6">
+                      <div className="w-16 h-16 rounded-2xl bg-muted border border-border overflow-hidden shrink-0">
+                        {tool.logoMedia ? (
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={tool.logoMedia.url} alt={`${tool.name} logo`} className="w-full h-full object-cover" />
+                          </>
+                        ) : <Package size={24} className="m-5 text-muted-foreground" />}
+                      </div>
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <h3 className="truncate text-lg font-black">{tool.name}</h3>
+                          <StatusChip label={tool.publicationStatus} tone={tool.publicationStatus === 'PUBLISHED' ? 'green' : 'slate'} />
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground line-clamp-2 break-words">{tool.tagline}</p>
                       </div>
                     </div>
-                  ) : null}
-                </div>
-
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  {submission.reviewStatus === "DRAFT" ? (
-                    <Link
-                      href={`/dashboard/tools/${submission.tool.id}`}
-                      className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-black transition hover:bg-black/[0.04]"
-                    >
-                      Edit draft
-                    </Link>
-                  ) : null}
-                  {submission.submissionType === "FREE_LAUNCH" &&
-                  submission.reviewStatus === "DRAFT" ? (
-                    <button
-                      type="button"
-                      onClick={() => verifyDraftBadge(submission.id)}
-                      disabled={pendingVerificationId !== null}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#9f4f1d]/20 bg-white px-4 py-2 text-sm font-semibold text-[#9f4f1d] transition hover:bg-[#fff2df] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {pendingVerificationId === submission.id ? (
-                        <>
-                          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#9f4f1d]/30 border-t-[#9f4f1d]" />
-                          Verifying...
-                        </>
-                      ) : (
-                        "Verify badge"
-                      )}
-                    </button>
-                  ) : null}
-                  {submission.reviewStatus === "DRAFT" &&
-                  submission.submissionType !== "FEATURED_LAUNCH" ? (
-                    <button
-                      type="button"
-                      onClick={() => submitDraft(submission.id)}
-                      disabled={
-                        pendingSubmitId !== null ||
-                        (submission.submissionType === "FREE_LAUNCH" &&
-                          submission.badgeVerification !== "VERIFIED")
-                      }
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#143f35] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0d2e26] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {pendingSubmitId === submission.id ? (
-                        <>
-                          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                          Submitting...
-                        </>
-                      ) : (
-                        "Submit for review"
-                      )}
-                    </button>
-                  ) : null}
-                  {submission.submissionType === "FEATURED_LAUNCH" &&
-                  submission.paymentStatus !== "PAID" ? (
-                    <button
-                      type="button"
-                      onClick={() => beginFeaturedCheckout(submission.id)}
-                      disabled={pendingCheckoutId !== null}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#9f4f1d] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7d3f17] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {pendingCheckoutId === submission.id ? (
-                        <>
-                          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                          Opening checkout...
-                        </>
-                      ) : (
-                        "Pay featured launch"
-                      )}
-                    </button>
-                  ) : null}
-                  <a
-                    href={submission.tool.websiteUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-black transition hover:bg-black/[0.04]"
-                  >
-                    Visit site
-                  </a>
-                </div>
-              </div>
-                );
-              })()}
-            </article>
-          ))}
-
-          {submissions.length === 0 ? (
-            <div className="rounded-[1.75rem] border border-dashed border-black/15 bg-black/[0.02] px-5 py-10 text-center text-sm text-black/55">
-              No submissions yet. Start with your first listing or launch request.
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                      <Link href={`/dashboard/tools/${tool.id}`} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-black text-primary-foreground shadow-lg shadow-black/10 hover:opacity-90 sm:w-auto">
+                        <Edit size={14} /> Edit
+                      </Link>
+                      <Link href={`/dashboard/tools/${tool.id}/preview`} target="_blank" className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-2.5 text-xs font-black hover:bg-muted sm:w-auto">
+                        <ExternalLink size={14} /> Preview
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+              {tools.length === 0 && <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/30 px-5 py-16 text-center text-sm font-bold text-muted-foreground  tracking-widest">No listings yet.</div>}
             </div>
-          ) : null}
-        </div>
-      </section>
+          </div>
+        )}
+
+        {activeNav === "submissions" && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex min-w-0 items-end justify-between px-2">
+              <div className="space-y-1">
+                <h2 className="text-3xl font-black tracking-tight">Launch Queue</h2>
+                <p className="text-xs font-bold text-muted-foreground  tracking-widest">Track your submission status</p>
+              </div>
+            </div>
+            <div className="grid gap-4">
+              {submissions.map((sub) => {
+                const state = getSubmissionState(sub);
+                const latestLaunch = sub.tool.launches[0] ?? null;
+                return (
+                  <article key={sub.id} className="rounded-[2rem] border border-border bg-card p-5 sm:p-6 space-y-6">
+                    <div className="flex min-w-0 flex-col gap-6 lg:flex-row lg:justify-between">
+                      <div className="min-w-0 space-y-4">
+                        <div className="flex flex-wrap gap-2">
+                          <span className={cn("px-3 py-1 rounded-full border text-[10px] font-black  tracking-widest", submissionStateTone(state.tone))}>{state.label}</span>
+                          <span className="px-3 py-1 rounded-full border border-border bg-muted/30 text-[10px] font-black  tracking-widest text-muted-foreground">{getSubmissionTypeLabel(sub.submissionType)}</span>
+                          {latestLaunch ? (
+                            <span className="px-3 py-1 rounded-full border border-border bg-muted/30 text-[10px] font-black  tracking-widest text-muted-foreground">
+                              Launch date:{" "}
+                              <span className="text-foreground">
+                                {formatDate(latestLaunch.launchDate)}
+                              </span>
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-muted border border-border overflow-hidden shrink-0">
+                            {sub.tool.logoMedia ? (
+                              <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={sub.tool.logoMedia.url} alt={`${sub.tool.name} logo`} className="w-full h-full object-cover" />
+                              </>
+                            ) : <Rocket size={20} className="m-3 text-muted-foreground" />}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="truncate font-black text-foreground">{sub.tool.name}</h3>
+                            <p className="truncate text-xs text-muted-foreground  tracking-widest">Slug: {sub.tool.slug}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-start">
+                        {sub.reviewStatus === "DRAFT" && (
+                          <Link href={`/submit?draft=${sub.id}`} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90">
+                            <Edit size={14} /> Continue Submission
+                          </Link>
+                        )}
+                        {sub.reviewStatus !== "DRAFT" && sub.submissionType === "FEATURED_LAUNCH" && sub.paymentStatus !== "PAID" && (
+                          <button onClick={() => beginFeaturedCheckout(sub.id)} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90">
+                            <Star size={14} /> Reserve Premium Launch
+                          </button>
+                        )}
+                        <a href={sub.tool.websiteUrl} target="_blank" className="inline-flex items-center gap-2 border border-border bg-card px-4 py-2 rounded-xl text-xs font-black hover:bg-muted">
+                          <ExternalLink size={14} /> Site
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+              {submissions.length === 0 && <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/30 px-5 py-16 text-center text-sm font-bold text-muted-foreground  tracking-widest">No submissions yet.</div>}
+            </div>
+          </div>
+        )}
+
+        {activeNav === "claims" && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex min-w-0 items-end justify-between px-2">
+              <div className="space-y-1">
+                <h2 className="text-3xl font-black tracking-tight">Ownership Claims</h2>
+                <p className="text-xs font-bold text-muted-foreground  tracking-widest">Listing takeover requests</p>
+              </div>
+            </div>
+            <div className="grid gap-4">
+              {claims.map((claim) => (
+                <article key={claim.id} className="rounded-[2rem] border border-border bg-card p-5 sm:p-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                  <div className="flex min-w-0 items-center gap-4 sm:gap-6">
+                    <div className="w-12 h-12 rounded-xl bg-muted border border-border overflow-hidden shrink-0">
+                      {claim.tool.logoMedia ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={claim.tool.logoMedia.url} alt={`${claim.tool.name} logo`} className="w-full h-full object-cover" />
+                        </>
+                      ) : <Fingerprint size={20} className="m-3 text-muted-foreground" />}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="truncate font-black">{claim.tool.name}</h3>
+                      <p className="truncate text-xs text-muted-foreground  tracking-widest">{claim.websiteDomain}</p>
+                    </div>
+                  </div>
+                  <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
+                    <StatusChip label={claim.status} tone={claim.status === 'APPROVED' ? 'green' : claim.status === 'PENDING' ? 'amber' : 'rose'} />
+                    <Link href={`/tools/${claim.tool.slug}`} target="_blank" className="inline-flex items-center gap-2 border border-border bg-card px-4 py-2 rounded-xl text-xs font-black hover:bg-muted">
+                      <ExternalLink size={14} /> View
+                    </Link>
+                  </div>
+                </article>
+              ))}
+              {claims.length === 0 && <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/30 px-5 py-16 text-center text-sm font-bold text-muted-foreground  tracking-widest">No claims found.</div>}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
+}
+
+function StatusChip({ label, tone }: { label: string; tone: 'green' | 'amber' | 'rose' | 'slate' }) {
+  const styles = {
+    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    rose: "bg-rose-50 text-rose-700 border-rose-200",
+    slate: "bg-muted/30 text-muted-foreground border-border"
+  };
+  return <span className={cn("px-2 py-0.5 rounded-full border text-[10px] font-black  tracking-widest", styles[tone])}>{label}</span>;
 }

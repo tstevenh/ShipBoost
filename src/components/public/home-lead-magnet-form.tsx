@@ -2,6 +2,9 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { AlertCircle, Check } from "lucide-react";
+
+import { requestStartupDirectoriesAccess } from "@/lib/startup-directories-access";
 
 const source = "homepage_directory_list";
 const leadMagnet = "startup-directories-800";
@@ -25,33 +28,19 @@ export function HomeLeadMagnetForm() {
     setSuccessMessage(null);
 
     try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          source,
-          leadMagnet,
-          utmSource: searchParams.get("utm_source") ?? undefined,
-          utmMedium: searchParams.get("utm_medium") ?? undefined,
-          utmCampaign: searchParams.get("utm_campaign") ?? undefined,
-          utmContent: searchParams.get("utm_content") ?? undefined,
-          utmTerm: searchParams.get("utm_term") ?? undefined,
-        }),
+      await requestStartupDirectoriesAccess({
+        email,
+        source,
+        leadMagnet,
+        utmSource: searchParams.get("utm_source") ?? undefined,
+        utmMedium: searchParams.get("utm_medium") ?? undefined,
+        utmCampaign: searchParams.get("utm_campaign") ?? undefined,
+        utmContent: searchParams.get("utm_content") ?? undefined,
+        utmTerm: searchParams.get("utm_term") ?? undefined,
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: string }
-        | null;
-
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Unable to join the list right now.");
-      }
-
       setSuccessMessage(
-        "Check your inbox. Shipboost is sending the startup directories list now.",
+        "Check your inbox. We sent your access link to the startup directories resource.",
       );
       setEmail("");
     } catch (error) {
@@ -66,56 +55,61 @@ export function HomeLeadMagnetForm() {
   }
 
   return (
-    <section className="rounded-[2rem] border border-black/10 bg-[#fff9ef] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
-      <p className="text-sm font-semibold tracking-[0.24em] text-[#9f4f1d] uppercase">
-        Free founder resource
-      </p>
-      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-black">
-        Get the 800+ startup directories list
-      </h2>
-      <p className="mt-4 max-w-2xl text-base leading-7 text-black/66">
-        Join the Shipboost newsletter and get the directory list founders use to
-        find more submission opportunities without paying for another tool.
-      </p>
+    <section className="rounded-[2.5rem] border border-border bg-card p-10 sm:p-12 shadow-2xl shadow-black/5 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-muted/20 blur-3xl -mr-32 -mt-32 rounded-full" />
+      
+      <div className="relative">
+        <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40  mb-4">
+          Secondary resource
+        </p>
+        <h2 className="text-3xl font-black tracking-tight text-foreground mb-6 ">
+          Get the startup directories list.
+        </h2>
+        <p className="text-lg font-medium leading-relaxed text-muted-foreground/80 max-w-2xl mb-10">
+          Get the curated directory database we use for founder distribution.
+          This is the supporting resource, not the main event.
+        </p>
 
-      <form
-        onSubmit={handleSubmit}
-        className="mt-8 flex flex-col gap-3 sm:flex-row"
-      >
-        <input
-          required
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@startup.com"
-          className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#9f4f1d] focus:ring-4 focus:ring-[#9f4f1d]/10"
-        />
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center rounded-2xl bg-[#143f35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2e26] disabled:cursor-not-allowed disabled:opacity-60"
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4 sm:flex-row max-w-xl"
         >
-          {isSubmitting ? "Sending..." : "Get the list"}
-        </button>
-      </form>
+          <input
+            required
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@startup.com"
+            className="flex-1 rounded-2xl border border-border bg-muted/20 px-6 py-4 text-sm font-medium outline-none transition focus:border-foreground focus:ring-4 focus:ring-foreground/5"
+          />
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex shrink-0 items-center justify-center rounded-2xl bg-primary px-10 py-4 text-sm font-black text-primary-foreground shadow-xl shadow-black/10 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50"
+          >
+            {isSubmitting ? "Sending..." : "Get access now"}
+          </button>
+        </form>
 
-      <p className="mt-4 text-sm leading-6 text-black/58">
-        Get the 800+ startup directories list plus occasional startup growth
-        emails. Unsubscribe anytime.
-      </p>
+        <p className="mt-8 text-xs font-bold text-muted-foreground/40  tracking-widest">
+          * Access link via secure email. Unsubscribe with one click.
+        </p>
 
-      {successMessage ? (
-        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {successMessage}
-        </div>
-      ) : null}
+        {successMessage ? (
+          <div className="mt-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-6 py-4 text-sm font-bold text-emerald-700  tracking-widest flex items-center gap-3">
+            <Check size={18} />
+            {successMessage}
+          </div>
+        ) : null}
 
-      {errorMessage ? (
-        <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {errorMessage}
-        </div>
-      ) : null}
+        {errorMessage ? (
+          <div className="mt-8 rounded-2xl border border-destructive/20 bg-destructive/10 px-6 py-4 text-sm font-bold text-destructive  tracking-widest flex items-center gap-3">
+            <AlertCircle size={18} />
+            {errorMessage}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

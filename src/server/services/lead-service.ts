@@ -1,7 +1,6 @@
 import { Resend } from "resend";
 
 import { prisma } from "@/server/db/client";
-import { sendStartupDirectoriesLeadMagnetEmail } from "@/server/email/transactional";
 import { getEnv } from "@/server/env";
 import { AppError } from "@/server/http/app-error";
 import type { LeadCaptureInput } from "@/server/validators/lead";
@@ -123,23 +122,6 @@ async function syncLeadToResend(lead: {
   return response.data?.id ?? null;
 }
 
-async function deliverLeadMagnet(lead: {
-  email: string;
-  name: string | null;
-}) {
-  const env = getEnv();
-
-  if (!env.LEAD_MAGNET_STARTUP_DIRECTORIES_URL) {
-    return;
-  }
-
-  await sendStartupDirectoriesLeadMagnetEmail({
-    to: lead.email,
-    name: lead.name,
-    directoriesUrl: env.LEAD_MAGNET_STARTUP_DIRECTORIES_URL,
-  });
-}
-
 export async function captureLead(input: LeadCaptureInput) {
   const email = normalizeEmail(input.email);
   const now = new Date();
@@ -191,12 +173,6 @@ export async function captureLead(input: LeadCaptureInput) {
     }
   } catch (error) {
     console.error("[shipboost lead:resend-sync-error]", error);
-  }
-
-  try {
-    await deliverLeadMagnet(lead);
-  } catch (error) {
-    console.error("[shipboost lead:delivery-error]", error);
   }
 
   return {

@@ -1,6 +1,5 @@
 import { z } from "zod";
 
 export const launchesQuerySchema = z.object({
-  board: z.enum(["daily", "weekly", "monthly"]).default("daily"),
+  board: z.enum(["weekly", "monthly", "yearly"]).default("weekly"),
 });
-

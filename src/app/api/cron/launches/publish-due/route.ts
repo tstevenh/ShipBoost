@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 
+import { revalidateAllPublicContent } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
 import { AppError } from "@/server/http/app-error";
 import { errorResponse, ok } from "@/server/http/response";
@@ -41,6 +42,11 @@ async function handleRequest(request: NextRequest) {
   try {
     assertCronAccess(request);
     const result = await publishDueLaunches();
+
+    if (result.publishedCount > 0) {
+      revalidateAllPublicContent();
+    }
+
     return ok(result);
   } catch (error) {
     return errorResponse(error);

@@ -3,15 +3,20 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db/client";
 import { toolDetailsInclude } from "@/server/db/includes";
 import {
+  publicRelatedToolSelect,
+  publicToolDetailSelect,
+} from "@/server/db/public-selects";
+import {
   deleteImageFromCloudinary,
-  type UploadedCloudinaryAsset,
 } from "@/server/cloudinary";
 import { AppError } from "@/server/http/app-error";
 import {
   getToolByOwner,
   getToolById,
+  getToolEditorById,
+  getToolEditorByOwner,
   listTools,
-  listToolsByOwner,
+  listToolSummariesByOwner,
   replaceToolCategories,
   replaceToolTags,
 } from "@/server/repositories/tool-repository";
@@ -44,6 +49,13 @@ function getToolListWhere(filters: {
         ]
       : undefined,
   };
+}
+
+function haveSameOrderedIds(left: string[], right: string[]) {
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  );
 }
 
 export async function listAdminTools(filters: {
@@ -385,49 +397,81 @@ export async function searchPublishedTools(
     }));
 }
 
-export async function getPublishedToolBySlug(
-  slug: string,
-  options?: { viewerUserId?: string | null },
-) {
+export async function getPublishedToolBySlug(slug: string) {
   const tool = await prisma.tool.findFirst({
     where: {
       slug,
       ...getPubliclyVisibleToolWhere(),
     },
-    include: {
-      ...toolDetailsInclude,
-      _count: {
-        select: {
-          toolVotes: true,
-        },
-      },
-    },
+    select: publicToolDetailSelect,
   });
 
   if (!tool) {
     return null;
   }
 
-  const hasUpvoted = options?.viewerUserId
-    ? Boolean(
-        await prisma.toolVote.findUnique({
-          where: {
-            toolId_userId: {
-              toolId: tool.id,
-              userId: options.viewerUserId,
-            },
-          },
-          select: {
-            id: true,
-          },
-        }),
-      )
-    : false;
-
   return {
     ...tool,
     upvoteCount: tool._count.toolVotes,
-    hasUpvoted,
+  };
+}
+
+export async function getFounderToolPreviewById(
+  ownerUserId: string,
+  toolId: string,
+) {
+  const tool = await getToolByOwner(prisma, ownerUserId, toolId);
+
+  if (!tool) {
+    return null;
+  }
+
+  return {
+    id: tool.id,
+    slug: tool.slug,
+    name: tool.name,
+    tagline: tool.tagline,
+    richDescription: tool.richDescription,
+    pricingModel: tool.pricingModel,
+    websiteUrl: tool.websiteUrl,
+    metaTitle: tool.metaTitle,
+    metaDescription: tool.metaDescription,
+    canonicalUrl: tool.canonicalUrl,
+    createdAt: tool.createdAt,
+    publicationStatus: tool.publicationStatus,
+    moderationStatus: tool.moderationStatus,
+    logoMedia: tool.logoMedia
+      ? {
+          url: tool.logoMedia.url,
+        }
+      : null,
+    media: tool.media
+      .filter((media) => media.type === "SCREENSHOT")
+      .map((media) => ({
+        id: media.id,
+        url: media.url,
+      })),
+    toolCategories: tool.toolCategories.map((item) => ({
+      category: {
+        id: item.category.id,
+        name: item.category.name,
+        slug: item.category.slug,
+      },
+    })),
+    toolTags: tool.toolTags.map((item) => ({
+      tag: {
+        id: item.tag.id,
+        name: item.tag.name,
+        slug: item.tag.slug,
+        isActive: item.tag.isActive,
+      },
+    })),
+    launches: tool.launches.map((launch) => ({
+      launchType: launch.launchType,
+      status: launch.status,
+      launchDate: launch.launchDate,
+    })),
+    upvoteCount: tool._count.toolVotes,
   };
 }
 
@@ -477,18 +521,25 @@ export async function listRelatedPublishedTools(
           : undefined,
       ].filter(Boolean) as Prisma.ToolWhereInput[],
     },
-    include: toolDetailsInclude,
+    select: publicRelatedToolSelect,
     orderBy: [{ isFeatured: "desc" }, { updatedAt: "desc" }],
     take: options.take ?? 4,
   });
 }
 
 export async function listFounderTools(ownerUserId: string) {
-  return listToolsByOwner(prisma, ownerUserId);
+  return listToolSummariesByOwner(prisma, ownerUserId);
 }
 
 export async function getFounderToolById(ownerUserId: string, toolId: string) {
   return getToolByOwner(prisma, ownerUserId, toolId);
+}
+
+export async function getFounderToolEditorById(
+  ownerUserId: string,
+  toolId: string,
+) {
+  return getToolEditorByOwner(prisma, ownerUserId, toolId);
 }
 
 export async function deleteFounderTool(ownerUserId: string, toolId: string) {
@@ -523,46 +574,94 @@ export async function deleteFounderTool(ownerUserId: string, toolId: string) {
 export async function updateFounderTool(
   ownerUserId: string,
   toolId: string,
-  input: FounderToolUpdateInput & {
-    logo?: UploadedCloudinaryAsset;
-    screenshots?: UploadedCloudinaryAsset[];
-  },
+  input: FounderToolUpdateInput,
 ) {
-  const existing = await getToolByOwner(prisma, ownerUserId, toolId);
+  const existing = await getToolEditorByOwner(prisma, ownerUserId, toolId);
 
   if (!existing) {
     throw new AppError(404, "Tool not found.");
   }
 
-  await assertCatalogAssignments(input.categoryIds, input.tagIds);
+  const existingCategoryIds = existing.toolCategories.map(
+    (item) => item.categoryId,
+  );
+  const categoriesChanged = !haveSameOrderedIds(
+    existingCategoryIds,
+    input.categoryIds,
+  );
+  const existingTagIds = existing.toolTags.map((item) => item.tagId);
+  const tagsChanged = !haveSameOrderedIds(existingTagIds, input.tagIds);
+
+  if (categoriesChanged || tagsChanged) {
+    await assertCatalogAssignments(input.categoryIds, input.tagIds);
+  }
 
   const txResult = await prisma.$transaction(async (tx) => {
     const nextSlug =
       input.slug && input.slug !== existing.slug
         ? await createUniqueToolSlug(input.slug, tx)
         : undefined;
+    const nextToolData: Prisma.ToolUpdateInput = {};
 
-    await tx.tool.update({
-      where: { id: toolId },
-      data: {
-        slug: nextSlug,
-        name: input.name,
-        tagline: input.tagline,
-        websiteUrl: input.websiteUrl,
-        richDescription: input.richDescription,
-        pricingModel: input.pricingModel,
-        hasAffiliateProgram: input.hasAffiliateProgram,
-        founderXUrl: input.founderXUrl,
-        founderGithubUrl: input.founderGithubUrl,
-        founderLinkedinUrl: input.founderLinkedinUrl,
-        founderFacebookUrl: input.founderFacebookUrl,
-      },
-    });
+    if (nextSlug) {
+      nextToolData.slug = nextSlug;
+    }
+
+    if (input.name !== existing.name) {
+      nextToolData.name = input.name;
+    }
+
+    if (input.tagline !== existing.tagline) {
+      nextToolData.tagline = input.tagline;
+    }
+
+    if (input.websiteUrl !== existing.websiteUrl) {
+      nextToolData.websiteUrl = input.websiteUrl;
+    }
+
+    if (input.richDescription !== existing.richDescription) {
+      nextToolData.richDescription = input.richDescription;
+    }
+
+    if (input.pricingModel !== existing.pricingModel) {
+      nextToolData.pricingModel = input.pricingModel;
+    }
+
+    if (input.hasAffiliateProgram !== existing.hasAffiliateProgram) {
+      nextToolData.hasAffiliateProgram = input.hasAffiliateProgram;
+    }
+
+    const nextFounderXUrl = input.founderXUrl ?? null;
+    if (nextFounderXUrl !== (existing.founderXUrl ?? null)) {
+      nextToolData.founderXUrl = nextFounderXUrl;
+    }
+
+    const nextFounderGithubUrl = input.founderGithubUrl ?? null;
+    if (nextFounderGithubUrl !== (existing.founderGithubUrl ?? null)) {
+      nextToolData.founderGithubUrl = nextFounderGithubUrl;
+    }
+
+    const nextFounderLinkedinUrl = input.founderLinkedinUrl ?? null;
+    if (nextFounderLinkedinUrl !== (existing.founderLinkedinUrl ?? null)) {
+      nextToolData.founderLinkedinUrl = nextFounderLinkedinUrl;
+    }
+
+    const nextFounderFacebookUrl = input.founderFacebookUrl ?? null;
+    if (nextFounderFacebookUrl !== (existing.founderFacebookUrl ?? null)) {
+      nextToolData.founderFacebookUrl = nextFounderFacebookUrl;
+    }
+
+    if (Object.keys(nextToolData).length > 0) {
+      await tx.tool.update({
+        where: { id: toolId },
+        data: nextToolData,
+      });
+    }
 
     if (input.logo) {
-      if (existing.logoMediaId) {
+      if (existing.logoMedia?.id) {
         await tx.toolMedia.update({
-          where: { id: existing.logoMediaId },
+          where: { id: existing.logoMedia.id },
           data: input.logo,
         });
       } else {
@@ -584,18 +683,16 @@ export async function updateFounderTool(
       }
     }
 
-    const keptExistingScreenshots = existing.media.filter(
-      (media) =>
-        media.type === "SCREENSHOT" &&
-        input.existingScreenshotIds.includes(media.id),
+    const keptExistingScreenshots = existing.media.filter((media) =>
+      input.existingScreenshotIds.includes(media.id),
     );
     const removedScreenshots = existing.media.filter(
-      (media) =>
-        media.type === "SCREENSHOT" &&
-        !input.existingScreenshotIds.includes(media.id),
+      (media) => !input.existingScreenshotIds.includes(media.id),
     );
+    const hasScreenshotChanges =
+      removedScreenshots.length > 0 || (input.screenshots?.length ?? 0) > 0;
 
-    if (input.screenshots || removedScreenshots.length > 0) {
+    if (hasScreenshotChanges) {
       await tx.toolMedia.deleteMany({
         where: {
           toolId,
@@ -630,8 +727,13 @@ export async function updateFounderTool(
       }
     }
 
-    await replaceToolCategories(tx, toolId, input.categoryIds);
-    await replaceToolTags(tx, toolId, input.tagIds);
+    if (categoriesChanged) {
+      await replaceToolCategories(tx, toolId, input.categoryIds);
+    }
+
+    if (tagsChanged) {
+      await replaceToolTags(tx, toolId, input.tagIds);
+    }
 
     return {
       replacedLogoPublicId:
@@ -647,7 +749,7 @@ export async function updateFounderTool(
     timeout: 15_000,
   });
 
-  const updatedTool = await getToolById(prisma, toolId);
+  const updatedTool = await getToolEditorById(prisma, toolId);
 
   if (!updatedTool) {
     throw new AppError(500, "Tool updated but could not be reloaded.");

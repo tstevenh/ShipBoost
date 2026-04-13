@@ -8,7 +8,7 @@ import {
   getSubmissionById,
   getSubmissionByIdForFounder,
   listAdminSubmissions,
-  listSubmissionsForFounder,
+  listSubmissionSummariesForFounder,
 } from "@/server/repositories/submission-repository";
 import {
   replaceToolCategories,
@@ -27,12 +27,93 @@ import type {
 
 import {
   type AuthenticatedFounder,
+  type DeferredEmailTask,
   type DraftSaveResult,
+  type SavedSubmissionDraft,
   formatLaunchDateForEmail,
   freeLaunchBadgePattern,
   getDashboardUrl,
-  sendProductEmailSafely,
 } from "@/server/services/submission-service-shared";
+
+function buildSavedSubmissionDraft(input: {
+  id: string;
+  submissionType: SubmissionCreateInput["submissionType"];
+  paymentStatus: SavedSubmissionDraft["paymentStatus"];
+  badgeVerification: SavedSubmissionDraft["badgeVerification"];
+}): SavedSubmissionDraft {
+  return {
+    id: input.id,
+    submissionType: input.submissionType,
+    reviewStatus: "DRAFT",
+    paymentStatus: input.paymentStatus,
+    badgeVerification: input.badgeVerification,
+  };
+}
+
+function orderedIdsMatch(currentIds: string[], nextIds: string[]) {
+  return (
+    currentIds.length === nextIds.length &&
+    currentIds.every((value, index) => value === nextIds[index])
+  );
+}
+
+function uploadedMediaMatches(
+  current:
+    | {
+        url: string;
+        publicId: string | null;
+        format: string | null;
+        width: number | null;
+        height: number | null;
+      }
+    | null
+    | undefined,
+  next: SubmissionCreateInput["logo"],
+) {
+  if (!current) {
+    return false;
+  }
+
+  return (
+    current.url === next.url &&
+    current.publicId === (next.publicId ?? null) &&
+    current.format === (next.format ?? null) &&
+    current.width === (next.width ?? null) &&
+    current.height === (next.height ?? null)
+  );
+}
+
+function screenshotsMatch(
+  current: Array<{
+    url: string;
+    publicId: string | null;
+    format: string | null;
+    width: number | null;
+    height: number | null;
+    sortOrder: number;
+  }>,
+  next: SubmissionCreateInput["screenshots"],
+) {
+  return (
+    current.length === next.length &&
+    current.every((media, index) => {
+      const nextMedia = next[index];
+
+      if (!nextMedia) {
+        return false;
+      }
+
+      return (
+        media.sortOrder === index &&
+        media.url === nextMedia.url &&
+        media.publicId === (nextMedia.publicId ?? null) &&
+        media.format === (nextMedia.format ?? null) &&
+        media.width === (nextMedia.width ?? null) &&
+        media.height === (nextMedia.height ?? null)
+      );
+    })
+  );
+}
 
 async function assertNoDuplicateSubmissionDomain(
   websiteUrl: string,
@@ -49,7 +130,7 @@ async function assertNoDuplicateSubmissionDomain(
 
   throw new AppError(
     409,
-    "This domain already exists on Shipboost.",
+    "This domain already exists on ShipBoost.",
     buildDuplicateSubmissionDetails(duplicate, founderUserId),
   );
 }
@@ -127,8 +208,24 @@ export async function createSubmission(
                 existingSubmission.badgeVerification === "VERIFIED"
               ? "VERIFIED"
               : "PENDING";
-        const removedScreenshots = existingSubmission.tool.media.filter(
+        const existingScreenshots = existingSubmission.tool.media.filter(
           (media) => media.type === "SCREENSHOT",
+        );
+        const logoChanged = !uploadedMediaMatches(
+          existingSubmission.tool.logoMedia,
+          input.logo,
+        );
+        const screenshotsChanged = !screenshotsMatch(
+          existingScreenshots,
+          input.screenshots,
+        );
+        const categoriesChanged = !orderedIdsMatch(
+          existingSubmission.tool.toolCategories.map((item) => item.categoryId),
+          input.categoryIds,
+        );
+        const tagsChanged = !orderedIdsMatch(
+          existingSubmission.tool.toolTags.map((item) => item.tagId),
+          input.tagIds,
         );
 
         await tx.tool.update({
@@ -156,12 +253,12 @@ export async function createSubmission(
           },
         });
 
-        if (existingSubmission.tool.logoMediaId) {
+        if (existingSubmission.tool.logoMediaId && logoChanged) {
           await tx.toolMedia.update({
             where: { id: existingSubmission.tool.logoMediaId },
             data: input.logo,
           });
-        } else {
+        } else if (!existingSubmission.tool.logoMediaId) {
           const logoMedia = await tx.toolMedia.create({
             data: {
               toolId: existingSubmission.toolId,
@@ -179,30 +276,37 @@ export async function createSubmission(
           });
         }
 
-        await tx.toolMedia.deleteMany({
-          where: {
-            toolId: existingSubmission.toolId,
-            type: "SCREENSHOT",
-          },
-        });
-
-        if (input.screenshots.length > 0) {
-          await tx.toolMedia.createMany({
-            data: input.screenshots.map((screenshot, index) => ({
+        if (screenshotsChanged) {
+          await tx.toolMedia.deleteMany({
+            where: {
               toolId: existingSubmission.toolId,
               type: "SCREENSHOT",
-              sortOrder: index,
-              url: screenshot.url,
-              publicId: screenshot.publicId,
-              format: screenshot.format,
-              width: screenshot.width,
-              height: screenshot.height,
-            })),
+            },
           });
+
+          if (input.screenshots.length > 0) {
+            await tx.toolMedia.createMany({
+              data: input.screenshots.map((screenshot, index) => ({
+                toolId: existingSubmission.toolId,
+                type: "SCREENSHOT",
+                sortOrder: index,
+                url: screenshot.url,
+                publicId: screenshot.publicId,
+                format: screenshot.format,
+                width: screenshot.width,
+                height: screenshot.height,
+              })),
+            });
+          }
         }
 
-        await replaceToolCategories(tx, existingSubmission.toolId, input.categoryIds);
-        await replaceToolTags(tx, existingSubmission.toolId, input.tagIds);
+        if (categoriesChanged) {
+          await replaceToolCategories(tx, existingSubmission.toolId, input.categoryIds);
+        }
+
+        if (tagsChanged) {
+          await replaceToolTags(tx, existingSubmission.toolId, input.tagIds);
+        }
 
         await tx.submission.update({
           where: { id: existingSubmission.id },
@@ -225,12 +329,27 @@ export async function createSubmission(
         });
 
         return {
+          draft: buildSavedSubmissionDraft({
+            id: existingSubmission.id,
+            submissionType: input.submissionType,
+            paymentStatus:
+              input.submissionType === "FEATURED_LAUNCH"
+                ? "PENDING"
+                : "NOT_REQUIRED",
+            badgeVerification: nextBadgeVerification,
+          }),
           submissionId: existingSubmission.id,
-          replacedLogoPublicId: existingSubmission.tool.logoMedia?.publicId ?? null,
-          replacedScreenshotPublicIds: removedScreenshots
-            .map((media) => media.publicId)
-            .filter((publicId): publicId is string => Boolean(publicId)),
-        } satisfies DraftSaveResult;
+          replacedLogoPublicId: logoChanged
+            ? existingSubmission.tool.logoMedia?.publicId ?? null
+            : null,
+          replacedScreenshotPublicIds: screenshotsChanged
+            ? existingScreenshots
+                .map((media) => media.publicId)
+                .filter((publicId): publicId is string => Boolean(publicId))
+            : [],
+        } satisfies DraftSaveResult & {
+          draft: SavedSubmissionDraft;
+        };
       },
       {
         maxWait: 15_000,
@@ -239,21 +358,14 @@ export async function createSubmission(
     );
 
     await cleanupDraftMedia(result, input);
-
-    const updatedSubmission = await getSubmissionById(prisma, result.submissionId);
-
-    if (!updatedSubmission) {
-      throw new AppError(500, "Draft saved but could not be reloaded.");
-    }
-
-    return updatedSubmission;
+    return result.draft;
   }
 
-  let submissionId: string | null = null;
+  let createdDraft: SavedSubmissionDraft | null = null;
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      submissionId = await prisma.$transaction(
+      createdDraft = await prisma.$transaction(
         async (tx) => {
           const user = await tx.user.findUniqueOrThrow({
             where: {
@@ -354,7 +466,13 @@ export async function createSubmission(
             },
           });
 
-          return submission.id;
+          return {
+            id: submission.id,
+            submissionType: submission.submissionType,
+            reviewStatus: submission.reviewStatus,
+            paymentStatus: submission.paymentStatus,
+            badgeVerification: submission.badgeVerification,
+          } satisfies SavedSubmissionDraft;
         },
         {
           maxWait: 15_000,
@@ -376,21 +494,36 @@ export async function createSubmission(
     }
   }
 
-  if (!submissionId) {
+  if (!createdDraft) {
     throw new AppError(500, "Submission could not be created.");
   }
 
-  const createdSubmission = await getSubmissionById(prisma, submissionId);
-
-  if (!createdSubmission) {
-    throw new AppError(500, "Submission created but could not be reloaded.");
-  }
-
-  return createdSubmission;
+  return createdDraft;
 }
 
 export async function listFounderSubmissions(userId: string) {
-  return listSubmissionsForFounder(prisma, userId);
+  return listSubmissionSummariesForFounder(prisma, userId);
+}
+
+export async function getFounderSubmissionDraft(
+  submissionId: string,
+  founder: AuthenticatedFounder,
+) {
+  const submission = await getSubmissionByIdForFounder(
+    prisma,
+    submissionId,
+    founder.id,
+  );
+
+  if (!submission) {
+    throw new AppError(404, "Submission not found.");
+  }
+
+  if (submission.reviewStatus !== "DRAFT") {
+    throw new AppError(409, "This submission can no longer be resumed.");
+  }
+
+  return submission;
 }
 
 export async function listAdminSubmissionQueue(
@@ -437,7 +570,7 @@ export async function submitSubmissionDraft(
   ) {
     throw new AppError(
       400,
-      "Verify the Shipboost badge on your website before submitting the free launch.",
+      "Verify the ShipBoost badge on your website before submitting the free launch.",
     );
   }
 
@@ -459,27 +592,48 @@ export async function submitSubmissionDraft(
       });
     }
   });
+  const submitted = {
+    id: submission.id,
+    submissionType: submission.submissionType,
+    reviewStatus: "PENDING" as const,
+    preferredLaunchDate: submission.preferredLaunchDate,
+    paymentStatus: submission.paymentStatus,
+    badgeVerification: submission.badgeVerification,
+    tool: {
+      id: submission.tool.id,
+      slug: submission.tool.slug,
+      name: submission.tool.name,
+      websiteUrl: submission.tool.websiteUrl,
+      logoMedia: submission.tool.logoMedia
+        ? {
+            url: submission.tool.logoMedia.url,
+          }
+        : null,
+      launches: submission.tool.launches.map((launch) => ({
+        id: launch.id,
+        launchType: launch.launchType,
+        status: launch.status,
+        launchDate: launch.launchDate,
+      })),
+    },
+  };
 
-  const submitted = await getSubmissionById(prisma, submissionId);
-
-  if (!submitted) {
-    throw new AppError(500, "Submission sent but could not be reloaded.");
-  }
-
-  await sendProductEmailSafely(
+  const emailTask: DeferredEmailTask = () =>
     sendSubmissionReceivedEmailMessage({
-      to: submitted.user.email,
-      name: submitted.user.name,
+      to: submission.user.email,
+      name: submission.user.name,
       dashboardUrl: getDashboardUrl(),
       toolName: submitted.tool.name,
       submissionType: submitted.submissionType,
       preferredLaunchDate: submitted.preferredLaunchDate
         ? formatLaunchDateForEmail(submitted.preferredLaunchDate)
         : null,
-    }),
-  );
+    });
 
-  return submitted;
+  return {
+    submission: submitted,
+    emailTask,
+  };
 }
 
 export async function verifyFreeLaunchBadge(
@@ -510,7 +664,7 @@ export async function verifyFreeLaunchBadge(
   try {
     const response = await fetch(submission.tool.websiteUrl, {
       headers: {
-        "user-agent": "ShipboostBadgeVerifier/1.0 (+https://shipboost.io)",
+        "user-agent": "ShipBoostBadgeVerifier/1.0 (+https://shipboost.io)",
       },
       redirect: "follow",
       signal: AbortSignal.timeout(10_000),
@@ -521,8 +675,8 @@ export async function verifyFreeLaunchBadge(
   } catch (error) {
     message =
       error instanceof Error
-        ? `Shipboost could not verify the badge automatically: ${error.message}`
-        : "Shipboost could not verify the badge automatically.";
+        ? `ShipBoost could not verify the badge automatically: ${error.message}`
+        : "ShipBoost could not verify the badge automatically.";
   }
 
   await prisma.$transaction(async (tx) => {

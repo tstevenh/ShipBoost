@@ -1,13 +1,23 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { FounderDashboard } from "@/components/founder/founder-dashboard";
 import { getServerSession } from "@/server/auth/session";
+import { getEnv } from "@/server/env";
 import { listFounderListingClaims } from "@/server/services/listing-claim-service";
 import {
   listFounderSubmissions,
   reconcileFeaturedLaunchCheckout,
 } from "@/server/services/submission-service";
 import { listFounderTools } from "@/server/services/tool-service";
+import { Footer } from "@/components/ui/footer";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 type DashboardPageProps = {
   searchParams?: Promise<{
@@ -18,9 +28,14 @@ type DashboardPageProps = {
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const session = await getServerSession();
+  const isPrelaunch = getEnv().NEXT_PUBLIC_PRELAUNCH_MODE === "true";
 
   if (!session) {
     redirect("/sign-in");
+  }
+
+  if (session.user.role === "ADMIN") {
+    redirect("/admin");
   }
 
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -39,18 +54,30 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const initialSuccessMessage =
     resolvedSearchParams?.checkout === "success"
       ? reconciledCheckoutSubmission?.paymentStatus === "PAID"
-        ? "Checkout completed. Shipboost confirmed your featured launch payment."
-        : "Checkout completed. Shipboost is syncing your featured launch payment now."
+        ? "Checkout completed. ShipBoost confirmed your premium launch payment."
+        : "Checkout completed. ShipBoost is syncing your premium launch payment now."
       : null;
   const serializedSubmissions = submissions.map((submission) => ({
-    ...submission,
-    createdAt: submission.createdAt.toISOString(),
+    id: submission.id,
+    submissionType: submission.submissionType,
+    reviewStatus: submission.reviewStatus,
     preferredLaunchDate: submission.preferredLaunchDate?.toISOString() ?? null,
-    paidAt: submission.paidAt?.toISOString() ?? null,
+    paymentStatus: submission.paymentStatus,
+    badgeVerification: submission.badgeVerification,
     tool: {
-      ...submission.tool,
+      id: submission.tool.id,
+      slug: submission.tool.slug,
+      name: submission.tool.name,
+      websiteUrl: submission.tool.websiteUrl,
+      logoMedia: submission.tool.logoMedia
+        ? {
+            url: submission.tool.logoMedia.url,
+          }
+        : null,
       launches: submission.tool.launches.map((launch) => ({
-        ...launch,
+        id: launch.id,
+        launchType: launch.launchType,
+        status: launch.status,
         launchDate: launch.launchDate.toISOString(),
       })),
     },
@@ -60,16 +87,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     slug: tool.slug,
     name: tool.name,
     tagline: tool.tagline,
-    moderationStatus: tool.moderationStatus,
     publicationStatus: tool.publicationStatus,
-    isFeatured: tool.isFeatured,
-    updatedAt: tool.updatedAt.toISOString(),
-    launches: tool.launches.map((launch) => ({
-      id: launch.id,
-      launchType: launch.launchType,
-      status: launch.status,
-      launchDate: launch.launchDate.toISOString(),
-    })),
     logoMedia: tool.logoMedia
       ? {
           url: tool.logoMedia.url,
@@ -79,18 +97,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const serializedClaims = claims.map((claim) => ({
     id: claim.id,
     status: claim.status,
-    claimEmail: claim.claimEmail,
-    claimDomain: claim.claimDomain,
     websiteDomain: claim.websiteDomain,
-    founderVisibleNote: claim.founderVisibleNote,
-    reviewedAt: claim.reviewedAt?.toISOString() ?? null,
-    createdAt: claim.createdAt.toISOString(),
     tool: {
       id: claim.tool.id,
       slug: claim.tool.slug,
       name: claim.tool.name,
-      tagline: claim.tool.tagline,
-      websiteUrl: claim.tool.websiteUrl,
       logoMedia: claim.tool.logoMedia
         ? {
             url: claim.tool.logoMedia.url,
@@ -100,15 +111,30 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }));
 
   return (
-    <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-16 sm:py-20">
-      <FounderDashboard
-        initialSubmissions={serializedSubmissions}
-        initialTools={serializedTools}
-        initialClaims={serializedClaims}
-        founderEmail={session.user.email}
-        founderRole={session.user.role ?? "FOUNDER"}
-        initialSuccessMessage={initialSuccessMessage}
-      />
-    </section>
+    <main className="flex flex-1 flex-col overflow-x-hidden bg-secondary/30 pt-32">
+      <section className="mx-auto mb-32 flex w-full max-w-7xl flex-1 flex-col px-4 sm:px-6">
+        {isPrelaunch ? (
+          <div className="mb-8 rounded-[2rem] border border-primary/20 bg-primary/5 px-6 py-5">
+            <p className="text-[10px] font-black  tracking-[0.3em] text-primary">
+              Prelaunch Mode
+            </p>
+            <p className="mt-3 text-sm font-bold leading-relaxed text-foreground">
+              ShipBoost opens on May 1, 2026 UTC. Your free launches are being
+              queued into weekly cohorts, and premium launches can reserve
+              their preferred launch week ahead of go-live.
+            </p>
+          </div>
+        ) : null}
+        <FounderDashboard
+          initialSubmissions={serializedSubmissions}
+          initialTools={serializedTools}
+          initialClaims={serializedClaims}
+          founderEmail={session.user.email}
+          founderRole={session.user.role ?? "FOUNDER"}
+          initialSuccessMessage={initialSuccessMessage}
+        />
+      </section>
+      <Footer className="mt-auto" />
+    </main>
   );
 }

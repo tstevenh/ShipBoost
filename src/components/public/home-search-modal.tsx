@@ -1,28 +1,36 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { createPortal } from "react-dom";
 
 import type { PublicToolSearchResult } from "@/server/services/tool-service";
-
-type HomeSearchModalProps = {
-  initialQuery?: string;
-};
 
 const MIN_QUERY_LENGTH = 2;
 const SEARCH_DEBOUNCE_MS = 250;
 
-export function HomeSearchModal({ initialQuery = "" }: HomeSearchModalProps) {
-  const normalizedInitialQuery = initialQuery.trim();
+export function HomeSearchModal() {
+  const searchParams = useSearchParams();
+  const normalizedInitialQuery = useMemo(
+    () => (searchParams.get("q") ?? "").trim(),
+    [searchParams],
+  );
   const [isOpen, setIsOpen] = useState(normalizedInitialQuery.length >= MIN_QUERY_LENGTH);
   const [query, setQuery] = useState(normalizedInitialQuery);
   const [results, setResults] = useState<PublicToolSearchResult[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
     normalizedInitialQuery.length >= MIN_QUERY_LENGTH ? "loading" : "idle",
   );
+  const [mounted, setMounted] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const trimmedQuery = useMemo(() => query.trim(), [query]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setQuery(normalizedInitialQuery);
@@ -35,7 +43,11 @@ export function HomeSearchModal({ initialQuery = "" }: HomeSearchModalProps) {
       return;
     }
 
-    inputRef.current?.focus();
+    // Small delay to ensure input is rendered in Portal
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 10);
+    return () => clearTimeout(timer);
   }, [isOpen]);
 
   useEffect(() => {
@@ -55,11 +67,13 @@ export function HomeSearchModal({ initialQuery = "" }: HomeSearchModalProps) {
   }, [trimmedQuery]);
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Cmd+K or Ctrl+K
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setIsOpen(true);
+      }
+      
       if (event.key === "Escape") {
         setIsOpen(false);
       }
@@ -67,7 +81,7 @@ export function HomeSearchModal({ initialQuery = "" }: HomeSearchModalProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  }, []);
 
   useEffect(() => {
     if (!isOpen || trimmedQuery.length < MIN_QUERY_LENGTH) {
@@ -114,6 +128,17 @@ export function HomeSearchModal({ initialQuery = "" }: HomeSearchModalProps) {
     };
   }, [isOpen, trimmedQuery]);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
   const contextualLabel = (tool: PublicToolSearchResult) => {
     if (tool.categories[0]) {
       return tool.categories[0].name;
@@ -126,126 +151,139 @@ export function HomeSearchModal({ initialQuery = "" }: HomeSearchModalProps) {
     return null;
   };
 
+  const modalContent = isOpen ? (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md px-6 py-16"
+      onClick={() => setIsOpen(false)}
+    >
+      <div
+        className="w-full max-w-2xl overflow-hidden rounded-3xl border border-border bg-card shadow-2xl shadow-black/50"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border bg-muted/30 px-6 py-4">
+          <h2 className="text-sm font-bold tracking-tight text-muted-foreground ">
+            Product Search
+          </h2>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Esc
+          </button>
+        </div>
+
+        <div className="p-6">
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Find tools, categories, or tags..."
+            className="w-full rounded-xl border border-border bg-background px-4 py-4 text-lg font-medium outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
+          />
+
+          <div className="mt-6 max-h-[60vh] overflow-y-auto space-y-2 pr-1">
+            {status === "idle" ? (
+              <p className="py-8 text-center text-sm font-medium text-muted-foreground">
+                Start typing to explore the directory.
+              </p>
+            ) : null}
+
+            {status === "loading" ? (
+              <div className="flex flex-col items-center py-8">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="mt-4 text-sm font-medium text-muted-foreground">Searching for products...</p>
+              </div>
+            ) : null}
+
+            {status === "error" ? (
+              <p className="py-8 text-center text-sm font-bold text-destructive">
+                Search is temporarily unavailable.
+              </p>
+            ) : null}
+
+            {status === "done" && results.length === 0 ? (
+              <p className="py-8 text-center text-sm font-medium text-muted-foreground">
+                No matching products found.
+              </p>
+            ) : null}
+
+            {results.map((tool) => {
+              const label = contextualLabel(tool);
+
+              return (
+                <Link
+                  key={tool.id}
+                  href={`/tools/${tool.slug}`}
+                  onClick={() => setIsOpen(false)}
+                  className="group block rounded-xl border border-transparent bg-muted/30 p-4 transition-all hover:border-primary/20 hover:bg-primary/5"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-background border border-border">
+                      {tool.logoUrl ? (
+                        <div className="relative h-full w-full">
+                          <Image
+                            src={tool.logoUrl}
+                            alt={`${tool.name} logo`}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-sm font-bold text-muted-foreground">
+                          {tool.name.slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-bold text-foreground group-hover:text-primary transition-colors">
+                          {tool.name}
+                        </p>
+                        {tool.isFeatured ? (
+                          <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                            Featured
+                          </span>
+                        ) : null}
+                        {label ? (
+                          <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                            {label}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">
+                        {tool.tagline}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <>
-      <div className="rounded-[1.75rem] border border-black/10 bg-white/90 p-3 shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
+      <div className="rounded-2xl border border-border bg-card p-2 shadow-sm">
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex w-full items-center justify-between rounded-[1.25rem] px-4 py-3 text-left text-black/55 transition hover:bg-black/[0.03]"
+          className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-muted-foreground transition-colors hover:bg-accent"
           aria-label="Open search"
         >
-          <span>Search published products</span>
-          <span className="text-xs font-medium tracking-[0.16em] text-black/40 uppercase">
-            Search
+          <span className="text-sm font-medium">Search published products...</span>
+          <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[10px] font-bold tracking-wider text-muted-foreground ">
+            ⌘ K
           </span>
         </button>
       </div>
 
-      {isOpen ? (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-6 py-16"
-          onClick={() => setIsOpen(false)}
-        >
-          <div
-            className="w-full max-w-2xl rounded-[2rem] bg-[#1d1c1a] p-6 text-[#f6e8d4] shadow-[0_28px_90px_rgba(29,28,26,0.4)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-xl font-semibold text-white">
-                Search published products
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="text-sm text-[#f6e8d4]/70 transition hover:text-white"
-              >
-                Close
-              </button>
-            </div>
-
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search published products"
-              className="mt-5 w-full rounded-2xl border border-[#f3c781]/30 bg-transparent px-4 py-3 text-white outline-none placeholder:text-[#f6e8d4]/38"
-            />
-
-            <div className="mt-5 space-y-3">
-              {status === "idle" ? (
-                <p className="text-sm text-[#f6e8d4]/70">
-                  Start typing to search published products.
-                </p>
-              ) : null}
-
-              {status === "loading" ? (
-                <p className="text-sm text-[#f6e8d4]/70">Searching...</p>
-              ) : null}
-
-              {status === "error" ? (
-                <p className="text-sm text-[#f6e8d4]/70">
-                  Search is temporarily unavailable.
-                </p>
-              ) : null}
-
-              {status === "done" && results.length === 0 ? (
-                <p className="text-sm text-[#f6e8d4]/70">
-                  No matching products found.
-                </p>
-              ) : null}
-
-              {results.map((tool) => {
-                const label = contextualLabel(tool);
-
-                return (
-                  <Link
-                    key={tool.id}
-                    href={`/tools/${tool.slug}`}
-                    className="block rounded-[1.5rem] border border-white/10 bg-white/5 p-4 transition hover:bg-white/10"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white/10">
-                        {tool.logoUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={tool.logoUrl}
-                            alt={`${tool.name} logo`}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-sm font-semibold text-white/70">
-                            {tool.name.slice(0, 2).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-white">{tool.name}</p>
-                          {tool.isFeatured ? (
-                            <span className="rounded-full bg-[#f3c781] px-2 py-0.5 text-[11px] font-semibold text-[#1d1c1a]">
-                              Featured
-                            </span>
-                          ) : null}
-                          {label ? (
-                            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] font-medium text-[#f6e8d4]/72">
-                              {label}
-                            </span>
-                          ) : null}
-                        </div>
-                        <p className="mt-1 text-sm text-[#f6e8d4]/75">
-                          {tool.tagline}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {mounted ? createPortal(modalContent, document.body) : null}
     </>
   );
 }

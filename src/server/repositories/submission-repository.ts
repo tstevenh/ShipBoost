@@ -6,6 +6,62 @@ type SubmissionDbClient = {
   submission: PrismaClient["submission"];
 };
 
+const founderSubmissionLaunchSummarySelect = {
+  id: true,
+  launchType: true,
+  status: true,
+  launchDate: true,
+} satisfies Prisma.LaunchSelect;
+
+const founderSubmissionToolSummarySelect = {
+  id: true,
+  slug: true,
+  name: true,
+  websiteUrl: true,
+  logoMedia: {
+    select: {
+      url: true,
+    },
+  },
+  launches: {
+    select: founderSubmissionLaunchSummarySelect,
+    orderBy: {
+      launchDate: "desc" as const,
+    },
+  },
+} satisfies Prisma.ToolSelect;
+
+export const founderSubmissionSummarySelect = {
+  id: true,
+  submissionType: true,
+  reviewStatus: true,
+  preferredLaunchDate: true,
+  paymentStatus: true,
+  badgeVerification: true,
+  tool: {
+    select: founderSubmissionToolSummarySelect,
+  },
+} satisfies Prisma.SubmissionSelect;
+
+export type FounderSubmissionSummary = Prisma.SubmissionGetPayload<{
+  select: typeof founderSubmissionSummarySelect;
+}>;
+
+export function listSubmissionSummariesForFounder(
+  db: SubmissionDbClient,
+  userId: string,
+) {
+  return db.submission.findMany({
+    where: {
+      userId,
+    },
+    select: founderSubmissionSummarySelect,
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
 export function listSubmissionsForFounder(
   db: SubmissionDbClient,
   userId: string,

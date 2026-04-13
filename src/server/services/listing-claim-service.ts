@@ -18,11 +18,8 @@ const listingClaimInclude = {
       id: true,
       slug: true,
       name: true,
-      tagline: true,
-      websiteUrl: true,
       moderationStatus: true,
       publicationStatus: true,
-      ownerUserId: true,
       logoMedia: {
         select: {
           url: true,
@@ -31,13 +28,6 @@ const listingClaimInclude = {
     },
   },
   claimantUser: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  },
-  reviewedBy: {
     select: {
       id: true,
       name: true,
