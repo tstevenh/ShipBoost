@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Manrope, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppHeader } from "@/components/app/app-header";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
@@ -77,7 +78,9 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300" suppressHydrationWarning>
-        <GoogleAnalytics />
+        <Suspense fallback={null}>
+          <GoogleAnalytics />
+        </Suspense>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
