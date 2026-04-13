@@ -8,7 +8,7 @@ type ToolPageSeoInput = {
 
 type ToolTimelineInput = {
   createdAt: Date | string;
-  launches: Array<{
+  launches?: Array<{
     launchDate: Date | string;
   }>;
 };
@@ -132,7 +132,7 @@ export function buildToolPageTitle(tool: ToolPageSeoInput) {
 }
 
 export function getToolTimelineDisplay(input: ToolTimelineInput) {
-  const latestLaunch = input.launches
+  const latestLaunch = (input.launches ?? [])
     .map((launch) => ({
       date: coerceDate(launch.launchDate),
     }))

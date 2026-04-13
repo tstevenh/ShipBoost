@@ -109,6 +109,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "yearly",
       priority: 0.2,
     },
+    {
+      url: toAbsoluteUrl("/resources/startup-directories", appUrl),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
   ];
 
   const launchBoardRoutes: MetadataRoute.Sitemap = getLaunchBoardStaticParams().map(

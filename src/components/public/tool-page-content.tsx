@@ -94,6 +94,18 @@ export function ToolPageContent({
     createdAt: tool.createdAt,
     launches: tool.launches,
   });
+  const morePathsSection = relatedListingLinks.length > 0 ? (
+    <InternalLinkSection
+      eyebrow="Explore"
+      title={`More paths around ${tool.name}`}
+      description={
+        primaryCategory
+          ? `Use ${primaryCategory.name}, tag, and alternatives pages when you want a broader comparison set around ${tool.name}.`
+          : `Use related tags and alternatives when you want a broader comparison set around ${tool.name}.`
+      }
+      links={relatedListingLinks.slice(0, 4)}
+    />
+  ) : null;
 
   return (
     <ViewerVoteStateProvider toolIds={[tool.id]}>
@@ -178,18 +190,7 @@ export function ToolPageContent({
                 />
               ) : null}
 
-              {relatedListingLinks.length > 0 ? (
-                <InternalLinkSection
-                  eyebrow="Explore"
-                  title={`More paths around ${tool.name}`}
-                  description={
-                    primaryCategory
-                      ? `Use ${primaryCategory.name}, tag, and alternatives pages when you want a broader comparison set around ${tool.name}.`
-                      : `Use related tags and alternatives when you want a broader comparison set around ${tool.name}.`
-                  }
-                  links={relatedListingLinks.slice(0, 4)}
-                />
-              ) : null}
+              <div className="hidden lg:block">{morePathsSection}</div>
             </div>
 
             <aside className="space-y-8">
@@ -268,6 +269,8 @@ export function ToolPageContent({
               ) : null}
 
               <ToolRelatedProducts relatedTools={relatedTools} />
+
+              <div className="lg:hidden">{morePathsSection}</div>
             </aside>
           </div>
         </section>

@@ -8,6 +8,7 @@ import {
   getCachedRelatedPublishedTools,
   getCachedToolStaticParams,
 } from "@/server/cache/public-content";
+import { resolveSameOriginCanonicalUrl } from "@/server/seo/page-metadata";
 import { hasAlternativesSeoPage } from "@/server/services/seo-service";
 import {
   buildToolPageDescription,
@@ -39,9 +40,10 @@ export async function generateMetadata(
   const env = getEnv();
   const title = buildToolPageTitle(tool);
   const description = buildToolPageDescription(tool);
-  const canonical = tool.canonicalUrl?.trim()
-    ? tool.canonicalUrl
-    : `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`;
+  const canonical = resolveSameOriginCanonicalUrl(
+    tool.canonicalUrl,
+    `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`,
+  );
 
   return {
     title,
@@ -83,9 +85,10 @@ export default async function ToolPage(context: RouteContext) {
 
   const primaryCategory = tool.toolCategories[0]?.category ?? null;
   const env = getEnv();
-  const canonical = tool.canonicalUrl?.trim()
-    ? tool.canonicalUrl
-    : `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`;
+  const canonical = resolveSameOriginCanonicalUrl(
+    tool.canonicalUrl,
+    `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`,
+  );
   const relatedTools = await getCachedRelatedPublishedTools(
     tool.id,
     tool.toolCategories.map((item) => item.category.id),

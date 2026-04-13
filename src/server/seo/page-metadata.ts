@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 
 import { getEnv } from "@/server/env";
 
-const env = getEnv();
-
 type PublicMetadataInput = {
   title: string;
   description: string;
@@ -12,12 +10,43 @@ type PublicMetadataInput = {
   twitterCard?: "summary" | "summary_large_image";
 };
 
-function resolveCanonicalUrl(url: string) {
-  if (/^https?:\/\//i.test(url)) {
-    return url;
+function normalizeCanonicalUrl(url: URL) {
+  url.hash = "";
+
+  if (url.pathname !== "/") {
+    url.pathname = url.pathname.replace(/\/+$/, "");
   }
 
-  return new URL(url, env.NEXT_PUBLIC_APP_URL).toString();
+  return url.toString();
+}
+
+export function resolveCanonicalUrl(url: string) {
+  const env = getEnv();
+  const canonical = /^https?:\/\//i.test(url)
+    ? new URL(url)
+    : new URL(url, env.NEXT_PUBLIC_APP_URL);
+
+  return normalizeCanonicalUrl(canonical);
+}
+
+export function resolveSameOriginCanonicalUrl(
+  candidateUrl: string | null | undefined,
+  fallbackUrl: string,
+) {
+  const appOrigin = new URL(getEnv().NEXT_PUBLIC_APP_URL).origin;
+  const fallbackCanonical = resolveCanonicalUrl(fallbackUrl);
+
+  if (!candidateUrl?.trim()) {
+    return fallbackCanonical;
+  }
+
+  const candidateCanonical = resolveCanonicalUrl(candidateUrl.trim());
+
+  if (new URL(candidateCanonical).origin !== appOrigin) {
+    return fallbackCanonical;
+  }
+
+  return candidateCanonical;
 }
 
 export function buildPublicPageMetadata(

@@ -25,4 +25,13 @@ describe("getToolTimelineDisplay", () => {
     expect(result.label).toBe("Listed");
     expect(result.date.toISOString()).toBe("2026-04-09T00:00:00.000Z");
   });
+
+  it("falls back to createdAt when launches are missing", () => {
+    const result = getToolTimelineDisplay({
+      createdAt: new Date("2026-04-09T00:00:00.000Z"),
+    });
+
+    expect(result.label).toBe("Listed");
+    expect(result.date.toISOString()).toBe("2026-04-09T00:00:00.000Z");
+  });
 });

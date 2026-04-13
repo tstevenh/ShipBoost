@@ -17,5 +17,6 @@ export const POST = Webhooks({
   },
   onOrderRefunded: async (payload) => {
     await handleFeaturedLaunchRefund(payload.data.id);
+    revalidateAllPublicContent();
   },
 });

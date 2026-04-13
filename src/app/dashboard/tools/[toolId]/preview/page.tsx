@@ -5,6 +5,7 @@ import { ToolPageContent } from "@/components/public/tool-page-content";
 import { getServerSession } from "@/server/auth/session";
 import { getCachedRelatedPublishedTools } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
+import { resolveSameOriginCanonicalUrl } from "@/server/seo/page-metadata";
 import { hasAlternativesSeoPage } from "@/server/services/seo-service";
 import {
   getFounderToolPreviewById,
@@ -69,9 +70,10 @@ export default async function FounderToolPreviewPage(context: RouteContext) {
   }
 
   const env = getEnv();
-  const canonical = tool.canonicalUrl?.trim()
-    ? tool.canonicalUrl
-    : `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`;
+  const canonical = resolveSameOriginCanonicalUrl(
+    tool.canonicalUrl,
+    `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`,
+  );
   const relatedTools = await getCachedRelatedPublishedTools(
     tool.id,
     tool.toolCategories.map((item) => item.category.id),

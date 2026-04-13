@@ -1,11 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { StartupDirectoriesResource } from "@/components/resources/startup-directories-resource";
 import { ResourceUnlockPanel } from "@/components/resources/resource-unlock-panel";
 import { startupDirectories } from "@/content/resources/startup-directories";
 import { getServerSession } from "@/server/auth/session";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Startup Directories Resource | ShipBoost",
+  description:
+    "Browse ShipBoost's startup directories resource with a public preview, then unlock the full hosted list inside your founder workflow.",
+  url: "/resources/startup-directories",
+});
 
 export default async function StartupDirectoriesPage() {
   const session = await getServerSession();

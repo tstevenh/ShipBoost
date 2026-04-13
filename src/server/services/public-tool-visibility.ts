@@ -29,6 +29,13 @@ export function isLaunchPubliclyVisible(
   );
 }
 
+export function getPublicLaunchBoardWhere(now = new Date()): Prisma.LaunchWhereInput {
+  return {
+    ...getPublicLaunchWhere(now),
+    tool: getPubliclyVisibleToolWhere(now),
+  };
+}
+
 export function isToolPubliclyVisible(
   tool: {
     publicationStatus: string;

@@ -5,7 +5,9 @@ import { publicLaunchCardSelect } from "@/server/db/public-selects";
 import { sendLaunchLiveEmailMessage } from "@/server/email/transactional";
 import { getEnv } from "@/server/env";
 import { getLaunchBoardWindow } from "@/server/services/launch-scheduling";
-import { getPublicLaunchWhere } from "@/server/services/public-tool-visibility";
+import {
+  getPublicLaunchBoardWhere,
+} from "@/server/services/public-tool-visibility";
 import { subDays } from "@/server/services/time";
 
 type PublicLaunchRecord = Prisma.LaunchGetPayload<{
@@ -83,7 +85,7 @@ export async function listLaunchBoard(
         gte: windowStart,
         lte: windowEnd,
       },
-      ...getPublicLaunchWhere(now),
+      ...getPublicLaunchBoardWhere(now),
     },
     select: publicLaunchCardSelect,
   });
@@ -141,7 +143,7 @@ export async function listPastLaunches(options?: { limit?: number }) {
       launchDate: {
         lte: windowEnd,
       },
-      ...getPublicLaunchWhere(now),
+      ...getPublicLaunchBoardWhere(now),
     },
     select: publicLaunchCardSelect,
     orderBy: [{ launchDate: "desc" }, { priorityWeight: "desc" }],

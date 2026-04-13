@@ -31,6 +31,10 @@ export const metadata: Metadata = {
   },
   description: "ShipBoost helps bootstrapped SaaS founders earn trust, visibility, and momentum through curated distribution.",
   applicationName: "ShipBoost",
+  icons: {
+    icon: "/ShipBoost-Logo-BG.svg",
+    shortcut: "/ShipBoost-Logo-BG.svg",
+  },
   robots: {
     index: true,
     follow: true,

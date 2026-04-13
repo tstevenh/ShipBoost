@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getPublicLaunchBoardWhere,
   getPubliclyVisibleToolWhere,
   isLaunchPubliclyVisible,
   isToolPubliclyVisible,
@@ -44,6 +45,57 @@ describe("getPubliclyVisibleToolWhere", () => {
         },
       },
     ]);
+  });
+
+  it("requires launch-board entries to belong to publicly visible tools", () => {
+    const now = new Date("2026-04-08T10:00:00.000Z");
+    const where = getPublicLaunchBoardWhere(now);
+
+    expect(where).toEqual({
+      OR: [
+        {
+          status: {
+            in: ["LIVE", "ENDED"],
+          },
+        },
+        {
+          status: "APPROVED",
+          launchDate: {
+            lte: now,
+          },
+        },
+      ],
+      tool: {
+        publicationStatus: "PUBLISHED",
+        moderationStatus: "APPROVED",
+        OR: [
+          {
+            launches: {
+              none: {},
+            },
+          },
+          {
+            launches: {
+              some: {
+                OR: [
+                  {
+                    status: {
+                      in: ["LIVE", "ENDED"],
+                    },
+                  },
+                  {
+                    status: "APPROVED",
+                    launchDate: {
+                      lte: now,
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
+    });
   });
 
   it("treats overdue approved launches as publicly visible", () => {
