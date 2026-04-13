@@ -118,7 +118,7 @@ export function ClaimListingCard({
 
   return (
     <div className="rounded-3xl border border-border bg-muted/20 p-8 shadow-xl shadow-black/5">
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+      <p className="text-[10px] font-black  tracking-[0.2em] text-muted-foreground">
         Claim this listing
       </p>
       <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground">
@@ -148,7 +148,7 @@ export function ClaimListingCard({
 
       {claimState.status === "AVAILABLE" ? (
         <div className="mt-8 space-y-4">
-          <div className="rounded-xl border border-border bg-card px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+          <div className="rounded-xl border border-border bg-card px-4 py-3 text-xs font-bold text-muted-foreground  tracking-widest">
             Signed in as <span className="text-foreground font-black">{viewerEmail}</span>
           </div>
           <button
@@ -167,13 +167,13 @@ export function ClaimListingCard({
       ) : null}
 
       {claimState.status === "DOMAIN_MISMATCH" ? (
-        <div className="mt-8 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive uppercase tracking-widest">
+        <div className="mt-8 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive  tracking-widest">
           Domain mismatch. Requires a {claimState.websiteDomain} email.
         </div>
       ) : null}
 
       {claimState.status === "PENDING_YOURS" ? (
-        <div className="mt-8 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs font-bold text-amber-700 uppercase tracking-widest">
+        <div className="mt-8 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs font-bold text-amber-700  tracking-widest">
           Claim request received. Reviewing now.
           {claimState.founderVisibleNote ? ` • ${claimState.founderVisibleNote}` : ""}
         </div>
@@ -181,7 +181,7 @@ export function ClaimListingCard({
 
       {claimState.status === "REJECTED_YOURS" ? (
         <div className="mt-8 space-y-4">
-          <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive uppercase tracking-widest">
+          <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive  tracking-widest">
             Previous claim rejected.
             {claimState.founderVisibleNote ? ` • ${claimState.founderVisibleNote}` : ""}
           </div>
@@ -197,7 +197,7 @@ export function ClaimListingCard({
       ) : null}
 
       {errorMessage ? (
-        <div className="mt-8 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive uppercase tracking-widest">
+        <div className="mt-8 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive  tracking-widest">
           {errorMessage}
         </div>
       ) : null}

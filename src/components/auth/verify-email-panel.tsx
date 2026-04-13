@@ -74,14 +74,14 @@ export function VerifyEmailPanel({
           Check your inbox
         </h1>
         <p className="text-sm font-medium text-muted-foreground">
-          You need to verify your email before Shipboost unlocks founder access.
+          You need to verify your email before ShipBoost unlocks founder access.
         </p>
       </div>
 
       <div className="mt-10 w-full space-y-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+            <label className="text-[10px] font-black  tracking-widest text-muted-foreground ml-1">
               Email
             </label>
             <input

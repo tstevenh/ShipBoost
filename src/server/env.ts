@@ -24,11 +24,17 @@ const envSchema = z.object({
   POSTHOG_KEY: optionalEnvString,
   POSTHOG_HOST: optionalEnvString,
   RESEND_FROM_TRANSACTIONAL: optionalEnvString.transform(
-    (value) => value ?? "Shipboost <onboarding@resend.dev>",
+    (value) => value ?? "ShipBoost <onboarding@resend.dev>",
   ),
   RESEND_REPLY_TO_TRANSACTIONAL: optionalEnvString,
   RESEND_FROM_MARKETING: optionalEnvString,
-  LEAD_MAGNET_STARTUP_DIRECTORIES_URL: optionalEnvString,
+  LAUNCHPAD_GO_LIVE_AT: z
+    .string()
+    .trim()
+    .datetime({ offset: true })
+    .default("2026-05-01T00:00:00Z"),
+  FREE_LAUNCH_SLOTS_PER_WEEK: z.coerce.number().int().positive().default(10),
+  FOUNDING_PREMIUM_LAUNCH_LIMIT: z.coerce.number().int().positive().default(100),
   CLOUDINARY_CLOUD_NAME: z.string().trim().min(1).optional(),
   CLOUDINARY_API_KEY: z.string().trim().min(1).optional(),
   CLOUDINARY_API_SECRET: z.string().trim().min(1).optional(),
@@ -65,8 +71,9 @@ export function getEnv() {
       RESEND_FROM_TRANSACTIONAL: process.env.RESEND_FROM_TRANSACTIONAL,
       RESEND_REPLY_TO_TRANSACTIONAL: process.env.RESEND_REPLY_TO_TRANSACTIONAL,
       RESEND_FROM_MARKETING: process.env.RESEND_FROM_MARKETING,
-      LEAD_MAGNET_STARTUP_DIRECTORIES_URL:
-        process.env.LEAD_MAGNET_STARTUP_DIRECTORIES_URL,
+      LAUNCHPAD_GO_LIVE_AT: process.env.LAUNCHPAD_GO_LIVE_AT,
+      FREE_LAUNCH_SLOTS_PER_WEEK: process.env.FREE_LAUNCH_SLOTS_PER_WEEK,
+      FOUNDING_PREMIUM_LAUNCH_LIMIT: process.env.FOUNDING_PREMIUM_LAUNCH_LIMIT,
       CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
       CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
       CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,

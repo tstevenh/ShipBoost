@@ -7,7 +7,7 @@ export function SponsorSlot() {
   return null;
   /* return (
     <div className={cn("bg-card border border-border rounded-2xl p-5 shadow-sm", className)}>
-      <h3 className="font-bold text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">
+      <h3 className="font-bold text-[9px]  tracking-[0.2em] text-muted-foreground/50 mb-3">
         Sponsored
       </h3>
       <div className="flex gap-4 items-center">
@@ -30,11 +30,11 @@ export function SponsorSlot() {
 export function SidebarLeadMagnet() {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 shadow-sm overflow-hidden relative">
-      <h3 className="font-bold text-[10px] uppercase tracking-[0.2em] text-foreground/40 mb-4 relative">
+      <h3 className="font-bold text-[10px]  tracking-[0.2em] text-foreground/40 mb-4 relative">
         Free Resource
       </h3>
       <h4 className="font-black text-lg mb-3 relative leading-tight">
-        800+ Startup Directories
+        Startup Directories List
       </h4>
       <p className="text-xs text-muted-foreground mb-6 leading-relaxed relative">
         Get the list founders use to find submission opportunities.

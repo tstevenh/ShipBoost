@@ -21,7 +21,6 @@ export const PUBLIC_TOOL_REVALIDATE = 3600;
 export const PUBLIC_HEADER_REVALIDATE = 3600;
 
 export const PUBLIC_LAUNCH_BOARDS = [
-  "daily",
   "weekly",
   "monthly",
   "yearly",
@@ -77,7 +76,7 @@ export function isPublicLaunchBoard(value: string): value is PublicLaunchBoard {
 export function coercePublicLaunchBoard(
   value: string | undefined,
 ): PublicLaunchBoard {
-  return value && isPublicLaunchBoard(value) ? value : "daily";
+  return value && isPublicLaunchBoard(value) ? value : "weekly";
 }
 
 export function coercePublicCatalogSort(
@@ -90,7 +89,7 @@ const getCachedPrelaunchTools = unstable_cache(
   async (): Promise<PrelaunchToolPreview[]> => {
     const tools = await prisma.tool.findMany({
       where: getPubliclyVisibleToolWhere(),
-      take: 6,
+      take: 18,
       orderBy: {
         createdAt: "desc",
       },
@@ -99,6 +98,8 @@ const getCachedPrelaunchTools = unstable_cache(
         name: true,
         tagline: true,
         slug: true,
+        affiliateUrl: true,
+        createdAt: true,
         logoMedia: {
           select: {
             url: true,
@@ -107,13 +108,25 @@ const getCachedPrelaunchTools = unstable_cache(
       },
     });
 
-    return tools.map((tool) => ({
-      id: tool.id,
-      name: tool.name,
-      tagline: tool.tagline,
-      slug: tool.slug,
-      logoUrl: tool.logoMedia?.url ?? null,
-    }));
+    return tools
+      .sort((left, right) => {
+        const affiliateDifference =
+          Number(Boolean(right.affiliateUrl)) - Number(Boolean(left.affiliateUrl));
+
+        if (affiliateDifference !== 0) {
+          return affiliateDifference;
+        }
+
+        return right.createdAt.getTime() - left.createdAt.getTime();
+      })
+      .slice(0, 6)
+      .map((tool) => ({
+        id: tool.id,
+        name: tool.name,
+        tagline: tool.tagline,
+        slug: tool.slug,
+        logoUrl: tool.logoMedia?.url ?? null,
+      }));
   },
   ["public-home", "v2", "prelaunch-tools"],
   {
@@ -123,24 +136,16 @@ const getCachedPrelaunchTools = unstable_cache(
 );
 
 const launchBoardLoaders: Record<PublicLaunchBoard, () => Promise<Awaited<ReturnType<typeof listLaunchBoard>>>> = {
-  daily: unstable_cache(
-    () => listLaunchBoard("daily"),
-    ["public-launch-board", "v2", "daily"],
-    {
-      revalidate: 300,
-      tags: [
-        PUBLIC_CACHE_TAGS.home,
-        PUBLIC_CACHE_TAGS.launchBoards,
-        "public:launch-board:daily",
-      ],
-    },
-  ),
   weekly: unstable_cache(
     () => listLaunchBoard("weekly"),
     ["public-launch-board", "v2", "weekly"],
     {
       revalidate: 900,
-      tags: [PUBLIC_CACHE_TAGS.launchBoards, "public:launch-board:weekly"],
+      tags: [
+        PUBLIC_CACHE_TAGS.home,
+        PUBLIC_CACHE_TAGS.launchBoards,
+        "public:launch-board:weekly",
+      ],
     },
   ),
   monthly: unstable_cache(

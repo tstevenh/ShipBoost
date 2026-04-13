@@ -6,6 +6,7 @@ import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
 import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildPricingPageSchema } from "@/server/seo/page-schema";
 
 const foundingPremiumPrice = {
@@ -79,13 +80,15 @@ const pricingTiers = [
 
 export function generateMetadata(): Metadata {
   const isPrelaunch = getEnv().NEXT_PUBLIC_PRELAUNCH_MODE === "true";
+  const description = isPrelaunch
+    ? "Compare ShipBoost pricing for Free Launch, Premium Launch, and done-for-you directory submission support before the opening cohort."
+    : "Compare ShipBoost pricing for Free Launch, Premium Launch, and done-for-you directory submission support.";
 
-  return {
-    title: "Pricing | ShipBoost",
-    description: isPrelaunch
-      ? "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a $9 Premium Launch for the May 1 opening cohort, or use our AI Directories partner service."
-      : "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a Premium Launch, or use our AI Directories partner service.",
-  };
+  return buildPublicPageMetadata({
+    title: "ShipBoost Pricing | Free and Premium Launches",
+    description,
+    url: "/pricing",
+  });
 }
 
 export const revalidate = 300;

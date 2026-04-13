@@ -1,5 +1,4 @@
 import type { NextRequest } from "next/server";
-import { revalidateTag } from "next/cache";
 
 import { AppError } from "@/server/http/app-error";
 import { uploadImageToCloudinary } from "@/server/cloudinary";

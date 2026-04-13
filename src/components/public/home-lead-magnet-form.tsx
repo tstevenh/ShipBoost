@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AlertCircle, Check } from "lucide-react";
 
+import { requestStartupDirectoriesAccess } from "@/lib/startup-directories-access";
+
 const source = "homepage_directory_list";
 const leadMagnet = "startup-directories-800";
 
@@ -26,33 +28,19 @@ export function HomeLeadMagnetForm() {
     setSuccessMessage(null);
 
     try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          source,
-          leadMagnet,
-          utmSource: searchParams.get("utm_source") ?? undefined,
-          utmMedium: searchParams.get("utm_medium") ?? undefined,
-          utmCampaign: searchParams.get("utm_campaign") ?? undefined,
-          utmContent: searchParams.get("utm_content") ?? undefined,
-          utmTerm: searchParams.get("utm_term") ?? undefined,
-        }),
+      await requestStartupDirectoriesAccess({
+        email,
+        source,
+        leadMagnet,
+        utmSource: searchParams.get("utm_source") ?? undefined,
+        utmMedium: searchParams.get("utm_medium") ?? undefined,
+        utmCampaign: searchParams.get("utm_campaign") ?? undefined,
+        utmContent: searchParams.get("utm_content") ?? undefined,
+        utmTerm: searchParams.get("utm_term") ?? undefined,
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: string }
-        | null;
-
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Unable to join the list right now.");
-      }
-
       setSuccessMessage(
-        "Check your inbox. Shipboost is sending the startup directories list now.",
+        "Check your inbox. We sent your access link to the startup directories resource.",
       );
       setEmail("");
     } catch (error) {
@@ -71,15 +59,15 @@ export function HomeLeadMagnetForm() {
       <div className="absolute top-0 right-0 w-64 h-64 bg-muted/20 blur-3xl -mr-32 -mt-32 rounded-full" />
       
       <div className="relative">
-        <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40 uppercase mb-4">
-          Free founder resource
+        <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40  mb-4">
+          Secondary resource
         </p>
-        <h2 className="text-4xl font-black tracking-tight text-foreground mb-6 lowercase">
-          800+ startup directories list.
+        <h2 className="text-3xl font-black tracking-tight text-foreground mb-6 ">
+          Get the startup directories list.
         </h2>
         <p className="text-lg font-medium leading-relaxed text-muted-foreground/80 max-w-2xl mb-10">
-          Stop paying for directory lists. Join the ShipBoost newsletter and get the exact 
-          database of submission opportunities we use to build distribution.
+          Get the curated directory database we use for founder distribution.
+          This is the supporting resource, not the main event.
         </p>
 
         <form
@@ -104,19 +92,19 @@ export function HomeLeadMagnetForm() {
           </button>
         </form>
 
-        <p className="mt-8 text-xs font-bold text-muted-foreground/40 uppercase tracking-widest">
-          * Instant delivery. Unsubscribe with one click.
+        <p className="mt-8 text-xs font-bold text-muted-foreground/40  tracking-widest">
+          * Access link via secure email. Unsubscribe with one click.
         </p>
 
         {successMessage ? (
-          <div className="mt-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-6 py-4 text-sm font-bold text-emerald-700 uppercase tracking-widest flex items-center gap-3">
+          <div className="mt-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-6 py-4 text-sm font-bold text-emerald-700  tracking-widest flex items-center gap-3">
             <Check size={18} />
             {successMessage}
           </div>
         ) : null}
 
         {errorMessage ? (
-          <div className="mt-8 rounded-2xl border border-destructive/20 bg-destructive/10 px-6 py-4 text-sm font-bold text-destructive uppercase tracking-widest flex items-center gap-3">
+          <div className="mt-8 rounded-2xl border border-destructive/20 bg-destructive/10 px-6 py-4 text-sm font-bold text-destructive  tracking-widest flex items-center gap-3">
             <AlertCircle size={18} />
             {errorMessage}
           </div>

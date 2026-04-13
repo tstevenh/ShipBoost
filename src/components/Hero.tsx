@@ -10,7 +10,7 @@ export function Hero() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/5 blur-[120px] rounded-full -z-10 opacity-50" />
       
       <div className="container mx-auto max-w-4xl text-center space-y-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-secondary rounded-full border border-border text-[10px] font-bold tracking-widest uppercase text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-secondary rounded-full border border-border text-[10px] font-bold tracking-widest  text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-500">
           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
           The best tools, everyday
         </div>

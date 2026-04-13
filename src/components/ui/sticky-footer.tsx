@@ -35,7 +35,7 @@ export function StickyFooter({ className, ...props }: StickyFooterProps) {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-black text-primary-foreground transition-transform group-hover:scale-105">
                 S
               </span>
-              <span className="text-xl font-black tracking-tight text-foreground lowercase">
+              <span className="text-xl font-black tracking-tight text-foreground ">
                 ShipBoost
               </span>
             </div>
@@ -51,7 +51,7 @@ export function StickyFooter({ className, ...props }: StickyFooterProps) {
               className="w-full"
             >
               <div className="mb-10 md:mb-0">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground mb-6">{group.label}</h3>
+                <h3 className="text-[10px] font-black  tracking-[0.2em] text-foreground mb-6">{group.label}</h3>
                 <ul className="text-muted-foreground space-y-3 text-sm">
                   {group.links.map((link) => (
                     <li key={link.title}>
@@ -69,7 +69,7 @@ export function StickyFooter({ className, ...props }: StickyFooterProps) {
           ))}
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full text-muted-foreground flex flex-col items-center justify-between gap-4 border-t border-border pt-8 text-xs font-bold uppercase tracking-widest md:flex-row">
+        <div className="relative z-10 max-w-7xl mx-auto w-full text-muted-foreground flex flex-col items-center justify-between gap-4 border-t border-border pt-8 text-xs font-bold  tracking-widest md:flex-row">
           <p>© {new Date().getFullYear()} ShipBoost. All rights reserved.</p>
           <div className="flex gap-8">
             <Link href="#" className="hover:text-primary transition-colors">Privacy</Link>

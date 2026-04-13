@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { 
-  Rocket, Save, Trash2, ArrowLeft, RefreshCw, Check, 
-  ExternalLink, Info, Image as ImageIcon, Plus, X, AlertCircle,
+  Save, Trash2, ArrowLeft, RefreshCw, Check, 
+  ExternalLink, Info, Image as ImageIcon, AlertCircle,
   Layout, Share2, Settings, DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -155,11 +155,11 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">{label}</label>
-      {hint ? <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ml-1">{hint}</p> : null}
+      <label className="text-xs font-black  tracking-widest text-muted-foreground ml-1">{label}</label>
+      {hint ? <p className="text-[10px] font-bold text-muted-foreground/60  tracking-widest ml-1">{hint}</p> : null}
       {children}
       {error ? (
-        <p className="text-[10px] font-bold text-destructive uppercase tracking-widest ml-1">{error}</p>
+        <p className="text-[10px] font-bold text-destructive  tracking-widest ml-1">{error}</p>
       ) : null}
     </div>
   );
@@ -559,16 +559,16 @@ export function FounderToolEditor({
   ] as const;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-      <div className="space-y-8">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
+      <div className="min-w-0 space-y-8">
         <div className="rounded-[2.5rem] border border-border bg-card shadow-xl shadow-black/5 overflow-hidden">
           {/* Header */}
-          <div className="p-8 sm:p-12 border-b border-border bg-muted/10">
-            <div className="max-w-2xl">
-              <p className="text-[10px] font-black tracking-[0.3em] text-primary uppercase mb-4">
+          <div className="border-b border-border bg-muted/10 p-6 sm:p-8 lg:p-12">
+            <div className="max-w-2xl min-w-0">
+              <p className="text-[10px] font-black tracking-[0.3em] text-primary  mb-4">
                 Founder listing editor
               </p>
-              <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+              <h1 className="max-w-full break-words text-3xl font-black tracking-tight text-foreground [overflow-wrap:anywhere] sm:text-5xl">
                 Edit {tool.name}
               </h1>
               <p className="mt-6 text-lg font-medium leading-relaxed text-muted-foreground/80">
@@ -579,15 +579,15 @@ export function FounderToolEditor({
           </div>
 
           {/* Tabs Navigation */}
-          <div className="px-8 sm:px-12 py-4 bg-muted/5 border-b border-border">
-            <div className="flex flex-wrap gap-2">
+          <div className="border-b border-border bg-muted/5 px-4 py-4 sm:px-6 lg:px-12">
+            <div className="-mx-1 flex overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                    "mr-2 inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black tracking-widest transition-all last:mr-0 sm:mr-0",
                     activeTab === tab.id
                       ? "bg-primary text-primary-foreground shadow-lg shadow-black/10"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -601,7 +601,7 @@ export function FounderToolEditor({
           </div>
 
           {/* Form Content */}
-          <form onSubmit={handleSubmit} className="p-8 sm:p-12">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 lg:p-12">
             <fieldset disabled={isSubmitting || isDeleting} className="space-y-8 disabled:opacity-50">
               {activeTab === "general" && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -629,11 +629,12 @@ export function FounderToolEditor({
 
                   <Field
                     label="Tagline"
-                    hint="Used on cards and launch boards. Minimum 10 characters."
+                    hint="Used on cards and launch boards. Keep it between 10 and 60 characters."
                     error={getFieldError("tagline")}
                   >
                     <input
                       required
+                      maxLength={60}
                       value={form.tagline}
                       onChange={(event) =>
                         setForm((current) => ({ ...current, tagline: event.target.value }))
@@ -697,13 +698,13 @@ export function FounderToolEditor({
                   </div>
 
                   <div className="grid gap-6 lg:grid-cols-2">
-                    <div className="rounded-2xl border border-border bg-muted/20 p-6 space-y-4">
+                    <div className="min-w-0 rounded-2xl border border-border bg-muted/20 p-5 sm:p-6 space-y-4">
                       <div className="space-y-1">
-                        <p className="text-xs font-black uppercase tracking-widest text-foreground">Categories</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pick up to 3.</p>
+                        <p className="text-xs font-black  tracking-widest text-foreground">Categories</p>
+                        <p className="text-[10px] font-bold text-muted-foreground  tracking-widest">Pick up to 3.</p>
                       </div>
                       {getFieldError("categoryIds") && (
-                        <p className="text-[10px] font-bold text-destructive uppercase tracking-widest">
+                        <p className="text-[10px] font-bold text-destructive  tracking-widest">
                           {getFieldError("categoryIds")}
                         </p>
                       )}
@@ -722,13 +723,13 @@ export function FounderToolEditor({
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-border bg-muted/20 p-6 space-y-4">
+                    <div className="min-w-0 rounded-2xl border border-border bg-muted/20 p-5 sm:p-6 space-y-4">
                       <div className="space-y-1">
-                        <p className="text-xs font-black uppercase tracking-widest text-foreground">Tags</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pick up to 5.</p>
+                        <p className="text-xs font-black  tracking-widest text-foreground">Tags</p>
+                        <p className="text-[10px] font-bold text-muted-foreground  tracking-widest">Pick up to 5.</p>
                       </div>
                       {getFieldError("tagIds") && (
-                        <p className="text-[10px] font-bold text-destructive uppercase tracking-widest">
+                        <p className="text-[10px] font-bold text-destructive  tracking-widest">
                           {getFieldError("tagIds")}
                         </p>
                       )}
@@ -754,11 +755,12 @@ export function FounderToolEditor({
                 <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   {/* Logo Section */}
                   <div className="space-y-4">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Logo *</label>
-                    <div className="flex items-start gap-6">
+                    <label className="text-xs font-black  tracking-widest text-muted-foreground ml-1">Logo *</label>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
                       {(newLogo || existingLogo) && (
                         <div className="relative group">
                           <div className="w-32 h-32 rounded-2xl overflow-hidden border border-border bg-background shadow-sm">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={newLogo?.previewUrl ?? existingLogo?.url} alt="Logo preview" className="w-full h-full object-cover" />
                           </div>
                           <button
@@ -778,7 +780,7 @@ export function FounderToolEditor({
                         </div>
                       )}
                       <label className={cn(
-                        "flex-1 max-w-[320px] aspect-square rounded-2xl border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center p-6",
+                        "flex w-full flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-border bg-muted/30 p-6 text-center transition-all hover:border-primary/50 hover:bg-muted/50 sm:flex-1 sm:max-w-[320px] sm:aspect-square",
                         (newLogo || existingLogo) && "hidden sm:flex"
                       )}>
                         <input
@@ -795,7 +797,7 @@ export function FounderToolEditor({
                         </div>
                       </label>
                     </div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
+                    <p className="text-[10px] font-bold text-muted-foreground  tracking-widest ml-1">
                       Use a square format, at least 128x128px.
                     </p>
                   </div>
@@ -803,8 +805,8 @@ export function FounderToolEditor({
                   {/* Screenshots Section */}
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Images</label>
-                      <p className="text-[10px] font-bold text-muted-foreground leading-relaxed uppercase tracking-widest ml-1">
+                      <label className="text-xs font-black  tracking-widest text-muted-foreground ml-1">Images</label>
+                      <p className="text-[10px] font-bold text-muted-foreground leading-relaxed  tracking-widest ml-1">
                         Showcase your product with 1 to 3 images. Recommended 16:9 aspect ratio.
                       </p>
                     </div>
@@ -812,9 +814,10 @@ export function FounderToolEditor({
                     <div className="flex flex-col gap-6">
                       {(existingScreenshots.length > 0 || newScreenshots.length > 0) && (
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          {existingScreenshots.map((s, i) => (
+                          {existingScreenshots.map((s) => (
                             <div key={s.id} className="relative group">
                               <div className="aspect-video rounded-2xl overflow-hidden border border-border bg-background shadow-sm">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={s.url} alt="Screenshot" className="w-full h-full object-cover" />
                               </div>
                               <button
@@ -829,6 +832,7 @@ export function FounderToolEditor({
                           {newScreenshots.map((s) => (
                             <div key={s.id} className="relative group">
                               <div className="aspect-video rounded-2xl overflow-hidden border border-border bg-background shadow-sm">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={s.previewUrl} alt="Screenshot" className="w-full h-full object-cover" />
                               </div>
                               <button
@@ -857,7 +861,7 @@ export function FounderToolEditor({
                           </div>
                           <div className="space-y-1">
                             <p className="text-lg font-black text-foreground">Drop images or click to upload</p>
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{3 - (existingScreenshots.length + newScreenshots.length)} left</p>
+                            <p className="text-xs font-bold text-muted-foreground  tracking-widest">{3 - (existingScreenshots.length + newScreenshots.length)} left</p>
                           </div>
                         </label>
                       )}
@@ -934,12 +938,12 @@ export function FounderToolEditor({
 
               {activeTab === "settings" && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="rounded-2xl border border-border bg-muted/20 p-8 space-y-6">
+                  <div className="rounded-2xl border border-border bg-muted/20 p-5 sm:p-8 space-y-6">
                     <div className="space-y-1">
-                      <h3 className="text-sm font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                      <h3 className="text-sm font-black  tracking-widest text-foreground flex items-center gap-2">
                         <DollarSign size={16} /> Affiliate Program
                       </h3>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Help users know if you offer rewards for referrals.</p>
+                      <p className="text-[10px] font-bold text-muted-foreground  tracking-widest">Help users know if you offer rewards for referrals.</p>
                     </div>
                     
                     <label className="flex items-center gap-3 text-sm font-bold text-foreground cursor-pointer">
@@ -958,12 +962,12 @@ export function FounderToolEditor({
                     </label>
                   </div>
 
-                  <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-8 space-y-6">
+                  <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-5 sm:p-8 space-y-6">
                     <div className="space-y-1">
-                      <h3 className="text-sm font-black uppercase tracking-widest text-destructive flex items-center gap-2">
+                      <h3 className="text-sm font-black  tracking-widest text-destructive flex items-center gap-2">
                         <Trash2 size={16} /> Danger Zone
                       </h3>
-                      <p className="text-[10px] font-bold text-destructive/60 uppercase tracking-widest">This action is permanent and cannot be undone.</p>
+                      <p className="text-[10px] font-bold text-destructive/60  tracking-widest">This action is permanent and cannot be undone.</p>
                     </div>
                     
                     <button
@@ -980,7 +984,7 @@ export function FounderToolEditor({
               {/* Status Messages */}
               <div className="space-y-4">
                 {isSubmitting && (
-                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs font-bold text-primary uppercase tracking-widest">
+                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs font-bold text-primary  tracking-widest">
                     <div className="flex items-center gap-2">
                       <RefreshCw size={14} className="animate-spin" />
                       Saving and syncing media...
@@ -989,7 +993,7 @@ export function FounderToolEditor({
                 )}
 
                 {errorMessage && (
-                  <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive uppercase tracking-widest">
+                  <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-xs font-bold text-destructive  tracking-widest">
                     <div className="flex items-center gap-2">
                       <AlertCircle size={14} />
                       {errorMessage}
@@ -998,7 +1002,7 @@ export function FounderToolEditor({
                 )}
 
                 {successMessage && (
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-bold text-emerald-700 uppercase tracking-widest">
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-bold text-emerald-700  tracking-widest">
                     <div className="flex items-center gap-2">
                       <Check size={14} />
                       {successMessage}
@@ -1031,11 +1035,11 @@ export function FounderToolEditor({
       </div>
 
       {/* Sidebar Info */}
-      <aside className="space-y-6">
-        <div className="rounded-[2rem] bg-primary p-8 text-primary-foreground shadow-2xl shadow-primary/20">
+      <aside className="min-w-0 space-y-6">
+        <div className="rounded-[2rem] bg-primary p-6 sm:p-8 text-primary-foreground shadow-2xl shadow-primary/20">
           <div className="flex items-center gap-3 mb-6">
             <Info size={16} />
-            <p className="text-[10px] font-black tracking-[0.2em] uppercase opacity-60">
+            <p className="text-[10px] font-black tracking-[0.2em]  opacity-60">
               Editing notes
             </p>
           </div>
@@ -1046,14 +1050,14 @@ export function FounderToolEditor({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-6">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4">Preview Listing</h4>
+        <div className="rounded-3xl border border-border bg-card p-5 sm:p-6">
+          <h4 className="text-[10px] font-black  tracking-widest text-muted-foreground/60 mb-4">Preview Listing</h4>
           <Link
-            href={`/tools/${tool.slug}`}
+            href={`/dashboard/tools/${tool.id}/preview`}
             target="_blank"
             className="flex items-center justify-center gap-2 w-full bg-foreground text-background px-5 py-3 rounded-xl text-xs font-black hover:opacity-90 transition-all"
           >
-            <ExternalLink size={14} /> View Public Page
+            <ExternalLink size={14} /> Open Founder Preview
           </Link>
         </div>
       </aside>
@@ -1061,8 +1065,8 @@ export function FounderToolEditor({
       {/* Delete Modal */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm px-4">
-          <div className="w-full max-w-xl rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl">
-            <p className="text-[10px] font-black tracking-[0.3em] text-destructive uppercase mb-4">
+          <div className="w-full max-w-xl rounded-[2.5rem] border border-border bg-card p-6 sm:p-10 shadow-2xl">
+            <p className="text-[10px] font-black tracking-[0.3em] text-destructive  mb-4">
               Delete listing
             </p>
             <h2 className="text-3xl font-black tracking-tight text-foreground">

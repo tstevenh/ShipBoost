@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import { 
   ChevronRight, Home as HomeIcon, Layers, 
   BarChart3, Code2, Globe, Database, Shield, 
   Zap, MessageSquare, Paintbrush, Briefcase, 
-  Layout, Cpu, Search, Video, Music, Share2, 
+  Cpu, Search, Video, Music, Share2, 
   Settings, Terminal, LineChart, Mail, Calculator
 } from "lucide-react";
 
@@ -13,14 +14,17 @@ import { listPublicCategories } from "@/server/services/catalog-service";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
 import { Footer } from "@/components/ui/footer";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildCollectionListingSchema } from "@/server/seo/page-schema";
 
-export const metadata: Metadata = {
-  title: "Browse Categories | ShipBoost",
-  description: "Explore curated SaaS categories for bootstrapped founders.",
-};
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Browse SaaS Tools by Category | ShipBoost",
+  description:
+    "Browse SaaS tools by category on ShipBoost, from marketing and analytics to support, sales, and development.",
+  url: "/categories",
+});
 
-const categoryIconMap: Record<string, any> = {
+const categoryIconMap: Record<string, LucideIcon> = {
   "marketing": BarChart3,
   "development": Code2,
   "productivity": Zap,

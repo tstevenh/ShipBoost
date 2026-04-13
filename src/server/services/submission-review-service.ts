@@ -6,10 +6,12 @@ import {
 import { AppError } from "@/server/http/app-error";
 import { getSubmissionById } from "@/server/repositories/submission-repository";
 import {
-  DEFAULT_FREE_LAUNCH_SLOTS_PER_DAY,
+  getLaunchpadGoLiveAtUtc,
+  isAnchoredLaunchWeekStart,
   scheduleNextFreeLaunchDate,
 } from "@/server/services/launch-scheduling";
-import { startOfDay } from "@/server/services/time";
+import { getEnv } from "@/server/env";
+import { startOfUtcDay } from "@/server/services/time";
 import type { SubmissionReviewInput } from "@/server/validators/submission";
 
 import {
@@ -111,12 +113,26 @@ export async function reviewSubmission(
         const isFeaturedLaunch =
           submission.submissionType === "FEATURED_LAUNCH";
         const launchType = resolveLaunchType(submission.submissionType);
+        const goLiveFloor = getLaunchpadGoLiveAtUtc();
         const preferredLaunchDate = submission.preferredLaunchDate
-          ? startOfDay(submission.preferredLaunchDate)
+          ? startOfUtcDay(submission.preferredLaunchDate)
           : new Date();
+        if (
+          isFeaturedLaunch &&
+          (!submission.preferredLaunchDate ||
+            preferredLaunchDate < goLiveFloor ||
+            !isAnchoredLaunchWeekStart(preferredLaunchDate, {
+              goLiveAt: goLiveFloor,
+            }))
+        ) {
+          throw new AppError(
+            400,
+            "Premium launches must use one of the available weekly launch windows.",
+          );
+        }
         const launchDate = isFreeLaunch
           ? await scheduleNextFreeLaunchDate(tx, {
-              dailySlots: DEFAULT_FREE_LAUNCH_SLOTS_PER_DAY,
+              weeklySlots: getEnv().FREE_LAUNCH_SLOTS_PER_WEEK,
               fromDate: new Date(),
             })
           : preferredLaunchDate;

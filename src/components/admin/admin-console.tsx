@@ -2,9 +2,9 @@
 
 import { useDeferredValue, useEffect, useEffectEvent, useMemo, useState } from "react";
 import { 
-  Activity, Layers, Tag, Rocket, ClipboardList, 
-  Search, Shield, AlertCircle, RefreshCw, Check,
-  Layout, Send, Fingerprint, Package, Archive, Settings,
+  Activity, Layers, Rocket, ClipboardList,
+  Shield, AlertCircle, RefreshCw,
+  Layout, Package,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -144,10 +144,6 @@ export function AdminConsole() {
 
   function isActionPending(actionKey: string) {
     return pendingAction === actionKey;
-  }
-
-  function isActionGroupPending(prefix: string) {
-    return pendingAction?.startsWith(prefix) ?? false;
   }
 
   function matchesSubmissionFilters(
@@ -723,7 +719,7 @@ export function AdminConsole() {
 
   if (bootError) {
     return (
-      <div className="rounded-[2rem] border border-destructive/20 bg-destructive/10 p-8 text-destructive uppercase tracking-widest text-xs font-bold">
+      <div className="rounded-[2rem] border border-destructive/20 bg-destructive/10 p-8 text-destructive  tracking-widest text-xs font-bold">
         <div className="flex items-center gap-3">
           <AlertCircle size={20} />
           {bootError}
@@ -749,7 +745,7 @@ export function AdminConsole() {
               key={item.id}
               onClick={() => setActiveNav(item.id)}
               className={cn(
-                "w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all group",
+                "w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-black  tracking-widest transition-all group",
                 activeNav === item.id
                   ? "bg-primary text-primary-foreground shadow-lg shadow-black/10"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -772,18 +768,18 @@ export function AdminConsole() {
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-5 shadow-sm hidden lg:block">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4">Internal Stats</h4>
+          <h4 className="text-[10px] font-black  tracking-widest text-muted-foreground/60 mb-4">Internal Stats</h4>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Live tools</span>
+              <span className="text-[10px] font-black  tracking-widest text-muted-foreground/60">Live tools</span>
               <span className="text-xs font-black text-foreground">{publishedCount}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Categories</span>
+              <span className="text-[10px] font-black  tracking-widest text-muted-foreground/60">Categories</span>
               <span className="text-xs font-black text-foreground">{categories.length}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Tags</span>
+              <span className="text-[10px] font-black  tracking-widest text-muted-foreground/60">Tags</span>
               <span className="text-xs font-black text-foreground">{tags.length}</span>
             </div>
           </div>
@@ -804,7 +800,7 @@ export function AdminConsole() {
                 <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                   <div className="flex items-center gap-3 text-muted-foreground mb-2">
                     <s.icon size={14} />
-                    <p className="text-[10px] font-black uppercase tracking-widest">{s.label}</p>
+                    <p className="text-[10px] font-black  tracking-widest">{s.label}</p>
                   </div>
                   <p className="text-xl font-black text-foreground">{s.val}</p>
                 </div>
@@ -813,7 +809,7 @@ export function AdminConsole() {
 
             <div className="rounded-3xl border border-border bg-primary p-8 sm:p-10 text-primary-foreground shadow-2xl shadow-black/20">
               <div className="max-w-2xl">
-                <p className="text-[10px] font-black tracking-[0.3em] uppercase opacity-60 mb-3">Admin Console</p>
+                <p className="text-[10px] font-black tracking-[0.3em]  opacity-60 mb-3">Admin Console</p>
                 <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Moderation Hub</h1>
                 <p className="mt-4 text-base font-medium opacity-80 leading-relaxed">
                   Manage the ShipBoost directory, review founder submissions, and maintain the catalog taxonomy from one unified surface.
@@ -875,7 +871,6 @@ export function AdminConsole() {
               getToolNote={getToolNote}
               hasPendingAction={hasPendingAction}
               isActionPending={isActionPending}
-              isActionGroupPending={isActionGroupPending}
             />
           </div>
         )}

@@ -4,5 +4,5 @@ import { FlickeringFooter } from './flickering-footer';
 type FooterProps = React.ComponentProps<'footer'>;
 
 export function Footer({ className, ...props }: Omit<FooterProps, 'children'>) {
-	return <FlickeringFooter />;
+	return <FlickeringFooter className={className} {...props} />;
 }

@@ -373,10 +373,6 @@ async function main() {
     }
 
     try {
-      const previousScreenshotPublicIds = tool.media
-        .map((media) => media.publicId)
-        .filter(Boolean);
-
       await prisma.$transaction(async (tx) => {
         const logoAction = faviconUrl
           ? await ensureLogoMedia(tx, tool, faviconUrl)

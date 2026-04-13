@@ -181,10 +181,10 @@ export function SectionCard({
   return (
     <section className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xl shadow-black/5">
       <div className="max-w-3xl">
-        <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40 uppercase mb-2">
+        <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40  mb-2">
           {eyebrow}
         </p>
-        <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl lowercase">
+        <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl ">
           {title}
         </h2>
         <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground/80">
@@ -207,11 +207,11 @@ export function Field({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+      <label className="text-xs font-black  tracking-widest text-muted-foreground ml-1">
         {label}
       </label>
       {hint && (
-        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ml-1">
+        <p className="text-[10px] font-bold text-muted-foreground/60  tracking-widest ml-1">
           {hint}
         </p>
       )}
@@ -241,7 +241,7 @@ export function StatusChip({
   return (
     <span
       className={cn(
-        "inline-flex rounded-full border px-3 py-1 text-[10px] font-black tracking-widest uppercase",
+        "inline-flex rounded-full border px-3 py-1 text-[10px] font-black tracking-widest ",
         className
       )}
     >

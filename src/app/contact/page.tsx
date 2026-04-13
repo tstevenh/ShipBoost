@@ -4,13 +4,15 @@ import Link from "next/link";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { ContentPageShell } from "@/components/marketing/content-page-shell";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildContactPageSchema } from "@/server/seo/page-schema";
 
-export const metadata: Metadata = {
-  title: "Contact ShipBoost | ShipBoost",
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Contact ShipBoost",
   description:
     "Contact ShipBoost for founder support, listing questions, partnerships, or launch help at support@shipboost.io.",
-};
+  url: "/contact",
+});
 
 const contactTopics = [
   {

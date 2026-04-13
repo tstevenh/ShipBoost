@@ -39,6 +39,24 @@ vi.mock("@/server/email/transactional", () => ({
   sendFeaturedLaunchPaidEmailMessage: sendFeaturedLaunchPaidEmailMessageMock,
 }));
 
+vi.mock("@/server/services/launch-scheduling", () => ({
+  getLaunchpadGoLiveAtUtc: () => new Date("2026-05-01T00:00:00.000Z"),
+  isAnchoredLaunchWeekStart: (date: Date, options?: { goLiveAt?: Date }) => {
+    const launchpadGoLiveAt =
+      options?.goLiveAt ?? new Date("2026-05-01T00:00:00.000Z");
+    const normalized = new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+    );
+
+    return (
+      normalized.getTime() >= launchpadGoLiveAt.getTime() &&
+      (normalized.getTime() - launchpadGoLiveAt.getTime()) %
+        (7 * 24 * 60 * 60 * 1000) ===
+        0
+    );
+  },
+}));
+
 vi.mock("@/server/services/submission-service-shared", async () => {
   const actual =
     await vi.importActual<typeof import("@/server/services/submission-service-shared")>(
@@ -55,6 +73,7 @@ vi.mock("@/server/services/submission-service-shared", async () => {
 import {
   handleFeaturedLaunchOrderPaid,
   reconcileFeaturedLaunchCheckout,
+  rescheduleFeaturedLaunch,
 } from "@/server/services/submission-payment-service";
 
 type PaymentTx = {
@@ -84,7 +103,7 @@ describe("submission-payment-service", () => {
       toolId: "tool_1",
       userId: "founder_1",
       submissionType: "FEATURED_LAUNCH",
-      preferredLaunchDate: new Date("2026-04-09T00:00:00.000Z"),
+      preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
       paymentStatus: "PENDING",
       polarCheckoutId: "checkout_1",
       tool: {
@@ -104,7 +123,7 @@ describe("submission-payment-service", () => {
         launches: [
           {
             launchType: "FEATURED",
-            launchDate: new Date("2026-04-09T00:00:00.000Z"),
+            launchDate: new Date("2026-05-08T00:00:00.000Z"),
           },
         ],
       },
@@ -167,7 +186,7 @@ describe("submission-payment-service", () => {
       toolId: "tool_1",
       userId: "founder_1",
       submissionType: "FEATURED_LAUNCH",
-      preferredLaunchDate: new Date("2026-04-09T00:00:00.000Z"),
+      preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
       paymentStatus: "PENDING",
       polarCheckoutId: "checkout_1",
       tool: {
@@ -239,5 +258,65 @@ describe("submission-payment-service", () => {
       id: "submission_1",
       paymentStatus: "PAID",
     });
+  });
+
+  it("rejects premium launch dates before the launchpad go-live date", async () => {
+    getSubmissionByIdForFounderMock.mockResolvedValueOnce({
+      id: "submission_1",
+      toolId: "tool_1",
+      submissionType: "FEATURED_LAUNCH",
+      paymentStatus: "PAID",
+      preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
+      tool: {
+        launches: [
+          {
+            id: "launch_1",
+            launchType: "FEATURED",
+            status: "APPROVED",
+            launchDate: new Date("2026-05-08T00:00:00.000Z"),
+          },
+        ],
+      },
+    });
+
+    await expect(
+      rescheduleFeaturedLaunch(
+        "submission_1",
+        {
+          preferredLaunchDate: new Date("2026-04-28T00:00:00.000Z"),
+        },
+        { id: "founder_1" },
+      ),
+    ).rejects.toThrow("Choose May 1, 2026 UTC or later.");
+  });
+
+  it("rejects premium launch dates that are not aligned to launch week boundaries", async () => {
+    getSubmissionByIdForFounderMock.mockResolvedValueOnce({
+      id: "submission_1",
+      toolId: "tool_1",
+      submissionType: "FEATURED_LAUNCH",
+      paymentStatus: "PAID",
+      preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
+      tool: {
+        launches: [
+          {
+            id: "launch_1",
+            launchType: "FEATURED",
+            status: "APPROVED",
+            launchDate: new Date("2026-05-08T00:00:00.000Z"),
+          },
+        ],
+      },
+    });
+
+    await expect(
+      rescheduleFeaturedLaunch(
+        "submission_1",
+        {
+          preferredLaunchDate: new Date("2026-05-10T00:00:00.000Z"),
+        },
+        { id: "founder_1" },
+      ),
+    ).rejects.toThrow("Choose one of the available weekly launch windows.");
   });
 });

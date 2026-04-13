@@ -161,7 +161,7 @@ export function HomeSearchModal() {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border bg-muted/30 px-6 py-4">
-          <h2 className="text-sm font-bold tracking-tight text-muted-foreground uppercase">
+          <h2 className="text-sm font-bold tracking-tight text-muted-foreground ">
             Product Search
           </h2>
           <button
@@ -277,7 +277,7 @@ export function HomeSearchModal() {
           aria-label="Open search"
         >
           <span className="text-sm font-medium">Search published products...</span>
-          <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+          <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[10px] font-bold tracking-wider text-muted-foreground ">
             ⌘ K
           </span>
         </button>

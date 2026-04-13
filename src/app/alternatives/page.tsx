@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Home as HomeIcon, Search } from "lucide-react";
+import { ChevronRight, Home as HomeIcon } from "lucide-react";
 
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { alternativesSeoRegistry } from "@/server/seo/registry";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
 import { Footer } from "@/components/ui/footer";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildCollectionListingSchema } from "@/server/seo/page-schema";
 
-export const metadata: Metadata = {
-  title: "Product Alternatives | ShipBoost",
-  description: "Find and compare the best alternatives to popular SaaS products and founder tools.",
-};
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Best SaaS Alternatives and Comparisons | ShipBoost",
+  description:
+    "Compare popular SaaS products and discover curated alternatives for tools used by bootstrapped founders.",
+  url: "/alternatives",
+});
 
 export default function AlternativesIndexPage() {
   const entries = Object.values(alternativesSeoRegistry);

@@ -63,6 +63,7 @@ export const publicToolDetailSelect = Prisma.validator<Prisma.ToolSelect>()({
   tagline: true,
   richDescription: true,
   pricingModel: true,
+  websiteUrl: true,
   metaTitle: true,
   metaDescription: true,
   canonicalUrl: true,
@@ -82,6 +83,16 @@ export const publicToolDetailSelect = Prisma.validator<Prisma.ToolSelect>()({
     select: {
       id: true,
       url: true,
+    },
+  },
+  launches: {
+    orderBy: {
+      launchDate: "desc",
+    },
+    select: {
+      status: true,
+      launchType: true,
+      launchDate: true,
     },
   },
   toolCategories: publicToolCategoriesArgs,
@@ -121,6 +132,7 @@ export const publicLaunchCardSelect = Prisma.validator<Prisma.LaunchSelect>()({
   launchType: true,
   status: true,
   launchDate: true,
+  createdAt: true,
   priorityWeight: true,
   tool: {
     select: publicLaunchToolSelect,

@@ -70,7 +70,7 @@ export function ViewerClaimState({
 
   if (errorMessage) {
     return (
-      <div className="rounded-3xl border border-destructive/20 bg-destructive/10 p-6 text-xs font-bold uppercase tracking-widest text-destructive">
+      <div className="rounded-3xl border border-destructive/20 bg-destructive/10 p-6 text-xs font-bold  tracking-widest text-destructive">
         {errorMessage}
       </div>
     );

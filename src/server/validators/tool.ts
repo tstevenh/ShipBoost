@@ -11,7 +11,7 @@ export const adminToolCreateSchema = z.object({
   ownerUserId: cuidSchema.optional(),
   slug: optionalTrimmedString,
   name: z.string().trim().min(2).max(80),
-  tagline: z.string().trim().min(10).max(140),
+  tagline: z.string().trim().min(10).max(60),
   websiteUrl: z.url(),
   richDescription: z.string().trim().min(40).max(5000),
   pricingModel: pricingModelSchema,
@@ -62,7 +62,7 @@ export const adminToolListQuerySchema = z.object({
 export const founderToolUpdateSchema = z.object({
   slug: optionalTrimmedString,
   name: z.string().trim().min(2).max(80),
-  tagline: z.string().trim().min(10).max(140),
+  tagline: z.string().trim().min(10).max(60),
   websiteUrl: z.url(),
   richDescription: z.string().trim().min(40).max(5000),
   pricingModel: pricingModelSchema,

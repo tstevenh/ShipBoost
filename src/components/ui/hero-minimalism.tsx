@@ -116,7 +116,7 @@ export default function MinimalHero() {
 .hero-kicker {
   font-size: 12px;
   letter-spacing: 0.4em;
-  text-transform: uppercase;
+   
   color: var(--foreground);
   font-weight: 900;
   margin-bottom: 24px;

@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { 
-  Rocket, ShieldCheck, Star, Zap, Info, ArrowLeft, Loader2, Check, 
-  ChevronDown, Layout, Image as ImageIcon, Share2, DollarSign, ExternalLink,
-  ChevronRight, Trophy, Search, X, ArrowRight, Trash2
+  Rocket, ShieldCheck, Star, Zap, Loader2, Check,
+  ChevronDown, Layout, Image as ImageIcon, Share2, ExternalLink,
+  Search, X, ArrowRight, Trash2
 } from "lucide-react";
 
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
@@ -38,9 +38,40 @@ type BadgeTheme = "light" | "dark";
 type SubmitProductFormProps = {
   categories: CategoryOption[];
   tags: TagOption[];
-  appUrl: string;
-  founderEmail: string;
   supportEmail: string;
+  premiumLaunchWeeks: Array<{
+    value: string;
+    label: string;
+  }>;
+  initialDraft?: {
+    id: string;
+    submissionType: SubmissionType;
+    reviewStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+    paymentStatus: "NOT_REQUIRED" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+    badgeVerification: "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "FAILED";
+    preferredLaunchDate: string | null;
+    tool: {
+      id: string;
+      slug: string;
+      name: string;
+      tagline: string;
+      websiteUrl: string;
+      richDescription: string;
+      pricingModel: PricingModel;
+      affiliateUrl: string | null;
+      affiliateSource: string | null;
+      hasAffiliateProgram: boolean;
+      founderXUrl: string | null;
+      founderGithubUrl: string | null;
+      founderLinkedinUrl: string | null;
+      founderFacebookUrl: string | null;
+      logoMedia: UploadedMediaAsset | null;
+      screenshots: UploadedMediaAsset[];
+      categoryIds: string[];
+      tagIds: string[];
+    };
+  } | null;
+  isPrelaunch?: boolean;
 };
 
 type FormState = {
@@ -78,24 +109,6 @@ type DraftImage = {
   asset?: UploadedMediaAsset;
 };
 
-type FieldErrors = Record<string, string[] | undefined>;
-
-type ApiErrorPayload = {
-  error?: string;
-  details?: {
-    fieldErrors?: FieldErrors;
-    formErrors?: string[];
-    duplicateTool?: {
-      id: string;
-      slug: string;
-      name: string;
-      ownedByYou: boolean;
-      ctaHref: string | null;
-      ctaLabel: string | null;
-    };
-  };
-};
-
 type SavedSubmission = {
   id: string;
   submissionType: SubmissionType;
@@ -107,6 +120,12 @@ type SavedSubmission = {
 type UploadedDraftMediaPayload = {
   logo?: UploadedMediaAsset;
   screenshots: UploadedMediaAsset[];
+};
+
+const foundingPremiumPrice = {
+  original: "$19",
+  discounted: "$9",
+  label: "Founding price for the first 100 premium launches",
 };
 
 const pricingModels: PricingModel[] = [
@@ -186,6 +205,14 @@ function createDraftImage(file: File): DraftImage {
   };
 }
 
+function createDraftImageFromAsset(asset: UploadedMediaAsset): DraftImage {
+  return {
+    id: crypto.randomUUID(),
+    previewUrl: asset.url,
+    asset,
+  };
+}
+
 function maybeRevokeObjectUrl(url: string) {
   if (url.startsWith("blob:")) {
     URL.revokeObjectURL(url);
@@ -222,29 +249,77 @@ function buildSubmissionPayload(
   };
 }
 
+function createFormFromDraft(
+  draft: NonNullable<SubmitProductFormProps["initialDraft"]>,
+): FormState {
+  return {
+    submissionType: draft.submissionType,
+    requestedSlug: draft.tool.slug,
+    preferredLaunchDate: draft.preferredLaunchDate
+      ? draft.preferredLaunchDate.slice(0, 10)
+      : "",
+    name: draft.tool.name,
+    tagline: draft.tool.tagline,
+    websiteUrl: draft.tool.websiteUrl,
+    richDescription: draft.tool.richDescription,
+    pricingModel: draft.tool.pricingModel,
+    affiliateUrl: draft.tool.affiliateUrl ?? "",
+    affiliateSource: draft.tool.affiliateSource ?? "",
+    hasAffiliateProgram: draft.tool.hasAffiliateProgram,
+    founderXUrl: draft.tool.founderXUrl ?? "",
+    founderGithubUrl: draft.tool.founderGithubUrl ?? "",
+    founderLinkedinUrl: draft.tool.founderLinkedinUrl ?? "",
+    founderFacebookUrl: draft.tool.founderFacebookUrl ?? "",
+    categoryIds: draft.tool.categoryIds,
+    tagIds: draft.tool.tagIds,
+  };
+}
+
 export function SubmitProductForm({
   categories,
   tags,
-  appUrl,
-  founderEmail,
   supportEmail,
+  premiumLaunchWeeks,
+  initialDraft = null,
+  isPrelaunch = false,
 }: SubmitProductFormProps) {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2>(initialDraft ? 2 : 1);
   const [activeTab, setActiveTab] = useState<"general" | "media" | "socials">("general");
-  const [form, setForm] = useState<FormState>(emptyForm);
-  const [logo, setLogo] = useState<DraftImage | null>(null);
-  const [screenshots, setScreenshots] = useState<DraftImage[]>([]);
+  const [form, setForm] = useState<FormState>(
+    initialDraft ? createFormFromDraft(initialDraft) : emptyForm(),
+  );
+  const [logo, setLogo] = useState<DraftImage | null>(
+    initialDraft?.tool.logoMedia
+      ? createDraftImageFromAsset(initialDraft.tool.logoMedia)
+      : null,
+  );
+  const [screenshots, setScreenshots] = useState<DraftImage[]>(
+    initialDraft?.tool.screenshots.map(createDraftImageFromAsset) ?? [],
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
   const [isVerifyingBadge, setIsVerifyingBadge] = useState(false);
   const [slugStatus, setSlugStatus] = useState<string>("");
-  const [isSlugLoading, setIsSlugLoading] = useState(false);
-  const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(null);
-  const [draftBadgeVerification, setDraftBadgeVerification] = useState<SavedSubmission["badgeVerification"]>("PENDING");
-  const [lastSavedDraft, setLastSavedDraft] = useState<SavedSubmission | null>(null);
+  const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(
+    initialDraft?.id ?? null,
+  );
+  const [draftBadgeVerification, setDraftBadgeVerification] = useState<SavedSubmission["badgeVerification"]>(
+    initialDraft?.badgeVerification ?? "PENDING",
+  );
+  const [lastSavedDraft, setLastSavedDraft] = useState<SavedSubmission | null>(
+    initialDraft
+      ? {
+          id: initialDraft.id,
+          submissionType: initialDraft.submissionType,
+          reviewStatus: initialDraft.reviewStatus,
+          paymentStatus: initialDraft.paymentStatus,
+          badgeVerification: initialDraft.badgeVerification,
+        }
+      : null,
+  );
   const [lastSavedPayloadSignature, setLastSavedPayloadSignature] = useState<string | null>(null);
   const [badgeTheme, setBadgeTheme] = useState<BadgeTheme>("light");
   const [copiedBadgeSnippet, setCopiedBadgeSnippet] = useState(false);
@@ -255,15 +330,14 @@ export function SubmitProductForm({
   const [isTagOpen, setIsTagOpen] = useState(false);
 
   const isBusy = isSavingDraft || isSubmittingDraft || isVerifyingBadge;
-  const normalizedAppUrl = appUrl.replace(/\/$/, "");
   const shipboostUrl = "https://shipboost.io";
   const badgeAssetPath =
     badgeTheme === "light"
       ? "/ShipBoost-Badge/ShipBoost-Light-Badge.svg"
       : "/ShipBoost-Badge/ShipBoost-Dark-Badge.svg";
-  const badgePreviewSrc = badgeAssetPath;
+  const badgePreviewSrc = `${shipboostUrl}${badgeAssetPath}`;
   const freeLaunchBadgeSnippet = `<a href="${shipboostUrl}" data-shipboost-badge="free-launch" target="_blank" rel="noopener">
-  <img src="${normalizedAppUrl}${badgeAssetPath}" alt="Launching soon on Shipboost" style="height: 54px; width: auto;" />
+  <img src="${badgePreviewSrc}" alt="Launching soon on ShipBoost" style="height: 54px; width: auto;" />
 </a>`;
   const submissionChecklist = [
     { label: "Name", complete: form.name.trim().length >= 2 },
@@ -279,13 +353,10 @@ export function SubmitProductForm({
   const incompleteChecklistItems = submissionChecklist
     .filter((item) => !item.complete)
     .map((item) => item.label);
-  const minFeaturedLaunchDate = new Date().toISOString().slice(0, 10);
-
   useEffect(() => {
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || draftSubmissionId) return;
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
-      setIsSlugLoading(true);
       try {
         const response = await fetch(`/api/tools/slug-suggestion?value=${encodeURIComponent(form.name)}`, { signal: controller.signal });
         const payload = await response.json();
@@ -293,10 +364,10 @@ export function SubmitProductForm({
           setForm(prev => ({ ...prev, requestedSlug: payload.data.slug }));
           setSlugStatus(`Suggested: ${payload.data.slug}`);
         }
-      } catch (err) {} finally { setIsSlugLoading(false); }
+      } catch {}
     }, 250);
     return () => { controller.abort(); clearTimeout(timer); };
-  }, [form.name]);
+  }, [draftSubmissionId, form.name]);
 
   async function handleCopyBadgeSnippet() {
     try {
@@ -489,7 +560,7 @@ export function SubmitProductForm({
       );
       if (payload.data.verified) setSuccessMessage(payload.data.message);
       else setErrorMessage(payload.data.message || "Badge not found. Make sure it's in your footer.");
-    } catch (err) { setErrorMessage("Verification failed."); }
+    } catch { setErrorMessage("Verification failed."); }
     finally { setIsVerifyingBadge(false); }
   }
 
@@ -501,7 +572,7 @@ export function SubmitProductForm({
     try {
       if (type === "FEATURED_LAUNCH") {
         if (!form.preferredLaunchDate) {
-          throw new Error("Please choose your preferred launch date first.");
+          throw new Error("Please choose your preferred launch week first.");
         }
 
         const savedDraft = await saveDraft({
@@ -558,15 +629,15 @@ export function SubmitProductForm({
         <div className="flex items-center gap-10">
           <div className="flex items-center gap-3">
             <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-colors", step >= 1 ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>1</div>
-            <span className={cn("text-sm font-black uppercase tracking-widest", step >= 1 ? "text-foreground" : "text-muted-foreground")}>Details</span>
+            <span className={cn("text-sm font-black  tracking-widest", step >= 1 ? "text-foreground" : "text-muted-foreground")}>Details</span>
           </div>
           <div className="h-px w-12 bg-border" />
           <div className="flex items-center gap-3">
             <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-colors", step >= 2 ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>2</div>
-            <span className={cn("text-sm font-black uppercase tracking-widest", step >= 2 ? "text-foreground" : "text-muted-foreground")}>Choose Plan</span>
+            <span className={cn("text-sm font-black  tracking-widest", step >= 2 ? "text-foreground" : "text-muted-foreground")}>Choose Plan</span>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+        <div className="flex items-center gap-2 text-[10px] font-black  tracking-[0.2em] text-muted-foreground/40">
           <Rocket size={12} /> Step {step} of 2
         </div>
       </div>
@@ -585,7 +656,7 @@ export function SubmitProductForm({
                   key={t.id}
                   onClick={() => setActiveTab(t.id)}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-4 text-xs font-black uppercase tracking-widest transition-all border-b-2",
+                    "flex-1 flex items-center justify-center gap-2 py-4 text-xs font-black  tracking-widest transition-all border-b-2",
                     activeTab === t.id ? "bg-card border-foreground text-foreground" : "border-transparent text-muted-foreground hover:bg-muted/50"
                   )}
                 >
@@ -600,22 +671,22 @@ export function SubmitProductForm({
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Product Name *</label>
+                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Product Name *</label>
                       <input required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className={inputClassName()} placeholder="Acme SaaS" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Slug *</label>
+                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Slug *</label>
                       <input value={form.requestedSlug} onChange={e => setForm({...form, requestedSlug: slugify(e.target.value)})} className={inputClassName()} />
                       <p className="text-[10px] font-bold text-muted-foreground/60">{slugStatus}</p>
                     </div>
                   </div>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Website URL *</label>
+                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Website URL *</label>
                       <input required value={form.websiteUrl} onChange={e => setForm({...form, websiteUrl: e.target.value})} className={inputClassName()} placeholder="https://acme.com" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Pricing Model *</label>
+                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Pricing Model *</label>
                       <select value={form.pricingModel} onChange={e => setForm({...form, pricingModel: e.target.value as PricingModelSelection})} className={inputClassName()}>
                         <option value="">Select pricing model</option>
                         {pricingModels.map(m => <option key={m} value={m}>{m}</option>)}
@@ -623,13 +694,13 @@ export function SubmitProductForm({
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tagline * (10-140 chars)</label>
-                    <input required maxLength={140} value={form.tagline} onChange={e => setForm({...form, tagline: e.target.value})} className={inputClassName()} placeholder="Short, punchy description of what you do" />
+                    <label className="text-xs font-black  tracking-widest text-muted-foreground">Tagline * (10-60 chars)</label>
+                    <input required maxLength={60} value={form.tagline} onChange={e => setForm({...form, tagline: e.target.value})} className={inputClassName()} placeholder="Short, punchy description of what you do" />
                   </div>
                   
                   {/* Category Dropdown */}
                   <div className="space-y-2 relative">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Category * (Pick 1)</label>
+                    <label className="text-xs font-black  tracking-widest text-muted-foreground">Category * (Pick 1)</label>
                     <button 
                       type="button"
                       onClick={() => setIsCatOpen(!isCatOpen)}
@@ -669,7 +740,7 @@ export function SubmitProductForm({
 
                   {/* Tags Dropdown */}
                   <div className="space-y-2 relative">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tags (Pick up to 5)</label>
+                    <label className="text-xs font-black  tracking-widest text-muted-foreground">Tags (Pick up to 5)</label>
                     <button 
                       type="button"
                       onClick={() => setIsTagOpen(!isTagOpen)}
@@ -723,7 +794,7 @@ export function SubmitProductForm({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Product Description * (40-5000 chars)</label>
+                    <label className="text-xs font-black  tracking-widest text-muted-foreground">Product Description * (40-5000 chars)</label>
                     <MarkdownTextarea value={form.richDescription} onChange={v => setForm({...form, richDescription: v})} rows={6} placeholder="Describe your product outcomes..." />
                   </div>
                 </div>
@@ -733,11 +804,12 @@ export function SubmitProductForm({
                 <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   {/* Logo Section */}
                   <div className="space-y-4">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Logo *</label>
+                    <label className="text-xs font-black  tracking-widest text-muted-foreground">Logo *</label>
                     <div className="flex items-start gap-6">
                       {logo && (
                         <div className="relative group">
                           <div className="w-32 h-32 rounded-2xl overflow-hidden border border-border bg-background shadow-sm">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={logo.previewUrl} alt="Logo preview" className="w-full h-full object-cover" />
                           </div>
                           <button
@@ -778,7 +850,7 @@ export function SubmitProductForm({
                         </div>
                       </label>
                     </div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <p className="text-[10px] font-bold text-muted-foreground  tracking-widest">
                       Use a square format, at least 128x128px.
                     </p>
                   </div>
@@ -786,8 +858,8 @@ export function SubmitProductForm({
                   {/* Screenshots Section */}
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Images</label>
-                      <p className="text-[10px] font-bold text-muted-foreground leading-relaxed uppercase tracking-widest">
+                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Images</label>
+                      <p className="text-[10px] font-bold text-muted-foreground leading-relaxed  tracking-widest">
                         Showcase your product with 1 to 3 images. Any dimensions work, but we recommend keeping the same aspect ratio for consistency. Click the preview button on the left to see how they&apos;ll look!
                       </p>
                     </div>
@@ -798,6 +870,7 @@ export function SubmitProductForm({
                           {screenshots.map(s => (
                             <div key={s.id} className="relative group">
                               <div className="aspect-video rounded-2xl overflow-hidden border border-border bg-background shadow-sm">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={s.previewUrl} alt="Screenshot preview" className="w-full h-full object-cover" />
                               </div>
                               <button
@@ -836,7 +909,7 @@ export function SubmitProductForm({
                           </div>
                           <div className="space-y-1">
                             <p className="text-lg font-black text-foreground">Drop images or click to upload</p>
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{3 - screenshots.length} left</p>
+                            <p className="text-xs font-bold text-muted-foreground  tracking-widest">{3 - screenshots.length} left</p>
                           </div>
                         </label>
                       )}
@@ -849,19 +922,19 @@ export function SubmitProductForm({
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">X (Twitter)</label>
+                      <label className="text-xs font-black  tracking-widest text-muted-foreground">X (Twitter)</label>
                       <input value={form.founderXUrl} onChange={e => setForm({...form, founderXUrl: e.target.value})} className={inputClassName()} placeholder="https://x.com/..." />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">LinkedIn</label>
+                      <label className="text-xs font-black  tracking-widest text-muted-foreground">LinkedIn</label>
                       <input value={form.founderLinkedinUrl} onChange={e => setForm({...form, founderLinkedinUrl: e.target.value})} className={inputClassName()} placeholder="https://linkedin.com/..." />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">GitHub</label>
+                      <label className="text-xs font-black  tracking-widest text-muted-foreground">GitHub</label>
                       <input value={form.founderGithubUrl} onChange={e => setForm({...form, founderGithubUrl: e.target.value})} className={inputClassName()} placeholder="https://github.com/..." />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Facebook</label>
+                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Facebook</label>
                       <input value={form.founderFacebookUrl} onChange={e => setForm({...form, founderFacebookUrl: e.target.value})} className={inputClassName()} placeholder="https://facebook.com/..." />
                     </div>
                   </div>
@@ -869,7 +942,7 @@ export function SubmitProductForm({
               )}
 
               <div className="pt-10 border-t border-border flex justify-between items-center">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                <p className="text-[10px] font-bold text-muted-foreground  tracking-widest">
                   * Required fields
                 </p>
                 <button
@@ -887,15 +960,20 @@ export function SubmitProductForm({
 
           <aside className="space-y-6">
             <div className="bg-primary p-8 rounded-[2rem] text-primary-foreground shadow-2xl shadow-black/10">
-              <h3 className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-6">Preview</h3>
+              <h3 className="text-[10px] font-black  tracking-widest opacity-60 mb-6">Preview</h3>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden">
-                    {logo ? <img src={logo.previewUrl} className="w-full h-full object-cover" /> : <Rocket size={20} />}
+                    {logo ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={logo.previewUrl} alt="Product logo preview" className="w-full h-full object-cover" />
+                      </>
+                    ) : <Rocket size={20} />}
                   </div>
                   <div className="min-w-0">
                     <p className="font-black text-sm truncate">{form.name || "Product Name"}</p>
-                    <p className="text-[10px] font-bold opacity-60 uppercase">{form.pricingModel || "Pricing"}</p>
+                    <p className="text-[10px] font-bold opacity-60 ">{form.pricingModel || "Pricing"}</p>
                   </div>
                 </div>
                 <p className="text-xs font-medium opacity-80 leading-relaxed line-clamp-2">
@@ -905,7 +983,7 @@ export function SubmitProductForm({
             </div>
             
             <div className="bg-card border border-border p-6 rounded-2xl">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4">Submission Guide</h4>
+              <h4 className="text-[10px] font-black  tracking-widest text-muted-foreground/60 mb-4">Submission Guide</h4>
               <ul className="space-y-4">
                 {[
                   "Use high-quality PNG for logo",
@@ -921,10 +999,10 @@ export function SubmitProductForm({
 
             <div className="bg-card border border-border p-6 rounded-2xl">
               <div className="flex items-center justify-between gap-3 mb-4">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                <h4 className="text-[10px] font-black  tracking-widest text-muted-foreground/60">
                   Completion Checklist
                 </h4>
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <span className="text-[10px] font-black  tracking-widest text-muted-foreground">
                   {submissionChecklist.filter((item) => item.complete).length}/{submissionChecklist.length}
                 </span>
               </div>
@@ -939,7 +1017,7 @@ export function SubmitProductForm({
                     </span>
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-widest",
+                        "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black  tracking-widest",
                         item.complete
                           ? "bg-emerald-100 text-emerald-700"
                           : "bg-rose-100 text-rose-700",
@@ -958,12 +1036,25 @@ export function SubmitProductForm({
         /* STEP 2: CHOOSE PLAN */
         <div className="space-y-12 animate-in fade-in zoom-in-95 duration-500">
           <div className="text-center space-y-4">
-            <h2 className="text-4xl font-black tracking-tight lowercase">Choose your launch path</h2>
+            <h2 className="text-4xl font-black tracking-tight ">Choose your launch path</h2>
             <p className="text-muted-foreground font-medium max-w-xl mx-auto">
               Ready to go live? Choose a plan that fits your goals. 
               Verified badges help you build authority with our community.
             </p>
           </div>
+
+          {isPrelaunch ? (
+            <div className="max-w-4xl mx-auto rounded-[2rem] border border-primary/20 bg-primary/5 px-6 py-5 text-center">
+              <p className="text-[10px] font-black  tracking-[0.3em] text-primary">
+                Prelaunch Mode
+              </p>
+              <p className="mt-3 text-sm font-bold leading-relaxed text-foreground">
+                ShipBoost opens on May 1, 2026 UTC. Free launches are queued
+                into weekly cohorts, and premium launches can reserve a launch
+                week ahead of the opening.
+              </p>
+            </div>
+          ) : null}
 
           {errorMessage ? (
             <div className="max-w-4xl mx-auto rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
@@ -991,11 +1082,12 @@ export function SubmitProductForm({
               </div>
               <h3 className="text-2xl font-black mb-2">Free Launch</h3>
               <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
-                Launch for free by including our trust badge on your website. 
-                Best for early-stage bootstrapped founders.
+                {isPrelaunch
+                  ? "Join the weekly launchpad for free by including our trust badge on your website. Best for early-stage bootstrapped founders shipping into the May opening cohort."
+                  : "Join the weekly launchpad for free by including our trust badge on your website. Best for early-stage bootstrapped founders."}
               </p>
               <ul className="space-y-4 mb-10">
-                {["Public listing forever", "Category placement", "Founder verified badge", "Requires backlink"].map(p => (
+                {["Weekly launchpad placement", "Public listing forever", "Founder verified badge", "Requires backlink"].map(p => (
                   <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
                     <Check size={16} className="text-emerald-500 mt-0.5" /> {p}
                   </li>
@@ -1027,30 +1119,36 @@ export function SubmitProductForm({
             )}
             onClick={() => setForm({ ...form, submissionType: "FEATURED_LAUNCH" })}
             >
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-lg">Most Popular</div>
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-black  tracking-widest px-4 py-1 rounded-full shadow-lg">Most Popular</div>
               <div className="flex items-center justify-between mb-8">
                 <div className="bg-primary text-primary-foreground p-3 rounded-2xl shadow-xl shadow-black/10"><Star size={24} /></div>
-                <span className="text-4xl font-black">$9</span>
+                <div className="text-right">
+                  <div className="text-sm font-black text-muted-foreground line-through">
+                    {foundingPremiumPrice.original}
+                  </div>
+                  <span className="text-4xl font-black">{foundingPremiumPrice.discounted}</span>
+                </div>
               </div>
-              <h3 className="text-2xl font-black mb-2">Featured Boost</h3>
+              <h3 className="text-2xl font-black mb-2">Premium Launch</h3>
+              <p className="text-[10px] font-black  tracking-widest text-primary mb-3">
+                {foundingPremiumPrice.label}
+              </p>
               <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
-                Get priority placement, scheduled launch date, and higher visibility 
-                across the entire platform. No badge required.
+                Reserve your launch week, get premium placement in the weekly
+                launchpad, and skip the backlink requirement.
               </p>
               <ul className="space-y-4 mb-10">
-                {["Priority weighting", "Scheduled launch date", "Featured badge", "No backlink required", "Direct distribution support"].map(p => (
+                {["Choose your launch week", "Premium placement", "No backlink required", "Priority ordering over free launches", "Founding offer pricing"].map(p => (
                   <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
                     <Check size={16} className="text-foreground mt-0.5" /> {p}
                   </li>
                 ))}
               </ul>
               <div className="mb-6 space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  Preferred launch date *
+                <label className="text-xs font-black  tracking-widest text-muted-foreground">
+                  Preferred launch week *
                 </label>
-                <input
-                  type="date"
-                  min={minFeaturedLaunchDate}
+                <select
                   value={form.preferredLaunchDate}
                   onChange={(event) =>
                     setForm({
@@ -1060,9 +1158,18 @@ export function SubmitProductForm({
                     })
                   }
                   className={inputClassName()}
-                />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  This is only required for the featured plan.
+                >
+                  <option value="">Select a launch week</option>
+                  {premiumLaunchWeeks.map((week) => (
+                    <option key={week.value} value={week.value}>
+                      {week.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] font-bold  tracking-widest text-muted-foreground">
+                  {isPrelaunch
+                    ? "Choose one of the available weekly launch windows starting May 1, 2026 UTC."
+                    : "Premium launches are reserved by week, not by day."}
                 </p>
               </div>
               <button 
@@ -1070,7 +1177,7 @@ export function SubmitProductForm({
                 disabled={isBusy}
                 className="w-full py-4 rounded-2xl bg-foreground text-background font-black text-sm shadow-xl shadow-black/10 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
               >
-                {isSubmittingDraft ? "Starting checkout..." : "Featured Launch & Pay"}
+                {isSubmittingDraft ? "Starting checkout..." : "Reserve Premium Launch"}
               </button>
             </div>
           </div>
@@ -1085,7 +1192,7 @@ export function SubmitProductForm({
                   We verify the same website URL you entered in step 1.
                 </p>
                 <div className="rounded-2xl border border-border bg-background p-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+                  <p className="text-[10px] font-black  tracking-widest text-muted-foreground mb-2">
                     Website URL being checked
                   </p>
                   <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm font-medium text-foreground">
@@ -1103,7 +1210,7 @@ export function SubmitProductForm({
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  <p className="text-[10px] font-black  tracking-widest text-muted-foreground">
                     Badge theme
                   </p>
                   <div className="flex flex-wrap gap-5 text-sm font-bold text-foreground">
@@ -1142,18 +1249,19 @@ export function SubmitProductForm({
                 </div>
               </div>
                 <div className="shrink-0 space-y-4 text-center">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Badge Preview</p>
+                  <p className="text-[10px] font-black  tracking-widest text-muted-foreground">Badge Preview</p>
                 <div className={cn("w-72 rounded-2xl border border-border p-6", badgeTheme === "dark" ? "bg-white" : "bg-background")}>
                   <a href={shipboostUrl} target="_blank" rel="noopener">
-                    <img src={badgePreviewSrc} alt={`${badgeTheme} Shipboost badge preview`} className="mx-auto h-auto max-h-16 w-auto" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={badgePreviewSrc} alt={`${badgeTheme} ShipBoost badge preview`} className="mx-auto h-auto max-h-16 w-auto" />
                   </a>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Badge Snippet</p>
+                  <p className="text-[10px] font-black  tracking-widest text-muted-foreground">Badge Snippet</p>
                   <button
                     type="button"
                     onClick={() => void handleCopyBadgeSnippet()}
-                    className="text-[10px] font-black uppercase tracking-widest text-foreground underline decoration-border underline-offset-4"
+                    className="text-[10px] font-black  tracking-widest text-foreground underline decoration-border underline-offset-4"
                   >
                     {copiedBadgeSnippet ? "Copied" : "Copy"}
                   </button>
@@ -1167,7 +1275,7 @@ export function SubmitProductForm({
             </div>
             
             <div className="pt-8 border-t border-border flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest">
+              <div className="flex items-center gap-2 text-xs font-black  tracking-widest">
                 <span className="text-muted-foreground/60">Status:</span>
                 <span className={cn(draftBadgeVerification === "VERIFIED" ? "text-emerald-500" : "text-foreground")}>
                   {draftBadgeVerification}

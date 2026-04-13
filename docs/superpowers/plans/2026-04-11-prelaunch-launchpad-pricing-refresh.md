@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship a founder-first April prelaunch experience that queues launches behind a May 1, 2026 UTC go-live date, renames Featured Launch to Premium Launch in the UI, tightens pricing/offer copy, adds robust text-based logo fallbacks, and shortens taglines so public metadata stays disciplined.
+**Goal:** Ship a founder-first April prelaunch experience that queues launches behind a May 1, 2026 UTC go-live date, renames Featured Launch to Premium Launch in the UI, tightens pricing/offer copy, adds robust text-based logo fallbacks, shortens taglines so public metadata stays disciplined, and turns the lead magnet into a lightweight on-site resource unlocked through global magic-link auth.
 
-**Architecture:** Keep the current lightweight ISR/static public architecture. Add a small amount of configuration for launchpad go-live and founding offer limits, update scheduling logic so free launches use weekly capacity while premium launches choose a week without being blocked by the free cap, and restrict all copy/branding changes to UI surfaces instead of changing internal enum names.
+**Architecture:** Keep the current lightweight ISR/static public architecture. Add a small amount of configuration for launchpad go-live and founding offer limits, update scheduling logic so free launches use weekly capacity while premium launches choose a week without being blocked by the free cap, and restrict all copy/branding changes to UI surfaces instead of changing internal enum names. Introduce Better Auth magic-link sign-in globally, then use that low-friction auth method to gate a mostly static startup-directories resource page, with progress tracking stored only in the browser.
 
-**Tech Stack:** Next.js App Router, React, TypeScript, Prisma, Vitest, Tailwind CSS, Next image/cache APIs.
+**Tech Stack:** Next.js App Router, React, TypeScript, Prisma, Better Auth, Vitest, Tailwind CSS, Next image/cache APIs, Resend.
 
 ---
 
@@ -65,6 +65,29 @@
   - Lower tagline max length from `140` to `60`.
 - Modify: `src/app/tools/[slug]/page.tsx`
   - Trim/fallback meta title generation so it never produces bloated titles from long taglines.
+
+### Auth / lead magnet resource access
+
+- Modify: `src/lib/auth.ts`
+  - Add Better Auth magic-link support alongside email/password and Google.
+- Modify: `src/lib/auth-client.ts`
+  - Register the client plugin so `signIn.magicLink(...)` is available in UI code.
+- Modify: `src/server/email/transactional.ts`
+  - Add a dedicated magic-link email message for sign-in/resource access.
+- Modify: `src/components/auth/auth-form.tsx`
+  - Add a passwordless magic-link sign-in option while keeping password + Google.
+- Modify: `src/components/public/home-lead-magnet-form.tsx`
+  - Replace file-delivery messaging with magic-link access to the on-site resource.
+- Add: `src/app/resources/startup-directories/page.tsx`
+  - Server-gated page for the free resource.
+- Add: `src/components/resources/startup-directories-resource.tsx`
+  - Static resource UI with search/filter and client-only progress.
+- Add: `src/components/resources/resource-progress-toggle.tsx`
+  - LocalStorage-backed checkbox control per row.
+- Add: `src/content/resources/startup-directories.ts`
+  - The curated list data rendered on the page.
+- Test: `src/components/resources/resource-progress-toggle.test.tsx`
+- Test: `src/components/auth/auth-form.test.tsx`
 
 ---
 
@@ -659,6 +682,285 @@ git add src/app/pricing/page.tsx src/server/services/founding-offer-service.ts s
 git commit -m "feat: add founding premium launch spot counter"
 ```
 
+### Task 7: Add global magic-link auth alongside password and Google
+
+**Files:**
+- Modify: `src/lib/auth.ts`
+- Modify: `src/lib/auth-client.ts`
+- Modify: `src/server/email/transactional.ts`
+- Modify: `src/components/auth/auth-form.tsx`
+- Test: `src/components/auth/auth-form.test.tsx`
+
+- [ ] **Step 1: Write the failing auth-form tests**
+
+```tsx
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { vi } from "vitest";
+
+import { AuthForm } from "@/components/auth/auth-form";
+
+const signInMagicLinkMock = vi.fn();
+
+vi.mock("@/lib/auth-client", () => ({
+  authClient: {
+    signIn: {
+      magicLink: signInMagicLinkMock,
+      email: vi.fn(),
+      social: vi.fn(),
+    },
+  },
+}));
+
+it("renders a magic-link CTA on sign-in", () => {
+  render(<AuthForm mode="sign-in" redirectTo="/dashboard" googleEnabled />);
+  expect(screen.getByText(/email me a sign-in link/i)).toBeInTheDocument();
+});
+
+it("submits a magic link with the requested callback URL", async () => {
+  signInMagicLinkMock.mockResolvedValueOnce({});
+  const user = userEvent.setup();
+
+  render(<AuthForm mode="sign-in" redirectTo="/resources/startup-directories" />);
+  await user.type(screen.getByLabelText(/email/i), "founder@example.com");
+  await user.click(screen.getByText(/email me a sign-in link/i));
+
+  expect(signInMagicLinkMock).toHaveBeenCalledWith({
+    email: "founder@example.com",
+    callbackURL: "/resources/startup-directories",
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npm run test -- src/components/auth/auth-form.test.tsx`
+Expected: FAIL because magic-link auth is not configured yet.
+
+- [ ] **Step 3: Add Better Auth magic-link support**
+
+```ts
+// src/lib/auth.ts
+import { magicLink } from "better-auth/plugins";
+```
+
+```ts
+// inside betterAuth({...})
+plugins: [
+  ...plugins,
+r{
+    sendMagicLink: async ({ email, url }) => {
+      await sendMagicLinkEmailMessage({
+        to: email,
+        signInUrl: url,
+      });
+    },
+  }),
+],
+```
+
+```ts
+// src/lib/auth-client.ts
+import { magicLinkClient } from "better-auth/client/plugins";
+
+export const authClient = createAuthClient({
+  plugins: [inferAdditionalFields<typeof auth>(), magicLinkClient()],
+});
+```
+
+- [ ] **Step 4: Add the UI path without cluttering the auth form**
+
+```tsx
+// src/components/auth/auth-form.tsx
+const [magicLinkEmail, setMagicLinkEmail] = useState("");
+const [magicLinkSent, setMagicLinkSent] = useState<string | null>(null);
+
+async function handleMagicLinkSignIn() {
+  if (isSubmitting || !magicLinkEmail.trim()) return;
+  setIsSubmitting(true);
+  setErrorMessage(null);
+  setNoticeMessage(null);
+
+  try {
+    const result = await authClient.signIn.magicLink({
+      email: magicLinkEmail.trim(),
+      callbackURL: redirectTo,
+    });
+
+    if (result?.error) {
+      setErrorMessage(result.error.message ?? "Unable to send sign-in link.");
+      return;
+    }
+
+    setMagicLinkSent(magicLinkEmail.trim());
+  } finally {
+    setIsSubmitting(false);
+  }
+}
+```
+
+Render it only for `mode === "sign-in"` as the primary email entry, with password sign-in kept as the secondary path and Google still available.
+
+- [ ] **Step 5: Run tests and commit**
+
+Run:
+- `npm run test -- src/components/auth/auth-form.test.tsx`
+- `npx tsc --noEmit`
+
+Expected: PASS
+
+```bash
+git add src/lib/auth.ts src/lib/auth-client.ts src/server/email/transactional.ts src/components/auth/auth-form.tsx src/components/auth/auth-form.test.tsx
+git commit -m "feat: add global magic link auth"
+```
+
+### Task 8: Replace the shared lead-magnet file flow with a lightweight gated resource page
+
+**Files:**
+- Modify: `src/components/public/home-lead-magnet-form.tsx`
+- Add: `src/app/resources/startup-directories/page.tsx`
+- Add: `src/components/resources/startup-directories-resource.tsx`
+- Add: `src/components/resources/resource-progress-toggle.tsx`
+- Add: `src/content/resources/startup-directories.ts`
+- Test: `src/components/resources/resource-progress-toggle.test.tsx`
+
+- [ ] **Step 1: Create the static resource dataset and local progress test**
+
+```ts
+// src/content/resources/startup-directories.ts
+export type StartupDirectoryResourceItem = {
+  id: string;
+  name: string;
+  url: string;
+  category: string;
+  notes?: string;
+};
+
+export const startupDirectories: StartupDirectoryResourceItem[] = [
+  { id: "aidirectories", name: "AI Directories", url: "https://www.aidirectori.es", category: "AI" },
+  { id: "betalists", name: "BetaList", url: "https://betalist.com", category: "Launch" },
+];
+```
+
+```tsx
+// src/components/resources/resource-progress-toggle.test.tsx
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+import { ResourceProgressToggle } from "@/components/resources/resource-progress-toggle";
+
+it("stores progress in localStorage", async () => {
+  const user = userEvent.setup();
+  render(<ResourceProgressToggle storageKey="resource:dir-1" />);
+  await user.click(screen.getByRole("checkbox"));
+  expect(window.localStorage.getItem("resource:dir-1")).toBe("done");
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `npm run test -- src/components/resources/resource-progress-toggle.test.tsx`
+Expected: FAIL because the resource components do not exist yet.
+
+- [ ] **Step 3: Build the gated page and lightweight UI**
+
+```tsx
+// src/app/resources/startup-directories/page.tsx
+import { redirect } from "next/navigation";
+
+import { getServerSession } from "@/server/auth/session";
+import { StartupDirectoriesResource } from "@/components/resources/startup-directories-resource";
+
+export const revalidate = 3600;
+
+export default async function StartupDirectoriesPage() {
+  const session = await getServerSession();
+
+  if (!session) {
+    redirect("/sign-in?redirect=/resources/startup-directories");
+  }
+
+  return <StartupDirectoriesResource />;
+}
+```
+
+```tsx
+// src/components/resources/startup-directories-resource.tsx
+"use client";
+
+import { useState } from "react";
+
+import { startupDirectories } from "@/content/resources/startup-directories";
+import { ResourceProgressToggle } from "@/components/resources/resource-progress-toggle";
+
+export function StartupDirectoriesResource() {
+  const [query, setQuery] = useState("");
+  const filtered = startupDirectories.filter((item) =>
+    `${item.name} ${item.category}`.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  return (
+    <main className="mx-auto max-w-6xl px-6 py-16">
+      <h1 className="text-4xl font-black tracking-tight">800+ Startup Directories</h1>
+      <input
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Search directories"
+        className="mt-6 w-full rounded-2xl border border-border bg-card px-5 py-4"
+      />
+      <div className="mt-8 grid gap-3">
+        {filtered.map((item) => (
+          <article key={item.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-border bg-card p-4">
+            <ResourceProgressToggle storageKey={`startup-directories:${item.id}`} />
+            <div>
+              <p className="font-black">{item.name}</p>
+              <p className="text-xs text-muted-foreground">{item.category}</p>
+            </div>
+            <a href={item.url} target="_blank" rel="noreferrer" className="text-xs font-black">
+              Visit
+            </a>
+          </article>
+        ))}
+      </div>
+    </main>
+  );
+}
+```
+
+- [ ] **Step 4: Update the lead form to send the magic link instead of a file**
+
+```tsx
+// src/components/public/home-lead-magnet-form.tsx
+const result = await authClient.signIn.magicLink({
+  email,
+  callbackURL: "/resources/startup-directories",
+});
+
+if (result?.error) {
+  throw new Error(result.error.message ?? "Unable to send access link.");
+}
+
+setSuccessMessage(
+  "Check your inbox. We sent a secure access link to the startup directories resource.",
+);
+```
+
+Keep the existing `/api/leads` call so the email is still captured for the newsletter before sending the magic link.
+
+- [ ] **Step 5: Verify and commit**
+
+Run:
+- `npm run test -- src/components/resources/resource-progress-toggle.test.tsx`
+- `npx tsc --noEmit`
+- `npm run build`
+
+Expected: PASS
+
+```bash
+git add src/components/public/home-lead-magnet-form.tsx src/app/resources/startup-directories/page.tsx src/components/resources/startup-directories-resource.tsx src/components/resources/resource-progress-toggle.tsx src/content/resources/startup-directories.ts src/components/resources/resource-progress-toggle.test.tsx
+git commit -m "feat: gate startup directories resource behind magic-link auth"
+```
+
 ---
 
 ## Self-Review Checklist
@@ -672,8 +974,11 @@ git commit -m "feat: add founding premium launch spot counter"
   - Text-based logo fallback: covered in Task 5.
   - Tagline limit reduction and meta-title safety: covered in Task 5.
   - Lightweight founding-spots counter: covered in Task 6.
+  - Global magic-link sign-in alongside password + Google: covered in Task 7.
+  - Lead magnet moved from shared file delivery to gated on-site resource access: covered in Task 8.
+  - Progress tracking kept lightweight via `localStorage` only: covered in Task 8.
 - Placeholder scan:
   - No `TODO`/`TBD` markers remain.
 - Type consistency:
   - Internal enum names remain `FEATURED_LAUNCH`/`FEATURED`; UI copy changes to “Premium Launch” only.
-
+  - Magic-link auth is added as a first-class method; it does not replace password or Google.

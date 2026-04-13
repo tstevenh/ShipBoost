@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import MinimalHero from "@/components/ui/hero-minimalism";
 import { FilterBar } from "@/components/FilterBar";
 import { Footer } from "@/components/ui/footer";
@@ -10,14 +12,31 @@ import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-p
 import { getEnv } from "@/server/env";
 import { getCachedHomePageData } from "@/server/cache/public-content";
 import { buildHomePageSchema } from "@/server/seo/page-schema";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
+import { InternalLinkSection } from "@/components/seo/internal-link-section";
+import { alternativesSeoRegistry } from "@/server/seo/registry";
 
 export const revalidate = 300;
+
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "ShipBoost | Weekly SaaS Launches and Discovery",
+  description:
+    "Discover weekly SaaS launches, curated tools, and founder-friendly distribution paths on ShipBoost.",
+  url: "/",
+  twitterCard: "summary_large_image",
+});
 
 export default async function Home() {
   const env = getEnv();
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
   const currentPeriod = "weekly";
   const { launches, prelaunchTools } = await getCachedHomePageData(currentPeriod, isPrelaunch);
+  const topCategories = [...new Map(
+    launches
+      .flatMap((launch) => launch.tool.toolCategories.map((item) => item.category))
+      .map((category) => [category.slug, category]),
+  ).values()].slice(0, 4);
+  const popularComparisons = Object.values(alternativesSeoRegistry).slice(0, 4);
   const schemaItems = isPrelaunch
     ? prelaunchTools.map((tool) => ({
         name: tool.name,
@@ -57,6 +76,157 @@ export default async function Home() {
             ) : (
               <LaunchpadShowcase board={currentPeriod} launches={launches} />
             )}
+
+            <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
+              <p className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/60">
+                Discovery
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-foreground">
+                How founders use ShipBoost after launch day
+              </h2>
+              <div className="mt-6 space-y-4 text-base font-medium leading-relaxed text-muted-foreground/80">
+                <p>
+                  ShipBoost is designed to help founders do more than chase a one-day spike. The
+                  weekly board makes launches easier to compare, while category, tag, and
+                  alternatives pages keep good products discoverable after the board rotates.
+                </p>
+                <p>
+                  For buyers and operators, that means cleaner discovery paths. For founders, it
+                  means a public listing that stays useful after the initial launch window.
+                </p>
+              </div>
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                {[
+                  {
+                    title: "Launch visibility",
+                    body: "Use weekly cohorts to stay visible longer and compete in a cleaner launch surface.",
+                  },
+                  {
+                    title: "Category discovery",
+                    body: "Keep showing up when users browse categories like marketing, development, support, and sales.",
+                  },
+                  {
+                    title: "Comparison intent",
+                    body: "Capture higher-intent traffic through alternatives pages and related tool discovery.",
+                  },
+                ].map((item) => (
+                  <article
+                    key={item.title}
+                    className="rounded-2xl border border-border bg-background p-5"
+                  >
+                    <h3 className="text-sm font-black text-foreground">{item.title}</h3>
+                    <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                      {item.body}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <InternalLinkSection
+              eyebrow="Launch Boards"
+              title="Explore ShipBoost by time window"
+              links={[
+                {
+                  href: "/launches/weekly",
+                  label: "Weekly launches",
+                  description: "Browse the current weekly board.",
+                },
+                {
+                  href: "/launches/monthly",
+                  label: "Monthly launches",
+                  description: "See products with momentum across the month.",
+                },
+                {
+                  href: "/launches/yearly",
+                  label: "Yearly launches",
+                  description: "Review the strongest launch board entries over the year.",
+                },
+              ]}
+            />
+
+            <InternalLinkSection
+              eyebrow="Explore"
+              title="Browse ShipBoost by path"
+              description="Move from the launch board into deeper discovery surfaces depending on whether you are comparing categories, narrowing by use case, or evaluating alternatives."
+              links={[
+                {
+                  href: "/categories",
+                  label: "Browse categories",
+                  description: "Explore curated tool collections by product area.",
+                },
+                {
+                  href: "/tags",
+                  label: "Browse tags",
+                  description: "Refine discovery by feature, use case, or founder profile.",
+                },
+                {
+                  href: "/alternatives",
+                  label: "Compare alternatives",
+                  description: "Jump into higher-intent comparison pages.",
+                },
+                {
+                  href: "/how-it-works",
+                  label: "How ShipBoost works",
+                  description: "See how launch weeks, ranking, and submissions work.",
+                },
+                {
+                  href: "/launch-guide",
+                  label: "Read the launch guide",
+                  description: "Prepare your product before launch day.",
+                },
+                {
+                  href: "/pricing",
+                  label: "Review pricing",
+                  description: "Compare Free Launch, Premium Launch, and done-for-you support.",
+                },
+              ]}
+            />
+
+            {topCategories.length > 0 ? (
+              <InternalLinkSection
+                eyebrow="Popular Categories"
+                title="Start with the categories founders browse most"
+                links={topCategories.map((category) => ({
+                  href: `/categories/${category.slug}`,
+                  label: category.name,
+                  description: `Explore curated ${category.name.toLowerCase()} tools on ShipBoost.`,
+                }))}
+              />
+            ) : null}
+
+            {popularComparisons.length > 0 ? (
+              <InternalLinkSection
+                eyebrow="Comparisons"
+                title="Popular alternative pages"
+                links={popularComparisons.map((entry) => ({
+                  href: `/alternatives/${entry.slug}`,
+                  label: entry.title,
+                  description: entry.metaDescription,
+                }))}
+              />
+            ) : null}
+
+            <div className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
+              <h2 className="text-3xl font-black tracking-tight text-foreground">
+                Want to launch here?
+              </h2>
+              <p className="mt-4 max-w-3xl text-base font-medium leading-relaxed text-muted-foreground/80">
+                Start with the submission flow if your product is ready, or review the launch
+                options first if you are still deciding between Free Launch and Premium Launch.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-4 text-sm font-black">
+                <Link href="/submit" className="text-foreground hover:underline underline-offset-4">
+                  Submit your product
+                </Link>
+                <Link href="/pricing" className="text-foreground hover:underline underline-offset-4">
+                  Compare launch pricing
+                </Link>
+                <Link href="/faqs" className="text-foreground hover:underline underline-offset-4">
+                  Read founder FAQs
+                </Link>
+              </div>
+            </div>
           </div>
         </ShowcaseLayout>
       </ViewerVoteStateProvider>

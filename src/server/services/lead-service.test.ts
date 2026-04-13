@@ -15,16 +15,11 @@ const { prismaMock, resendInstance, emailMock, envMock } = vi.hoisted(() => ({
       update: vi.fn(),
     },
   },
-  emailMock: {
-    sendStartupDirectoriesLeadMagnetEmail: vi.fn(),
-  },
+  emailMock: {},
   envMock: {
     RESEND_API_KEY: "re_test",
-    LEAD_MAGNET_STARTUP_DIRECTORIES_URL:
-      "https://example.com/startup-directories",
   } as {
     RESEND_API_KEY?: string;
-    LEAD_MAGNET_STARTUP_DIRECTORIES_URL?: string;
   },
 }));
 
@@ -114,7 +109,6 @@ describe("captureLead", () => {
         }),
       }),
     );
-    expect(emailMock.sendStartupDirectoriesLeadMagnetEmail).toHaveBeenCalled();
     expect(result.created).toBe(true);
     expect(result.lead.email).toBe("founder@example.com");
   });

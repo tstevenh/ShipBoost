@@ -6,7 +6,6 @@ import { useState } from "react";
 import { Loader2, ArrowRight } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
-import { cn } from "@/lib/utils";
 import { AuthBrand } from "@/components/auth/auth-brand";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -48,6 +47,7 @@ export function AuthForm({
   const [noticeMessage, setNoticeMessage] = useState<string | null>(
     initialNotice ?? null,
   );
+  const [magicLinkSent, setMagicLinkSent] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -60,6 +60,7 @@ export function AuthForm({
     setIsSubmitting(true);
     setErrorMessage(null);
     setNoticeMessage(null);
+    setMagicLinkSent(null);
 
     try {
       if (mode === "sign-up") {
@@ -123,6 +124,7 @@ export function AuthForm({
     setIsSubmitting(true);
     setErrorMessage(null);
     setNoticeMessage(null);
+    setMagicLinkSent(null);
 
     try {
       const result = await authClient.signIn.social({
@@ -135,6 +137,34 @@ export function AuthForm({
           result.error.message ?? "Unable to start Google sign-in right now.",
         );
       }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleMagicLinkSignIn() {
+    if (isSubmitting || mode !== "sign-in" || !email.trim()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    setNoticeMessage(null);
+    setMagicLinkSent(null);
+
+    try {
+      const normalizedEmail = email.trim();
+      const result = await authClient.signIn.magicLink({
+        email: normalizedEmail,
+        callbackURL: redirectTo,
+      });
+
+      if (result?.error) {
+        setErrorMessage(result.error.message ?? "Unable to send sign-in link.");
+        return;
+      }
+
+      setMagicLinkSent(normalizedEmail);
     } finally {
       setIsSubmitting(false);
     }
@@ -191,16 +221,40 @@ export function AuthForm({
 
         <div className="relative flex items-center">
           <div className="h-px flex-1 bg-border" />
-          <span className="mx-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+          <span className="mx-4 text-[10px] font-bold  tracking-widest text-muted-foreground/50">
             or
           </span>
           <div className="h-px flex-1 bg-border" />
         </div>
 
+        {mode === "sign-in" && (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => void handleMagicLinkSignIn()}
+              disabled={isSubmitting || !email.trim()}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground transition-all hover:opacity-90 disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ArrowRight className="h-4 w-4" />
+              )}
+              Email me a sign-in link
+            </button>
+
+            {magicLinkSent ? (
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-bold text-emerald-700">
+                Check your inbox for your sign-in link to {magicLinkSent}.
+              </div>
+            ) : null}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "sign-up" && (
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+              <label className="text-[10px] font-black  tracking-widest text-muted-foreground ml-1">
                 Name
               </label>
               <input
@@ -215,15 +269,16 @@ export function AuthForm({
           )}
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+            <label className="text-[10px] font-black  tracking-widest text-muted-foreground ml-1">
               Email
             </label>
-            <input
-              required
-              type="email"
-              disabled={isSubmitting}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              <input
+                required
+                type="email"
+                aria-label="Email"
+                disabled={isSubmitting}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/5"
               placeholder="you@email.com"
             />
@@ -231,7 +286,7 @@ export function AuthForm({
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between px-1">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <label className="text-[10px] font-black  tracking-widest text-muted-foreground">
                 Password
               </label>
               {mode === "sign-in" && (

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { buildTrackedToolOutboundUrl } from "@/lib/tool-outbound";
 import { ToolUpvoteButton } from "@/components/public/tool-upvote-button";
+import { LogoFallback } from "@/components/ui/logo-fallback";
 
 type LaunchItem = {
   id: string;
@@ -41,17 +42,17 @@ export function LaunchBoard({
   launches,
   dailyVotesRemaining,
 }: {
-  board: "daily" | "weekly" | "monthly";
+  board: "weekly" | "monthly" | "yearly";
   launches: LaunchItem[];
   dailyVotesRemaining?: number | null;
 }) {
   return (
     <div className="space-y-8">
       <div className="rounded-3xl border border-border bg-card p-8 sm:p-10">
-        <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40 uppercase">
+        <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40 ">
           Launch board
         </p>
-        <h1 className="mt-4 text-4xl font-black tracking-tight lowercase">
+        <h1 className="mt-4 text-4xl font-black tracking-tight ">
           {board[0].toUpperCase() + board.slice(1)} launches
         </h1>
         <p className="mt-4 max-w-3xl text-lg font-medium leading-relaxed text-muted-foreground/80">
@@ -67,20 +68,13 @@ export function LaunchBoard({
           >
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-start gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted border border-border">
-                  {launch.tool.logoMedia ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={launch.tool.logoMedia.url}
-                      alt={`${launch.tool.name} logo`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-lg font-black text-muted-foreground/40">
-                      {launch.tool.name.slice(0, 2).toUpperCase()}
-                    </span>
-                  )}
-                </div>
+                <LogoFallback
+                  name={launch.tool.name}
+                  src={launch.tool.logoMedia?.url}
+                  sizes="64px"
+                  className="h-16 w-16 shrink-0 rounded-xl border border-border"
+                  textClassName="text-lg"
+                />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
@@ -90,18 +84,20 @@ export function LaunchBoard({
                       {launch.tool.name}
                     </Link>
                     <span
-                      className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase ${toneClassName(
+                      className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-widest  ${toneClassName(
                         launch.launchType,
                       )}`}
                     >
-                      {launch.launchType}
+                      {launch.launchType === "FEATURED"
+                        ? "Premium"
+                        : launch.launchType}
                     </span>
                   </div>
                   <p className="mt-1 line-clamp-1 text-base text-muted-foreground font-medium leading-relaxed">
                     {launch.tool.tagline}
                   </p>
                   <div className="mt-2 flex items-center gap-3">
-                    <p className="text-[10px] font-black tracking-widest text-muted-foreground/40 uppercase">
+                    <p className="text-[10px] font-black tracking-widest text-muted-foreground/40 ">
                       {new Intl.DateTimeFormat("en", {
                         dateStyle: "medium",
                         timeStyle: "short",
@@ -112,7 +108,7 @@ export function LaunchBoard({
                         <Link
                           key={item.category.slug}
                           href={`/categories/${item.category.slug}`}
-                          className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
+                          className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-black  tracking-widest text-muted-foreground transition-colors hover:text-foreground"
                         >
                           {item.category.name}
                         </Link>
@@ -138,7 +134,7 @@ export function LaunchBoard({
                   )}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-full border border-border bg-background px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-muted"
+                  className="rounded-full border border-border bg-background px-6 py-2.5 text-[10px] font-black  tracking-widest transition-all hover:bg-muted"
                 >
                   Visit site
                 </a>

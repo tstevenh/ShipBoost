@@ -4,13 +4,16 @@ import Link from "next/link";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { ContentPageShell } from "@/components/marketing/content-page-shell";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildArticlePageSchema } from "@/server/seo/page-schema";
 
-export const metadata: Metadata = {
-  title: "How ShipBoost Works | ShipBoost",
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "How ShipBoost Works for SaaS Founders",
   description:
-    "Learn how ShipBoost works: weekly launch cohorts, free vs Premium Launch rules, ranking, approval, and what founders can expect after submitting.",
-};
+    "Learn how ShipBoost works, from submissions and weekly launch cohorts to Premium Launch rules, ranking, and listing visibility.",
+  url: "/how-it-works",
+  openGraphType: "article",
+});
 
 const steps = [
   {

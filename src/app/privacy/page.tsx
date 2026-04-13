@@ -3,13 +3,15 @@ import type { Metadata } from "next";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { ContentPageShell } from "@/components/marketing/content-page-shell";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildSimpleWebPageSchema } from "@/server/seo/page-schema";
 
-export const metadata: Metadata = {
-  title: "Privacy | ShipBoost",
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Privacy Policy | ShipBoost",
   description:
-    "Read how ShipBoost collects, uses, stores, and protects personal data across accounts, submissions, launches, and analytics.",
-};
+    "Read the ShipBoost privacy policy and how we handle account, submission, and platform data.",
+  url: "/privacy",
+});
 
 const sections = [
   {

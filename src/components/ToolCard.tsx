@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
 import { ToolUpvoteButton } from "@/components/public/tool-upvote-button";
+import { LogoFallback } from "@/components/ui/logo-fallback";
 
 interface ToolCardProps {
   toolId: string;
@@ -15,6 +15,14 @@ interface ToolCardProps {
   votes: number;
   hasUpvoted?: boolean;
   tags?: string[];
+  linkedTags?: Array<{
+    name: string;
+    slug: string;
+  }>;
+  primaryCategory?: {
+    name: string;
+    slug: string;
+  } | null;
   initialDailyVotesRemaining?: number | null;
 }
 
@@ -28,26 +36,24 @@ export function ToolCard({
   votes,
   hasUpvoted = false,
   tags = [],
+  linkedTags = [],
+  primaryCategory = null,
   initialDailyVotesRemaining = null,
 }: ToolCardProps) {
+  const visibleLinkedTags = linkedTags.slice(0, 3);
+  const fallbackTags =
+    visibleLinkedTags.length === 0 ? tags.slice(0, 3) : [];
+
   return (
     <article className="group relative flex items-center gap-5 rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20">
       <div className="shrink-0">
-        <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-border bg-muted">
-          {logoUrl ? (
-            <Image
-              src={logoUrl}
-              alt={`${name} logo`}
-              fill
-              sizes="48px"
-              className="object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-lg font-bold text-muted-foreground/50">
-              {name.slice(0, 2).toUpperCase()}
-            </div>
-          )}
-        </div>
+        <LogoFallback
+          name={name}
+          src={logoUrl}
+          sizes="48px"
+          className="h-12 w-12 rounded-lg border border-border"
+          textClassName="text-lg"
+        />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -69,16 +75,35 @@ export function ToolCard({
           {tagline}
         </p>
 
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              className="cursor-pointer text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 transition-colors hover:text-foreground"
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
+        {primaryCategory || visibleLinkedTags.length > 0 || fallbackTags.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {primaryCategory ? (
+              <Link
+                href={`/categories/${primaryCategory.slug}`}
+                className="text-[10px] font-black tracking-wider text-muted-foreground/60 transition-colors hover:text-foreground"
+              >
+                {primaryCategory.name}
+              </Link>
+            ) : null}
+            {visibleLinkedTags.map((tag) => (
+              <Link
+                key={tag.slug}
+                href={`/best/tag/${tag.slug}`}
+                className="text-[10px] font-black tracking-wider text-muted-foreground/60 transition-colors hover:text-foreground"
+              >
+                #{tag.name}
+              </Link>
+            ))}
+            {fallbackTags.map((tag) => (
+              <span
+                key={tag}
+                className="text-[10px] font-black tracking-wider text-muted-foreground/60"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="shrink-0 self-center">

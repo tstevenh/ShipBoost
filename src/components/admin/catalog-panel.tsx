@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import {
   Field,
   SectionCard,
-  pendingSpinnerClassName,
   textInputClassName,
   type Category,
   type CategoryDraft,
@@ -61,7 +60,7 @@ export function CatalogPanel({
       description="Keep the taxonomy narrow and intentional."
     >
       {catalogError && (
-        <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-bold text-destructive uppercase tracking-widest">
+        <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-bold text-destructive  tracking-widest">
           {catalogError}
         </div>
       )}
@@ -74,7 +73,7 @@ export function CatalogPanel({
             className="space-y-4 rounded-2xl border border-border bg-muted/20 p-5"
           >
             <div className="space-y-1">
-              <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Create Category</h3>
+              <h3 className="text-xs font-black  tracking-widest text-foreground">Create Category</h3>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
@@ -114,7 +113,7 @@ export function CatalogPanel({
                   className={cn(textInputClassName(), "w-20")}
                 />
               </Field>
-              <label className="mt-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer">
+              <label className="mt-6 flex items-center gap-2 text-[10px] font-black  tracking-widest text-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   className="rounded border-border text-primary focus:ring-primary/20"
@@ -196,7 +195,7 @@ export function CatalogPanel({
                           className={cn(textInputClassName(), "w-16 text-xs py-1")}
                         />
                       </Field>
-                      <label className="mt-5 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer">
+                      <label className="mt-5 flex items-center gap-2 text-[10px] font-black  tracking-widest text-foreground cursor-pointer">
                         <input
                           type="checkbox"
                           className="rounded border-border text-primary focus:ring-primary/20"
@@ -256,7 +255,7 @@ export function CatalogPanel({
             className="space-y-4 rounded-2xl border border-border bg-muted/20 p-5"
           >
             <div className="space-y-1">
-              <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Create Tag</h3>
+              <h3 className="text-xs font-black  tracking-widest text-foreground">Create Tag</h3>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
@@ -282,7 +281,7 @@ export function CatalogPanel({
                 />
               </Field>
             </div>
-            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer">
+            <label className="flex items-center gap-2 text-[10px] font-black  tracking-widest text-foreground cursor-pointer">
               <input
                 type="checkbox"
                 className="rounded border-border text-primary focus:ring-primary/20"
@@ -346,7 +345,7 @@ export function CatalogPanel({
                     </Field>
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-4">
-                    <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer">
+                    <label className="flex items-center gap-2 text-[10px] font-black  tracking-widest text-foreground cursor-pointer">
                       <input
                         type="checkbox"
                         className="rounded border-border text-primary focus:ring-primary/20"

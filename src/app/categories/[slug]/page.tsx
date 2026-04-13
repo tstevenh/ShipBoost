@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ChevronRight, Home as HomeIcon, Layers } from "lucide-react";
 
-import { ToolCard } from "@/components/ToolCard";
 import { JsonLdScript } from "@/components/seo/json-ld";
+import { InternalLinkSection } from "@/components/seo/internal-link-section";
 import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
 import { getEnv } from "@/server/env";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
@@ -20,6 +20,7 @@ import {
   getCachedCategoryPage,
   getCachedCategoryStaticParams,
 } from "@/server/cache/public-content";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildCollectionWithBreadcrumbSchema } from "@/server/seo/page-schema";
 
 export const revalidate = 1800;
@@ -36,7 +37,21 @@ function mapToolToGridItem(tool: {
   createdAt: Date | string;
   isFeatured: boolean;
   logoMedia: { url: string } | null;
-  toolTags: { tag: { name: string | null } }[];
+  toolCategories: {
+    category: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }[];
+  toolTags: {
+    tag: {
+      id: string;
+      name: string | null;
+      slug: string;
+      isActive: boolean;
+    };
+  }[];
   _count?: { toolVotes?: number };
 }): SortableToolGridItem {
   return {
@@ -49,6 +64,23 @@ function mapToolToGridItem(tool: {
     tags: tool.toolTags
       .map((item) => item.tag?.name)
       .filter((name): name is string => Boolean(name)),
+    linkedTags: tool.toolTags
+      .map((item) => item.tag)
+      .filter(
+        (
+          tag,
+        ): tag is {
+          id: string;
+          name: string;
+          slug: string;
+          isActive: boolean;
+        } => Boolean(tag?.name && tag.slug),
+      )
+      .map((tag) => ({
+        name: tag.name,
+        slug: tag.slug,
+      })),
+    primaryCategory: tool.toolCategories[0]?.category ?? null,
     isFeatured: tool.isFeatured,
     createdAt: new Date(tool.createdAt).toISOString(),
   };
@@ -78,6 +110,8 @@ function renderStaticToolGrid(
           slug={tool.slug}
           votes={tool.votes}
           tags={tool.tags}
+          linkedTags={tool.linkedTags}
+          primaryCategory={tool.primaryCategory}
         />
       ))}
     </div>
@@ -103,33 +137,17 @@ export async function generateMetadata(
   const env = getEnv();
   const title =
     category.metaTitle?.trim() ||
-    `${category.name} tools for bootstrapped SaaS founders | ShipBoost`;
+    `Best ${category.name} Tools for SaaS Founders | ShipBoost`;
   const description =
     category.metaDescription?.trim() ||
-    category.seoIntro?.trim() ||
-    category.description?.trim() ||
-    `Browse ${category.name} tools curated for bootstrapped SaaS founders on ShipBoost.`;
+    `Discover the best ${category.name.toLowerCase()} tools on ShipBoost. Compare curated products, featured listings, and founder-friendly options.`;
   const canonical = `${env.NEXT_PUBLIC_APP_URL}/categories/${category.slug}`;
 
-  return {
+  return buildPublicPageMetadata({
     title,
     description,
-    alternates: {
-      canonical,
-    },
-    openGraph: {
-      title,
-      description,
-      url: canonical,
-      siteName: "ShipBoost",
-      type: "website",
-    },
-    twitter: {
-      card: "summary",
-      title,
-      description,
-    },
-  };
+    url: canonical,
+  });
 }
 
 export default async function CategoryPage(context: RouteContext) {
@@ -154,9 +172,7 @@ export default async function CategoryPage(context: RouteContext) {
   const canonical = `${env.NEXT_PUBLIC_APP_URL}/categories/${category.slug}`;
   const description =
     category.metaDescription?.trim() ||
-    category.seoIntro?.trim() ||
-    category.description?.trim() ||
-    `Browse ${category.name} tools curated for bootstrapped SaaS founders on ShipBoost.`;
+    `Discover the best ${category.name.toLowerCase()} tools on ShipBoost. Compare curated products, featured listings, and founder-friendly options.`;
   const schema = buildCollectionWithBreadcrumbSchema({
     name: `${category.name} Tools`,
     description,
@@ -171,6 +187,37 @@ export default async function CategoryPage(context: RouteContext) {
       url: `${env.NEXT_PUBLIC_APP_URL}/tools/${item.tool.slug}`,
     })),
   });
+  const relatedCategoryLinks = (category.relatedCategories || []).map((item) => ({
+    href: `/categories/${item.slug}`,
+    label: item.name,
+    description: `Explore more ${item.name.toLowerCase()} tools on ShipBoost.`,
+  }));
+  const topTagLinks = (category.topTags || []).map((tag) => ({
+    href: `/best/tag/${tag.slug}`,
+    label: tag.name,
+    description: `Browse tools tagged ${tag.name}.`,
+  }));
+  const topTagNames = (category.topTags || []).slice(0, 3).map((tag) => tag.name);
+  const relatedCategoryNames = (category.relatedCategories || [])
+    .slice(0, 3)
+    .map((item) => item.name);
+  const resourceLinks = [
+    {
+      href: "/launch-guide",
+      label: "Read the launch guide",
+      description: "See how founders prepare products before launch day.",
+    },
+    {
+      href: "/how-it-works",
+      label: "How ShipBoost works",
+      description: "Understand weekly launches, ranking, and listing visibility.",
+    },
+    {
+      href: "/pricing",
+      label: "Compare launch pricing",
+      description: "Review Free Launch, Premium Launch, and done-for-you support.",
+    },
+  ];
 
   return (
     <main className="flex-1">
@@ -245,6 +292,8 @@ export default async function CategoryPage(context: RouteContext) {
                       slug={tool.slug}
                       votes={tool.votes}
                       tags={tool.tags}
+                      linkedTags={tool.linkedTags}
+                      primaryCategory={tool.primaryCategory}
                     />
                   ))}
                 </div>
@@ -282,6 +331,84 @@ export default async function CategoryPage(context: RouteContext) {
                 />
               </Suspense>
             </section>
+
+            <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
+              <h2 className="text-3xl font-black tracking-tight text-foreground">
+                How founders usually evaluate {category.name} tools
+              </h2>
+              <div className="mt-4 space-y-3 text-base font-medium leading-relaxed text-muted-foreground/80">
+                <p>
+                  This category currently includes {publishedCount} published tool
+                  {publishedCount === 1 ? "" : "s"}
+                  {(category.featuredTools || []).length > 0
+                    ? `, with ${(category.featuredTools || []).length} featured pick${
+                        (category.featuredTools || []).length === 1 ? "" : "s"
+                      } surfaced separately.`
+                    : "."}
+                </p>
+                {topTagNames.length > 0 ? (
+                  <p>
+                    Common overlaps in this category include {topTagNames.join(", ")}, which
+                    helps you narrow the list by workflow instead of treating every{" "}
+                    {category.name.toLowerCase()} tool as interchangeable.
+                  </p>
+                ) : null}
+                {relatedCategoryNames.length > 0 ? (
+                  <p>
+                    If you are still mapping the problem space, the closest adjacent categories
+                    here are {relatedCategoryNames.join(", ")}.
+                  </p>
+                ) : null}
+              </div>
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                {[
+                  {
+                    title: "Workflow fit",
+                    body: `Start by checking whether each tool actually matches the main job founders expect from ${category.name.toLowerCase()} software.`,
+                  },
+                  {
+                    title: "Implementation cost",
+                    body: `Compare setup complexity, pricing model, and how quickly a ${category.name.toLowerCase()} tool becomes useful in a real workflow.`,
+                  },
+                  {
+                    title: "Compare nearby options",
+                    body:
+                      topTagNames.length > 0
+                        ? `Use tags like ${topTagNames.slice(0, 2).join(" and ")} plus nearby categories to avoid choosing based on branding alone.`
+                        : "Use related tags and adjacent categories to avoid choosing based on branding alone.",
+                  },
+                ].map((item) => (
+                  <article
+                    key={item.title}
+                    className="rounded-2xl border border-border bg-background p-5"
+                  >
+                    <h3 className="text-sm font-black text-foreground">{item.title}</h3>
+                    <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                      {item.body}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <InternalLinkSection
+              eyebrow="Related Categories"
+              title={`Keep exploring beyond ${category.name}`}
+              description="Category pages work best when they help you branch into adjacent tool clusters and narrower use cases."
+              links={relatedCategoryLinks}
+            />
+
+            <InternalLinkSection
+              eyebrow="Popular Tags"
+              title={`Common tags across ${category.name} tools`}
+              links={topTagLinks}
+            />
+
+            <InternalLinkSection
+              eyebrow="Helpful Resources"
+              title="Support pages for founders comparing tools"
+              links={resourceLinks}
+            />
           </div>
           </div>
         </ShowcaseLayout>

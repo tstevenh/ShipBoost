@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getPubliclyVisibleToolWhere,
   isLaunchPubliclyVisible,
+  isToolPubliclyVisible,
 } from "@/server/services/public-tool-visibility";
 
 describe("getPubliclyVisibleToolWhere", () => {
@@ -50,6 +51,46 @@ describe("getPubliclyVisibleToolWhere", () => {
       isLaunchPubliclyVisible({
         status: "APPROVED",
         launchDate: new Date("2026-04-08T00:00:00.000Z"),
+      }),
+    ).toBe(true);
+  });
+
+  it("does not treat future approved launches as public", () => {
+    expect(
+      isLaunchPubliclyVisible(
+        {
+          status: "APPROVED",
+          launchDate: new Date("2026-05-08T00:00:00.000Z"),
+        },
+        new Date("2026-05-01T00:00:00.000Z"),
+      ),
+    ).toBe(false);
+  });
+
+  it("treats future scheduled tools as non-public even when published", () => {
+    expect(
+      isToolPubliclyVisible(
+        {
+          publicationStatus: "PUBLISHED",
+          moderationStatus: "APPROVED",
+          launches: [
+            {
+              status: "APPROVED",
+              launchDate: new Date("2026-05-08T00:00:00.000Z"),
+            },
+          ],
+        },
+        new Date("2026-05-01T00:00:00.000Z"),
+      ),
+    ).toBe(false);
+  });
+
+  it("treats published tools with no launches as public", () => {
+    expect(
+      isToolPubliclyVisible({
+        publicationStatus: "PUBLISHED",
+        moderationStatus: "APPROVED",
+        launches: [],
       }),
     ).toBe(true);
   });

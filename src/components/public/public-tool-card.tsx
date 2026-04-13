@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { buildTrackedToolOutboundUrl, type ToolOutboundSource } from "@/lib/tool-outbound";
+import { LogoFallback } from "@/components/ui/logo-fallback";
 
 type ToolCardTool = {
   id: string;
@@ -36,20 +37,12 @@ export function PublicToolCard({
     <article className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-foreground/20 hover:shadow-lg hover:shadow-black/5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted border border-border">
-            {tool.logoMedia ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={tool.logoMedia.url}
-                alt={`${tool.name} logo`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-sm font-black text-muted-foreground/40">
-                {tool.name.slice(0, 2).toUpperCase()}
-              </span>
-            )}
-          </div>
+          <LogoFallback
+            name={tool.name}
+            src={tool.logoMedia?.url}
+            sizes="56px"
+            className="h-14 w-14 shrink-0 rounded-xl border border-border"
+          />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <Link
@@ -59,7 +52,7 @@ export function PublicToolCard({
                 {tool.name}
               </Link>
               <span
-                className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black tracking-widest uppercase ${badgeClassName(
+                className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black tracking-widest  ${badgeClassName(
                   tool.isFeatured,
                 )}`}
               >
@@ -74,7 +67,7 @@ export function PublicToolCard({
 
         <Link
           href={`/tools/${tool.slug}`}
-          className="rounded-full border border-border bg-background px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-muted"
+          className="rounded-full border border-border bg-background px-4 py-1.5 text-[10px] font-black  tracking-widest transition-all hover:bg-muted"
         >
           View
         </Link>
@@ -85,18 +78,19 @@ export function PublicToolCard({
           <Link
             key={item.category.slug}
             href={`/categories/${item.category.slug}`}
-            className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
+            className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-black  tracking-widest text-muted-foreground transition-colors hover:text-foreground"
           >
             {item.category.name}
           </Link>
         ))}
         {tool.toolTags.slice(0, 3).map((item) => (
-          <span
+          <Link
             key={item.tag.slug}
+            href={`/best/tag/${item.tag.slug}`}
             className="rounded-md border border-border bg-background px-2 py-0.5 text-[10px] font-bold text-muted-foreground/60"
           >
             {item.tag.name}
-          </span>
+          </Link>
         ))}
       </div>
 

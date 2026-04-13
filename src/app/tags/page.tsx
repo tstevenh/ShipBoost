@@ -7,12 +7,15 @@ import { listPublicTags } from "@/server/services/catalog-service";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
 import { Footer } from "@/components/ui/footer";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildCollectionListingSchema } from "@/server/seo/page-schema";
 
-export const metadata: Metadata = {
-  title: "Browse Tags | ShipBoost",
-  description: "Explore SaaS products by specific features and tags.",
-};
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Browse SaaS Tools by Tag | ShipBoost",
+  description:
+    "Explore SaaS tools by feature, use case, and founder-focused tags on ShipBoost.",
+  url: "/tags",
+});
 
 export default async function TagsPage() {
   const tags = await listPublicTags();

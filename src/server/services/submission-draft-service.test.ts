@@ -68,7 +68,7 @@ describe("submission-draft-service", () => {
       ),
     ).rejects.toMatchObject({
       statusCode: 409,
-      message: "This domain already exists on Shipboost.",
+      message: "This domain already exists on ShipBoost.",
       details: {
         duplicateTool: {
           id: "tool_1",

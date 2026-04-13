@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 type ToolRelatedProductsProps = {
   relatedTools: Array<{
@@ -18,19 +17,13 @@ type ToolRelatedProductsProps = {
 export function ToolRelatedProducts({
   relatedTools,
 }: ToolRelatedProductsProps) {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted || relatedTools.length === 0) {
+  if (relatedTools.length === 0) {
     return null;
   }
 
   return (
     <div className="space-y-4">
-      <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+      <h3 className="px-1 text-[10px] font-black  tracking-[0.2em] text-muted-foreground/60">
         Similar products
       </h3>
       <div className="grid gap-3">

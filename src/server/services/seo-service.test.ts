@@ -7,7 +7,7 @@ vi.mock("@/server/seo/registry", () => ({
       anchorToolSlug: "example-tool",
       title: "Best alternatives to Example Tool",
       intro: "Compare stronger alternatives if Example Tool is not the right fit.",
-      metaTitle: "Best alternatives to Example Tool | Shipboost",
+      metaTitle: "Best alternatives to Example Tool | ShipBoost",
       metaDescription: "Manual alternatives to Example Tool.",
       toolSlugs: ["tool-one", "tool-two"],
     },
@@ -17,7 +17,7 @@ vi.mock("@/server/seo/registry", () => ({
       slug: "ai",
       title: "Best AI tools",
       intro: "Manual AI picks.",
-      metaTitle: "Best AI tools | Shipboost",
+      metaTitle: "Best AI tools | ShipBoost",
       metaDescription: "Curated AI tools.",
     },
   },
@@ -112,7 +112,7 @@ describe("seo-service", () => {
       "Best SEO tools for bootstrapped SaaS founders",
     );
     expect(page?.entry.metaDescription).toBe(
-      "Explore published SEO tools curated for bootstrapped SaaS founders on Shipboost.",
+      "Explore published SEO tools curated for bootstrapped SaaS founders on ShipBoost.",
     );
   });
 

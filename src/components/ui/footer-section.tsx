@@ -2,7 +2,6 @@
 import React from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { cn } from "@/lib/utils";
 
 interface FooterLink {
 	title: string;
@@ -64,7 +63,7 @@ export function Footer() {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-black text-primary-foreground transition-transform group-hover:scale-105">
               S
             </span>
-            <span className="text-xl font-black tracking-tight text-foreground lowercase">
+            <span className="text-xl font-black tracking-tight text-foreground ">
               ShipBoost
             </span>
           </div>
@@ -80,7 +79,7 @@ export function Footer() {
 					{footerLinks.map((section, index) => (
 						<AnimatedContainer key={section.label} delay={0.1 + index * 0.1}>
 							<div className="mb-10 md:mb-0">
-								<h3 className="text-[10px] font-black uppercase tracking-widest text-foreground">{section.label}</h3>
+								<h3 className="text-[10px] font-black  tracking-widest text-foreground">{section.label}</h3>
 								<ul className="text-muted-foreground mt-6 space-y-3 text-sm">
 									{section.links.map((link) => (
 										<li key={link.title}>

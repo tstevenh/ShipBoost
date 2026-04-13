@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, X, Search, Sun, Moon } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 
 const menuItems = [
   { name: "Explore", href: "#link" },
@@ -16,7 +16,7 @@ const menuItems = [
 export function Header() {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -53,10 +53,10 @@ export function Header() {
 
               <div className="flex items-center gap-2 lg:hidden">
                 <button
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
                   className="p-2 text-muted-foreground"
                 >
-                  {mounted && theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+                  {mounted && resolvedTheme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
                 <button
                   onClick={() => setMenuState(!menuState)}
@@ -104,10 +104,10 @@ export function Header() {
               </div>
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-4 sm:space-y-0 md:w-fit items-center">
                 <button
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
                   className="hidden lg:block p-2 text-muted-foreground hover:text-primary transition-colors"
                 >
-                  {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                  {mounted && resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
                 <Link
                   href="/login"
@@ -139,7 +139,7 @@ const Logo = () => {
       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-black text-primary-foreground transition-transform group-hover:scale-105">
         S
       </span>
-      <span className="text-xl font-black tracking-tight text-foreground lowercase">
+      <span className="text-xl font-black tracking-tight text-foreground ">
         ShipBoost
       </span>
     </div>

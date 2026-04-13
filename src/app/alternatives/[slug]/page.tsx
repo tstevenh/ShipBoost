@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight, Home as HomeIcon, ListFilter, ExternalLink } from "lucide-react";
 
 import { JsonLdScript } from "@/components/seo/json-ld";
+import { InternalLinkSection } from "@/components/seo/internal-link-section";
 import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
 import { getEnv } from "@/server/env";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
@@ -14,7 +15,9 @@ import {
   getAlternativesStaticParams,
   getCachedAlternativesPage,
 } from "@/server/cache/public-content";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildCollectionWithBreadcrumbSchema } from "@/server/seo/page-schema";
+import { alternativesSeoRegistry } from "@/server/seo/registry";
 
 export const revalidate = 1800;
 export const dynamicParams = false;
@@ -41,25 +44,11 @@ export async function generateMetadata(
 
   const canonical = `${getEnv().NEXT_PUBLIC_APP_URL}/alternatives/${slug}`;
 
-  return {
+  return buildPublicPageMetadata({
     title: page.entry.metaTitle,
     description: page.entry.metaDescription,
-    alternates: {
-      canonical,
-    },
-    openGraph: {
-      title: page.entry.metaTitle,
-      description: page.entry.metaDescription,
-      url: canonical,
-      siteName: "ShipBoost",
-      type: "website",
-    },
-    twitter: {
-      card: "summary",
-      title: page.entry.metaTitle,
-      description: page.entry.metaDescription,
-    },
-  };
+    url: canonical,
+  });
 }
 
 export default async function AlternativesPage(context: RouteContext) {
@@ -73,6 +62,62 @@ export default async function AlternativesPage(context: RouteContext) {
   const allToolIds = (page.tools || []).map(t => t.id);
   const env = getEnv();
   const canonical = `${env.NEXT_PUBLIC_APP_URL}/alternatives/${slug}`;
+  const categoryMap = new Map<string, { name: string; slug: string; count: number }>();
+  const tagMap = new Map<string, { name: string; slug: string; count: number }>();
+  const allComparedTools = [page.anchorTool, ...page.tools];
+
+  for (const tool of allComparedTools) {
+    for (const category of tool.toolCategories.map((item) => item.category)) {
+      const current = categoryMap.get(category.slug);
+      categoryMap.set(category.slug, {
+        name: category.name,
+        slug: category.slug,
+        count: (current?.count ?? 0) + 1,
+      });
+    }
+
+    for (const item of tool.toolTags) {
+      const current = tagMap.get(item.tag.slug);
+      tagMap.set(item.tag.slug, {
+        name: item.tag.name,
+        slug: item.tag.slug,
+        count: (current?.count ?? 0) + 1,
+      });
+    }
+  }
+
+  const relatedCategoryLinks = [...categoryMap.values()]
+    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+    .slice(0, 6)
+    .map((item) => ({
+      href: `/categories/${item.slug}`,
+      label: item.name,
+      description: `Browse more ${item.name.toLowerCase()} tools on ShipBoost.`,
+    }));
+  const relatedTagLinks = [...tagMap.values()]
+    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+    .slice(0, 6)
+    .map((item) => ({
+      href: `/best/tag/${item.slug}`,
+      label: item.name,
+      description: `See tools tagged ${item.name}.`,
+    }));
+  const relatedComparisonLinks = Object.values(alternativesSeoRegistry)
+    .filter((entry) => entry.slug !== slug)
+    .slice(0, 4)
+    .map((entry) => ({
+      href: `/alternatives/${entry.slug}`,
+      label: entry.title,
+      description: entry.metaDescription,
+    }));
+  const relatedCategoryNames = [...categoryMap.values()]
+    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+    .slice(0, 3)
+    .map((item) => item.name);
+  const relatedTagNames = [...tagMap.values()]
+    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+    .slice(0, 3)
+    .map((item) => item.name);
   const schema = buildCollectionWithBreadcrumbSchema({
     name: page.entry.title,
     description: page.entry.metaDescription,
@@ -171,10 +216,102 @@ export default async function AlternativesPage(context: RouteContext) {
                   slug={tool.slug}
                   votes={tool._count?.toolVotes ?? 0}
                   tags={(tool.toolTags || []).map(tt => tt.tag?.name).filter((name): name is string => Boolean(name))}
+                  linkedTags={(tool.toolTags || [])
+                    .map((item) => item.tag)
+                    .filter(
+                      (
+                        tag,
+                      ): tag is {
+                        id: string;
+                        name: string;
+                        slug: string;
+                        isActive: boolean;
+                      } => Boolean(tag?.name && tag.slug),
+                    )
+                    .map((tag) => ({
+                      name: tag.name,
+                      slug: tag.slug,
+                    }))}
+                  primaryCategory={tool.toolCategories[0]?.category ?? null}
                 />
               ))}
             </div>
           </div>
+
+          <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
+            <h2 className="text-3xl font-black tracking-tight text-foreground">
+              How to compare alternatives to {page.anchorTool.name}
+            </h2>
+            <div className="mt-4 space-y-3 text-base font-medium leading-relaxed text-muted-foreground/80">
+              <p>
+                This page compares {page.tools.length} alternative
+                {page.tools.length === 1 ? "" : "s"} against {page.anchorTool.name}, so the goal
+                is not just to find substitutes, but to understand where each product fits better.
+              </p>
+              {relatedCategoryNames.length > 0 ? (
+                <p>
+                  The overlap here is strongest around {relatedCategoryNames.join(", ")}, which
+                  gives you a better signal than comparing brand names alone.
+                </p>
+              ) : null}
+              {relatedTagNames.length > 0 ? (
+                <p>
+                  Shared tags like {relatedTagNames.join(", ")} also show where the tools compete
+                  directly and where they branch into different use cases.
+                </p>
+              ) : null}
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  title: "Keep the anchor in view",
+                  body: `The point of this page is not to dismiss ${page.anchorTool.name}, but to make it easier to compare where it fits against close substitutes.`,
+                },
+                {
+                  title: "Compare workflow fit",
+                  body:
+                    relatedCategoryNames.length > 0
+                      ? `Look at category overlap across ${relatedCategoryNames.slice(0, 2).join(" and ")}, product focus, and which jobs each tool is designed to handle well.`
+                      : "Look at category overlap, product focus, and which jobs each tool is designed to handle well.",
+                },
+                {
+                  title: "Use nearby discovery paths",
+                  body:
+                    relatedTagNames.length > 0
+                      ? `Category and tag hubs like ${relatedTagNames.slice(0, 2).join(" and ")} help you widen the comparison set once you understand the core tradeoff.`
+                      : "Category and tag hubs help you widen the comparison set once you understand the core tradeoff.",
+                },
+              ].map((item) => (
+                <article
+                  key={item.title}
+                  className="rounded-2xl border border-border bg-background p-5"
+                >
+                  <h3 className="text-sm font-black text-foreground">{item.title}</h3>
+                  <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                    {item.body}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <InternalLinkSection
+            eyebrow="Related Categories"
+            title="Category paths around this comparison"
+            links={relatedCategoryLinks}
+          />
+
+          <InternalLinkSection
+            eyebrow="Related Tags"
+            title="Tags that show up across these tools"
+            links={relatedTagLinks}
+          />
+
+          <InternalLinkSection
+            eyebrow="More Comparisons"
+            title="Other alternative pages on ShipBoost"
+            links={relatedComparisonLinks}
+          />
           </div>
         </ShowcaseLayout>
       </ViewerVoteStateProvider>

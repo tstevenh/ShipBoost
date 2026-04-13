@@ -37,23 +37,46 @@ export function hasAlternativesSeoPage(slug: string) {
 }
 
 function buildBestTagTitle(tagName: string) {
-  return `Best ${tagName} tools for bootstrapped SaaS founders`;
+  return `Best ${tagName} SaaS Tools`;
+}
+
+function normalizeWhitespace(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function isReusableBestTagDescription(
+  tagName: string,
+  description?: string | null,
+) {
+  if (!description?.trim()) {
+    return false;
+  }
+
+  const normalizedDescription = normalizeWhitespace(description).toLowerCase();
+  const normalizedTagName = normalizeWhitespace(tagName).toLowerCase();
+
+  const genericDescriptions = new Set([
+    `browse published ${normalizedTagName} tools curated for bootstrapped saas founders on shipboost.`,
+    `browse the best ${normalizedTagName} tools on shipboost. compare curated products, discover alternatives, and find founder-friendly picks.`,
+  ]);
+
+  return !genericDescriptions.has(normalizedDescription);
 }
 
 function buildBestTagIntro(tagName: string, description?: string | null) {
-  if (description?.trim()) {
-    return description.trim();
+  if (isReusableBestTagDescription(tagName, description)) {
+    return description!.trim();
   }
 
-  return `Browse published ${tagName} tools curated for bootstrapped SaaS founders on Shipboost.`;
+  return `Browse published ${tagName} tools curated for bootstrapped SaaS founders on ShipBoost.`;
 }
 
 function buildBestTagMetaDescription(tagName: string, description?: string | null) {
-  if (description?.trim()) {
-    return description.trim();
+  if (isReusableBestTagDescription(tagName, description)) {
+    return description!.trim();
   }
 
-  return `Explore published ${tagName} tools curated for bootstrapped SaaS founders on Shipboost.`;
+  return `Browse the best ${tagName} tools on ShipBoost. Compare curated products, discover alternatives, and find founder-friendly picks.`;
 }
 
 export async function getAlternativesSeoPage(slug: string) {
@@ -125,7 +148,7 @@ export async function getBestTagSeoPage(
   const resolvedIntro =
     override?.intro?.trim() || buildBestTagIntro(tag.name, tag.description);
   const resolvedMetaTitle =
-    override?.metaTitle?.trim() || `${resolvedTitle} | Shipboost`;
+    override?.metaTitle?.trim() || `${resolvedTitle} | ShipBoost`;
   const resolvedMetaDescription =
     override?.metaDescription?.trim() ||
     buildBestTagMetaDescription(tag.name, tag.description);

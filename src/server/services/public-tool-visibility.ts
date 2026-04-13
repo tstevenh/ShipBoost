@@ -29,6 +29,28 @@ export function isLaunchPubliclyVisible(
   );
 }
 
+export function isToolPubliclyVisible(
+  tool: {
+    publicationStatus: string;
+    moderationStatus: string;
+    launches: Array<{
+      status: "PENDING" | "APPROVED" | "LIVE" | "ENDED" | "REJECTED";
+      launchDate: Date;
+    }>;
+  },
+  now = new Date(),
+) {
+  if (tool.publicationStatus !== "PUBLISHED" || tool.moderationStatus !== "APPROVED") {
+    return false;
+  }
+
+  if (tool.launches.length === 0) {
+    return true;
+  }
+
+  return tool.launches.some((launch) => isLaunchPubliclyVisible(launch, now));
+}
+
 export function getPubliclyVisibleToolWhere(now = new Date()): Prisma.ToolWhereInput {
   return {
     publicationStatus: "PUBLISHED",

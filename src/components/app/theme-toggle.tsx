@@ -1,15 +1,20 @@
 "use client";
 
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+import { useTheme } from "@/components/theme-provider";
+
+function useMounted() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { resolvedTheme, setTheme } = useTheme();
+  const mounted = useMounted();
 
   if (!mounted) {
     return (
@@ -19,11 +24,11 @@ export function ThemeToggle() {
 
   return (
     <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
       className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-95"
       aria-label="Toggle theme"
     >
-      {theme === "dark" ? (
+      {resolvedTheme === "dark" ? (
         /* Sun Icon - Show in Dark Mode to switch to Light */
         <svg
           xmlns="http://www.w3.org/2000/svg"

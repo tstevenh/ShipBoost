@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Bold, Italic, Code, Link as LinkIcon, Quote, List, ListOrdered, Heading1, Heading2, Heading3 } from "lucide-react";
+import { Bold, Italic, Code, Link as LinkIcon, Quote, List, ListOrdered, Heading1, Heading2 } from "lucide-react";
 
 type MarkdownTextareaProps = {
   id?: string;
@@ -204,7 +204,7 @@ export function MarkdownTextarea({
             <action.icon size={16} />
           </button>
         ))}
-        <span className="ml-auto px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+        <span className="ml-auto px-2 text-[10px] font-black  tracking-widest text-muted-foreground/40">
           {value.trim().length}/{maxLength}
         </span>
       </div>

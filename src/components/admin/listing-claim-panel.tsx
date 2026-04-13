@@ -8,7 +8,6 @@ import {
   SectionCard,
   StatusChip,
   formatDate,
-  pendingSpinnerClassName,
   textInputClassName,
   type ListingClaim,
 } from "@/components/admin/admin-console-shared";
@@ -86,13 +85,13 @@ export function ListingClaimPanel({
           </Field>
         </div>
 
-        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-lg border border-border">
+        <div className="text-[10px] font-black  tracking-widest text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-lg border border-border">
           {claims.length} claims
         </div>
       </div>
 
       {claimError && (
-        <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-bold text-destructive uppercase tracking-widest">
+        <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-bold text-destructive  tracking-widest">
           {claimError}
         </div>
       )}
@@ -122,7 +121,7 @@ export function ListingClaimPanel({
                                 : "slate"
                         }
                       />
-                      <span className="px-2 py-0.5 rounded border border-border bg-card text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      <span className="px-2 py-0.5 rounded border border-border bg-card text-[10px] font-black  tracking-widest text-muted-foreground">
                         {claim.websiteDomain}
                       </span>
                     </div>
@@ -130,12 +129,15 @@ export function ListingClaimPanel({
                     <div className="flex gap-4">
                       <div className="w-10 h-10 rounded-lg bg-card flex items-center justify-center border border-border shrink-0 overflow-hidden">
                         {claim.tool.logoMedia ? (
-                          <img src={claim.tool.logoMedia.url} className="w-full h-full object-cover" />
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={claim.tool.logoMedia.url} alt={`${claim.tool.name} logo`} className="w-full h-full object-cover" />
+                          </>
                         ) : <RefreshCw size={16} className="text-muted-foreground" />}
                       </div>
                       <div className="space-y-0.5">
                         <h3 className="text-base font-black text-foreground">{claim.tool.name}</h3>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                        <p className="text-[10px] font-black  tracking-widest text-muted-foreground/50">
                           Requested {formatDate(claim.createdAt)}
                         </p>
                       </div>
@@ -151,7 +153,7 @@ export function ListingClaimPanel({
                     <Link
                       href={`/tools/${claim.tool.slug}`}
                       target="_blank"
-                      className="flex items-center justify-center gap-2 w-full border border-border bg-card px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all"
+                      className="flex items-center justify-center gap-2 w-full border border-border bg-card px-4 py-2 rounded-lg text-[10px] font-black  tracking-widest hover:bg-muted transition-all"
                     >
                       <ExternalLink size={12} /> View Page
                     </Link>
@@ -201,7 +203,7 @@ export function ListingClaimPanel({
                       type="button"
                       disabled={hasPendingAction}
                       onClick={() => void handleClaimReview(claim.id, "APPROVE")}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-black/10 transition hover:opacity-90 disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-[10px] font-black  tracking-widest text-primary-foreground shadow-lg shadow-black/10 transition hover:opacity-90 disabled:opacity-50"
                     >
                       {isActionPending(`claim:${claim.id}:APPROVE`) ? (
                         <RefreshCw className="animate-spin" size={12} />
@@ -214,7 +216,7 @@ export function ListingClaimPanel({
                       type="button"
                       disabled={hasPendingAction}
                       onClick={() => void handleClaimReview(claim.id, "REJECT")}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-destructive transition hover:bg-destructive/20 disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2 text-[10px] font-black  tracking-widest text-destructive transition hover:bg-destructive/20 disabled:opacity-50"
                     >
                       {isActionPending(`claim:${claim.id}:REJECT`) ? (
                         <RefreshCw className="animate-spin" size={12} />
@@ -232,7 +234,7 @@ export function ListingClaimPanel({
 
         {claims.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-5 py-10 text-center">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+            <p className="text-xs font-bold text-muted-foreground  tracking-widest">
               No claims.
             </p>
           </div>

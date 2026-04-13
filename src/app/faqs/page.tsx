@@ -7,13 +7,15 @@ import {
   type FaqGroup,
 } from "@/components/marketing/faq-accordion";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildFaqPageSchema } from "@/server/seo/page-schema";
 
-export const metadata: Metadata = {
-  title: "Founder FAQs | ShipBoost",
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "ShipBoost Founder FAQs | Launch Questions Answered",
   description:
-    "Answers to the most common ShipBoost founder questions about submissions, free vs Premium Launch, launch weeks, ranking, payments, and listing visibility.",
-};
+    "Get answers to common ShipBoost questions about submissions, launch weeks, Free vs Premium Launch, payments, and ranking.",
+  url: "/faqs",
+});
 
 const groups: FaqGroup[] = [
   {

@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -44,8 +45,8 @@ export function ViewerVoteStateProvider({
     null,
   );
   const [isLoadingVotes, setIsLoadingVotes] = useState(false);
-  const uniqueToolIds = Array.from(new Set(toolIds));
-  const toolIdsKey = uniqueToolIds.join(",");
+  const uniqueToolIds = useMemo(() => Array.from(new Set(toolIds)), [toolIds]);
+  const toolIdsKey = useMemo(() => uniqueToolIds.join(","), [uniqueToolIds]);
 
   useEffect(() => {
     if (isPending) {
@@ -115,7 +116,7 @@ export function ViewerVoteStateProvider({
     return () => {
       controller.abort();
     };
-  }, [isPending, session?.user.id, toolIdsKey]);
+  }, [isPending, session?.user.id, toolIdsKey, uniqueToolIds]);
 
   function applyVoteResult(toolId: string, result: VoteMutationResult) {
     setUpvotedToolIds((currentToolIds) => {

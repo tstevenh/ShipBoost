@@ -3,13 +3,15 @@ import type { Metadata } from "next";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { ContentPageShell } from "@/components/marketing/content-page-shell";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildSimpleWebPageSchema } from "@/server/seo/page-schema";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPublicPageMetadata({
   title: "Affiliate Disclosure | ShipBoost",
   description:
-    "Read how ShipBoost handles affiliate links, commissions, editorial independence, and click tracking across directory listings and recommendations.",
-};
+    "Read how ShipBoost handles affiliate relationships, partner links, and related disclosures.",
+  url: "/affiliate",
+});
 
 const sections = [
   {

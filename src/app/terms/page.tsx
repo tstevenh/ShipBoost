@@ -3,13 +3,15 @@ import type { Metadata } from "next";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { ContentPageShell } from "@/components/marketing/content-page-shell";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildSimpleWebPageSchema } from "@/server/seo/page-schema";
 
-export const metadata: Metadata = {
-  title: "Terms | ShipBoost",
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Terms of Service | ShipBoost",
   description:
-    "Read the terms that govern ShipBoost, including submissions, launch scheduling, payments, listings, and acceptable use.",
-};
+    "Read the ShipBoost terms covering platform use, submissions, listings, and founder responsibilities.",
+  url: "/terms",
+});
 
 const sections = [
   {

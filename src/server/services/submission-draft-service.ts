@@ -130,7 +130,7 @@ async function assertNoDuplicateSubmissionDomain(
 
   throw new AppError(
     409,
-    "This domain already exists on Shipboost.",
+    "This domain already exists on ShipBoost.",
     buildDuplicateSubmissionDetails(duplicate, founderUserId),
   );
 }
@@ -505,6 +505,27 @@ export async function listFounderSubmissions(userId: string) {
   return listSubmissionSummariesForFounder(prisma, userId);
 }
 
+export async function getFounderSubmissionDraft(
+  submissionId: string,
+  founder: AuthenticatedFounder,
+) {
+  const submission = await getSubmissionByIdForFounder(
+    prisma,
+    submissionId,
+    founder.id,
+  );
+
+  if (!submission) {
+    throw new AppError(404, "Submission not found.");
+  }
+
+  if (submission.reviewStatus !== "DRAFT") {
+    throw new AppError(409, "This submission can no longer be resumed.");
+  }
+
+  return submission;
+}
+
 export async function listAdminSubmissionQueue(
   filters: AdminSubmissionListQueryInput,
 ) {
@@ -549,7 +570,7 @@ export async function submitSubmissionDraft(
   ) {
     throw new AppError(
       400,
-      "Verify the Shipboost badge on your website before submitting the free launch.",
+      "Verify the ShipBoost badge on your website before submitting the free launch.",
     );
   }
 
@@ -643,7 +664,7 @@ export async function verifyFreeLaunchBadge(
   try {
     const response = await fetch(submission.tool.websiteUrl, {
       headers: {
-        "user-agent": "ShipboostBadgeVerifier/1.0 (+https://shipboost.io)",
+        "user-agent": "ShipBoostBadgeVerifier/1.0 (+https://shipboost.io)",
       },
       redirect: "follow",
       signal: AbortSignal.timeout(10_000),
@@ -654,8 +675,8 @@ export async function verifyFreeLaunchBadge(
   } catch (error) {
     message =
       error instanceof Error
-        ? `Shipboost could not verify the badge automatically: ${error.message}`
-        : "Shipboost could not verify the badge automatically.";
+        ? `ShipBoost could not verify the badge automatically: ${error.message}`
+        : "ShipBoost could not verify the badge automatically.";
   }
 
   await prisma.$transaction(async (tx) => {

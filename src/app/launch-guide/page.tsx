@@ -3,13 +3,16 @@ import type { Metadata } from "next";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { ContentPageShell } from "@/components/marketing/content-page-shell";
 import { getEnv } from "@/server/env";
+import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildArticlePageSchema } from "@/server/seo/page-schema";
 
-export const metadata: Metadata = {
-  title: "Launch Guide For Bootstrapped SaaS Founders | ShipBoost",
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "SaaS Launch Guide for Bootstrapped Founders | ShipBoost",
   description:
-    "A practical launch guide for bootstrapped SaaS founders: what to prepare, what to avoid, how weekly launches work, and how to turn launch into momentum.",
-};
+    "A practical SaaS launch guide for founders: what to prepare, what to avoid, and how to turn launch day into long-term momentum.",
+  url: "/launch-guide",
+  openGraphType: "article",
+});
 
 const mistakes = [
   "Launching without proof, screenshots, or a clear product story",

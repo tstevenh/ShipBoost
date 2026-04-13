@@ -1,47 +1,68 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Timer } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+
+const UTC_WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
 
 const periods = [
-  { label: "Today", value: "daily" },
   { label: "Weekly", value: "weekly" },
   { label: "Monthly", value: "monthly" },
-  { label: "Yearly", value: "yearly" }
+  { label: "Yearly", value: "yearly" },
 ];
 
-export function FilterBar() {
-  const router = useRouter();
+function getNextLaunchWeekBoundary(now: Date, goLiveAt: Date) {
+  if (now.getTime() < goLiveAt.getTime()) {
+    return goLiveAt;
+  }
+
+  const elapsedWeeks = Math.floor(
+    (now.getTime() - goLiveAt.getTime()) / UTC_WEEK_IN_MS,
+  );
+
+  return new Date(goLiveAt.getTime() + (elapsedWeeks + 1) * UTC_WEEK_IN_MS);
+}
+
+function formatWeeklyCountdown(timeLeftInMs: number) {
+  const totalSeconds = Math.max(0, Math.floor(timeLeftInMs / 1000));
+  const days = Math.floor(totalSeconds / (24 * 60 * 60));
+  const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+  const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+  const seconds = totalSeconds % 60;
+
+  const hh = hours.toString().padStart(2, "0");
+  const mm = minutes.toString().padStart(2, "0");
+  const ss = seconds.toString().padStart(2, "0");
+
+  return days > 0 ? `${days}d ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
+}
+
+export function FilterBar({ launchpadGoLiveAt }: { launchpadGoLiveAt: string }) {
   const pathname = usePathname();
   const activePeriod = React.useMemo(() => {
-    const board = pathname.match(/^\/launches\/(daily|weekly|monthly|yearly)$/)?.[1];
-    return board || "daily";
+    if (pathname === "/") {
+      return "weekly";
+    }
+
+    const board = pathname.match(/^\/launches\/(weekly|monthly|yearly)$/)?.[1];
+    return board || "weekly";
   }, [pathname]);
   const [timeLeft, setTimeLeft] = React.useState("");
 
   React.useEffect(() => {
+    const goLiveAt = new Date(launchpadGoLiveAt);
+
     const calculateTimeLeft = () => {
       const now = new Date();
-      
-      // Calculate next UTC midnight
-      const nextMidnight = new Date(now);
-      nextMidnight.setUTCHours(24, 0, 0, 0);
-      
-      const difference = nextMidnight.getTime() - now.getTime();
-      
-      if (difference > 0) {
-        const hours = Math.floor(difference / (1000 * 60 * 60));
-        const minutes = Math.floor((difference / (1000 * 60)) % 60);
-        const seconds = Math.floor((difference / 1000) % 60);
-        
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      }
-      return "00:00:00";
+
+      return formatWeeklyCountdown(
+        getNextLaunchWeekBoundary(now, goLiveAt).getTime() - now.getTime(),
+      );
     };
 
-    // Initialize
     setTimeLeft(calculateTimeLeft());
 
     const timer = setInterval(() => {
@@ -49,13 +70,7 @@ export function FilterBar() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
-
-  const handlePeriodChange = (value: string) => {
-    router.push(value === "daily" ? "/" : `/launches/${value}`, {
-      scroll: false,
-    });
-  };
+  }, [launchpadGoLiveAt]);
 
   return (
     <div className="w-full bg-background border-b border-border py-2">
@@ -63,9 +78,9 @@ export function FilterBar() {
         {/* Left: Period Tabs */}
         <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border">
           {periods.map((period) => (
-            <button
+            <Link
               key={period.value}
-              onClick={() => handlePeriodChange(period.value)}
+              href={`/launches/${period.value}`}
               className={cn(
                 "px-5 py-2 text-sm font-bold rounded-lg transition-all",
                 activePeriod === period.value
@@ -74,7 +89,7 @@ export function FilterBar() {
               )}
             >
               {period.label}
-            </button>
+            </Link>
           ))}
         </div>
 
@@ -82,7 +97,13 @@ export function FilterBar() {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Timer className="w-4 h-4 text-primary" />
-            Next launch in <span className="text-foreground font-bold tabular-nums" suppressHydrationWarning>{timeLeft || "00:00:00"}</span>
+            Next cohort reset in{" "}
+            <span
+              className="text-foreground font-bold tabular-nums"
+              suppressHydrationWarning
+            >
+              {timeLeft || "00:00:00"}
+            </span>
           </div>
         </div>
       </div>

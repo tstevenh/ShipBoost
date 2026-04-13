@@ -13,6 +13,14 @@ export type SortableToolGridItem = {
   logoUrl?: string;
   votes: number;
   tags: string[];
+  linkedTags?: Array<{
+    name: string;
+    slug: string;
+  }>;
+  primaryCategory?: {
+    name: string;
+    slug: string;
+  } | null;
   isFeatured: boolean;
   createdAt: string;
 };
@@ -76,6 +84,8 @@ export function SortableToolGrid({
           slug={tool.slug}
           votes={tool.votes}
           tags={tool.tags}
+          linkedTags={tool.linkedTags}
+          primaryCategory={tool.primaryCategory}
         />
       ))}
     </div>

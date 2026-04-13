@@ -17,7 +17,6 @@ import {
   getToolEditorByOwner,
   listTools,
   listToolSummariesByOwner,
-  listToolsByOwner,
   replaceToolCategories,
   replaceToolTags,
 } from "@/server/repositories/tool-repository";
@@ -413,6 +412,65 @@ export async function getPublishedToolBySlug(slug: string) {
 
   return {
     ...tool,
+    upvoteCount: tool._count.toolVotes,
+  };
+}
+
+export async function getFounderToolPreviewById(
+  ownerUserId: string,
+  toolId: string,
+) {
+  const tool = await getToolByOwner(prisma, ownerUserId, toolId);
+
+  if (!tool) {
+    return null;
+  }
+
+  return {
+    id: tool.id,
+    slug: tool.slug,
+    name: tool.name,
+    tagline: tool.tagline,
+    richDescription: tool.richDescription,
+    pricingModel: tool.pricingModel,
+    websiteUrl: tool.websiteUrl,
+    metaTitle: tool.metaTitle,
+    metaDescription: tool.metaDescription,
+    canonicalUrl: tool.canonicalUrl,
+    createdAt: tool.createdAt,
+    publicationStatus: tool.publicationStatus,
+    moderationStatus: tool.moderationStatus,
+    logoMedia: tool.logoMedia
+      ? {
+          url: tool.logoMedia.url,
+        }
+      : null,
+    media: tool.media
+      .filter((media) => media.type === "SCREENSHOT")
+      .map((media) => ({
+        id: media.id,
+        url: media.url,
+      })),
+    toolCategories: tool.toolCategories.map((item) => ({
+      category: {
+        id: item.category.id,
+        name: item.category.name,
+        slug: item.category.slug,
+      },
+    })),
+    toolTags: tool.toolTags.map((item) => ({
+      tag: {
+        id: item.tag.id,
+        name: item.tag.name,
+        slug: item.tag.slug,
+        isActive: item.tag.isActive,
+      },
+    })),
+    launches: tool.launches.map((launch) => ({
+      launchType: launch.launchType,
+      status: launch.status,
+      launchDate: launch.launchDate,
+    })),
     upvoteCount: tool._count.toolVotes,
   };
 }
