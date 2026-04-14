@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
+import {
+  premiumLaunchAvailable,
+  premiumLaunchUnavailableMessage,
+} from "@/lib/premium-launch";
 import { cn } from "@/lib/utils";
 
 type CategoryOption = {
@@ -571,6 +575,10 @@ export function SubmitProductForm({
 
     try {
       if (type === "FEATURED_LAUNCH") {
+        if (!premiumLaunchAvailable) {
+          throw new Error(premiumLaunchUnavailableMessage);
+        }
+
         if (!form.preferredLaunchDate) {
           throw new Error("Please choose your preferred launch week first.");
         }
@@ -1115,9 +1123,19 @@ export function SubmitProductForm({
             {/* PREMIUM PLAN */}
             <div className={cn(
               "p-8 rounded-[2.5rem] border transition-all flex flex-col h-full relative",
-              form.submissionType === "FEATURED_LAUNCH" ? "border-foreground bg-card ring-4 ring-foreground/5 shadow-2xl" : "border-border bg-card hover:border-foreground/30"
+              form.submissionType === "FEATURED_LAUNCH"
+                ? "border-foreground bg-card ring-4 ring-foreground/5 shadow-2xl"
+                : premiumLaunchAvailable
+                  ? "border-border bg-card hover:border-foreground/30"
+                  : "border-border bg-card opacity-80"
             )}
-            onClick={() => setForm({ ...form, submissionType: "FEATURED_LAUNCH" })}
+            onClick={() => {
+              if (!premiumLaunchAvailable) {
+                return;
+              }
+
+              setForm({ ...form, submissionType: "FEATURED_LAUNCH" });
+            }}
             >
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-black  tracking-widest px-4 py-1 rounded-full shadow-lg">Most Popular</div>
               <div className="flex items-center justify-between mb-8">
@@ -1137,6 +1155,11 @@ export function SubmitProductForm({
                 Reserve your launch week, get premium placement in the weekly
                 launchpad, and skip badge verification.
               </p>
+              {!premiumLaunchAvailable ? (
+                <p className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-relaxed text-amber-700">
+                  {premiumLaunchUnavailableMessage}
+                </p>
+              ) : null}
               <ul className="space-y-4 mb-10">
                 {["Choose your launch week", "Premium placement", "No badge required", "Priority ordering over free launches", "Founding offer pricing"].map(p => (
                   <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
@@ -1157,6 +1180,7 @@ export function SubmitProductForm({
                       preferredLaunchDate: event.target.value,
                     })
                   }
+                  disabled={!premiumLaunchAvailable}
                   className={inputClassName()}
                 >
                   <option value="">Select a launch week</option>
@@ -1174,10 +1198,19 @@ export function SubmitProductForm({
               </div>
               <button 
                 onClick={() => handleFinalSubmit("FEATURED_LAUNCH")}
-                disabled={isBusy}
-                className="w-full py-4 rounded-2xl bg-foreground text-background font-black text-sm shadow-xl shadow-black/10 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+                disabled={isBusy || !premiumLaunchAvailable}
+                className={cn(
+                  "w-full py-4 rounded-2xl font-black text-sm transition-all",
+                  premiumLaunchAvailable
+                    ? "bg-foreground text-background shadow-xl shadow-black/10 hover:opacity-90 active:scale-95 disabled:opacity-50"
+                    : "bg-muted text-muted-foreground/50 cursor-not-allowed border border-border"
+                )}
               >
-                {isSubmittingDraft ? "Starting checkout..." : "Reserve Premium Launch"}
+                {premiumLaunchAvailable
+                  ? isSubmittingDraft
+                    ? "Starting checkout..."
+                    : "Reserve Premium Launch"
+                  : "Temporarily unavailable"}
               </button>
             </div>
           </div>

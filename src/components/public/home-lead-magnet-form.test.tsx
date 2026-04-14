@@ -43,7 +43,9 @@ describe("HomeLeadMagnetForm", () => {
     fireEvent.change(screen.getByPlaceholderText("you@startup.com"), {
       target: { value: "founder@example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /get access now/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /get the directory list/i }),
+    );
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(

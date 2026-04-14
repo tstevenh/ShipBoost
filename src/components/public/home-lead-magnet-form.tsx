@@ -60,14 +60,15 @@ export function HomeLeadMagnetForm() {
       
       <div className="relative">
         <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40  mb-4">
-          Secondary resource
+          Founder resource
         </p>
         <h2 className="text-3xl font-black tracking-tight text-foreground mb-6 ">
-          Get the startup directories list.
+          Launch faster with 300+ startup directories in one place.
         </h2>
         <p className="text-lg font-medium leading-relaxed text-muted-foreground/80 max-w-2xl mb-10">
-          Get the curated directory database we use for founder distribution.
-          This is the supporting resource, not the main event.
+          Get the curated, searchable directory list ShipBoost uses to find real
+          distribution opportunities without bouncing between tabs, random
+          spreadsheets, or low-signal lists.
         </p>
 
         <form
@@ -88,12 +89,12 @@ export function HomeLeadMagnetForm() {
             disabled={isSubmitting}
             className="inline-flex shrink-0 items-center justify-center rounded-2xl bg-primary px-10 py-4 text-sm font-black text-primary-foreground shadow-xl shadow-black/10 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50"
           >
-            {isSubmitting ? "Sending..." : "Get access now"}
+            {isSubmitting ? "Sending..." : "Get the directory list"}
           </button>
         </form>
 
         <p className="mt-8 text-xs font-bold text-muted-foreground/40  tracking-widest">
-          * Access link via secure email. Unsubscribe with one click.
+          * 300+ directories. Searchable inside ShipBoost. Access link sent by email.
         </p>
 
         {successMessage ? (

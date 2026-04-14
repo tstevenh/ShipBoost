@@ -153,17 +153,39 @@ export function StartupDirectoriesResource({
           </thead>
           <tbody>
             {visibleRows.map((item, index) => (
-              <tr key={item.id} className="border-t border-border align-middle">
-                <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
-                <td className="px-4 py-3 font-bold text-foreground">{item.name}</td>
-                <td className="px-4 py-3 text-muted-foreground">{item.domain}</td>
+              <tr
+                key={item.id}
+                className={`border-t border-border align-middle ${
+                  item.recommended ? "bg-primary/[0.045]" : ""
+                }`}
+              >
+                <td className={`px-4 py-3 ${item.recommended ? "font-black text-foreground" : "text-muted-foreground"}`}>
+                  {index + 1}
+                </td>
+                <td className="px-4 py-3 font-bold text-foreground">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span>{item.name}</span>
+                    {item.recommended ? (
+                      <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+                        ShipBoost
+                      </span>
+                    ) : null}
+                  </div>
+                </td>
+                <td className={`px-4 py-3 ${item.recommended ? "font-semibold text-foreground/80" : "text-muted-foreground"}`}>
+                  {item.domain}
+                </td>
                 <td className="px-4 py-3 font-bold text-foreground">{item.dr}</td>
                 <td className="px-4 py-3">
                   <a
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center justify-center rounded-xl border border-border px-3 py-2 text-xs font-black transition-colors hover:bg-muted"
+                    className={`inline-flex items-center justify-center rounded-xl border px-3 py-2 text-xs font-black transition-colors ${
+                      item.recommended
+                        ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/15"
+                        : "border-border hover:bg-muted"
+                    }`}
                   >
                     Visit
                   </a>

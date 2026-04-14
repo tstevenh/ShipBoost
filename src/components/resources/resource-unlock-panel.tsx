@@ -52,15 +52,16 @@ export function ResourceUnlockPanel() {
     >
       <div className="max-w-3xl space-y-4">
         <p className="text-[10px] font-black tracking-[0.28em] text-foreground/40">
-          Unlock the full list
+          Unlock the full resource
         </p>
         <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-          Get the full startup directories database in your inbox.
+          Get the full 300+ startup directories list.
         </h2>
         <p className="text-sm font-medium leading-7 text-muted-foreground sm:text-base">
-          Unlock the full hosted sheet, including the complete list, search, and
-          sorting inside ShipBoost. The preview below stays public. The full
-          list opens after email access.
+          Unlock the searchable directory list ShipBoost uses for founder
+          distribution. The public preview shows a sample. The full version
+          gives you the complete list inside ShipBoost so you can sort, search,
+          and work through it faster.
         </p>
       </div>
 
@@ -82,12 +83,12 @@ export function ResourceUnlockPanel() {
           disabled={isSubmitting}
           className="inline-flex shrink-0 items-center justify-center rounded-2xl bg-primary px-6 py-4 text-sm font-black text-primary-foreground transition-all hover:opacity-90 disabled:opacity-50"
         >
-          {isSubmitting ? "Sending..." : "Email me access"}
+          {isSubmitting ? "Sending..." : "Email me the full list"}
         </button>
       </form>
 
       <p className="mt-4 text-xs font-bold tracking-widest text-muted-foreground/45">
-        * Access link via secure email. Full list unlocks after sign-in.
+        * Access link via email. Open the full hosted list after sign-in.
       </p>
 
       {successMessage ? (

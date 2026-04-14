@@ -12,7 +12,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Startup Directories Resource | ShipBoost",
   description:
-    "Browse ShipBoost's startup directories resource with a public preview, then unlock the full hosted list inside your founder workflow.",
+    "Browse ShipBoost's 300+ startup directories resource with a public preview, then unlock the full hosted list inside your founder workflow.",
   url: "/resources/startup-directories",
 });
 
@@ -33,26 +33,27 @@ export default async function StartupDirectoriesPage() {
           {session ? "Signed-in resource" : "Public preview"}
         </p>
         <h1 className="text-4xl font-black tracking-tight text-foreground">
-          Startup directories
+          300+ startup directories, organized for faster launches.
         </h1>
         <p className="text-base font-medium leading-7 text-muted-foreground">
-          The fast hosted version of your directories sheet inside ShipBoost.
-          Search it, sort it, and work through it without bouncing between tabs.
+          This is the hosted version of the startup directories list ShipBoost
+          uses for founder distribution. Search it, sort it, and move faster
+          without juggling spreadsheets or scattered bookmarks.
         </p>
       </div>
 
       <section className="mt-8 rounded-[2rem] border border-primary/15 bg-primary/5 px-6 py-6 shadow-sm">
         <div className="max-w-3xl space-y-3">
           <p className="text-[10px] font-black tracking-[0.3em] text-primary">
-            Founder CTA
+            Founder options
           </p>
           <h2 className="text-2xl font-black tracking-tight text-foreground">
-            Submit your product to ShipBoost
+            Use the list yourself or let ShipBoost handle distribution.
           </h2>
           <p className="text-sm font-medium leading-7 text-muted-foreground">
-            Want your startup in this directory stack too? Submit on ShipBoost
-            and choose the launch path that fits your timing: free launch with
-            badge verification or Premium Launch with priority placement.
+            If you want hands-on control, submit your product and choose your
+            launch path. If you want help turning this directory list into
+            actual distribution, use our done-for-you support option.
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
             <Link
@@ -65,7 +66,7 @@ export default async function StartupDirectoriesPage() {
               href="/pricing"
               className="inline-flex items-center justify-center rounded-2xl border border-border bg-card px-5 py-3 text-sm font-black text-foreground transition-all hover:bg-muted active:scale-95"
             >
-              Compare launch options
+              Get done-for-you distribution
             </Link>
           </div>
         </div>
@@ -86,7 +87,7 @@ export default async function StartupDirectoriesPage() {
               </h2>
               <p className="text-sm font-medium leading-7 text-muted-foreground">
                 This preview shows {previewCount} real directories from the
-                hosted list.
+                full 300+ directory list.
               </p>
             </div>
 

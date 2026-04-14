@@ -9,7 +9,7 @@ import { buildSimpleWebPageSchema } from "@/server/seo/page-schema";
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Privacy Policy | ShipBoost",
   description:
-    "Read the ShipBoost privacy policy and how we handle account, submission, and platform data.",
+    "Read the ShipBoost privacy policy and how we handle account, submission, payment, and analytics data.",
   url: "/privacy",
 });
 
@@ -17,36 +17,37 @@ const sections = [
   {
     title: "What We Collect",
     body: [
-      "We collect information you provide directly, such as your name, email address, account details, submission content, screenshots, logos, launch preferences, and support messages.",
-      "We also collect operational data such as log information, device or browser details, referral data, and analytics about how people interact with ShipBoost.",
+      "We collect information you provide directly, such as your name, email address, account details, submission content, screenshots, logos, launch preferences, billing-related metadata, and support messages.",
+      "We also collect operational data such as log information, device or browser details, referral data, page activity, outbound click activity, and analytics about how people interact with ShipBoost.",
     ],
   },
   {
     title: "How We Use Information",
     body: [
-      "We use data to run ShipBoost, authenticate accounts, process submissions, operate launch scheduling, improve directory quality, support founders, and maintain security.",
-      "We may also use contact details to send service-related emails, such as sign-in links, submission updates, launch status notifications, and support replies.",
+      "We use data to run ShipBoost, authenticate accounts, process submissions, operate launch scheduling, deliver paid placements or digital services, improve directory quality, support founders, and maintain security.",
+      "We may also use contact details to send service-related emails, such as sign-in links, submission updates, launch status notifications, receipts, support replies, and other transactional messages related to your account or purchase.",
     ],
   },
   {
     title: "Payments and Third Parties",
     body: [
-      "If you purchase a paid launch product, payment information is handled by our payment provider. ShipBoost does not store your full payment card details.",
-      "We may rely on third-party services for hosting, analytics, email delivery, authentication, and payment processing. Those providers may process data on our behalf.",
+      "If you purchase a paid launch product or digital service, payment information is handled by our payment providers. ShipBoost does not store your full payment card details.",
+      "We may rely on third-party services for hosting, analytics, email delivery, authentication, payment processing, fraud prevention, and other operational needs. Those providers may process data on our behalf.",
     ],
   },
   {
     title: "Cookies and Analytics",
     body: [
       "ShipBoost may use cookies and similar technologies to keep you signed in, remember preferences, understand product usage, measure outbound clicks, and improve the service.",
+      "We use analytics tools, including Google Analytics, to understand traffic, page usage, referral sources, and product interaction patterns. Those tools may collect browser, device, and usage data according to their own technologies and settings.",
       "If you disable certain cookies or browser storage, parts of the founder experience may not work correctly.",
     ],
   },
   {
     title: "How We Share Information",
     body: [
-      "We do not sell personal data. We may share information with service providers who help us operate ShipBoost, or if required by law, legal process, or to protect the platform and its users.",
-      "Content you choose to submit for public listing or launch may be published publicly as part of the ShipBoost product experience.",
+      "We do not sell personal data. We may share information with service providers who help us operate ShipBoost, process payments, analyze usage, or prevent abuse, or if required by law, legal process, or to protect the platform and its users.",
+      "Content you choose to submit for public listing, launch placement, featured listing, or distribution support may be published publicly or shared with third-party launch or directory platforms as part of the service you request.",
     ],
   },
   {
@@ -78,7 +79,7 @@ export default function PrivacyPage() {
     type: "WebPage",
     title: "Privacy",
     description:
-      "Read how ShipBoost collects, uses, stores, and protects personal data across accounts, submissions, launches, and analytics.",
+      "Read how ShipBoost collects, uses, stores, and protects personal data across accounts, submissions, payments, launches, and analytics.",
     url: `${env.NEXT_PUBLIC_APP_URL}/privacy`,
   });
 
@@ -88,7 +89,7 @@ export default function PrivacyPage() {
       <ContentPageShell
         eyebrow="Legal"
         title="Privacy"
-        description="This page explains what data ShipBoost collects, how we use it, when we share it, and how founders can contact us about privacy-related questions."
+        description="This page explains what data ShipBoost collects, how we use it, when we share it, how payments and analytics are handled, and how founders can contact us about privacy-related questions."
         primaryCtaLabel="Contact support"
         primaryCtaHref="mailto:support@shipboost.io"
         secondaryCtaLabel="Read terms"

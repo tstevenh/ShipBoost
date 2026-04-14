@@ -9,7 +9,7 @@ import { buildSimpleWebPageSchema } from "@/server/seo/page-schema";
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Terms of Service | ShipBoost",
   description:
-    "Read the ShipBoost terms covering platform use, submissions, listings, and founder responsibilities.",
+    "Read the ShipBoost terms covering platform use, submissions, launch placements, payments, refunds, and founder responsibilities.",
   url: "/terms",
 });
 
@@ -17,7 +17,7 @@ const sections = [
   {
     title: "Scope",
     body: [
-      "These Terms govern your access to and use of ShipBoost, including our public directory, launch surfaces, founder dashboard, submissions, and related services.",
+      "These Terms govern your access to and use of ShipBoost, including our public directory, launch surfaces, founder dashboard, submissions, paid placements, digital services, and related software tools.",
       "By using ShipBoost, creating an account, or submitting a product, you agree to these Terms. If you do not agree, do not use the service.",
     ],
   },
@@ -29,17 +29,28 @@ const sections = [
     ],
   },
   {
-    title: "Submissions and Listings",
+    title: "Submissions, Listings, and Digital Services",
     body: [
       "You keep ownership of the content you submit, but you grant ShipBoost permission to host, display, edit for formatting, and distribute that content as needed to operate the platform.",
-      "We may review, reject, edit, hide, or remove submissions that do not meet our quality standards, violate these Terms, or create trust issues for users.",
+      "ShipBoost may offer free launches, premium launch placements, featured listings, distribution support, directory submission services, and other digital founder tools or software features.",
+      "We may review, reject, edit, hide, reschedule, or remove submissions that do not meet our quality standards, violate these Terms, or create trust issues for users.",
     ],
   },
   {
     title: "Launch Scheduling and Payments",
     body: [
       "Free launches are scheduled according to ShipBoost's launch queue and review rules. Premium Launches are scheduled according to the launch week you select and the availability we present at checkout.",
-      "Payments for paid launch products are processed by our payment provider. Fees are generally non-refundable once a paid launch has been confirmed or delivered, except where required by law or where ShipBoost explicitly agrees otherwise.",
+      "Payments for paid launch products, featured placements, and other digital services are processed by our payment providers. ShipBoost does not directly store full payment card details.",
+      "You are responsible for providing accurate billing information and for any taxes, duties, or similar charges that apply to your purchase unless the payment provider collects and remits them on our behalf.",
+    ],
+  },
+  {
+    title: "Refunds, Cancellation, and Subscription Terms",
+    body: [
+      "Paid launch queue priority, featured placements, and promotional or distribution services are refundable if ShipBoost rejects the submission before publication or if we are unable to deliver the purchased service.",
+      "Once a launch placement, featured listing, or other digital service has been published or substantially delivered, payments are non-refundable except in cases of duplicate payment, billing error, fraud, technical delivery failure caused by ShipBoost, or where required by law.",
+      "If a delivery issue can reasonably be corrected, ShipBoost may offer rescheduling, replacement placement, or service credit instead of a cash refund.",
+      "If ShipBoost offers subscription products in the future, subscriptions may be canceled before renewal to stop future billing. Cancellation does not automatically create a refund for the current billing period unless required by law or expressly stated by ShipBoost.",
     ],
   },
   {
@@ -59,7 +70,7 @@ const sections = [
   {
     title: "No Guarantee and Limitation of Liability",
     body: [
-      "ShipBoost is provided on an as-is and as-available basis. We do not guarantee uninterrupted availability, ranking position, traffic, conversions, revenue, or business outcomes.",
+      "ShipBoost is provided on an as-is and as-available basis. We do not guarantee uninterrupted availability, acceptance of a submission, ranking position, traffic, conversions, revenue, business outcomes, or approval by third-party directories or launch platforms.",
       "To the maximum extent allowed by law, ShipBoost will not be liable for indirect, incidental, special, consequential, or punitive damages arising from your use of the service.",
     ],
   },
@@ -78,7 +89,7 @@ export default function TermsPage() {
     type: "WebPage",
     title: "Terms",
     description:
-      "Read the terms that govern ShipBoost, including submissions, launch scheduling, payments, listings, and acceptable use.",
+      "Read the terms that govern ShipBoost, including submissions, launch scheduling, paid placements, payments, refunds, listings, and acceptable use.",
     url: `${env.NEXT_PUBLIC_APP_URL}/terms`,
   });
 
@@ -88,7 +99,7 @@ export default function TermsPage() {
       <ContentPageShell
         eyebrow="Legal"
         title="Terms"
-        description="These terms explain how ShipBoost works, what founders can submit, how launches and payments are handled, and the basic rules for using the platform."
+        description="These terms explain how ShipBoost works, what founders can submit, how launch placements and digital services are handled, and the refund and payment rules for using the platform."
         primaryCtaLabel="Contact support"
         primaryCtaHref="mailto:support@shipboost.io"
         secondaryCtaLabel="Read privacy"

@@ -39,7 +39,9 @@ describe("ResourceUnlockPanel", () => {
     fireEvent.change(screen.getByPlaceholderText("you@startup.com"), {
       target: { value: "preview@example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /email me access/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /email me the full list/i }),
+    );
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(

@@ -8,6 +8,10 @@ import {
   Layout, Package, Send, Fingerprint,
   type LucideIcon,
 } from "lucide-react";
+import {
+  premiumLaunchAvailable,
+  premiumLaunchUnavailableMessage,
+} from "@/lib/premium-launch";
 import { cn } from "@/lib/utils";
 
 type FounderSubmission = {
@@ -191,6 +195,10 @@ export function FounderDashboard({
     setPendingCheckoutId(submissionId);
     void (async () => {
       try {
+        if (!premiumLaunchAvailable) {
+          throw new Error(premiumLaunchUnavailableMessage);
+        }
+
         setErrorMessage(null);
         const result = await apiRequest<{ checkoutUrl: string }>("/api/polar/checkout/featured-launch", {
           method: "POST",
@@ -422,9 +430,15 @@ export function FounderDashboard({
                           </Link>
                         )}
                         {sub.reviewStatus !== "DRAFT" && sub.submissionType === "FEATURED_LAUNCH" && sub.paymentStatus !== "PAID" && (
-                          <button onClick={() => beginFeaturedCheckout(sub.id)} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90">
-                            <Star size={14} /> Reserve Premium Launch
-                          </button>
+                          premiumLaunchAvailable ? (
+                            <button onClick={() => beginFeaturedCheckout(sub.id)} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90">
+                              <Star size={14} /> Reserve Premium Launch
+                            </button>
+                          ) : (
+                            <span className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-4 py-2 text-xs font-black text-muted-foreground/70">
+                              <Star size={14} /> Temporarily unavailable
+                            </span>
+                          )
                         )}
                         <a href={sub.tool.websiteUrl} target="_blank" className="inline-flex items-center gap-2 border border-border bg-card px-4 py-2 rounded-xl text-xs font-black hover:bg-muted">
                           <ExternalLink size={14} /> Site

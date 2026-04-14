@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, ArrowRight, Star, ShieldCheck, Zap } from "lucide-react";
+import {
+  premiumLaunchAvailable,
+  premiumLaunchUnavailableMessage,
+} from "@/lib/premium-launch";
 import { cn } from "@/lib/utils";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
@@ -48,8 +52,13 @@ const pricingTiers = [
       "Choose your launch week, skip badge verification, and get priority placement in the weekly launchpad.",
     eyebrow: "Founding offer",
     foundingSpotsLabel: "First 100 Premium Launches",
-    ctaLabel: "Reserve premium launch",
-    ctaHref: "/submit",
+    ctaLabel: premiumLaunchAvailable
+      ? "Reserve premium launch"
+      : "Temporarily unavailable",
+    ctaHref: premiumLaunchAvailable ? "/submit" : undefined,
+    availabilityNote: premiumLaunchAvailable
+      ? undefined
+      : premiumLaunchUnavailableMessage,
     highlight: true,
     icon: Star,
     points: [
@@ -173,6 +182,11 @@ export default async function PricingPage() {
               <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
                 {tier.description}
               </p>
+              {"availabilityNote" in tier && tier.availabilityNote ? (
+                <p className="mt-3 text-xs font-bold leading-relaxed text-amber-700">
+                  {tier.availabilityNote}
+                </p>
+              ) : null}
 
               <ul className="mt-10 space-y-4 flex-1">
                 {tier.points.map((point) => (

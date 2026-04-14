@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Rocket } from "lucide-react";
 import { DeferredHomeSearchModal } from "@/components/public/deferred-home-search-modal";
+import { SidebarLeadMagnetForm } from "@/components/public/sidebar-lead-magnet-form";
 
 export function SponsorSlot() {
   return null;
@@ -28,29 +29,7 @@ export function SponsorSlot() {
 }
 
 export function SidebarLeadMagnet() {
-  return (
-    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm overflow-hidden relative">
-      <h3 className="font-bold text-[10px]  tracking-[0.2em] text-foreground/40 mb-4 relative">
-        Free Resource
-      </h3>
-      <h4 className="font-black text-lg mb-3 relative leading-tight">
-        Startup Directories List
-      </h4>
-      <p className="text-xs text-muted-foreground mb-6 leading-relaxed relative">
-        Get the list founders use to find submission opportunities.
-      </p>
-      <form className="space-y-3 relative">
-        <input
-          type="email"
-          placeholder="you@startup.com"
-          className="w-full px-4 py-3 bg-muted/20 border border-border rounded-xl text-sm font-medium outline-none focus:border-foreground transition-all"
-        />
-        <button className="w-full py-3 bg-primary text-primary-foreground text-xs font-black rounded-xl shadow-lg shadow-black/10 hover:opacity-90 transition-all active:scale-95">
-          Get the list
-        </button>
-      </form>
-    </div>
-  );
+  return <SidebarLeadMagnetForm />;
 }
 
 export function ShowcaseLayout({

@@ -13,8 +13,6 @@ import { getEnv } from "@/server/env";
 import { getCachedHomePageData } from "@/server/cache/public-content";
 import { buildHomePageSchema } from "@/server/seo/page-schema";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
-import { InternalLinkSection } from "@/components/seo/internal-link-section";
-import { alternativesSeoRegistry } from "@/server/seo/registry";
 
 export const revalidate = 300;
 
@@ -31,12 +29,6 @@ export default async function Home() {
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
   const currentPeriod = "weekly";
   const { launches, prelaunchTools } = await getCachedHomePageData(currentPeriod, isPrelaunch);
-  const topCategories = [...new Map(
-    launches
-      .flatMap((launch) => launch.tool.toolCategories.map((item) => item.category))
-      .map((category) => [category.slug, category]),
-  ).values()].slice(0, 4);
-  const popularComparisons = Object.values(alternativesSeoRegistry).slice(0, 4);
   const schemaItems = isPrelaunch
     ? prelaunchTools.map((tool) => ({
         name: tool.name,
@@ -122,90 +114,6 @@ export default async function Home() {
                 ))}
               </div>
             </section>
-
-            <InternalLinkSection
-              eyebrow="Launch Boards"
-              title="Explore ShipBoost by time window"
-              links={[
-                {
-                  href: "/launches/weekly",
-                  label: "Weekly launches",
-                  description: "Browse the current weekly board.",
-                },
-                {
-                  href: "/launches/monthly",
-                  label: "Monthly launches",
-                  description: "See products with momentum across the month.",
-                },
-                {
-                  href: "/launches/yearly",
-                  label: "Yearly launches",
-                  description: "Review the strongest launch board entries over the year.",
-                },
-              ]}
-            />
-
-            <InternalLinkSection
-              eyebrow="Explore"
-              title="Browse ShipBoost by path"
-              description="Move from the launch board into deeper discovery surfaces depending on whether you are comparing categories, narrowing by use case, or evaluating alternatives."
-              links={[
-                {
-                  href: "/categories",
-                  label: "Browse categories",
-                  description: "Explore curated tool collections by product area.",
-                },
-                {
-                  href: "/tags",
-                  label: "Browse tags",
-                  description: "Refine discovery by feature, use case, or founder profile.",
-                },
-                {
-                  href: "/alternatives",
-                  label: "Compare alternatives",
-                  description: "Jump into higher-intent comparison pages.",
-                },
-                {
-                  href: "/how-it-works",
-                  label: "How ShipBoost works",
-                  description: "See how launch weeks, ranking, and submissions work.",
-                },
-                {
-                  href: "/launch-guide",
-                  label: "Read the launch guide",
-                  description: "Prepare your product before launch day.",
-                },
-                {
-                  href: "/pricing",
-                  label: "Review pricing",
-                  description: "Compare Free Launch, Premium Launch, and done-for-you support.",
-                },
-              ]}
-            />
-
-            {topCategories.length > 0 ? (
-              <InternalLinkSection
-                eyebrow="Popular Categories"
-                title="Start with the categories founders browse most"
-                links={topCategories.map((category) => ({
-                  href: `/categories/${category.slug}`,
-                  label: category.name,
-                  description: `Explore curated ${category.name.toLowerCase()} tools on ShipBoost.`,
-                }))}
-              />
-            ) : null}
-
-            {popularComparisons.length > 0 ? (
-              <InternalLinkSection
-                eyebrow="Comparisons"
-                title="Popular alternative pages"
-                links={popularComparisons.map((entry) => ({
-                  href: `/alternatives/${entry.slug}`,
-                  label: entry.title,
-                  description: entry.metaDescription,
-                }))}
-              />
-            ) : null}
 
             <div className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
               <h2 className="text-3xl font-black tracking-tight text-foreground">
