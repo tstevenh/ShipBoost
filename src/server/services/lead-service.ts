@@ -32,6 +32,10 @@ function getResendClient() {
   return new Resend(env.RESEND_API_KEY);
 }
 
+function getResendLeadSegmentId() {
+  return getEnv().RESEND_LEADS_SEGMENT_ID;
+}
+
 function splitName(name?: string | null) {
   if (!name?.trim()) {
     return { firstName: undefined, lastName: undefined };
@@ -58,11 +62,14 @@ async function syncLeadToResend(lead: {
   utmContent: string | null;
   utmTerm: string | null;
 }) {
-  const resend = getResendClient();
+  const resendClient = getResendClient();
+  const resendLeadSegmentId = getResendLeadSegmentId();
 
-  if (!resend) {
+  if (!resendClient) {
     return null;
   }
+
+  const resend = resendClient;
 
   const { firstName, lastName } = splitName(lead.name);
   const payload = {
@@ -80,6 +87,35 @@ async function syncLeadToResend(lead: {
     },
   };
 
+  async function ensureLeadInSegment(contactId: string) {
+    if (!resendLeadSegmentId) {
+      return;
+    }
+
+    const segments = await resend.contacts.segments.list({ contactId });
+
+    if (segments.error) {
+      throw new Error(segments.error.message);
+    }
+
+    const isInSegment = segments.data?.data.some(
+      (segment) => segment.id === resendLeadSegmentId,
+    );
+
+    if (isInSegment) {
+      return;
+    }
+
+    const addToSegment = await resend.contacts.segments.add({
+      contactId,
+      segmentId: resendLeadSegmentId,
+    });
+
+    if (addToSegment.error) {
+      throw new Error(addToSegment.error.message);
+    }
+  }
+
   if (lead.resendContactId) {
     const response = await resend.contacts.update({
       id: lead.resendContactId,
@@ -90,7 +126,10 @@ async function syncLeadToResend(lead: {
       throw new Error(response.error.message);
     }
 
-    return response.data?.id ?? lead.resendContactId;
+    const contactId = response.data?.id ?? lead.resendContactId;
+    await ensureLeadInSegment(contactId);
+
+    return contactId;
   }
 
   const existing = await resend.contacts.get({
@@ -107,12 +146,20 @@ async function syncLeadToResend(lead: {
       throw new Error(response.error.message);
     }
 
-    return response.data?.id ?? existing.data.id;
+    const contactId = response.data?.id ?? existing.data.id;
+    await ensureLeadInSegment(contactId);
+
+    return contactId;
   }
 
   const response = await resend.contacts.create({
     email: lead.email,
     ...payload,
+    ...(resendLeadSegmentId
+      ? {
+          segments: [{ id: resendLeadSegmentId }],
+        }
+      : {}),
   });
 
   if (response.error) {

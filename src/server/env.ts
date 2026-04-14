@@ -21,6 +21,7 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
   NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
   RESEND_API_KEY: optionalEnvString,
+  RESEND_LEADS_SEGMENT_ID: optionalEnvString,
   POSTHOG_KEY: optionalEnvString,
   POSTHOG_HOST: optionalEnvString,
   RESEND_FROM_TRANSACTIONAL: optionalEnvString.transform(
@@ -66,6 +67,7 @@ export function getEnv() {
       BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
       RESEND_API_KEY: process.env.RESEND_API_KEY,
+      RESEND_LEADS_SEGMENT_ID: process.env.RESEND_LEADS_SEGMENT_ID,
       POSTHOG_KEY: process.env.POSTHOG_KEY,
       POSTHOG_HOST: process.env.POSTHOG_HOST,
       RESEND_FROM_TRANSACTIONAL: process.env.RESEND_FROM_TRANSACTIONAL,

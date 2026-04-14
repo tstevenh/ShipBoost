@@ -13,13 +13,19 @@ const { prismaMock, resendInstance, emailMock, envMock } = vi.hoisted(() => ({
       get: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      segments: {
+        list: vi.fn(),
+        add: vi.fn(),
+      },
     },
   },
   emailMock: {},
   envMock: {
     RESEND_API_KEY: "re_test",
+    RESEND_LEADS_SEGMENT_ID: "segment_1",
   } as {
     RESEND_API_KEY?: string;
+    RESEND_LEADS_SEGMENT_ID?: string;
   },
 }));
 
@@ -109,6 +115,12 @@ describe("captureLead", () => {
         }),
       }),
     );
+    expect(resendInstance.contacts.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "founder@example.com",
+        segments: [{ id: "segment_1" }],
+      }),
+    );
     expect(result.created).toBe(true);
     expect(result.lead.email).toBe("founder@example.com");
   });
@@ -176,6 +188,18 @@ describe("captureLead", () => {
       data: { id: "contact_1" },
       error: null,
     });
+    resendInstance.contacts.segments.list.mockResolvedValueOnce({
+      data: {
+        object: "list",
+        data: [],
+        has_more: false,
+      },
+      error: null,
+    });
+    resendInstance.contacts.segments.add.mockResolvedValueOnce({
+      data: { id: "segment_1" },
+      error: null,
+    });
 
     const result = await captureLead({
       email: "founder@example.com",
@@ -191,6 +215,13 @@ describe("captureLead", () => {
 
     expect(prismaMock.lead.create).not.toHaveBeenCalled();
     expect(prismaMock.lead.update).toHaveBeenCalled();
+    expect(resendInstance.contacts.segments.list).toHaveBeenCalledWith({
+      contactId: "contact_1",
+    });
+    expect(resendInstance.contacts.segments.add).toHaveBeenCalledWith({
+      contactId: "contact_1",
+      segmentId: "segment_1",
+    });
     expect(result.created).toBe(false);
   });
 
@@ -232,5 +263,6 @@ describe("captureLead", () => {
     expect(result.created).toBe(true);
     expect(resendInstance.contacts.create).not.toHaveBeenCalled();
     envMock.RESEND_API_KEY = "re_test";
+    envMock.RESEND_LEADS_SEGMENT_ID = "segment_1";
   });
 });
