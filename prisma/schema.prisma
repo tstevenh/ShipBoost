@@ -95,6 +95,12 @@ enum LeadStatus {
   UNSUBSCRIBED
 }
 
+enum BlogArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model User {
   id            String   @id @default(cuid())
   name          String?
@@ -371,6 +377,102 @@ model Lead {
   @@index([status])
   @@index([source])
   @@index([leadMagnet])
+}
+
+model BlogAuthor {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  role        String?
+  bio         String
+  imageUrl    String?
+  xUrl        String?
+  linkedinUrl String?
+  websiteUrl  String?
+  isActive    Boolean @default(true)
+
+  articles BlogArticle[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogCategory {
+  id              String  @id @default(cuid())
+  slug            String  @unique
+  name            String
+  description     String?
+  seoIntro        String?
+  metaTitle       String?
+  metaDescription String?
+  isActive        Boolean @default(true)
+  sortOrder       Int     @default(0)
+
+  articles BlogArticle[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogTag {
+  id              String  @id @default(cuid())
+  slug            String  @unique
+  name            String
+  description     String?
+  metaTitle       String?
+  metaDescription String?
+  isActive        Boolean @default(true)
+
+  articleTags BlogArticleTag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogArticle {
+  id                 String            @id @default(cuid())
+  slug               String            @unique
+  title              String
+  excerpt            String
+  markdownContent    String
+  status             BlogArticleStatus @default(DRAFT)
+  authorId           String
+  primaryCategoryId  String
+  coverImageUrl      String?
+  coverImagePublicId String?
+  coverImageAlt      String?
+  metaTitle          String?
+  metaDescription    String?
+  canonicalUrl       String?
+  ogImageUrl         String?
+  publishedAt        DateTime?
+  lastUpdatedAt      DateTime?
+
+  author          BlogAuthor      @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  primaryCategory BlogCategory    @relation(fields: [primaryCategoryId], references: [id], onDelete: Restrict)
+  articleTags     BlogArticleTag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([primaryCategoryId, status, publishedAt])
+  @@index([authorId, status, publishedAt])
+}
+
+model BlogArticleTag {
+  id        String   @id @default(cuid())
+  articleId String
+  tagId     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  article BlogArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag     BlogTag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, tagId])
+  @@index([tagId])
+  @@index([tagId, sortOrder])
 }
 
 model Session {

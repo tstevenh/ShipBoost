@@ -152,14 +152,36 @@ async function seedTags() {
   }
 }
 
+async function seedBlogAuthor() {
+  return prisma.blogAuthor.upsert({
+    where: { slug: "tony" },
+    update: {
+      name: "Tony",
+      role: "Founder, ShipBoost",
+      bio: "Tony writes about SaaS discovery, launches, founder distribution, and practical SEO.",
+      isActive: true,
+    },
+    create: {
+      slug: "tony",
+      name: "Tony",
+      role: "Founder, ShipBoost",
+      bio: "Tony writes about SaaS discovery, launches, founder distribution, and practical SEO.",
+      isActive: true,
+    },
+  });
+}
+
 async function main() {
   loadDotenvLocal();
 
   const admin = await seedAdmin();
   await seedCategories();
   await seedTags();
+  const blogAuthor = await seedBlogAuthor();
 
-  console.log(`Seeded admin user ${admin.email} and starter catalog records.`);
+  console.log(
+    `Seeded admin user ${admin.email}, blog author ${blogAuthor.slug}, and starter catalog records.`,
+  );
 }
 
 main()
