@@ -924,12 +924,6 @@ export function AdminConsole() {
             />
           </div>
         )}
-
-        {activeNav === "blog" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <BlogPanel />
-          </div>
-        )}
       </div>
     </div>
   );
