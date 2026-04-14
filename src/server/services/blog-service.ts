@@ -558,6 +558,28 @@ export function getPublishedBlogArticleBySlug(slug: string) {
   });
 }
 
+export function listPublicBlogCategories() {
+  return prisma.blogCategory.findMany({
+    where: {
+      isActive: true,
+      articles: {
+        some: {
+          status: "PUBLISHED",
+          author: {
+            isActive: true,
+          },
+        },
+      },
+    },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  });
+}
+
 export async function getPublicBlogIndexPage() {
   const [articles, categories, tags] = await Promise.all([
     prisma.blogArticle.findMany({

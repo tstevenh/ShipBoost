@@ -63,7 +63,7 @@ describe("blog-service", () => {
       status: "PUBLISHED",
       publishedAt: new Date("2026-04-14T00:00:00.000Z"),
       updatedAt: new Date("2026-04-14T00:00:00.000Z"),
-      author: { id: "author_1", name: "Tony" },
+      author: { id: "author_1", name: "Tim" },
       primaryCategory: { id: "category_1", slug: "seo", name: "SEO" },
       articleTags: [],
     });
@@ -181,7 +181,7 @@ describe("blog-service", () => {
         status: "PUBLISHED",
         publishedAt: new Date("2026-04-14T00:00:00.000Z"),
         updatedAt: new Date("2026-04-14T01:00:00.000Z"),
-        author: { id: "author_1", name: "Tony" },
+        author: { id: "author_1", name: "Tim" },
         primaryCategory: { id: "category_1", slug: "seo", name: "SEO" },
         articleTags: [],
       });

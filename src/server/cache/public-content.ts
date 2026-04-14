@@ -11,6 +11,7 @@ import {
   listPublishedBlogCategoryStaticParams,
   listPublishedBlogTagStaticParams,
   listRelatedPublishedBlogArticles,
+  listPublicBlogCategories,
 } from "@/server/services/blog-service";
 import { listLaunchBoard } from "@/server/services/launch-service";
 import { getPublicCategoryPageBySlug } from "@/server/services/catalog-service";
@@ -367,6 +368,16 @@ export const getCachedBlogTagPage = cache(async (slug: string) =>
     {
       revalidate: PUBLIC_BLOG_ARCHIVE_REVALIDATE,
       tags: [PUBLIC_CACHE_TAGS.blogTags, `public:blog:tag:${slug}`],
+    },
+  )(),
+);
+export const getCachedPublicBlogCategories = cache(async () =>
+  unstable_cache(
+    () => listPublicBlogCategories(),
+    ["public-blog-all-categories", "v1"],
+    {
+      revalidate: PUBLIC_BLOG_ARCHIVE_REVALIDATE,
+      tags: [PUBLIC_CACHE_TAGS.blogCategories],
     },
   )(),
 );

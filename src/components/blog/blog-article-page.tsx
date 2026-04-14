@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { MarkdownContent } from "@/components/content/markdown-content";
-import { Footer } from "@/components/ui/footer";
 import { BlogAuthorCard } from "@/components/blog/blog-author-card";
+import { Footer } from "@/components/ui/footer";
 
 type BlogArticlePageProps = {
   article: {
@@ -70,11 +70,12 @@ export function BlogArticlePage({
 }: BlogArticlePageProps) {
   const publishedLabel = formatDate(article.publishedAt ?? article.updatedAt);
   const updatedLabel = formatDate(article.lastUpdatedAt ?? article.updatedAt);
+  const sidebarRelatedArticle = relatedArticles[0] ?? null;
 
   return (
     <main className="flex flex-1 flex-col bg-muted/20 pt-32">
       <section className="mx-auto w-full max-w-6xl px-6">
-        <div className="rounded-[2.5rem] border border-border bg-card p-8 shadow-sm sm:p-12">
+        <div className="border-b border-border pb-10">
           {previewMode ? (
             <div className="mb-6 inline-flex rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-black tracking-[0.22em] text-amber-700">
               Preview mode
@@ -89,20 +90,41 @@ export function BlogArticlePage({
               {article.primaryCategory.name}
             </Link>
             {publishedLabel ? <span>{publishedLabel}</span> : null}
-            {updatedLabel ? <span>Updated {updatedLabel}</span> : null}
           </div>
-          <h1 className="mt-5 max-w-4xl text-5xl font-black tracking-tight text-foreground sm:text-6xl">
+          <h1 className="mt-5 max-w-4xl text-4xl font-black tracking-tight text-foreground sm:text-5xl">
             {article.title}
           </h1>
-          <p className="mt-6 max-w-3xl text-lg font-medium leading-relaxed text-muted-foreground/80">
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground/85">
             {article.excerpt}
           </p>
+          <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-border pt-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-border bg-card text-sm font-black text-foreground">
+                {article.author.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={article.author.imageUrl}
+                    alt={article.author.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  article.author.name.charAt(0)
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-black text-foreground">{article.author.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {article.author.role ?? "ShipBoost"}
+                </p>
+              </div>
+            </div>
+          </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {article.articleTags.map((item) => (
               <Link
                 key={item.tag.id}
                 href={`/blog/tag/${item.tag.slug}`}
-                className="rounded-full border border-border px-3 py-2 text-xs font-black tracking-wide text-muted-foreground hover:text-foreground"
+                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-black tracking-wide text-muted-foreground hover:text-foreground"
               >
                 {item.tag.name}
               </Link>
@@ -110,51 +132,49 @@ export function BlogArticlePage({
           </div>
         </div>
 
-        {article.coverImageUrl ? (
-          <div className="py-8">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={article.coverImageUrl}
-              alt={article.coverImageAlt ?? article.title}
-              className="w-full rounded-[2.5rem] border border-border object-cover shadow-sm"
-            />
-          </div>
-        ) : null}
-
-        <div className="grid gap-8 pb-12 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <article className="rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8">
-            <div className="prose prose-neutral max-w-none">
+        <div className="py-10">
+          <article className="min-w-0">
+            {article.coverImageUrl ? (
+              <div className="mb-8 overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={article.coverImageUrl}
+                  alt={article.coverImageAlt ?? article.title}
+                  className="w-full object-cover"
+                />
+              </div>
+            ) : null}
+            <div className="rounded-[1.75rem] border border-border bg-card p-6 shadow-sm sm:p-8">
               <MarkdownContent content={article.markdownContent} />
             </div>
+            {sidebarRelatedArticle ? (
+              <section className="mt-6 rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
+                <h2 className="text-sm font-black tracking-[0.2em] text-foreground/60">
+                  Related
+                </h2>
+                <div className="mt-4 space-y-3">
+                  <p className="text-[11px] font-black tracking-[0.22em] text-foreground/45">
+                    {sidebarRelatedArticle.primaryCategory.name}
+                  </p>
+                  <h3 className="text-base font-black tracking-tight text-foreground">
+                    <Link
+                      href={`/blog/${sidebarRelatedArticle.slug}`}
+                      className="hover:underline underline-offset-4"
+                    >
+                      {sidebarRelatedArticle.title}
+                    </Link>
+                  </h3>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    {sidebarRelatedArticle.excerpt}
+                  </p>
+                </div>
+              </section>
+            ) : null}
           </article>
-
-          <aside className="space-y-6">
-            <BlogAuthorCard author={article.author} />
-
-            <section className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
-              <h2 className="text-xl font-black tracking-tight text-foreground">
-                Continue exploring
-              </h2>
-              <div className="mt-5 space-y-3">
-                <Link
-                  href={`/blog/category/${article.primaryCategory.slug}`}
-                  className="block rounded-2xl border border-border px-4 py-3 text-sm font-bold text-foreground transition hover:bg-muted"
-                >
-                  More in {article.primaryCategory.name}
-                </Link>
-                <Link
-                  href="/submit"
-                  className="block rounded-2xl border border-border px-4 py-3 text-sm font-bold text-foreground transition hover:bg-muted"
-                >
-                  Submit your SaaS
-                </Link>
-              </div>
-            </section>
-          </aside>
         </div>
 
         {relatedArticles.length > 0 ? (
-          <section className="pb-12">
+          <section className="border-t border-border py-12">
             <div className="mb-5 flex items-center justify-between gap-4">
               <h2 className="text-2xl font-black tracking-tight text-foreground">
                 Related articles
@@ -163,15 +183,15 @@ export function BlogArticlePage({
                 View all articles
               </Link>
             </div>
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {relatedArticles.map((related) => (
-                <article key={related.id} className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm">
+                <article key={related.id} className="overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-sm">
                   {related.coverImageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={related.coverImageUrl}
                       alt={related.coverImageAlt ?? related.title}
-                      className="h-40 w-full object-cover"
+                      className="h-44 w-full object-cover"
                     />
                   ) : null}
                   <div className="space-y-3 p-5">

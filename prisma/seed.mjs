@@ -153,22 +153,56 @@ async function seedTags() {
 }
 
 async function seedBlogAuthor() {
-  return prisma.blogAuthor.upsert({
-    where: { slug: "tony" },
+  const author = await prisma.blogAuthor.upsert({
+    where: { slug: "tim" },
     update: {
-      name: "Tony",
+      name: "Tim",
       role: "Founder, ShipBoost",
-      bio: "Tony writes about SaaS discovery, launches, founder distribution, and practical SEO.",
+      bio: "Tim writes about SaaS launches, founder marketing, trust signals, and practical SEO.",
       isActive: true,
     },
     create: {
-      slug: "tony",
-      name: "Tony",
+      slug: "tim",
+      name: "Tim",
       role: "Founder, ShipBoost",
-      bio: "Tony writes about SaaS discovery, launches, founder distribution, and practical SEO.",
+      bio: "Tim writes about SaaS launches, founder marketing, trust signals, and practical SEO.",
       isActive: true,
     },
   });
+
+  const legacyAuthors = await prisma.blogAuthor.findMany({
+    where: {
+      slug: {
+        not: "tim",
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (legacyAuthors.length > 0) {
+    await prisma.blogArticle.updateMany({
+      where: {
+        authorId: {
+          in: legacyAuthors.map((item) => item.id),
+        },
+      },
+      data: {
+        authorId: author.id,
+      },
+    });
+
+    await prisma.blogAuthor.deleteMany({
+      where: {
+        id: {
+          in: legacyAuthors.map((item) => item.id),
+        },
+      },
+    });
+  }
+
+  return author;
 }
 
 async function main() {

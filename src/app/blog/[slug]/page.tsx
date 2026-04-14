@@ -19,6 +19,14 @@ type RouteContext = {
   params: Promise<{ slug: string }>;
 };
 
+function toIsoString(value: Date | string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  return new Date(value).toISOString();
+}
+
 export async function generateStaticParams() {
   return getCachedBlogArticleStaticParams();
 }
@@ -74,8 +82,8 @@ export default async function BlogArticleRoute(context: RouteContext) {
     url: canonical,
     authorName: article.author.name,
     image: article.ogImageUrl ?? article.coverImageUrl,
-    publishedAt: article.publishedAt?.toISOString() ?? null,
-    updatedAt: (article.lastUpdatedAt ?? article.updatedAt)?.toISOString() ?? null,
+    publishedAt: toIsoString(article.publishedAt),
+    updatedAt: toIsoString(article.lastUpdatedAt ?? article.updatedAt),
     categoryName: article.primaryCategory.name,
     categoryUrl: `${env.NEXT_PUBLIC_APP_URL}/blog/category/${article.primaryCategory.slug}`,
   });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useDeferredValue, useEffect, useEffectEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Activity, Layers, Rocket, ClipboardList,
   Shield, AlertCircle, RefreshCw,
@@ -736,6 +737,27 @@ export function AdminConsole() {
     { id: "taxonomy", label: "Taxonomy", icon: Layers, count: categories.length + tags.length },
     { id: "blog", label: "Blog", icon: FileText },
   ];
+
+  if (activeNav === "blog") {
+    return (
+      <div className="w-full space-y-10">
+        <div className="flex items-center justify-between">
+           <button 
+             onClick={() => setActiveNav("overview")}
+             className="text-xs font-black tracking-widest text-muted-foreground hover:text-foreground flex items-center gap-2"
+           >
+             ← Back to Dashboard
+           </button>
+           <Link href="/admin/blog" className="text-[10px] font-black tracking-widest bg-primary/10 text-primary px-3 py-1 rounded-full hover:bg-primary/20 transition-all">
+             Open Full Screen Editor ↗
+           </Link>
+        </div>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <BlogPanel />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 items-start">

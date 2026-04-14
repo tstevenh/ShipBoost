@@ -101,7 +101,7 @@ describe("page-schema", () => {
       title: "EEAT for SaaS Blogs",
       description: "Practical trust signals for content teams.",
       url: "https://shipboost.io/blog/eeat-for-saas-blogs",
-      authorName: "Tony",
+      authorName: "Tim",
       image: "https://shipboost.io/og/blog-cover.png",
       publishedAt: "2026-04-14T00:00:00.000Z",
       updatedAt: "2026-04-15T00:00:00.000Z",
@@ -116,7 +116,7 @@ describe("page-schema", () => {
     expect(schemas[1]).toMatchObject({
       author: {
         "@type": "Person",
-        name: "Tony",
+        name: "Tim",
       },
       datePublished: "2026-04-14T00:00:00.000Z",
       dateModified: "2026-04-15T00:00:00.000Z",

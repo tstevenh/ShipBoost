@@ -6,10 +6,12 @@ import { JsonLdScript } from "@/components/seo/json-ld";
 import {
   getCachedBlogTagPage,
   getCachedBlogTagStaticParams,
+  getCachedPublicBlogCategories,
 } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildBlogArchivePageSchema } from "@/server/seo/page-schema";
+import { type SharedArticle } from "@/components/blog/blog-shared";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
@@ -41,7 +43,10 @@ export async function generateMetadata(context: RouteContext): Promise<Metadata>
 
 export default async function BlogTagRoute(context: RouteContext) {
   const { slug } = await context.params;
-  const page = await getCachedBlogTagPage(slug);
+  const [page, categories] = await Promise.all([
+    getCachedBlogTagPage(slug),
+    getCachedPublicBlogCategories(),
+  ]);
 
   if (!page) {
     notFound();
@@ -79,7 +84,8 @@ export default async function BlogTagRoute(context: RouteContext) {
           { label: "Blog", href: "/blog" },
           { label: page.name, href: `/blog/tag/${page.slug}` },
         ]}
-        articles={page.articles}
+        articles={page.articles as SharedArticle[]}
+        categories={categories}
       />
     </>
   );

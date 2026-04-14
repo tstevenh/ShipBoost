@@ -1,43 +1,10 @@
-import Link from "next/link";
-
 import { Footer } from "@/components/ui/footer";
-
-type ArchiveArticle = {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  publishedAt: Date | null;
-  updatedAt: Date;
-  coverImageUrl: string | null;
-  coverImageAlt: string | null;
-  primaryCategory: {
-    slug: string;
-    name: string;
-  };
-  articleTags: Array<{
-    tag: {
-      id: string;
-      slug: string;
-      name: string;
-    };
-  }>;
-};
+import { CategoryNav, ArticleCard, type SharedArticle } from "./blog-shared";
 
 type Breadcrumb = {
   label: string;
   href: string;
 };
-
-function formatDate(value: Date | string | null | undefined) {
-  if (!value) {
-    return null;
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-  }).format(new Date(value));
-}
 
 export function BlogArchivePage({
   eyebrow,
@@ -45,79 +12,65 @@ export function BlogArchivePage({
   description,
   breadcrumbs,
   articles,
+  categories,
+  activeCategorySlug,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   breadcrumbs: Breadcrumb[];
-  articles: ArchiveArticle[];
+  articles: SharedArticle[];
+  categories: Array<{ id: string; slug: string; name: string }>;
+  activeCategorySlug?: string;
 }) {
+  const featured = articles[0] ?? null;
+  const remaining = articles.slice(1);
+
   return (
-    <main className="flex flex-1 flex-col bg-muted/20 pt-32">
-      <section className="mx-auto w-full max-w-6xl px-6">
-        <div className="rounded-[2.5rem] border border-border bg-card p-8 shadow-sm sm:p-12">
-          <div className="flex flex-wrap gap-2 text-sm font-bold text-muted-foreground">
+    <main className="flex flex-1 flex-col bg-background pt-32">
+      <section className="mx-auto w-full max-w-7xl px-6 flex-1 flex flex-col">
+        <div className="max-w-3xl mb-12">
+           <div className="flex flex-wrap gap-2 text-[10px] font-black tracking-widest text-muted-foreground uppercase mb-6">
             {breadcrumbs.map((breadcrumb, index) => (
               <span key={breadcrumb.href} className="inline-flex items-center gap-2">
-                {index > 0 ? <span>/</span> : null}
-                <Link href={breadcrumb.href} className="hover:text-foreground">
+                {index > 0 ? <span className="opacity-40">/</span> : null}
+                <a href={breadcrumb.href} className="hover:text-foreground">
                   {breadcrumb.label}
-                </Link>
+                </a>
               </span>
             ))}
           </div>
-          <p className="mt-6 text-[10px] font-black tracking-[0.3em] text-foreground/40">
+          <p className="text-[10px] font-black tracking-[0.3em] text-primary uppercase mb-4">
             {eyebrow}
           </p>
-          <h1 className="mt-5 text-5xl font-black tracking-tight text-foreground sm:text-6xl">
+          <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-6xl mb-6">
             {title}
           </h1>
-          <p className="mt-6 max-w-3xl text-lg font-medium leading-relaxed text-muted-foreground/80">
+          <p className="text-xl leading-relaxed text-muted-foreground">
             {description}
           </p>
         </div>
 
-        <div className="grid gap-6 py-10 md:grid-cols-2 xl:grid-cols-3">
-          {articles.map((article) => (
-            <article key={article.id} className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm">
-              {article.coverImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={article.coverImageUrl}
-                  alt={article.coverImageAlt ?? article.title}
-                  className="h-48 w-full object-cover"
-                />
-              ) : null}
-              <div className="space-y-4 p-6">
-                <div className="flex flex-wrap items-center gap-3 text-[11px] font-black tracking-[0.24em] text-foreground/45">
-                  <Link href={`/blog/category/${article.primaryCategory.slug}`} className="hover:text-foreground">
-                    {article.primaryCategory.name}
-                  </Link>
-                  <span>{formatDate(article.publishedAt ?? article.updatedAt)}</span>
-                </div>
-                <h2 className="text-2xl font-black tracking-tight text-foreground">
-                  <Link href={`/blog/${article.slug}`} className="hover:underline underline-offset-4">
-                    {article.title}
-                  </Link>
-                </h2>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {article.excerpt}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {article.articleTags.slice(0, 3).map((item) => (
-                    <Link
-                      key={item.tag.id}
-                      href={`/blog/tag/${item.tag.slug}`}
-                      className="rounded-full border border-border px-3 py-1 text-[11px] font-black tracking-wide text-muted-foreground hover:text-foreground"
-                    >
-                      {item.tag.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+        <CategoryNav categories={categories} activeSlug={activeCategorySlug} />
+
+        {featured && (
+          <div className="mb-12">
+            <ArticleCard article={featured} featured={true} />
+          </div>
+        )}
+
+        {remaining.length > 0 ? (
+          <div className="grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3 mb-24">
+            {remaining.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+        ) : !featured ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <p className="text-xl font-black text-foreground mb-2">No articles found</p>
+            <p className="text-muted-foreground">Try browsing another category.</p>
+          </div>
+        ) : null}
       </section>
       <Footer className="mt-auto" />
     </main>
