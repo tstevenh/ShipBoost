@@ -8,6 +8,7 @@ type PublicMetadataInput = {
   url: string;
   openGraphType?: "website" | "article";
   twitterCard?: "summary" | "summary_large_image";
+  imageUrl?: string | null;
 };
 
 function normalizeCanonicalUrl(url: URL) {
@@ -53,6 +54,14 @@ export function buildPublicPageMetadata(
   input: PublicMetadataInput,
 ): Metadata {
   const canonical = resolveCanonicalUrl(input.url);
+  const images = input.imageUrl
+    ? [
+        {
+          url: input.imageUrl,
+          alt: input.title,
+        },
+      ]
+    : undefined;
 
   return {
     title: input.title,
@@ -66,11 +75,13 @@ export function buildPublicPageMetadata(
       url: canonical,
       siteName: "ShipBoost",
       type: input.openGraphType ?? "website",
+      images,
     },
     twitter: {
       card: input.twitterCard ?? "summary",
       title: input.title,
       description: input.description,
+      images: input.imageUrl ? [input.imageUrl] : undefined,
     },
   };
 }

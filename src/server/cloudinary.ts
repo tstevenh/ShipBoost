@@ -49,12 +49,20 @@ export type UploadedCloudinaryAsset = {
 export async function uploadImageToCloudinary(
   fileBuffer: Buffer,
   options: {
-    kind: "logo" | "screenshot";
+    kind: "logo" | "screenshot" | "blog-cover" | "blog-inline";
     filename: string;
   },
 ): Promise<UploadedCloudinaryAsset> {
   const env = ensureConfigured();
   const publicId = `${options.kind}-${crypto.randomUUID()}`;
+  const folder =
+    options.kind === "logo"
+      ? `${env.CLOUDINARY_UPLOAD_FOLDER}/logos`
+      : options.kind === "screenshot"
+        ? `${env.CLOUDINARY_UPLOAD_FOLDER}/screenshots`
+        : options.kind === "blog-cover"
+          ? `${env.CLOUDINARY_UPLOAD_FOLDER}/blog/covers`
+          : `${env.CLOUDINARY_UPLOAD_FOLDER}/blog/inline`;
 
   const result = await new Promise<{
     secure_url: string;
@@ -66,7 +74,7 @@ export async function uploadImageToCloudinary(
     const stream = cloudinary.uploader.upload_stream(
       {
         resource_type: "image",
-        folder: `${env.CLOUDINARY_UPLOAD_FOLDER}/${options.kind}s`,
+        folder,
         public_id: publicId,
         overwrite: false,
         use_filename: false,

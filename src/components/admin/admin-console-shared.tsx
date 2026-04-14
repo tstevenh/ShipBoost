@@ -167,6 +167,75 @@ export type TagDraft = {
   isActive: boolean;
 };
 
+export type BlogAuthor = {
+  id: string;
+  slug: string;
+  name: string;
+  role: string | null;
+  bio: string;
+  imageUrl: string | null;
+  xUrl: string | null;
+  linkedinUrl: string | null;
+  websiteUrl: string | null;
+  isActive: boolean;
+};
+
+export type BlogCategory = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  seoIntro: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  isActive: boolean;
+  sortOrder: number;
+};
+
+export type BlogTag = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  isActive: boolean;
+};
+
+export type BlogArticle = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  markdownContent: string;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  publishedAt: string | null;
+  updatedAt: string;
+  lastUpdatedAt: string | null;
+  coverImageUrl: string | null;
+  coverImagePublicId: string | null;
+  coverImageAlt: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  canonicalUrl: string | null;
+  ogImageUrl: string | null;
+  author: BlogAuthor;
+  primaryCategory: BlogCategory;
+  articleTags: Array<{
+    tagId: string;
+    tag: BlogTag;
+  }>;
+};
+
+export type BlogMediaUpload = {
+  url: string;
+  publicId: string;
+  format?: string;
+  width?: number;
+  height?: number;
+  markdown: string;
+};
+
 export function SectionCard({
   title,
   eyebrow,
@@ -321,6 +390,28 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     throw new Error(payload?.error ?? "Request failed.");
+  }
+
+  return payload?.data as T;
+}
+
+export async function apiUpload<T>(
+  input: RequestInfo,
+  formData: FormData,
+  init?: Omit<RequestInit, "body" | "headers">,
+): Promise<T> {
+  const response = await fetch(input, {
+    method: "POST",
+    ...init,
+    body: formData,
+  });
+
+  const payload = (await response.json().catch(() => null)) as
+    | { data?: T; error?: string }
+    | null;
+
+  if (!response.ok) {
+    throw new Error(payload?.error ?? "Upload failed.");
   }
 
   return payload?.data as T;

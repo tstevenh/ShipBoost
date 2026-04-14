@@ -111,6 +111,65 @@ export function buildArticlePageSchema(input: {
   ];
 }
 
+export function buildBlogArticlePageSchema(input: {
+  title: string;
+  description: string;
+  url: string;
+  authorName: string;
+  image?: string | null;
+  publishedAt?: string | null;
+  updatedAt?: string | null;
+  categoryName?: string | null;
+  categoryUrl?: string | null;
+}) {
+  return [
+    buildBreadcrumbList([
+      { name: "Home", url: "https://shipboost.io" },
+      { name: "Blog", url: "https://shipboost.io/blog" },
+      ...(input.categoryName && input.categoryUrl
+        ? [{ name: input.categoryName, url: input.categoryUrl }]
+        : []),
+      { name: input.title, url: input.url },
+    ]),
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: input.title,
+      description: input.description,
+      url: input.url,
+      image: input.image ?? undefined,
+      datePublished: input.publishedAt ?? undefined,
+      dateModified: input.updatedAt ?? input.publishedAt ?? undefined,
+      author: {
+        "@type": "Person",
+        name: input.authorName,
+      },
+      articleSection: input.categoryName ?? undefined,
+    },
+  ];
+}
+
+export function buildBlogArchivePageSchema(input: {
+  title: string;
+  description: string;
+  url: string;
+  breadcrumbs: { name: string; url: string }[];
+  items: { name: string; url: string }[];
+}) {
+  const list = buildItemList(input.items);
+
+  return [
+    buildBreadcrumbList(input.breadcrumbs),
+    list,
+    buildCollectionPage({
+      name: input.title,
+      description: input.description,
+      url: input.url,
+      mainEntity: list,
+    }),
+  ];
+}
+
 export function buildFaqPageSchema(input: {
   title: string;
   description: string;

@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 
 import {
   getAlternativesStaticParams,
+  getCachedBlogArticleStaticParams,
+  getCachedBlogCategoryStaticParams,
+  getCachedBlogTagStaticParams,
   getCachedBestTagStaticParams,
   getCachedCategoryStaticParams,
   getCachedToolStaticParams,
@@ -22,6 +25,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getCachedCategoryStaticParams(),
     getCachedBestTagStaticParams(),
     getCachedToolStaticParams(),
+  ]);
+  const [blogArticleParams, blogCategoryParams, blogTagParams] = await Promise.all([
+    getCachedBlogArticleStaticParams(),
+    getCachedBlogCategoryStaticParams(),
+    getCachedBlogTagStaticParams(),
   ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -115,6 +123,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    {
+      url: toAbsoluteUrl("/blog", appUrl),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
   ];
 
   const launchBoardRoutes: MetadataRoute.Sitemap = getLaunchBoardStaticParams().map(
@@ -156,6 +170,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  const blogArticleRoutes: MetadataRoute.Sitemap = blogArticleParams.map(
+    ({ slug, updatedAt }) => ({
+      url: toAbsoluteUrl(`/blog/${slug}`, appUrl),
+      lastModified: updatedAt,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    }),
+  );
+
+  const blogCategoryRoutes: MetadataRoute.Sitemap = blogCategoryParams.map(
+    ({ slug, updatedAt }) => ({
+      url: toAbsoluteUrl(`/blog/category/${slug}`, appUrl),
+      lastModified: updatedAt,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }),
+  );
+
+  const blogTagRoutes: MetadataRoute.Sitemap = blogTagParams.map(
+    ({ slug, updatedAt }) => ({
+      url: toAbsoluteUrl(`/blog/tag/${slug}`, appUrl),
+      lastModified: updatedAt,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    }),
+  );
+
   return [
     ...staticRoutes,
     ...launchBoardRoutes,
@@ -163,5 +204,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...bestTagRoutes,
     ...alternativeRoutes,
     ...toolRoutes,
+    ...blogArticleRoutes,
+    ...blogCategoryRoutes,
+    ...blogTagRoutes,
   ];
 }

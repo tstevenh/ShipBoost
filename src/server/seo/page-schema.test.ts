@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildArticlePageSchema,
+  buildBlogArchivePageSchema,
+  buildBlogArticlePageSchema,
   buildCollectionListingSchema,
   buildCollectionWithBreadcrumbSchema,
   buildContactPageSchema,
@@ -91,6 +93,58 @@ describe("page-schema", () => {
     expect(schemas.map((item) => item["@type"])).toEqual([
       "BreadcrumbList",
       "Article",
+    ]);
+  });
+
+  it("builds blog article schema with author and timestamps", () => {
+    const schemas = buildBlogArticlePageSchema({
+      title: "EEAT for SaaS Blogs",
+      description: "Practical trust signals for content teams.",
+      url: "https://shipboost.io/blog/eeat-for-saas-blogs",
+      authorName: "Tony",
+      image: "https://shipboost.io/og/blog-cover.png",
+      publishedAt: "2026-04-14T00:00:00.000Z",
+      updatedAt: "2026-04-15T00:00:00.000Z",
+      categoryName: "SEO",
+      categoryUrl: "https://shipboost.io/blog/category/seo",
+    });
+
+    expect(schemas.map((item) => item["@type"])).toEqual([
+      "BreadcrumbList",
+      "Article",
+    ]);
+    expect(schemas[1]).toMatchObject({
+      author: {
+        "@type": "Person",
+        name: "Tony",
+      },
+      datePublished: "2026-04-14T00:00:00.000Z",
+      dateModified: "2026-04-15T00:00:00.000Z",
+    });
+  });
+
+  it("builds blog archive collection schema", () => {
+    const schemas = buildBlogArchivePageSchema({
+      title: "SEO Articles",
+      description: "Browse SEO articles on ShipBoost.",
+      url: "https://shipboost.io/blog/category/seo",
+      breadcrumbs: [
+        { name: "Home", url: "https://shipboost.io" },
+        { name: "Blog", url: "https://shipboost.io/blog" },
+        { name: "SEO", url: "https://shipboost.io/blog/category/seo" },
+      ],
+      items: [
+        {
+          name: "EEAT for SaaS Blogs",
+          url: "https://shipboost.io/blog/eeat-for-saas-blogs",
+        },
+      ],
+    });
+
+    expect(schemas.map((item) => item["@type"])).toEqual([
+      "BreadcrumbList",
+      "ItemList",
+      "CollectionPage",
     ]);
   });
 

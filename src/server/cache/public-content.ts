@@ -2,6 +2,16 @@ import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { prisma } from "@/server/db/client";
+import {
+  getPublicBlogCategoryPage,
+  getPublicBlogIndexPage,
+  getPublicBlogTagPage,
+  getPublishedBlogArticleBySlug,
+  listPublishedBlogArticleStaticParams,
+  listPublishedBlogCategoryStaticParams,
+  listPublishedBlogTagStaticParams,
+  listRelatedPublishedBlogArticles,
+} from "@/server/services/blog-service";
 import { listLaunchBoard } from "@/server/services/launch-service";
 import { getPublicCategoryPageBySlug } from "@/server/services/catalog-service";
 import { getAlternativesSeoPage, getBestTagSeoPage } from "@/server/services/seo-service";
@@ -19,6 +29,9 @@ export const PUBLIC_BEST_TAG_REVALIDATE = 1800;
 export const PUBLIC_ALTERNATIVES_REVALIDATE = 1800;
 export const PUBLIC_TOOL_REVALIDATE = 3600;
 export const PUBLIC_HEADER_REVALIDATE = 3600;
+export const PUBLIC_BLOG_INDEX_REVALIDATE = 900;
+export const PUBLIC_BLOG_ARCHIVE_REVALIDATE = 1800;
+export const PUBLIC_BLOG_ARTICLE_REVALIDATE = 3600;
 
 export const PUBLIC_LAUNCH_BOARDS = [
   "weekly",
@@ -38,10 +51,38 @@ export const PUBLIC_CACHE_TAGS = {
   bestTags: "public:best-tags",
   alternatives: "public:alternatives",
   tools: "public:tools",
+  blogIndex: "public:blog:index",
+  blogArticles: "public:blog:articles",
+  blogCategories: "public:blog:categories",
+  blogTags: "public:blog:tags",
 } as const;
 
 export function revalidatePublicToolContent() {
   revalidateTag(PUBLIC_CACHE_TAGS.tools, "max");
+}
+
+export function revalidatePublicBlogContent(input?: {
+  articleSlug?: string;
+  categorySlug?: string;
+  tagSlugs?: string[];
+}) {
+  revalidateTag(PUBLIC_CACHE_TAGS.blogIndex, "max");
+  revalidateTag(PUBLIC_CACHE_TAGS.blogArticles, "max");
+  revalidateTag(PUBLIC_CACHE_TAGS.blogCategories, "max");
+  revalidateTag(PUBLIC_CACHE_TAGS.blogTags, "max");
+  revalidatePath("/blog");
+
+  if (input?.articleSlug) {
+    revalidatePath(`/blog/${input.articleSlug}`);
+  }
+
+  if (input?.categorySlug) {
+    revalidatePath(`/blog/category/${input.categorySlug}`);
+  }
+
+  for (const slug of input?.tagSlugs ?? []) {
+    revalidatePath(`/blog/tag/${slug}`);
+  }
 }
 
 export function revalidateAllPublicContent() {
@@ -51,6 +92,7 @@ export function revalidateAllPublicContent() {
   revalidateTag(PUBLIC_CACHE_TAGS.bestTags, "max");
   revalidateTag(PUBLIC_CACHE_TAGS.alternatives, "max");
   revalidatePublicToolContent();
+  revalidatePublicBlogContent();
   revalidatePath("/");
   revalidatePath("/alternatives");
   revalidatePath("/alternatives/[slug]", "page");
@@ -58,6 +100,10 @@ export function revalidateAllPublicContent() {
   revalidatePath("/categories");
   revalidatePath("/categories/[slug]", "page");
   revalidatePath("/launches/[board]", "page");
+  revalidatePath("/blog");
+  revalidatePath("/blog/[slug]", "page");
+  revalidatePath("/blog/category/[slug]", "page");
+  revalidatePath("/blog/tag/[slug]", "page");
   revalidatePath("/tools/[slug]", "page");
 }
 
@@ -263,6 +309,68 @@ export const getCachedRelatedPublishedTools = cache(
     )(),
 );
 
+export const getCachedBlogIndexPage = cache(async () =>
+  unstable_cache(
+    () => getPublicBlogIndexPage(),
+    ["public-blog-index", "v1"],
+    {
+      revalidate: PUBLIC_BLOG_INDEX_REVALIDATE,
+      tags: [PUBLIC_CACHE_TAGS.blogIndex, PUBLIC_CACHE_TAGS.blogArticles],
+    },
+  )(),
+);
+
+export const getCachedPublishedBlogArticle = cache(async (slug: string) =>
+  unstable_cache(
+    () => getPublishedBlogArticleBySlug(slug),
+    ["public-blog-article", "v1", slug],
+    {
+      revalidate: PUBLIC_BLOG_ARTICLE_REVALIDATE,
+      tags: [PUBLIC_CACHE_TAGS.blogArticles, `public:blog:article:${slug}`],
+    },
+  )(),
+);
+
+export const getCachedRelatedPublishedBlogArticles = cache(
+  async (articleId: string, categoryId: string, tagIds: string[]) =>
+    unstable_cache(
+      () =>
+        listRelatedPublishedBlogArticles({
+          articleId,
+          categoryId,
+          tagIds,
+          take: 4,
+        }),
+      ["public-blog-related", "v1", articleId, categoryId, tagIds.join(",")],
+      {
+        revalidate: PUBLIC_BLOG_ARTICLE_REVALIDATE,
+        tags: [PUBLIC_CACHE_TAGS.blogArticles, `public:blog:related:${articleId}`],
+      },
+    )(),
+);
+
+export const getCachedBlogCategoryPage = cache(async (slug: string) =>
+  unstable_cache(
+    () => getPublicBlogCategoryPage(slug),
+    ["public-blog-category", "v1", slug],
+    {
+      revalidate: PUBLIC_BLOG_ARCHIVE_REVALIDATE,
+      tags: [PUBLIC_CACHE_TAGS.blogCategories, `public:blog:category:${slug}`],
+    },
+  )(),
+);
+
+export const getCachedBlogTagPage = cache(async (slug: string) =>
+  unstable_cache(
+    () => getPublicBlogTagPage(slug),
+    ["public-blog-tag", "v1", slug],
+    {
+      revalidate: PUBLIC_BLOG_ARCHIVE_REVALIDATE,
+      tags: [PUBLIC_CACHE_TAGS.blogTags, `public:blog:tag:${slug}`],
+    },
+  )(),
+);
+
 export const getCachedCategoryStaticParams = cache(async () =>
   unstable_cache(
     async () =>
@@ -331,6 +439,39 @@ export const getCachedToolStaticParams = cache(async () =>
     {
       revalidate: PUBLIC_TOOL_REVALIDATE,
       tags: [PUBLIC_CACHE_TAGS.tools],
+    },
+  )(),
+);
+
+export const getCachedBlogArticleStaticParams = cache(async () =>
+  unstable_cache(
+    () => listPublishedBlogArticleStaticParams(),
+    ["public-blog-article-static-params", "v1"],
+    {
+      revalidate: PUBLIC_BLOG_ARTICLE_REVALIDATE,
+      tags: [PUBLIC_CACHE_TAGS.blogArticles],
+    },
+  )(),
+);
+
+export const getCachedBlogCategoryStaticParams = cache(async () =>
+  unstable_cache(
+    () => listPublishedBlogCategoryStaticParams(),
+    ["public-blog-category-static-params", "v1"],
+    {
+      revalidate: PUBLIC_BLOG_ARCHIVE_REVALIDATE,
+      tags: [PUBLIC_CACHE_TAGS.blogCategories],
+    },
+  )(),
+);
+
+export const getCachedBlogTagStaticParams = cache(async () =>
+  unstable_cache(
+    () => listPublishedBlogTagStaticParams(),
+    ["public-blog-tag-static-params", "v1"],
+    {
+      revalidate: PUBLIC_BLOG_ARCHIVE_REVALIDATE,
+      tags: [PUBLIC_CACHE_TAGS.blogTags],
     },
   )(),
 );

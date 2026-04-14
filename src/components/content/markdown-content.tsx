@@ -52,6 +52,15 @@ export function MarkdownContent({ content }: { content: string }) {
             {children}
           </a>
         ),
+        img: ({ src, alt }) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={src ?? ""}
+            alt={alt ?? ""}
+            loading="lazy"
+            className="mt-6 w-full rounded-[1.75rem] border border-border bg-card object-cover shadow-sm"
+          />
+        ),
         code: ({ children }) => (
           <code className="rounded bg-muted px-1.5 py-0.5 text-[0.9em] font-bold text-foreground">
             {children}

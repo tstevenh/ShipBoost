@@ -1,10 +1,10 @@
 "use client";
 
 import { useDeferredValue, useEffect, useEffectEvent, useMemo, useState } from "react";
-import { 
+import {
   Activity, Layers, Rocket, ClipboardList,
   Shield, AlertCircle, RefreshCw,
-  Layout, Package,
+  Layout, Package, FileText,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ import {
   type ToolCreateForm,
 } from "@/components/admin/admin-console-shared";
 import { CatalogPanel } from "@/components/admin/catalog-panel";
+import { BlogPanel } from "@/components/admin/blog-panel";
 import { ListingClaimPanel } from "@/components/admin/listing-claim-panel";
 import { SubmissionReviewPanel } from "@/components/admin/submission-review-panel";
 import { ToolOpsPanel } from "@/components/admin/tool-ops-panel";
@@ -71,7 +72,7 @@ function emptyTagDraft(): TagDraft {
   };
 }
 
-type AdminNavSection = "overview" | "moderate" | "inventory" | "taxonomy";
+type AdminNavSection = "overview" | "moderate" | "inventory" | "taxonomy" | "blog";
 type AdminNavItem = {
   id: AdminNavSection;
   label: string;
@@ -733,6 +734,7 @@ export function AdminConsole() {
     { id: "moderate", label: "Moderate", icon: Shield, count: totalPending + pendingClaimCount },
     { id: "inventory", label: "Inventory", icon: Package, count: tools.length },
     { id: "taxonomy", label: "Taxonomy", icon: Layers, count: categories.length + tags.length },
+    { id: "blog", label: "Blog", icon: FileText },
   ];
 
   return (
@@ -898,6 +900,12 @@ export function AdminConsole() {
               hasPendingAction={hasPendingAction}
               isActionPending={isActionPending}
             />
+          </div>
+        )}
+
+        {activeNav === "blog" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <BlogPanel />
           </div>
         )}
       </div>
