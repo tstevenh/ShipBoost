@@ -20,7 +20,7 @@ type SubmitPageProps = {
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Submit Your SaaS Product | ShipBoost",
   description:
-    "Submit your SaaS product to ShipBoost and choose a Free Launch or Premium Launch path.",
+    "Submit your SaaS product to ShipBoost, choose a Free Launch or Premium Launch path, and turn launch into ongoing distribution.",
   url: "/submit",
 });
 
@@ -50,11 +50,27 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
         <section className="mx-auto max-w-4xl px-6">
           <div className="text-center space-y-6 mb-16">
             <h1 className="text-5xl font-black tracking-tight text-foreground ">
-              Submit your Product
+              Submit your product
             </h1>
             <p className="text-xl font-medium text-muted-foreground">
-              Join a curated ecosystem of serious founders building credible distribution loops.
+              Turn your launch into a cleaner public listing, weekly board visibility, and discovery that can keep working after launch day.
             </p>
+          </div>
+
+          <div className="mb-8 grid gap-4 sm:grid-cols-2">
+            {[
+              "Weekly launch board placement",
+              "Founder-ready public listing",
+              "Category and alternatives discovery over time",
+              "Dashboard control over your launch and listing",
+            ].map((item) => (
+              <div
+                key={item}
+                className="rounded-[2rem] border border-border bg-card px-5 py-5 text-sm font-bold text-foreground shadow-sm"
+              >
+                {item}
+              </div>
+            ))}
           </div>
 
           {isPrelaunch ? (
@@ -71,8 +87,13 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
 
           <div className="bg-card border border-border rounded-[2.5rem] p-10 shadow-xl shadow-black/5 text-center space-y-8 mb-32">
             <p className="text-lg font-medium text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              You must have an account to submit a product to ShipBoost. 
-              This allows you to manage your listing and track your launch momentum later.
+              You need an account to submit to ShipBoost. That keeps your draft,
+              listing, and launch status tied to one founder workflow from
+              submission through launch.
+            </p>
+            <p className="text-sm font-bold text-muted-foreground/80">
+              Save your draft anytime and come back later. You do not need to
+              finish everything in one session.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
@@ -161,6 +182,38 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
   return (
     <main className="flex-1 flex flex-col bg-muted/20 pt-32">
       <section className="mx-auto max-w-7xl px-6 mb-32">
+        <div className="mb-8 rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+          <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40">
+            Before you submit
+          </p>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div>
+              <h2 className="text-2xl font-black tracking-tight text-foreground">
+                What you get when you submit to ShipBoost
+              </h2>
+              <p className="mt-3 text-sm font-medium leading-relaxed text-muted-foreground">
+                Submit once, save your draft at any point, and build toward a
+                public listing, weekly launch placement, and discovery paths
+                that can keep working after launch day.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                "Weekly launch board placement",
+                "Founder-ready public listing",
+                "Category and alternatives discovery",
+                "You can update your listing later",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-2xl border border-border bg-muted/20 px-4 py-4 text-sm font-bold text-foreground"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
         <SubmitProductForm
           categories={categories}
           tags={tags}

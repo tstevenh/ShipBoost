@@ -163,14 +163,7 @@ export function StartupDirectoriesResource({
                   {index + 1}
                 </td>
                 <td className="px-4 py-3 font-bold text-foreground">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span>{item.name}</span>
-                    {item.recommended ? (
-                      <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-primary">
-                        ShipBoost
-                      </span>
-                    ) : null}
-                  </div>
+                  <span>{item.name}</span>
                 </td>
                 <td className={`px-4 py-3 ${item.recommended ? "font-semibold text-foreground/80" : "text-muted-foreground"}`}>
                   {item.domain}

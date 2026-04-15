@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { getEnv } from "@/server/env";
 
+const DEFAULT_SITE_OG_IMAGE_PATH = "/ShipBoost-OGImage.png";
+
 type PublicMetadataInput = {
   title: string;
   description: string;
@@ -50,18 +52,33 @@ export function resolveSameOriginCanonicalUrl(
   return candidateCanonical;
 }
 
+export function resolvePublicImageUrl(url: string) {
+  const env = getEnv();
+
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  return new URL(url, env.NEXT_PUBLIC_APP_URL).toString();
+}
+
+export function getDefaultPublicPageImage() {
+  return resolvePublicImageUrl(DEFAULT_SITE_OG_IMAGE_PATH);
+}
+
 export function buildPublicPageMetadata(
   input: PublicMetadataInput,
 ): Metadata {
   const canonical = resolveCanonicalUrl(input.url);
-  const images = input.imageUrl
-    ? [
-        {
-          url: input.imageUrl,
-          alt: input.title,
-        },
-      ]
-    : undefined;
+  const resolvedImageUrl = input.imageUrl
+    ? resolvePublicImageUrl(input.imageUrl)
+    : getDefaultPublicPageImage();
+  const images = [
+    {
+      url: resolvedImageUrl,
+      alt: input.title,
+    },
+  ];
 
   return {
     title: input.title,
@@ -81,7 +98,7 @@ export function buildPublicPageMetadata(
       card: input.twitterCard ?? "summary",
       title: input.title,
       description: input.description,
-      images: input.imageUrl ? [input.imageUrl] : undefined,
+      images: [resolvedImageUrl],
     },
   };
 }

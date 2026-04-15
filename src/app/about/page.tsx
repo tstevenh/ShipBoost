@@ -36,6 +36,38 @@ export default function AboutPage() {
         finalCtaDescription="ShipBoost is built for bootstrapped SaaS founders who care about credibility, practical distribution, and staying discoverable after the first spike."
       >
         <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm sm:p-10">
+          <div className="max-w-4xl space-y-5">
+            <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40">
+              In practice
+            </p>
+            <h2 className="text-3xl font-black tracking-tight text-foreground">
+              What ShipBoost actually does
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[
+                "Weekly launch board visibility",
+                "Founder-ready public listings",
+                "Category and tag discovery paths",
+                "Alternatives pages built for comparison intent",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-2xl border border-border bg-muted/20 p-5 text-sm font-bold text-foreground"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+            <p className="text-base font-medium leading-relaxed text-muted-foreground/80">
+              ShipBoost is built for bootstrapped SaaS founders who want a
+              cleaner launch surface and a public asset that keeps doing work
+              after launch day instead of disappearing into a one-day spike or a
+              dead directory archive.
+            </p>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm sm:p-10">
           <div className="max-w-4xl space-y-6 text-base font-medium leading-relaxed text-muted-foreground/80">
             <h2 className="text-3xl font-black tracking-tight text-foreground">
               Why I started ShipBoost

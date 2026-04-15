@@ -55,13 +55,12 @@ export function ResourceUnlockPanel() {
           Unlock the full resource
         </p>
         <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-          Get the full 300+ startup directories list.
+          Unlock the full searchable list of 300+ startup directories.
         </h2>
         <p className="text-sm font-medium leading-7 text-muted-foreground sm:text-base">
-          Unlock the searchable directory list ShipBoost uses for founder
-          distribution. The public preview shows a sample. The full version
-          gives you the complete list inside ShipBoost so you can sort, search,
-          and work through it faster.
+          Get the complete hosted list inside ShipBoost so you can search, sort,
+          and work through distribution research faster instead of juggling
+          spreadsheets and scattered bookmarks.
         </p>
       </div>
 

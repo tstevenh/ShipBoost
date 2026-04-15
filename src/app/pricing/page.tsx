@@ -24,8 +24,8 @@ const doneForYouTier = {
 export function generateMetadata(): Metadata {
   const isPrelaunch = getEnv().NEXT_PUBLIC_PRELAUNCH_MODE === "true";
   const description = isPrelaunch
-    ? "Compare ShipBoost pricing for Free Launch, Premium Launch, and done-for-you directory submission support before the opening cohort."
-    : "Compare ShipBoost pricing for Free Launch, Premium Launch, and done-for-you directory submission support.";
+    ? "Compare Free Launch, Premium Launch, and ShipBoost's partner submission support before the opening cohort."
+    : "Choose the ShipBoost launch path that fits your stage: Free Launch, Premium Launch, or partner submission support.";
 
   return buildPublicPageMetadata({
     title: "ShipBoost Pricing | Free and Premium Launches",
@@ -48,7 +48,7 @@ export default async function PricingPage() {
       name: "Free Launch",
       price: "$0",
       description:
-        "Get into the weekly launchpad with a public listing, category placement, and a founder-managed profile after approval.",
+        "Best for founders who want a founder-ready public listing, weekly launch visibility, and are comfortable qualifying through badge verification.",
       eyebrow: "Weekly launchpad",
       ctaLabel: "Reserve free launch",
       ctaHref: "/submit",
@@ -56,7 +56,7 @@ export default async function PricingPage() {
       icon: ShieldCheck,
       points: [
         "Weekly launchpad placement",
-        "Public tool listing on ShipBoost",
+        "Public listing on ShipBoost",
         "Founder-managed profile after approval",
         "Requires badge verification",
       ],
@@ -66,7 +66,7 @@ export default async function PricingPage() {
       price: foundingPremiumPrice.currentPrice,
       originalPrice: foundingPremiumPrice.compareAtPrice,
       description:
-        "Choose your launch week, skip badge verification, and get priority placement in the weekly launchpad.",
+        "Best for founders who care about timing, want less submission friction, and want stronger baseline placement in the weekly launch board.",
       eyebrow: "Founding offer",
       foundingSpotsLabel: "First 100 Premium Launches",
       ctaLabel: premiumLaunchAvailable
@@ -79,10 +79,10 @@ export default async function PricingPage() {
       highlight: true,
       icon: Star,
       points: [
-        "Choose your launch week",
-        "Premium placement in the weekly launchpad",
-        "No badge required",
-        "Priority ordering over free launches",
+        "Reserve a specific launch week",
+        "Skip badge verification and go live faster",
+        "Get stronger baseline board placement",
+        "Keep a public listing that stays useful after launch",
       ],
     },
     {
@@ -106,8 +106,8 @@ export default async function PricingPage() {
   const schema = buildPricingPageSchema({
     title: "Pricing",
     description: isPrelaunch
-      ? "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a Premium Launch for the May 1 opening cohort, or use our AI Directories partner service."
-      : "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a Premium Launch, or use our AI Directories partner service.",
+      ? "Choose the ShipBoost launch path that fits your product stage. Start free, reserve a Premium Launch for the May 1 opening cohort, or use our partner submission service."
+      : "Choose the ShipBoost launch path that fits your product stage. Start free, reserve a Premium Launch, or use our partner submission service.",
     url: `${env.NEXT_PUBLIC_APP_URL}/pricing`,
   });
 
@@ -122,12 +122,12 @@ export default async function PricingPage() {
           <h1 className="text-5xl font-black tracking-tight text-foreground sm:text-6xl ">
             {isPrelaunch
               ? "Launch pricing for the opening cohort."
-              : "Launch pricing for serious founders."}
+              : "Choose the launch path that fits your product stage."}
           </h1>
           <p className="mt-6 text-xl font-medium leading-relaxed text-muted-foreground/80">
             {isPrelaunch
-              ? "ShipBoost opens on May 1, 2026 UTC. Start with a free weekly launch, reserve a Premium Launch week, or hand off directory submissions to our AI Directories partner."
-              : "Start with a free weekly launch, reserve a Premium Launch when you want stronger placement, or hand off directory submissions to our AI Directories partner."}
+              ? "ShipBoost opens on May 1, 2026 UTC. Start free if you want a credible listing and weekly visibility, reserve Premium if timing and lower friction matter more, or use our partner service for broader directory submissions."
+              : "Start free if you want a credible listing and weekly visibility. Upgrade to Premium if timing, lower friction, and stronger baseline placement matter more."}
           </p>
         </div>
 
@@ -230,14 +230,15 @@ export default async function PricingPage() {
         <section className="mt-20 grid gap-12 lg:grid-cols-[1.2fr_0.8fr] items-start">
           <div className="space-y-6">
             <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40 ">
-              Brand Commitment
+              Why founders choose ShipBoost
             </p>
             <h2 className="text-3xl font-black tracking-tight text-foreground">
-              Distribution over vanity. Trust first.
+              Launch visibility is only useful if discovery keeps working after the board rotates.
             </h2>
             <p className="text-lg font-medium leading-relaxed text-muted-foreground/80">
-              ShipBoost is built for operators. The goal is simple: help founders
-              earn trust, get discovered, and turn launch into momentum.
+              ShipBoost is built for founders who want a cleaner public launch
+              surface, a better listing, and discovery paths that keep doing
+              work after launch day.
             </p>
             <div className="pt-4">
               <Link href="/submit" className="inline-flex items-center gap-2 text-sm font-black text-foreground hover:underline underline-offset-4">
@@ -248,13 +249,14 @@ export default async function PricingPage() {
 
           <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
             <h3 className="text-sm font-black tracking-[0.2em] text-foreground  mb-6 flex items-center gap-2">
-              <Zap size={16} /> Why ShipBoost
+              <Zap size={16} /> Product pillars
             </h3>
             <div className="space-y-6">
               {[
-                { title: "Weekly launchpad", desc: "Weekly cohorts keep launches readable instead of burying them in a crowded daily feed." },
-                { title: "Premium priority", desc: "Premium launches reserve a week and start ahead of free launches outside the top vote slots." },
-                { title: "Founder ownership", desc: "Founder claims and clean profiles make listings easier to trust." },
+                { title: "Weekly launch visibility", desc: "Weekly cohorts keep launches readable instead of burying them in a crowded daily feed." },
+                { title: "Cleaner public listings", desc: "Founder-ready public profiles make products easier to trust than disposable directory entries." },
+                { title: "Post-launch discoverability", desc: "Categories, tags, and alternatives pages keep the listing useful after launch day." },
+                { title: "Founder workflow", desc: "Submission, review, launch timing, and listing management live in one system." },
               ].map((item, i) => (
                 <div key={i} className="space-y-1">
                   <h4 className="text-sm font-black text-foreground">{item.title}</h4>

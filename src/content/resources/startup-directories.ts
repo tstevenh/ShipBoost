@@ -2058,6 +2058,14 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "waildworld waildworld.com https://waildworld.com"
   },
   {
+    "id": "indie-launch-269",
+    "name": "Indie Launch",
+    "url": "https://indielaunch.site/",
+    "domain": "indielaunch.site",
+    "dr": 8,
+    "searchText": "indie launch indielaunch.site https://indielaunch.site/"
+  },
+  {
     "id": "agencysource-257",
     "name": "AgencySource",
     "url": "https://agencysource.com",
@@ -2152,22 +2160,6 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "domain": "selected.site",
     "dr": 37,
     "searchText": "selected site selected.site https://selected.site/"
-  },
-  {
-    "id": "indie-launch-269",
-    "name": "Indie Launch",
-    "url": "https://indielaunch.site/",
-    "domain": "indielaunch.site",
-    "dr": 0,
-    "searchText": "indie launch indielaunch.site https://indielaunch.site/"
-  },
-  {
-    "id": "ai-index-tools-270",
-    "name": "AI Index Tools",
-    "url": "https://aiindex.tools/",
-    "domain": "aiindex.tools",
-    "dr": 29,
-    "searchText": "ai index tools aiindex.tools https://aiindex.tools/"
   },
   {
     "id": "collect-ai-tools-271",
@@ -2449,5 +2441,37 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "dr": 0,
     "recommended": true,
     "searchText": "shipboost shipboost.io https://shipboost.io"
+  },
+  {
+    "id": "showmysites-305",
+    "name": "ShowmySites",
+    "url": "https://www.showmysites.com/",
+    "domain": "showmysites.com",
+    "dr": 65,
+    "searchText": "showmysites showmysites.com https://www.showmysites.com/"
+  },
+  {
+    "id": "showmebest-306",
+    "name": "ShowmeBest",
+    "url": "https://showmebest.ai/",
+    "domain": "showmebest.ai",
+    "dr": 75,
+    "searchText": "showmebest showmebest.ai https://showmebest.ai/"
+  },
+  {
+    "id": "startupsfm-307",
+    "name": "StartupsFM",
+    "url": "https://www.startups.fm/",
+    "domain": "startups.fm",
+    "dr": 34,
+    "searchText": "startupsfm startups.fm https://www.startups.fm/"
+  },
+  {
+    "id": "shipstry-308",
+    "name": "Shipstry",
+    "url": "https://shipstry.com/",
+    "domain": "shipstry.com",
+    "dr": 33,
+    "searchText": "shipstry shipstry.com https://shipstry.com/"
   }
 ];

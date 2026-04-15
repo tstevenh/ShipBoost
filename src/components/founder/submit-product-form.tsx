@@ -1046,8 +1046,10 @@ export function SubmitProductForm({
           <div className="text-center space-y-4">
             <h2 className="text-4xl font-black tracking-tight ">Choose your launch path</h2>
             <p className="text-muted-foreground font-medium max-w-xl mx-auto">
-              Ready to go live? Choose a plan that fits your goals. 
-              Verified badges help you build authority with our community.
+              Choose the path that fits your product stage. Free Launch is best
+              if you are flexible and happy to verify the badge. Premium Launch
+              is best if timing, lower friction, and stronger baseline placement
+              matter more.
             </p>
           </div>
 
@@ -1091,11 +1093,11 @@ export function SubmitProductForm({
               <h3 className="text-2xl font-black mb-2">Free Launch</h3>
               <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
                 {isPrelaunch
-                  ? "Join the weekly launchpad for free by including our trust badge on your website. Best for early-stage bootstrapped founders shipping into the May opening cohort."
-                  : "Join the weekly launchpad for free by including our trust badge on your website. Best for early-stage bootstrapped founders."}
+                  ? "Best for founders who want a credible public listing and weekly launch visibility, and are comfortable qualifying through badge verification before the May opening cohort."
+                  : "Best for founders who want a credible public listing and weekly launch visibility, and are comfortable qualifying through badge verification."}
               </p>
               <ul className="space-y-4 mb-10">
-                {["Weekly launchpad placement", "Public listing forever", "Founder verified badge", "Requires badge verification"].map(p => (
+                {["Weekly launchpad placement", "Public listing on ShipBoost", "Founder trust signal", "Requires badge verification"].map(p => (
                   <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
                     <Check size={16} className="text-emerald-500 mt-0.5" /> {p}
                   </li>
@@ -1152,8 +1154,9 @@ export function SubmitProductForm({
                 {foundingPremiumPrice.label}
               </p>
               <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
-                Reserve your launch week, get premium placement in the weekly
-                launchpad, and skip badge verification.
+                Best for founders who care about timing, want less submission
+                friction, and want stronger baseline placement in the weekly
+                board.
               </p>
               {!premiumLaunchAvailable ? (
                 <p className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-relaxed text-amber-700">
@@ -1161,7 +1164,7 @@ export function SubmitProductForm({
                 </p>
               ) : null}
               <ul className="space-y-4 mb-10">
-                {["Choose your launch week", "Premium placement", "No badge required", "Priority ordering over free launches", "Founding offer pricing"].map(p => (
+                {["Reserve a specific launch week", "Skip badge verification", "Stronger baseline board placement", "Lower-friction launch flow", "Founding offer pricing"].map(p => (
                   <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
                     <Check size={16} className="text-foreground mt-0.5" /> {p}
                   </li>
@@ -1221,8 +1224,15 @@ export function SubmitProductForm({
               <div className="flex-1 space-y-4 text-center md:text-left">
                 <h3 className="text-xl font-black">Free Launch Badge</h3>
                 <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                  To launch for free, please add our trust badge to your website footer. 
-                  We verify the same website URL you entered in step 1.
+                  To launch for free, please add our trust badge to your website
+                  footer. We verify the same website URL you entered in step 1.
+                  This keeps the free launch surface more credible and filters
+                  low-intent submissions.
+                </p>
+                <p className="text-xs font-bold leading-relaxed text-muted-foreground/80">
+                  Premium Launch skips badge verification. You can also update
+                  your listing later, and one category plus a few tags is enough
+                  to get started.
                 </p>
                 <div className="rounded-2xl border border-border bg-background p-4">
                   <p className="text-[10px] font-black  tracking-widest text-muted-foreground mb-2">

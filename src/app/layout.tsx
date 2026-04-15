@@ -6,6 +6,7 @@ import { AppHeader } from "@/components/app/app-header";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { getCachedPublicHeaderCategories } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
+import { getDefaultPublicPageImage } from "@/server/seo/page-metadata";
 import "./globals.css";
 
 const inter = Inter({
@@ -24,14 +25,16 @@ const geistMono = Geist_Mono({
 });
 
 const env = getEnv();
+const defaultSocialImage = getDefaultPublicPageImage();
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   title: {
-    default: "ShipBoost | Launch smarter. Get distributed.",
+    default: "ShipBoost | Launch once. Keep getting discovered.",
     template: "%s",
   },
-  description: "ShipBoost helps bootstrapped SaaS founders earn trust, visibility, and momentum through curated distribution.",
+  description:
+    "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and discovery paths that outlive launch day.",
   applicationName: "ShipBoost",
   icons: {
     icon: "/ShipBoost-Logo-BG.svg",
@@ -52,15 +55,22 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "ShipBoost",
     url: env.NEXT_PUBLIC_APP_URL,
-    title: "ShipBoost | Launch smarter. Get distributed.",
+    title: "ShipBoost | Launch once. Keep getting discovered.",
     description:
-      "ShipBoost helps bootstrapped SaaS founders earn trust, visibility, and momentum through curated distribution.",
+      "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and discovery paths that outlive launch day.",
+    images: [
+      {
+        url: defaultSocialImage,
+        alt: "ShipBoost",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ShipBoost | Launch smarter. Get distributed.",
+    title: "ShipBoost | Launch once. Keep getting discovered.",
     description:
-      "ShipBoost helps bootstrapped SaaS founders earn trust, visibility, and momentum through curated distribution.",
+      "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and discovery paths that outlive launch day.",
+    images: [defaultSocialImage],
   },
 };
 

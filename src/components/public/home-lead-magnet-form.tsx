@@ -63,11 +63,11 @@ export function HomeLeadMagnetForm() {
           Founder resource
         </p>
         <h2 className="text-3xl font-black tracking-tight text-foreground mb-6 ">
-          Launch faster with 300+ startup directories in one place.
+          Get 300+ startup directories and launch sites in one searchable list.
         </h2>
         <p className="text-lg font-medium leading-relaxed text-muted-foreground/80 max-w-2xl mb-10">
-          Get the curated, searchable directory list ShipBoost uses to find real
-          distribution opportunities without bouncing between tabs, random
+          Use the hosted ShipBoost resource to search, sort, and plan founder
+          distribution faster without bouncing between tabs, random
           spreadsheets, or low-signal lists.
         </p>
 
@@ -94,7 +94,7 @@ export function HomeLeadMagnetForm() {
         </form>
 
         <p className="mt-8 text-xs font-bold text-muted-foreground/40  tracking-widest">
-          * 300+ directories. Searchable inside ShipBoost. Access link sent by email.
+          * 300+ directories and launch sites. Searchable inside ShipBoost. Access link sent by email.
         </p>
 
         {successMessage ? (

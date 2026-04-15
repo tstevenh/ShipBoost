@@ -12,7 +12,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Startup Directories Resource | ShipBoost",
   description:
-    "Browse ShipBoost's 300+ startup directories resource with a public preview, then unlock the full hosted list inside your founder workflow.",
+    "Browse 300+ startup directories and launch sites in one searchable ShipBoost resource built to help founders plan distribution faster.",
   url: "/resources/startup-directories",
 });
 
@@ -33,14 +33,64 @@ export default async function StartupDirectoriesPage() {
           {session ? "Signed-in resource" : "Public preview"}
         </p>
         <h1 className="text-4xl font-black tracking-tight text-foreground">
-          300+ startup directories, organized for faster launches.
+          300+ startup directories and launch sites in one clean, searchable list.
         </h1>
         <p className="text-base font-medium leading-7 text-muted-foreground">
-          This is the hosted version of the startup directories list ShipBoost
-          uses for founder distribution. Search it, sort it, and move faster
-          without juggling spreadsheets or scattered bookmarks.
+          Search and sort the ShipBoost startup directories resource by DR,
+          name, and domain. Skip scattered bookmarks, reduce blind submissions,
+          and move faster when planning founder distribution.
         </p>
       </div>
+
+      {!session ? (
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <article className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+            <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40">
+              What founders use this for
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {[
+                "Build a launch shortlist faster",
+                "Prioritize higher-DR opportunities first",
+                "Keep distribution research in one place",
+                "Avoid wasting time on scattered tabs and bookmarks",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-2xl border border-border bg-muted/20 px-4 py-4 text-sm font-bold text-foreground"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+            <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40">
+              What&apos;s included
+            </p>
+            <ul className="mt-4 space-y-3">
+              {[
+                "300+ startup directories and launch sites",
+                "Site name and URL",
+                "DR sorting and search",
+                "Hosted access inside ShipBoost",
+              ].map((item) => (
+                <li
+                  key={item}
+                  className="text-sm font-bold leading-relaxed text-foreground/85"
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-xs font-medium leading-relaxed text-muted-foreground">
+              This public resource is designed for speed and convenience. It does
+              not promise private ops notes or hidden submission intelligence.
+            </p>
+          </article>
+        </section>
+      ) : null}
 
       <section className="mt-8 rounded-[2rem] border border-primary/15 bg-primary/5 px-6 py-6 shadow-sm">
         <div className="max-w-3xl space-y-3">
@@ -48,12 +98,13 @@ export default async function StartupDirectoriesPage() {
             Founder options
           </p>
           <h2 className="text-2xl font-black tracking-tight text-foreground">
-            Use the list yourself or let ShipBoost handle distribution.
+            Want more than a list?
           </h2>
           <p className="text-sm font-medium leading-7 text-muted-foreground">
-            If you want hands-on control, submit your product and choose your
-            launch path. If you want help turning this directory list into
-            actual distribution, use our done-for-you support option.
+            ShipBoost helps founders move from research into real launch
+            distribution with weekly launch boards, founder-ready listings, and
+            long-tail discovery pages. Use the resource for planning, then use
+            ShipBoost when you are ready to launch.
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
             <Link
@@ -66,7 +117,7 @@ export default async function StartupDirectoriesPage() {
               href="/pricing"
               className="inline-flex items-center justify-center rounded-2xl border border-border bg-card px-5 py-3 text-sm font-black text-foreground transition-all hover:bg-muted active:scale-95"
             >
-              Get done-for-you distribution
+              Compare launch pricing
             </Link>
           </div>
         </div>

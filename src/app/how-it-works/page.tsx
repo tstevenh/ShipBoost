@@ -10,7 +10,7 @@ import { buildArticlePageSchema } from "@/server/seo/page-schema";
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "How ShipBoost Works for SaaS Founders",
   description:
-    "Learn how ShipBoost works, from submissions and weekly launch cohorts to Premium Launch rules, ranking, and listing visibility.",
+    "Learn how ShipBoost works, why the model exists, and what founders get after launch beyond the first weekly board.",
   url: "/how-it-works",
   openGraphType: "article",
 });
@@ -57,7 +57,7 @@ export default function HowItWorksPage() {
   const schema = buildArticlePageSchema({
     title: "How ShipBoost works",
     description:
-      "Learn how ShipBoost works: weekly launch cohorts, free vs Premium Launch rules, ranking, approval, and what founders can expect after submitting.",
+      "Learn how ShipBoost works: weekly launch cohorts, free vs Premium Launch rules, why the model exists, and what founders get after launch.",
     url: `${env.NEXT_PUBLIC_APP_URL}/how-it-works`,
   });
 
@@ -67,8 +67,27 @@ export default function HowItWorksPage() {
       <ContentPageShell
         eyebrow="How it works"
         title="How ShipBoost works"
-        description="ShipBoost is built for bootstrapped SaaS founders who want a cleaner launch system, clearer rules, and stronger distribution than a noisy daily feed."
+        description="ShipBoost is built for bootstrapped SaaS founders who want a cleaner launch system, clearer rules, and stronger discovery than a noisy daily feed or a dead directory listing."
       >
+        <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
+          <h2 className="text-3xl font-black tracking-tight text-foreground ">
+            Why this model works better
+          </h2>
+          <div className="mt-4 space-y-4 text-base font-medium leading-relaxed text-muted-foreground/80">
+            <p>
+              Daily launch surfaces can create a short spike, but good products
+              get buried quickly when the board resets. Generic directories have
+              the opposite problem: they stay online, but often become storage
+              instead of real discovery.
+            </p>
+            <p>
+              ShipBoost is built to combine both jobs more cleanly: launch
+              visibility now, and durable public discovery after the launch week
+              ends.
+            </p>
+          </div>
+        </section>
+
         <section className="grid gap-6">
         {steps.map((step) => (
           <article
@@ -137,6 +156,57 @@ export default function HowItWorksPage() {
             Read the founder FAQs →
           </Link>
         </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
+          <h2 className="text-3xl font-black tracking-tight text-foreground ">
+            What founders get after launch
+          </h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {[
+              "A public ShipBoost listing",
+              "Weekly board visibility",
+              "Category and tag discovery paths",
+              "Alternatives and comparison exposure over time",
+              "Dashboard control over launch timing and listing state",
+            ].map((item) => (
+              <div
+                key={item}
+                className="rounded-2xl border border-border bg-muted/20 p-5 text-sm font-bold text-foreground"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-3">
+          {[
+            {
+              title: "Choose Free Launch if…",
+              body: "You want a credible public listing and weekly board visibility, and you are comfortable completing badge verification first.",
+            },
+            {
+              title: "Choose Premium Launch if…",
+              body: "Timing matters, you want less submission friction, and you want stronger baseline placement in the weekly board.",
+            },
+            {
+              title: "Use partner submissions if…",
+              body: "You want broader manual directory coverage outside ShipBoost and would rather hand that work to our partner service.",
+            },
+          ].map((item) => (
+            <article
+              key={item.title}
+              className="rounded-[2rem] border border-border bg-card p-8 shadow-sm"
+            >
+              <h2 className="text-2xl font-black tracking-tight text-foreground ">
+                {item.title}
+              </h2>
+              <p className="mt-4 text-base font-medium leading-relaxed text-muted-foreground/80">
+                {item.body}
+              </p>
+            </article>
+          ))}
         </section>
       </ContentPageShell>
     </>

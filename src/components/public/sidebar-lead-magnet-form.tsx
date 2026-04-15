@@ -61,11 +61,11 @@ export function SidebarLeadMagnetForm() {
         Founder resource
       </h3>
       <h4 className="font-black text-lg mb-3 relative leading-tight">
-        Launch faster with 300+ startup directories.
+        Search 300+ startup directories in one place.
       </h4>
       <p className="text-xs text-muted-foreground mb-6 leading-relaxed relative">
-        Get the curated directory list ShipBoost uses to find real submission
-        opportunities faster.
+        Get the hosted ShipBoost resource and work through founder distribution
+        research faster.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-3 relative">
@@ -88,7 +88,7 @@ export function SidebarLeadMagnetForm() {
       </form>
 
       <p className="mt-4 text-[10px] font-black tracking-[0.14em] text-muted-foreground/45">
-        300+ directories. Access link sent by email.
+        300+ directories and launch sites. Access link sent by email.
       </p>
 
       {successMessage ? (
