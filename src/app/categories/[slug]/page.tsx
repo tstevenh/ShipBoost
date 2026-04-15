@@ -257,7 +257,7 @@ export default async function CategoryPage(context: RouteContext) {
                 </div>
                 <div className="w-px h-8 bg-primary/10" />
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black  tracking-widest text-primary/60">Featured</span>
+                  <span className="text-[10px] font-black  tracking-widest text-primary/60">Premium</span>
                   <span className="text-xl font-black text-primary">{(category.featuredTools || []).length}</span>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export default async function CategoryPage(context: RouteContext) {
                 <div className="flex items-center gap-3">
                   <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
                   <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground ">
-                    Featured picks
+                    Premium picks
                   </p>
                 </div>
                 <div className="grid gap-5">

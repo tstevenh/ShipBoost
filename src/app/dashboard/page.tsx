@@ -7,7 +7,7 @@ import { getEnv } from "@/server/env";
 import { listFounderListingClaims } from "@/server/services/listing-claim-service";
 import {
   listFounderSubmissions,
-  reconcileFeaturedLaunchCheckout,
+  reconcilePremiumLaunchPayment,
 } from "@/server/services/submission-service";
 import { listFounderTools } from "@/server/services/tool-service";
 import { Footer } from "@/components/ui/footer";
@@ -22,7 +22,9 @@ export const metadata: Metadata = {
 type DashboardPageProps = {
   searchParams?: Promise<{
     checkout?: string;
-    checkout_id?: string;
+    submission_id?: string;
+    payment_id?: string;
+    status?: string;
   }>;
 };
 
@@ -42,8 +44,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const reconciledCheckoutSubmission =
     resolvedSearchParams?.checkout === "success" &&
-    resolvedSearchParams.checkout_id
-      ? await reconcileFeaturedLaunchCheckout(resolvedSearchParams.checkout_id)
+    resolvedSearchParams.submission_id &&
+    resolvedSearchParams.payment_id
+      ? await reconcilePremiumLaunchPayment({
+          submissionId: resolvedSearchParams.submission_id,
+          paymentId: resolvedSearchParams.payment_id,
+        })
       : null;
 
   const [submissions, tools, claims] = await Promise.all([
@@ -53,9 +59,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   ]);
   const initialSuccessMessage =
     resolvedSearchParams?.checkout === "success"
-      ? reconciledCheckoutSubmission?.paymentStatus === "PAID"
-        ? "Checkout completed. ShipBoost confirmed your premium launch payment."
-        : "Checkout completed. ShipBoost is syncing your premium launch payment now."
+      ? resolvedSearchParams.status &&
+          resolvedSearchParams.status !== "succeeded"
+        ? "Checkout did not complete. You can try again from your dashboard."
+        : reconciledCheckoutSubmission?.paymentStatus === "PAID"
+          ? "Checkout completed. ShipBoost confirmed your premium launch payment."
+          : "Checkout completed. ShipBoost is syncing your premium launch payment now."
       : null;
   const serializedSubmissions = submissions.map((submission) => ({
     id: submission.id,

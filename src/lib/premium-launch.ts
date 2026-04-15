@@ -1,4 +1,4 @@
-export const premiumLaunchAvailable = false;
+export const premiumLaunchAvailable = true;
 
 export const premiumLaunchUnavailableMessage =
-  "Premium Launch is temporarily unavailable while ShipBoost switches payment providers.";
+  "Premium Launch is temporarily unavailable. Please try again shortly.";

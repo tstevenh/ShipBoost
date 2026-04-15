@@ -1,23 +1,30 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   prismaMock,
+  getEnvMock,
   getSubmissionByIdMock,
   getSubmissionByIdForFounderMock,
-  getPolarClientMock,
-  sendFeaturedLaunchPaidEmailMessageMock,
+  getDodoClientMock,
+  getDodoDashboardReturnUrlMock,
+  sendPremiumLaunchPaidEmailMessageMock,
   sendProductEmailSafelyMock,
 } = vi.hoisted(() => ({
   prismaMock: {
     $transaction: vi.fn(),
     submission: {
+      findUnique: vi.fn(),
       findFirst: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
+  getEnvMock: vi.fn(),
   getSubmissionByIdMock: vi.fn(),
   getSubmissionByIdForFounderMock: vi.fn(),
-  getPolarClientMock: vi.fn(),
-  sendFeaturedLaunchPaidEmailMessageMock: vi.fn(),
+  getDodoClientMock: vi.fn(),
+  getDodoDashboardReturnUrlMock: vi.fn(),
+  sendPremiumLaunchPaidEmailMessageMock: vi.fn(),
   sendProductEmailSafelyMock: vi.fn(),
 }));
 
@@ -25,18 +32,22 @@ vi.mock("@/server/db/client", () => ({
   prisma: prismaMock,
 }));
 
+vi.mock("@/server/env", () => ({
+  getEnv: getEnvMock,
+}));
+
 vi.mock("@/server/repositories/submission-repository", () => ({
   getSubmissionById: getSubmissionByIdMock,
   getSubmissionByIdForFounder: getSubmissionByIdForFounderMock,
 }));
 
-vi.mock("@/server/polar", () => ({
-  getPolarClient: getPolarClientMock,
-  getPolarCheckoutUrls: vi.fn(),
+vi.mock("@/server/dodo", () => ({
+  getDodoClient: getDodoClientMock,
+  getDodoDashboardReturnUrl: getDodoDashboardReturnUrlMock,
 }));
 
 vi.mock("@/server/email/transactional", () => ({
-  sendFeaturedLaunchPaidEmailMessage: sendFeaturedLaunchPaidEmailMessageMock,
+  sendPremiumLaunchPaidEmailMessage: sendPremiumLaunchPaidEmailMessageMock,
 }));
 
 vi.mock("@/server/services/launch-scheduling", () => ({
@@ -59,9 +70,9 @@ vi.mock("@/server/services/launch-scheduling", () => ({
 
 vi.mock("@/server/services/submission-service-shared", async () => {
   const actual =
-    await vi.importActual<typeof import("@/server/services/submission-service-shared")>(
-      "@/server/services/submission-service-shared",
-    );
+    await vi.importActual<
+      typeof import("@/server/services/submission-service-shared")
+    >("@/server/services/submission-service-shared");
 
   return {
     ...actual,
@@ -71,9 +82,11 @@ vi.mock("@/server/services/submission-service-shared", async () => {
 });
 
 import {
-  handleFeaturedLaunchOrderPaid,
-  reconcileFeaturedLaunchCheckout,
-  rescheduleFeaturedLaunch,
+  createPremiumLaunchCheckout,
+  handlePremiumLaunchPaymentSucceeded,
+  handlePremiumLaunchRefundSucceeded,
+  reconcilePremiumLaunchPayment,
+  reschedulePremiumLaunch,
 } from "@/server/services/submission-payment-service";
 
 type PaymentTx = {
@@ -87,17 +100,85 @@ type PaymentTx = {
   };
   launch: {
     create: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
   };
 };
 
 describe("submission-payment-service", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-15T00:00:00.000Z"));
     vi.clearAllMocks();
-    sendFeaturedLaunchPaidEmailMessageMock.mockReturnValue(Promise.resolve());
+    getEnvMock.mockReturnValue({
+      DODO_PREMIUM_LAUNCH_PRODUCT_ID: "prod_premium_1",
+    });
+    sendPremiumLaunchPaidEmailMessageMock.mockReturnValue(Promise.resolve());
     sendProductEmailSafelyMock.mockResolvedValue(undefined);
   });
 
-  it("matches order.paid to a submission by checkoutId when metadata is missing", async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("creates a Dodo checkout session and stores the checkout session id", async () => {
+    getSubmissionByIdForFounderMock.mockResolvedValueOnce({
+      id: "submission_1",
+      toolId: "tool_1",
+      submissionType: "FEATURED_LAUNCH",
+      preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
+      paymentStatus: "PENDING",
+      reviewStatus: "DRAFT",
+    });
+    getDodoDashboardReturnUrlMock.mockReturnValue(
+      "https://shipboost.io/dashboard?checkout=success&submission_id=submission_1",
+    );
+
+    const createMock = vi.fn().mockResolvedValue({
+      session_id: "cs_test_1",
+      checkout_url: "https://checkout.dodopayments.com/session/cs_test_1",
+    });
+
+    getDodoClientMock.mockReturnValue({
+      checkoutSessions: {
+        create: createMock,
+      },
+    });
+
+    const result = await createPremiumLaunchCheckout("submission_1", {
+      id: "founder_1",
+      email: "founder@acme.com",
+      name: "Founder",
+    });
+
+    expect(createMock).toHaveBeenCalledWith({
+      product_cart: [{ product_id: "prod_premium_1", quantity: 1 }],
+      customer: {
+        email: "founder@acme.com",
+        name: "Founder",
+      },
+      return_url:
+        "https://shipboost.io/dashboard?checkout=success&submission_id=submission_1",
+      metadata: {
+        shipboostSubmissionId: "submission_1",
+        shipboostToolId: "tool_1",
+        shipboostSubmissionType: "FEATURED_LAUNCH",
+        shipboostPreferredLaunchDate: "2026-05-08T00:00:00.000Z",
+      },
+    });
+    expect(prismaMock.submission.update).toHaveBeenCalledWith({
+      where: { id: "submission_1" },
+      data: {
+        polarCheckoutId: "cs_test_1",
+        paymentStatus: "PENDING",
+      },
+    });
+    expect(result).toEqual({
+      checkoutUrl: "https://checkout.dodopayments.com/session/cs_test_1",
+      checkoutId: "cs_test_1",
+    });
+  });
+
+  it("matches payment.succeeded to a submission by checkout session id when metadata is missing", async () => {
     const submission = {
       id: "submission_1",
       toolId: "tool_1",
@@ -105,7 +186,7 @@ describe("submission-payment-service", () => {
       submissionType: "FEATURED_LAUNCH",
       preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
       paymentStatus: "PENDING",
-      polarCheckoutId: "checkout_1",
+      polarCheckoutId: "cs_test_1",
       tool: {
         launches: [],
       },
@@ -142,12 +223,14 @@ describe("submission-payment-service", () => {
           },
           launch: {
             create: vi.fn(),
+            update: vi.fn(),
           },
         };
-        await callback(tx);
+        const result = await callback(tx);
+        expect(result).toBe("submission_1");
         expect(tx.submission.findFirst).toHaveBeenCalledWith({
           where: {
-            polarCheckoutId: "checkout_1",
+            polarCheckoutId: "cs_test_1",
           },
           include: {
             tool: {
@@ -161,26 +244,26 @@ describe("submission-payment-service", () => {
           where: { id: "submission_1" },
           data: expect.objectContaining({
             paymentStatus: "PAID",
-            polarOrderId: "order_1",
-            polarCheckoutId: "checkout_1",
+            polarOrderId: "pay_1",
+            polarCheckoutId: "cs_test_1",
             reviewStatus: "APPROVED",
           }),
         });
-        return updatedSubmission;
+        return result;
       },
     );
     getSubmissionByIdMock.mockResolvedValueOnce(updatedSubmission);
 
-    await handleFeaturedLaunchOrderPaid({
-      data: {
-        id: "order_1",
-        checkoutId: "checkout_1",
-        metadata: {},
-      },
-    } as never);
+    await handlePremiumLaunchPaymentSucceeded({
+      paymentId: "pay_1",
+      checkoutSessionId: "cs_test_1",
+      metadata: {},
+    });
+
+    expect(sendProductEmailSafelyMock).toHaveBeenCalledTimes(1);
   });
 
-  it("reconciles a successful checkout from checkoutId on dashboard return", async () => {
+  it("reconciles a successful Dodo payment from dashboard return parameters", async () => {
     const submission = {
       id: "submission_1",
       toolId: "tool_1",
@@ -188,7 +271,7 @@ describe("submission-payment-service", () => {
       submissionType: "FEATURED_LAUNCH",
       preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
       paymentStatus: "PENDING",
-      polarCheckoutId: "checkout_1",
+      polarCheckoutId: "cs_test_1",
       tool: {
         launches: [],
       },
@@ -207,35 +290,33 @@ describe("submission-payment-service", () => {
       },
     };
 
-    prismaMock.submission.findFirst
-      .mockResolvedValueOnce({
-        id: "submission_1",
-        paymentStatus: "PENDING",
-        polarOrderId: null,
-      })
-      .mockResolvedValueOnce(null);
+    prismaMock.submission.findUnique.mockResolvedValueOnce({
+      id: "submission_1",
+      submissionType: "FEATURED_LAUNCH",
+      paymentStatus: "PENDING",
+      polarOrderId: null,
+    });
 
-    const order = {
-      id: "order_1",
-      paid: true,
-      checkoutId: "checkout_1",
-      metadata: {},
-    };
-    getPolarClientMock.mockReturnValue({
-      orders: {
-        list: vi.fn().mockResolvedValue({
-          result: {
-            items: [order],
-          },
-        }),
+    const retrieveMock = vi.fn().mockResolvedValue({
+      payment_id: "pay_1",
+      status: "succeeded",
+      checkout_session_id: "cs_test_1",
+      metadata: {
+        shipboostSubmissionId: "submission_1",
       },
     });
+    getDodoClientMock.mockReturnValue({
+      payments: {
+        retrieve: retrieveMock,
+      },
+    });
+
     prismaMock.$transaction.mockImplementationOnce(
       async (callback: (tx: PaymentTx) => Promise<unknown>) => {
         const tx: PaymentTx = {
           submission: {
-            findUnique: vi.fn().mockResolvedValue(null),
-            findFirst: vi.fn().mockResolvedValue(submission),
+            findUnique: vi.fn().mockResolvedValue(submission),
+            findFirst: vi.fn().mockResolvedValue(null),
             update: vi.fn(),
           },
           tool: {
@@ -243,20 +324,36 @@ describe("submission-payment-service", () => {
           },
           launch: {
             create: vi.fn(),
+            update: vi.fn(),
           },
         };
-        await callback(tx);
-        return "submission_1";
+        const result = await callback(tx);
+        expect(result).toBe("submission_1");
+        return result;
       },
     );
     getSubmissionByIdMock.mockResolvedValueOnce(updatedSubmission);
 
-    const result = await reconcileFeaturedLaunchCheckout("checkout_1");
+    const result = await reconcilePremiumLaunchPayment({
+      submissionId: "submission_1",
+      paymentId: "pay_1",
+    });
 
-    expect(getPolarClientMock).toHaveBeenCalled();
+    expect(retrieveMock).toHaveBeenCalledWith("pay_1");
     expect(result).toMatchObject({
       id: "submission_1",
       paymentStatus: "PAID",
+    });
+  });
+
+  it("marks the submission refunded from a Dodo refund event", async () => {
+    await handlePremiumLaunchRefundSucceeded({
+      paymentId: "pay_1",
+    });
+
+    expect(prismaMock.submission.updateMany).toHaveBeenCalledWith({
+      where: { polarOrderId: "pay_1" },
+      data: { paymentStatus: "REFUNDED" },
     });
   });
 
@@ -280,7 +377,7 @@ describe("submission-payment-service", () => {
     });
 
     await expect(
-      rescheduleFeaturedLaunch(
+      reschedulePremiumLaunch(
         "submission_1",
         {
           preferredLaunchDate: new Date("2026-04-28T00:00:00.000Z"),
@@ -310,7 +407,7 @@ describe("submission-payment-service", () => {
     });
 
     await expect(
-      rescheduleFeaturedLaunch(
+      reschedulePremiumLaunch(
         "submission_1",
         {
           preferredLaunchDate: new Date("2026-05-10T00:00:00.000Z"),

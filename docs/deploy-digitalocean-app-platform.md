@@ -1,6 +1,6 @@
 # Deploy ShipBoost to DigitalOcean App Platform
 
-This app is a Next.js 16 web service with Prisma, Better Auth, Polar webhooks, Cloudinary uploads, and protected cron endpoints.
+This app is a Next.js 16 web service with Prisma, Better Auth, Dodo Payments webhooks, Cloudinary uploads, and protected cron endpoints.
 
 ## Before You Deploy
 
@@ -11,7 +11,7 @@ Have these ready:
 - a PostgreSQL database
 - a Resend account and a verified sending domain
 - a Cloudinary account
-- a Polar production product and webhook
+- a Dodo Payments product and webhook
 - a long random value for `BETTER_AUTH_SECRET`
 - a long random value for `CRON_SECRET`
 
@@ -91,15 +91,14 @@ CLOUDINARY_API_SECRET=
 CLOUDINARY_UPLOAD_FOLDER=shipboost
 ```
 
-### Polar featured launch payments
+### Dodo premium launch payments
 
 ```env
-POLAR_ACCESS_TOKEN=
-POLAR_WEBHOOK_SECRET=
-POLAR_SERVER=production
-POLAR_FEATURED_LAUNCH_PRODUCT_ID=
-POLAR_SUCCESS_URL=https://shipboost.io/dashboard?checkout=success&checkout_id={CHECKOUT_ID}
-POLAR_RETURN_URL=https://shipboost.io/submit
+DODO_PAYMENTS_API_KEY=
+DODO_PAYMENTS_WEBHOOK_SECRET=
+DODO_PAYMENTS_MODE=live
+DODO_PREMIUM_LAUNCH_PRODUCT_ID=
+DODO_PAYMENTS_RETURN_URL=https://shipboost.io/dashboard
 ```
 
 ### Optional
@@ -132,12 +131,12 @@ Then make sure the app env matches the final domain:
 
 ## Webhooks and Scheduled Requests
 
-### Polar webhook
+### Dodo Payments webhook
 
-Set the Polar production webhook target to:
+Set the Dodo Payments production webhook target to:
 
 ```text
-https://shipboost.io/api/polar/webhooks
+https://shipboost.io/api/dodo/webhooks
 ```
 
 ### Launch publish cron
@@ -171,7 +170,7 @@ If you do not schedule these, launches and cache refreshes will rely only on nor
 7. Run `npm run db:seed` once against production.
 8. Promote your real admin account if needed with `npm run auth:promote-admin -- <email>`.
 9. Add `shipboost.io` and `www.shipboost.io` in App Platform.
-10. Update Polar webhook and any OAuth redirect URLs to the production domain.
+10. Update the Dodo webhook and any OAuth redirect URLs to the production domain.
 
 ## Post-Launch Checks
 
@@ -182,5 +181,5 @@ Verify these flows in production:
 - founder draft save and Cloudinary media upload
 - submission flow
 - admin login and review screens
-- Polar checkout success and webhook processing
+- Dodo checkout success and webhook processing
 - cron endpoints respond with `200` when called with the bearer secret

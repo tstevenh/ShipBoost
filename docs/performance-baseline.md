@@ -63,8 +63,8 @@ Route (app)
 ├ ƒ /api/leads
 ├ ƒ /api/listing-claims
 ├ ƒ /api/outbound/tool/[toolId]
-├ ƒ /api/polar/checkout/featured-launch
-├ ƒ /api/polar/webhooks
+├ ƒ /api/dodo/checkout/premium-launch
+├ ƒ /api/dodo/webhooks
 ├ ƒ /api/submissions
 ├ ƒ /api/submissions/[submissionId]/reschedule
 ├ ƒ /api/submissions/[submissionId]/submit

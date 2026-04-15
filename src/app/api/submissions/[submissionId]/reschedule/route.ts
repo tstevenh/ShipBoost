@@ -4,14 +4,16 @@ import { revalidateAllPublicContent } from "@/server/cache/public-content";
 import { requireSession } from "@/server/auth/session";
 import { getEnv } from "@/server/env";
 import { errorResponse, ok } from "@/server/http/response";
-import { rescheduleFeaturedLaunch } from "@/server/services/submission-service";
-import { featuredLaunchRescheduleSchema } from "@/server/validators/submission";
+import { reschedulePremiumLaunch } from "@/server/services/submission-service";
+import { premiumLaunchRescheduleSchema } from "@/server/validators/submission";
 
 type RouteContext = {
   params: Promise<{ submissionId: string }>;
 };
 
-function serializeSubmission(submission: Awaited<ReturnType<typeof rescheduleFeaturedLaunch>>) {
+function serializeSubmission(
+  submission: Awaited<ReturnType<typeof reschedulePremiumLaunch>>,
+) {
   return {
     ...submission,
     createdAt: submission.createdAt.toISOString(),
@@ -32,8 +34,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     getEnv();
     const session = await requireSession(request);
     const { submissionId } = await context.params;
-    const body = featuredLaunchRescheduleSchema.parse(await request.json());
-    const submission = await rescheduleFeaturedLaunch(submissionId, body, {
+    const body = premiumLaunchRescheduleSchema.parse(await request.json());
+    const submission = await reschedulePremiumLaunch(submissionId, body, {
       id: session.user.id,
     });
     revalidateAllPublicContent();

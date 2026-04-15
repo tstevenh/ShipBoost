@@ -4,14 +4,6 @@ export type AuthenticatedFounder = {
   id: string;
 };
 
-export type FeaturedOrderPaidPayload = {
-  data: {
-    id: string;
-    checkoutId: string | null;
-    metadata: Record<string, unknown>;
-  };
-};
-
 export type DraftSaveResult = {
   submissionId: string;
   replacedLogoPublicId: string | null;

@@ -72,7 +72,7 @@ export const submissionReviewSchema = z.object({
   goLiveNow: z.boolean().default(true),
 });
 
-export const featuredLaunchCheckoutSchema = z.object({
+export const premiumLaunchCheckoutSchema = z.object({
   submissionId: cuidSchema,
 });
 
@@ -80,7 +80,7 @@ export const submissionActionSchema = z.object({
   submissionId: cuidSchema,
 });
 
-export const featuredLaunchRescheduleSchema = z.object({
+export const premiumLaunchRescheduleSchema = z.object({
   preferredLaunchDate: z.coerce.date(),
 });
 
@@ -89,6 +89,6 @@ export type SubmissionReviewInput = z.infer<typeof submissionReviewSchema>;
 export type AdminSubmissionListQueryInput = z.infer<
   typeof adminSubmissionListQuerySchema
 >;
-export type FeaturedLaunchRescheduleInput = z.infer<
-  typeof featuredLaunchRescheduleSchema
+export type PremiumLaunchRescheduleInput = z.infer<
+  typeof premiumLaunchRescheduleSchema
 >;

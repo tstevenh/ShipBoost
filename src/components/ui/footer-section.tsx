@@ -20,7 +20,7 @@ const footerLinks: FooterSection[] = [
 			{ title: 'Explore', href: '#link' },
 			{ title: 'Pricing', href: '#link' },
 			{ title: 'Submit Tool', href: '#link' },
-			{ title: 'Featured Slots', href: '#link' },
+			{ title: 'Premium Launch', href: '#link' },
 		],
 	},
 	{

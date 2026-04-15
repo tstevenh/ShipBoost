@@ -87,14 +87,14 @@ export function ToolOpsPanel({
   }> = [
     { id: "hasAffiliateProgram", label: "Affiliate" },
     { id: "publish", label: "Publish" },
-    { id: "isFeatured", label: "Featured" },
+    { id: "isFeatured", label: "Premium" },
   ];
 
   return (
     <SectionCard
       eyebrow="Inventory"
       title="Directory Tuning"
-      description="Manage listings and featured placement."
+      description="Manage listings and premium placement."
     >
       <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <form onSubmit={handleCreateTool} className="space-y-6 bg-muted/20 p-6 rounded-2xl border border-border">
@@ -317,7 +317,7 @@ export function ToolOpsPanel({
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-sm font-black text-foreground">{tool.name}</h3>
                       {tool.isFeatured && (
-                        <StatusChip label="Featured" tone="amber" />
+                        <StatusChip label="Premium" tone="amber" />
                       )}
                     </div>
                     <p className="text-[10px] font-medium text-muted-foreground line-clamp-1">{tool.tagline}</p>
@@ -386,7 +386,7 @@ export function ToolOpsPanel({
                       }
                       disabled={hasPendingAction}
                     />
-                    Featured
+                    Premium
                   </label>
                   <div className="text-[10px] font-black  tracking-widest text-muted-foreground/40">
                     {tool.toolCategories.length}C • {tool.toolTags.length}T

@@ -587,7 +587,7 @@ export function SubmitProductForm({
           submissionType: type,
           preferredLaunchDate: form.preferredLaunchDate,
         });
-        const response = await fetch("/api/polar/checkout/featured-launch", {
+        const response = await fetch("/api/dodo/checkout/premium-launch", {
           method: "POST",
           headers: {
             "content-type": "application/json",

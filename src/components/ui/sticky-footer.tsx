@@ -89,7 +89,7 @@ const footerLinkGroups: FooterLinkGroup[] = [
 			{ title: 'Explore', href: '#' },
 			{ title: 'Pricing', href: '#' },
 			{ title: 'Submit Tool', href: '#' },
-			{ title: 'Featured Slots', href: '#' },
+			{ title: 'Premium Launch', href: '#' },
       { title: 'Launch Board', href: '#' },
 		],
 	},

@@ -561,7 +561,7 @@ export async function submitSubmissionDraft(
   }
 
   if (submission.submissionType === "FEATURED_LAUNCH") {
-    throw new AppError(400, "Featured launches must go through checkout.");
+    throw new AppError(400, "Premium launches must go through checkout.");
   }
 
   if (

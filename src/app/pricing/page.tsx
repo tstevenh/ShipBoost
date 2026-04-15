@@ -9,15 +9,10 @@ import { cn } from "@/lib/utils";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
 import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
+import { getPremiumLaunchPriceCard } from "@/server/services/dodo-product-service";
 import { getEnv } from "@/server/env";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildPricingPageSchema } from "@/server/seo/page-schema";
-
-const foundingPremiumPrice = {
-  original: "$19",
-  discounted: "$9",
-  label: "Founding price for the first 100 Premium Launches",
-};
 
 const doneForYouTier = {
   name: "Done-for-you Submission",
@@ -25,67 +20,6 @@ const doneForYouTier = {
   ctaLabel: "See partner plans",
   ctaHref: "https://www.aidirectori.es/?via=ShipBoost",
 };
-
-const pricingTiers = [
-  {
-    name: "Free Launch",
-    price: "$0",
-    description:
-      "Get into the weekly launchpad with a public listing, category placement, and a founder-managed profile after approval.",
-    eyebrow: "Weekly launchpad",
-    ctaLabel: "Reserve free launch",
-    ctaHref: "/submit",
-    highlight: false,
-    icon: ShieldCheck,
-    points: [
-      "Weekly launchpad placement",
-      "Public tool listing on ShipBoost",
-      "Founder-managed profile after approval",
-      "Requires badge verification",
-    ],
-  },
-  {
-    name: "Premium Launch",
-    price: foundingPremiumPrice.discounted,
-    originalPrice: foundingPremiumPrice.original,
-    description:
-      "Choose your launch week, skip badge verification, and get priority placement in the weekly launchpad.",
-    eyebrow: "Founding offer",
-    foundingSpotsLabel: "First 100 Premium Launches",
-    ctaLabel: premiumLaunchAvailable
-      ? "Reserve premium launch"
-      : "Temporarily unavailable",
-    ctaHref: premiumLaunchAvailable ? "/submit" : undefined,
-    availabilityNote: premiumLaunchAvailable
-      ? undefined
-      : premiumLaunchUnavailableMessage,
-    highlight: true,
-    icon: Star,
-    points: [
-      "Choose your launch week",
-      "Premium placement in the weekly launchpad",
-      "No badge required",
-      "Priority ordering over free launches",
-    ],
-  },
-  {
-    name: doneForYouTier.name,
-    price: doneForYouTier.price,
-    description:
-      "Handled by AI Directories: manual submission packages for 30+, 60+, or 100+ AI directories with a detailed report after delivery.",
-    eyebrow: "Partner offer",
-    ctaLabel: doneForYouTier.ctaLabel,
-    ctaHref: doneForYouTier.ctaHref,
-    highlight: false,
-    icon: Zap,
-    points: [
-      "Starter from $99 for 30+ AI directories",
-      "Pro from $149 for 60+ directories",
-      "Premium from $199 for 100+ directories",
-      "Detailed submission report",
-    ],
-  },
-] as const;
 
 export function generateMetadata(): Metadata {
   const isPrelaunch = getEnv().NEXT_PUBLIC_PRELAUNCH_MODE === "true";
@@ -100,16 +34,79 @@ export function generateMetadata(): Metadata {
   });
 }
 
-export const revalidate = 300;
+export const revalidate = 900;
 
 export default async function PricingPage() {
   const env = getEnv();
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
-  const foundingSpotsLeft = await getRemainingFoundingPremiumLaunchSpots();
+  const [foundingSpotsLeft, foundingPremiumPrice] = await Promise.all([
+    getRemainingFoundingPremiumLaunchSpots(),
+    getPremiumLaunchPriceCard(),
+  ]);
+  const pricingTiers = [
+    {
+      name: "Free Launch",
+      price: "$0",
+      description:
+        "Get into the weekly launchpad with a public listing, category placement, and a founder-managed profile after approval.",
+      eyebrow: "Weekly launchpad",
+      ctaLabel: "Reserve free launch",
+      ctaHref: "/submit",
+      highlight: false,
+      icon: ShieldCheck,
+      points: [
+        "Weekly launchpad placement",
+        "Public tool listing on ShipBoost",
+        "Founder-managed profile after approval",
+        "Requires badge verification",
+      ],
+    },
+    {
+      name: "Premium Launch",
+      price: foundingPremiumPrice.currentPrice,
+      originalPrice: foundingPremiumPrice.compareAtPrice,
+      description:
+        "Choose your launch week, skip badge verification, and get priority placement in the weekly launchpad.",
+      eyebrow: "Founding offer",
+      foundingSpotsLabel: "First 100 Premium Launches",
+      ctaLabel: premiumLaunchAvailable
+        ? "Reserve premium launch"
+        : "Temporarily unavailable",
+      ctaHref: premiumLaunchAvailable ? "/submit" : undefined,
+      availabilityNote: premiumLaunchAvailable
+        ? undefined
+        : premiumLaunchUnavailableMessage,
+      highlight: true,
+      icon: Star,
+      points: [
+        "Choose your launch week",
+        "Premium placement in the weekly launchpad",
+        "No badge required",
+        "Priority ordering over free launches",
+      ],
+    },
+    {
+      name: doneForYouTier.name,
+      price: doneForYouTier.price,
+      description:
+        "Handled by AI Directories: manual submission packages for 30+, 60+, or 100+ AI directories with a detailed report after delivery.",
+      eyebrow: "Partner offer",
+      ctaLabel: doneForYouTier.ctaLabel,
+      ctaHref: doneForYouTier.ctaHref,
+      highlight: false,
+      icon: Zap,
+      points: [
+        "Starter from $99 for 30+ AI directories",
+        "Pro from $149 for 60+ directories",
+        "Premium from $199 for 100+ directories",
+        "Detailed submission report",
+      ],
+    },
+  ] as const;
   const schema = buildPricingPageSchema({
     title: "Pricing",
     description: isPrelaunch
-      ? "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a $9 Premium Launch for the May 1 opening cohort, or use our AI Directories partner service."
+      ? "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a Premium Launch for the May 1 opening cohort, or use our AI Directories partner service."
       : "Pricing for founders who want trust, visibility, and real distribution. Start free, reserve a Premium Launch, or use our AI Directories partner service.",
     url: `${env.NEXT_PUBLIC_APP_URL}/pricing`,
   });

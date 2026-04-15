@@ -244,7 +244,7 @@ export function HomeSearchModal() {
                         </p>
                         {tool.isFeatured ? (
                           <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                            Featured
+                            Premium
                           </span>
                         ) : null}
                         {label ? (

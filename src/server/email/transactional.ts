@@ -281,7 +281,7 @@ export async function sendWelcomeEmailMessage(input: {
         `${greeting}your email is verified and your ShipBoost founder workspace is ready.`,
       ),
       paragraph(
-        "Next step: submit your SaaS, request a featured launch, or start with a clean affiliate-ready listing.",
+        "Next step: submit your SaaS, request a premium launch, or start with a clean affiliate-ready listing.",
       ),
       ctaButton(input.dashboardUrl, "Open dashboard"),
     ].join(""),
@@ -396,7 +396,7 @@ export async function sendSubmissionReceivedEmailMessage(input: {
       ),
       paragraph(
         input.submissionType === "FEATURED_LAUNCH"
-          ? `Next step: complete payment to reserve your featured launch${
+          ? `Next step: complete payment to reserve your premium launch${
               input.preferredLaunchDate
                 ? ` for ${escapeHtml(input.preferredLaunchDate)}`
                 : ""
@@ -416,7 +416,7 @@ export async function sendSubmissionReceivedEmailMessage(input: {
       "",
       `${input.toolName} was submitted to ShipBoost.`,
       input.submissionType === "FEATURED_LAUNCH"
-        ? `Complete payment to reserve your featured launch${
+        ? `Complete payment to reserve your premium launch${
             input.preferredLaunchDate ? ` for ${input.preferredLaunchDate}` : ""
           }.`
         : "We’ll review it and update you as soon as the next step is decided.",
@@ -515,27 +515,27 @@ export async function sendSubmissionRejectedEmailMessage(input: {
   });
 }
 
-export async function sendFeaturedLaunchPaidEmailMessage(input: {
+export async function sendPremiumLaunchPaidEmailMessage(input: {
   to: string;
   name?: string | null;
   dashboardUrl: string;
   toolName: string;
   launchDate: string;
 }) {
-  const subject = `${input.toolName} featured launch is reserved`;
-  const preview = "Payment received and your featured launch slot is confirmed.";
+  const subject = `${input.toolName} premium launch is reserved`;
+  const preview = "Payment received and your premium launch slot is confirmed.";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
-      h1("Featured launch reserved"),
+      h1("Premium launch reserved"),
       paragraph(
         `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}payment was received for <strong>${escapeHtml(
           input.toolName,
         )}</strong>.`,
       ),
       paragraph(
-        `Your featured launch is scheduled for <strong>${escapeHtml(
+        `Your premium launch is scheduled for <strong>${escapeHtml(
           input.launchDate,
         )}</strong>.`,
       ),
@@ -551,7 +551,7 @@ export async function sendFeaturedLaunchPaidEmailMessage(input: {
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
       `Payment was received for ${input.toolName}.`,
-      `Featured launch date: ${input.launchDate}`,
+      `Premium launch date: ${input.launchDate}`,
       `Dashboard: ${input.dashboardUrl}`,
     ].join("\n"),
   });

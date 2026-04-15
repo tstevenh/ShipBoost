@@ -56,7 +56,7 @@ export function PublicToolCard({
                   tool.isFeatured,
                 )}`}
               >
-                {tool.isFeatured ? "Featured" : tool.pricingModel}
+                {tool.isFeatured ? "Premium" : tool.pricingModel}
               </span>
             </div>
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground font-medium leading-relaxed">

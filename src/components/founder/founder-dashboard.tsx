@@ -190,7 +190,7 @@ export function FounderDashboard({
     })();
   }
 
-  function beginFeaturedCheckout(submissionId: string) {
+  function beginPremiumCheckout(submissionId: string) {
     if (pendingCheckoutId) return;
     setPendingCheckoutId(submissionId);
     void (async () => {
@@ -200,7 +200,7 @@ export function FounderDashboard({
         }
 
         setErrorMessage(null);
-        const result = await apiRequest<{ checkoutUrl: string }>("/api/polar/checkout/featured-launch", {
+        const result = await apiRequest<{ checkoutUrl: string }>("/api/dodo/checkout/premium-launch", {
           method: "POST",
           body: JSON.stringify({ submissionId }),
         });
@@ -431,7 +431,7 @@ export function FounderDashboard({
                         )}
                         {sub.reviewStatus !== "DRAFT" && sub.submissionType === "FEATURED_LAUNCH" && sub.paymentStatus !== "PAID" && (
                           premiumLaunchAvailable ? (
-                            <button onClick={() => beginFeaturedCheckout(sub.id)} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90">
+                            <button onClick={() => beginPremiumCheckout(sub.id)} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90">
                               <Star size={14} /> Reserve Premium Launch
                             </button>
                           ) : (
