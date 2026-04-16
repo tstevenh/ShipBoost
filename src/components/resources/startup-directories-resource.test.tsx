@@ -79,7 +79,7 @@ describe("StartupDirectoriesResource", () => {
     render(<StartupDirectoriesResource preview />);
 
     expect(screen.queryByText("r/startups")).not.toBeInTheDocument();
-    expect(screen.getAllByText("ShipBoost")).toHaveLength(2);
+    expect(screen.getAllByText("ShipBoost")).toHaveLength(1);
     expect(screen.getByText("Beta")).toBeInTheDocument();
     expect(
       screen.queryByPlaceholderText(/search name, domain, or url/i),

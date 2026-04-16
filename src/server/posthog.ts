@@ -35,3 +35,19 @@ export async function capturePostHogEvent(input: CaptureInput) {
     }),
   });
 }
+
+export async function capturePostHogEventSafely(
+  input: CaptureInput,
+  context?: string,
+) {
+  try {
+    await capturePostHogEvent(input);
+  } catch (error) {
+    console.warn("[shipboost posthog] capture failed", {
+      context: context ?? null,
+      event: input.event,
+      distinctId: input.distinctId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}

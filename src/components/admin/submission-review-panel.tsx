@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ExternalLink, Check, X, RefreshCw, Clock, Rocket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -21,6 +22,7 @@ export function SubmissionReviewPanel({
   submissionNotes,
   setSubmissionNotes,
   handleSubmissionReview,
+  handleSubmissionSpotlightLink,
   hasPendingAction,
   isActionPending,
 }: {
@@ -43,15 +45,29 @@ export function SubmissionReviewPanel({
     submissionId: string,
     action: "APPROVE" | "REJECT",
   ) => void | Promise<void>;
+  handleSubmissionSpotlightLink: (
+    submissionId: string,
+    articleSlug: string,
+  ) => void | Promise<void>;
   hasPendingAction: boolean;
   isActionPending: (actionKey: string) => boolean;
 }) {
+  const [spotlightDrafts, setSpotlightDrafts] = useState<Record<string, string>>({});
+
   function getSubmissionReviewDraft(submission: Submission) {
     return (
       submissionNotes[submission.id] ?? {
         founderVisibleNote: submission.founderVisibleNote ?? "",
         internalReviewNote: submission.internalReviewNote ?? "",
       }
+    );
+  }
+
+  function getSpotlightDraft(submission: Submission) {
+    return (
+      spotlightDrafts[submission.id] ??
+      submission.spotlightBrief?.publishedArticle?.slug ??
+      ""
     );
   }
 
@@ -207,6 +223,78 @@ export function SubmissionReviewPanel({
                     />
                   </Field>
                 </div>
+
+                {submission.submissionType === "FEATURED_LAUNCH" &&
+                submission.paymentStatus === "PAID" ? (
+                  <div className="grid gap-4 border-t border-border pt-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusChip
+                          label={`Spotlight: ${
+                            submission.spotlightBrief?.status ?? "NOT_STARTED"
+                          }`}
+                          tone={
+                            submission.spotlightBrief?.status === "PUBLISHED"
+                              ? "green"
+                              : submission.spotlightBrief?.status === "READY"
+                                ? "green"
+                                : submission.spotlightBrief?.status ===
+                                    "IN_PROGRESS"
+                                  ? "amber"
+                                  : "slate"
+                          }
+                        />
+                        {submission.spotlightBrief?.publishedArticle ? (
+                          <a
+                            href={`/blog/${submission.spotlightBrief.publishedArticle.slug}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-[10px] font-black tracking-widest text-primary hover:opacity-80"
+                          >
+                            <ExternalLink size={12} />
+                            {submission.spotlightBrief.publishedArticle.title}
+                          </a>
+                        ) : null}
+                      </div>
+                      <Field
+                        label="Spotlight article slug"
+                        hint="Use a published article in the Launch Spotlights category."
+                      >
+                        <input
+                          value={getSpotlightDraft(submission)}
+                          onChange={(event) =>
+                            setSpotlightDrafts((current) => ({
+                              ...current,
+                              [submission.id]: event.target.value,
+                            }))
+                          }
+                          placeholder="launch-week-feature-acme"
+                          className={textInputClassName()}
+                        />
+                      </Field>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleSubmissionSpotlightLink(
+                          submission.id,
+                          getSpotlightDraft(submission),
+                        )
+                      }
+                      disabled={
+                        hasPendingAction || !getSpotlightDraft(submission).trim()
+                      }
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-[10px] font-black tracking-widest hover:bg-muted disabled:opacity-50"
+                    >
+                      {isActionPending(`spotlight:${submission.id}`) ? (
+                        <RefreshCw className="animate-spin" size={12} />
+                      ) : (
+                        <Rocket size={12} />
+                      )}
+                      Link spotlight
+                    </button>
+                  </div>
+                ) : null}
 
                 {requiresManualReview && (
                   <div className="flex flex-wrap gap-2 pt-2">

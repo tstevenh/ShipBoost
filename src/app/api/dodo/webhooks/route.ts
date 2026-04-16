@@ -50,8 +50,7 @@ export async function POST(request: Request) {
     }
 
     if (
-      (payload.type === "refund.created" ||
-        payload.type === "refund.succeeded") &&
+      payload.type === "refund.succeeded" &&
       payload.data.payment_id &&
       (!payload.data.status || payload.data.status === "succeeded")
     ) {

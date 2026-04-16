@@ -25,6 +25,7 @@ type DashboardPageProps = {
     submission_id?: string;
     payment_id?: string;
     status?: string;
+    tab?: string;
   }>;
 };
 
@@ -73,6 +74,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     preferredLaunchDate: submission.preferredLaunchDate?.toISOString() ?? null,
     paymentStatus: submission.paymentStatus,
     badgeVerification: submission.badgeVerification,
+    spotlightBrief: submission.spotlightBrief
+      ? {
+          status: submission.spotlightBrief.status,
+          updatedAt: submission.spotlightBrief.updatedAt.toISOString(),
+          publishedAt:
+            submission.spotlightBrief.publishedAt?.toISOString() ?? null,
+          publishedArticle: submission.spotlightBrief.publishedArticle,
+        }
+      : null,
     tool: {
       id: submission.tool.id,
       slug: submission.tool.slug,
@@ -141,6 +151,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           founderEmail={session.user.email}
           founderRole={session.user.role ?? "FOUNDER"}
           initialSuccessMessage={initialSuccessMessage}
+          initialActiveNav={
+            resolvedSearchParams?.tab === "submissions" ||
+            resolvedSearchParams?.tab === "products" ||
+            resolvedSearchParams?.tab === "claims"
+              ? resolvedSearchParams.tab
+              : "overview"
+          }
         />
       </section>
       <Footer className="mt-auto" />

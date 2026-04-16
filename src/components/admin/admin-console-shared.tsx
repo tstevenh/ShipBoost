@@ -76,6 +76,15 @@ export type Submission = {
   founderVisibleNote: string | null;
   internalReviewNote: string | null;
   createdAt: string;
+  spotlightBrief: {
+    status: "NOT_STARTED" | "IN_PROGRESS" | "READY" | "PUBLISHED";
+    updatedAt: string;
+    publishedAt: string | null;
+    publishedArticle: {
+      slug: string;
+      title: string;
+    } | null;
+  } | null;
   user: {
     id: string;
     name: string | null;

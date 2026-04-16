@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertCircle, Check } from "lucide-react";
 
+import { startupDirectoriesMarketingCountLabel } from "@/content/resources/startup-directories-meta";
 import { requestStartupDirectoriesAccess } from "@/lib/startup-directories-access";
 
 const source = "resource_preview_unlock";
@@ -55,7 +56,8 @@ export function ResourceUnlockPanel() {
           Unlock the full resource
         </p>
         <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-          Unlock the full searchable list of 300+ startup directories.
+          Unlock the full searchable list of{" "}
+          {startupDirectoriesMarketingCountLabel} startup directories.
         </h2>
         <p className="text-sm font-medium leading-7 text-muted-foreground sm:text-base">
           Get the complete hosted list inside ShipBoost so you can search, sort,

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { StartupDirectoriesResource } from "@/components/resources/startup-directories-resource";
 import { ResourceUnlockPanel } from "@/components/resources/resource-unlock-panel";
 import { startupDirectories } from "@/content/resources/startup-directories";
+import { startupDirectoriesMarketingCountLabel } from "@/content/resources/startup-directories-meta";
 import { getServerSession } from "@/server/auth/session";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 
@@ -12,7 +13,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Startup Directories Resource | ShipBoost",
   description:
-    "Browse 300+ startup directories and launch sites in one searchable ShipBoost resource built to help founders plan distribution faster.",
+    `Browse ${startupDirectoriesMarketingCountLabel} startup directories and launch sites in one searchable ShipBoost resource built to help founders plan distribution faster.`,
   url: "/resources/startup-directories",
 });
 
@@ -33,7 +34,8 @@ export default async function StartupDirectoriesPage() {
           {session ? "Signed-in resource" : "Public preview"}
         </p>
         <h1 className="text-4xl font-black tracking-tight text-foreground">
-          300+ startup directories and launch sites in one clean, searchable list.
+          {startupDirectoriesMarketingCountLabel} startup directories and launch
+          sites in one clean, searchable list.
         </h1>
         <p className="text-base font-medium leading-7 text-muted-foreground">
           Search and sort the ShipBoost startup directories resource by DR,
@@ -71,7 +73,7 @@ export default async function StartupDirectoriesPage() {
             </p>
             <ul className="mt-4 space-y-3">
               {[
-                "300+ startup directories and launch sites",
+                `${startupDirectoriesMarketingCountLabel} startup directories and launch sites`,
                 "Site name and URL",
                 "DR sorting and search",
                 "Hosted access inside ShipBoost",
@@ -138,7 +140,7 @@ export default async function StartupDirectoriesPage() {
               </h2>
               <p className="text-sm font-medium leading-7 text-muted-foreground">
                 This preview shows {previewCount} real directories from the
-                full 300+ directory list.
+                full {startupDirectoriesMarketingCountLabel} directory list.
               </p>
             </div>
 

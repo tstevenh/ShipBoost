@@ -30,7 +30,7 @@ describe("outbound-click-service", () => {
     vi.clearAllMocks();
   });
 
-  it("resolves a tracked website redirect and captures the event", async () => {
+  it("resolves a tracked website redirect to the affiliate URL without appending utms", async () => {
     prismaMock.tool.findFirst.mockResolvedValueOnce({
       id: "tool_1",
       slug: "acme",
@@ -55,7 +55,7 @@ describe("outbound-click-service", () => {
       request,
     });
 
-    expect(result.destinationUrl).toBe("https://acme.com");
+    expect(result.destinationUrl).toBe("https://partner.com/acme");
     expect(capturePostHogEventMock).toHaveBeenCalledWith(
       expect.objectContaining({
         distinctId: "user_1",
@@ -63,8 +63,13 @@ describe("outbound-click-service", () => {
         properties: expect.objectContaining({
           tool_id: "tool_1",
           destination_type: "website",
+          destination_url: "https://partner.com/acme",
+          destination_url_original: "https://partner.com/acme",
+          destination_url_final: "https://partner.com/acme",
+          destination_domain: "partner.com",
           source_surface: "tool_page",
           source_path: "/tools/acme?tab=overview",
+          used_affiliate_url: true,
         }),
       }),
     );
@@ -91,6 +96,31 @@ describe("outbound-click-service", () => {
     });
 
     expect(result.destinationUrl).toBe("https://partner.com/acme");
+  });
+
+  it("falls back to the plain website URL and preserves existing query params", async () => {
+    prismaMock.tool.findFirst.mockResolvedValueOnce({
+      id: "tool_1",
+      slug: "acme",
+      name: "Acme",
+      websiteUrl: "https://acme.com?ref=directory",
+      affiliateUrl: null,
+      isFeatured: false,
+      currentLaunchType: null,
+    });
+    getSessionFromRequestMock.mockResolvedValueOnce(null);
+
+    const result = await resolveTrackedToolOutboundClick({
+      toolId: "tool_1",
+      target: "website",
+      source: "launch_board",
+      referer: "http://localhost:3000/launch-board/weekly",
+      request: new Request("http://localhost:3000"),
+    });
+
+    expect(result.destinationUrl).toBe(
+      "https://acme.com/?ref=directory&utm_source=shipboost&utm_medium=referral&utm_campaign=launch_board&utm_content=acme",
+    );
   });
 
   it("rejects missing affiliate links", async () => {
@@ -135,6 +165,31 @@ describe("outbound-click-service", () => {
     });
   });
 
+  it("fails safely when the destination URL is malformed", async () => {
+    prismaMock.tool.findFirst.mockResolvedValueOnce({
+      id: "tool_1",
+      slug: "acme",
+      name: "Acme",
+      websiteUrl: "not-a-valid-url",
+      affiliateUrl: null,
+      isFeatured: false,
+      currentLaunchType: null,
+    });
+
+    await expect(
+      resolveTrackedToolOutboundClick({
+        toolId: "tool_1",
+        target: "website",
+        source: "tool_page",
+        referer: null,
+        request: new Request("http://localhost:3000"),
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 500,
+      message: "Tool destination URL is invalid.",
+    });
+  });
+
   it("still resolves redirect when PostHog capture fails", async () => {
     prismaMock.tool.findFirst.mockResolvedValueOnce({
       id: "tool_1",
@@ -147,6 +202,9 @@ describe("outbound-click-service", () => {
     });
     getSessionFromRequestMock.mockResolvedValueOnce(null);
     capturePostHogEventMock.mockRejectedValueOnce(new Error("boom"));
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
 
     const result = await resolveTrackedToolOutboundClick({
       toolId: "tool_1",
@@ -156,6 +214,10 @@ describe("outbound-click-service", () => {
       request: new Request("http://localhost:3000"),
     });
 
-    expect(result.destinationUrl).toBe("https://acme.com");
+    expect(result.destinationUrl).toBe(
+      "https://acme.com/?utm_source=shipboost&utm_medium=referral&utm_campaign=launch_board&utm_content=acme",
+    );
+
+    consoleErrorSpy.mockRestore();
   });
 });

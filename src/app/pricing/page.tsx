@@ -66,7 +66,7 @@ export default async function PricingPage() {
       price: foundingPremiumPrice.currentPrice,
       originalPrice: foundingPremiumPrice.compareAtPrice,
       description:
-        "Best for founders who care about timing, want less submission friction, and want stronger baseline placement in the weekly launch board.",
+        "Reserve your launch week, skip badge verification, get stronger baseline placement, and receive a ShipBoost editorial launch spotlight during your launch period.",
       eyebrow: "Founding offer",
       foundingSpotsLabel: "First 100 Premium Launches",
       ctaLabel: premiumLaunchAvailable
@@ -83,6 +83,7 @@ export default async function PricingPage() {
         "Skip badge verification and go live faster",
         "Get stronger baseline board placement",
         "Keep a public listing that stays useful after launch",
+        "Includes one editorial launch spotlight during launch period",
       ],
     },
     {
@@ -226,6 +227,25 @@ export default async function PricingPage() {
             </article>
           ))}
         </div>
+
+        <section className="mt-10 rounded-3xl border border-border bg-card p-8 shadow-sm">
+          <p className="text-[10px] font-black tracking-[0.2em] text-primary">
+            Founding bonus
+          </p>
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+            What is the editorial launch spotlight?
+          </h2>
+          <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-muted-foreground">
+            For the first 100 Premium Launches, ShipBoost includes one editorial
+            launch spotlight published during launch week. It gives your launch
+            one extra public discovery asset linked back to your listing and
+            product site.
+          </p>
+          <p className="mt-3 max-w-3xl text-xs font-bold leading-relaxed text-muted-foreground">
+            The editorial launch spotlight is a standardized ShipBoost founder
+            feature, not a custom commissioned article.
+          </p>
+        </section>
 
         <section className="mt-20 grid gap-12 lg:grid-cols-[1.2fr_0.8fr] items-start">
           <div className="space-y-6">

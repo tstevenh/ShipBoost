@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppHeader } from "@/components/app/app-header";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { PostHogPageTracker } from "@/components/analytics/posthog-page-tracker";
+import { UmamiAnalytics } from "@/components/analytics/umami-analytics";
 import { getCachedPublicHeaderCategories } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
 import { getDefaultPublicPageImage } from "@/server/seo/page-metadata";
@@ -88,9 +90,11 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300" suppressHydrationWarning>
+        <UmamiAnalytics />
         <Suspense fallback={null}>
           <GoogleAnalytics />
         </Suspense>
+        <PostHogPageTracker apiKey={env.POSTHOG_KEY} apiHost={env.POSTHOG_HOST} />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

@@ -6,6 +6,10 @@ import { useState } from "react";
 import { Loader2, ArrowRight } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import {
+  clearPendingAuthIntent,
+  setPendingAuthIntent,
+} from "@/lib/posthog-browser";
 import { AuthBrand } from "@/components/auth/auth-brand";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -64,6 +68,14 @@ export function AuthForm({
 
     try {
       if (mode === "sign-up") {
+        setPendingAuthIntent({
+          intent: "sign-up",
+          method: "email",
+          email,
+          redirectTo,
+          source: "auth_form",
+        });
+
         const result = await authClient.signUp.email({
           name,
           email,
@@ -72,6 +84,7 @@ export function AuthForm({
         });
 
         if (result.error) {
+          clearPendingAuthIntent();
           setErrorMessage(
             result.error.message ?? "Unable to create your account right now.",
           );
@@ -85,6 +98,14 @@ export function AuthForm({
         return;
       }
 
+      setPendingAuthIntent({
+        intent: "sign-in",
+        method: "email",
+        email,
+        redirectTo,
+        source: "auth_form",
+      });
+
       const result = await authClient.signIn.email({
         email,
         password,
@@ -92,6 +113,7 @@ export function AuthForm({
       });
 
       if (result.error) {
+        clearPendingAuthIntent();
         if (
           result.error.status === 403 ||
           result.error.message?.toLowerCase().includes("verify")
@@ -127,12 +149,21 @@ export function AuthForm({
     setMagicLinkSent(null);
 
     try {
+      setPendingAuthIntent({
+        intent: mode,
+        method: "google",
+        email: email.trim() || undefined,
+        redirectTo,
+        source: "auth_form",
+      });
+
       const result = await authClient.signIn.social({
         provider: "google",
         callbackURL: redirectTo,
       });
 
       if (result.error) {
+        clearPendingAuthIntent();
         setErrorMessage(
           result.error.message ?? "Unable to start Google sign-in right now.",
         );
@@ -164,6 +195,13 @@ export function AuthForm({
         return;
       }
 
+      setPendingAuthIntent({
+        intent: "sign-in",
+        method: "magic_link",
+        email: normalizedEmail,
+        redirectTo,
+        source: "auth_form",
+      });
       setMagicLinkSent(normalizedEmail);
     } finally {
       setIsSubmitting(false);

@@ -84,6 +84,32 @@ export const premiumLaunchRescheduleSchema = z.object({
   preferredLaunchDate: z.coerce.date(),
 });
 
+const optionalTrimmedUrl = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  },
+  z.url().optional(),
+);
+
+export const spotlightBriefSchema = z.object({
+  audience: optionalTrimmedString,
+  problem: optionalTrimmedString,
+  differentiator: optionalTrimmedString,
+  emphasis: optionalTrimmedString,
+  primaryCtaUrl: optionalTrimmedUrl,
+  founderQuote: optionalTrimmedString,
+  wordingToAvoid: optionalTrimmedString,
+});
+
+export const adminSpotlightLinkSchema = z.object({
+  articleSlug: z.string().trim().min(1),
+});
+
 export type SubmissionCreateInput = z.infer<typeof submissionCreateSchema>;
 export type SubmissionReviewInput = z.infer<typeof submissionReviewSchema>;
 export type AdminSubmissionListQueryInput = z.infer<
@@ -92,3 +118,4 @@ export type AdminSubmissionListQueryInput = z.infer<
 export type PremiumLaunchRescheduleInput = z.infer<
   typeof premiumLaunchRescheduleSchema
 >;
+export type SpotlightBriefInput = z.infer<typeof spotlightBriefSchema>;

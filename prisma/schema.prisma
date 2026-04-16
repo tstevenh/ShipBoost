@@ -101,6 +101,13 @@ enum BlogArticleStatus {
   ARCHIVED
 }
 
+enum SubmissionSpotlightStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  READY
+  PUBLISHED
+}
+
 model User {
   id            String   @id @default(cuid())
   name          String?
@@ -285,12 +292,40 @@ model Submission {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   tool Tool @relation(fields: [toolId], references: [id], onDelete: Cascade)
 
+  spotlightBrief SubmissionSpotlightBrief?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId, reviewStatus])
   @@index([userId, createdAt])
   @@index([toolId])
+}
+
+model SubmissionSpotlightBrief {
+  id                       String                    @id @default(cuid())
+  submissionId             String                    @unique
+  status                   SubmissionSpotlightStatus @default(NOT_STARTED)
+  audience                 String?
+  problem                  String?
+  differentiator           String?
+  emphasis                 String?
+  primaryCtaUrl            String?
+  founderQuote             String?
+  wordingToAvoid           String?
+  firstTouchedAt           DateTime?
+  completedAt              DateTime?
+  publishedAt              DateTime?
+  reminderThreeDaysSentAt  DateTime?
+  reminderLaunchWeekSentAt DateTime?
+  publishedArticleId       String?                   @unique
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+
+  submission       Submission   @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  publishedArticle BlogArticle? @relation(fields: [publishedArticleId], references: [id], onDelete: SetNull)
+
+  @@index([status])
 }
 
 model Launch {
@@ -451,6 +486,7 @@ model BlogArticle {
   author          BlogAuthor      @relation(fields: [authorId], references: [id], onDelete: Restrict)
   primaryCategory BlogCategory    @relation(fields: [primaryCategoryId], references: [id], onDelete: Restrict)
   articleTags     BlogArticleTag[]
+  spotlightBrief  SubmissionSpotlightBrief?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

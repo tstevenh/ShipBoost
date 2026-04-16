@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
+  capturePostHogEventSafelyMock,
   prismaMock,
   getSubmissionByIdForFounderMock,
   sendSubmissionReceivedEmailMessageMock,
 } = vi.hoisted(() => ({
+  capturePostHogEventSafelyMock: vi.fn(),
   prismaMock: {
     $transaction: vi.fn(),
     submission: {
@@ -30,6 +32,10 @@ vi.mock("@/server/email/transactional", () => ({
   sendSubmissionReceivedEmailMessage: sendSubmissionReceivedEmailMessageMock,
 }));
 
+vi.mock("@/server/posthog", () => ({
+  capturePostHogEventSafely: capturePostHogEventSafelyMock,
+}));
+
 vi.mock("@/server/services/submission-service-shared", async () => {
   const actual =
     await vi.importActual<typeof import("@/server/services/submission-service-shared")>(
@@ -53,6 +59,7 @@ describe("submit-relaunch-draft", () => {
     const submission = {
       id: "submission_1",
       toolId: "tool_1",
+      userId: "founder_1",
       submissionType: "RELAUNCH",
       reviewStatus: "DRAFT",
       badgeVerification: "NOT_REQUIRED",
@@ -62,7 +69,11 @@ describe("submit-relaunch-draft", () => {
       },
       tool: {
         id: "tool_1",
+        slug: "acme",
         name: "Acme",
+        affiliateUrl: "https://partner.example/acme",
+        toolCategories: [{ categoryId: "cat_1" }],
+        toolTags: [{ tagId: "tag_1" }, { tagId: "tag_2" }],
         launches: [],
       },
     };
@@ -97,6 +108,23 @@ describe("submit-relaunch-draft", () => {
     });
     expect(prismaMock.tool.update).not.toHaveBeenCalled();
     expect(sendSubmissionReceivedEmailMessageMock).not.toHaveBeenCalled();
+    expect(capturePostHogEventSafelyMock).toHaveBeenCalledWith(
+      {
+        distinctId: "founder_1",
+        event: "tool_submission_completed",
+        properties: {
+          submission_id: "submission_1",
+          submission_type: "RELAUNCH",
+          tool_id: "tool_1",
+          tool_slug: "acme",
+          tool_name: "Acme",
+          has_affiliate_url: true,
+          category_count: 1,
+          tag_count: 2,
+        },
+      },
+      "submitSubmissionDraft",
+    );
 
     sendSubmissionReceivedEmailMessageMock.mockReturnValue(Promise.resolve());
     await result.emailTask();

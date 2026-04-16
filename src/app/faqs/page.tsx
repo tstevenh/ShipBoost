@@ -52,6 +52,11 @@ const groups: FaqGroup[] = [
           "No. Badge verification is required for free launches, not Premium Launches.",
       },
       {
+        question: "What is the editorial launch spotlight?",
+        answer:
+          "For the first 100 Premium Launches, ShipBoost includes one standardized editorial launch spotlight published during launch week. It is a founder feature linked to your listing, not a custom commissioned article.",
+      },
+      {
         question: "Why does Free Launch require a badge?",
         answer:
           "Badge verification helps keep the free launch surface credible and filters low-intent or low-trust submissions. Premium Launch skips that step.",

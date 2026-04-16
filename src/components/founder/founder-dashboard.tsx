@@ -12,7 +12,9 @@ import {
   premiumLaunchAvailable,
   premiumLaunchUnavailableMessage,
 } from "@/lib/premium-launch";
+import { captureBrowserPostHogEvent } from "@/lib/posthog-browser";
 import { cn } from "@/lib/utils";
+import { LaunchSpotlightBriefCard } from "@/components/founder/launch-spotlight-brief-card";
 
 type FounderSubmission = {
   id: string;
@@ -21,6 +23,12 @@ type FounderSubmission = {
   preferredLaunchDate: string | null;
   paymentStatus: "NOT_REQUIRED" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
   badgeVerification: "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "FAILED";
+  spotlightBrief: {
+    status: "NOT_STARTED" | "IN_PROGRESS" | "READY" | "PUBLISHED";
+    updatedAt: string;
+    publishedAt: string | null;
+    publishedArticle: { slug: string; title: string } | null;
+  } | null;
   tool: {
     id: string;
     slug: string;
@@ -146,6 +154,7 @@ export function FounderDashboard({
   founderEmail,
   founderRole,
   initialSuccessMessage,
+  initialActiveNav = "overview",
 }: {
   initialSubmissions: FounderSubmission[];
   initialTools: FounderToolSummary[];
@@ -153,8 +162,9 @@ export function FounderDashboard({
   founderEmail: string;
   founderRole: string;
   initialSuccessMessage?: string | null;
+  initialActiveNav?: NavSection;
 }) {
-  const [activeNav, setActiveNav] = useState<NavSection>("overview");
+  const [activeNav, setActiveNav] = useState<NavSection>(initialActiveNav);
   const [submissions, setSubmissions] = useState(initialSubmissions);
   const [tools, setTools] = useState(initialTools);
   const [claims, setClaims] = useState(initialClaims);
@@ -203,6 +213,10 @@ export function FounderDashboard({
         const result = await apiRequest<{ checkoutUrl: string }>("/api/dodo/checkout/premium-launch", {
           method: "POST",
           body: JSON.stringify({ submissionId }),
+        });
+        captureBrowserPostHogEvent("premium_launch_checkout_started", {
+          submission_id: submissionId,
+          source_surface: "founder_dashboard",
         });
         window.location.href = result.checkoutUrl;
       } catch (error) {
@@ -444,7 +458,17 @@ export function FounderDashboard({
                           <ExternalLink size={14} /> Site
                         </a>
                       </div>
-                    </div>
+                  </div>
+                    {sub.submissionType === "FEATURED_LAUNCH" &&
+                    sub.paymentStatus === "PAID" ? (
+                      <LaunchSpotlightBriefCard
+                        submissionId={sub.id}
+                        status={sub.spotlightBrief?.status ?? "NOT_STARTED"}
+                        initialPublishedArticle={
+                          sub.spotlightBrief?.publishedArticle ?? null
+                        }
+                      />
+                    ) : null}
                   </article>
                 );
               })}

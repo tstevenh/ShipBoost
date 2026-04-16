@@ -679,6 +679,43 @@ export function AdminConsole() {
     }
   }
 
+  async function handleSubmissionSpotlightLink(
+    submissionId: string,
+    articleSlug: string,
+  ) {
+    if (hasPendingAction) {
+      return;
+    }
+
+    setSubmissionError(null);
+    setPendingAction(`spotlight:${submissionId}`);
+
+    try {
+      const spotlightBrief = await apiRequest<Submission["spotlightBrief"]>(
+        `/api/admin/submissions/${submissionId}/spotlight`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ articleSlug }),
+        },
+      );
+
+      setSubmissions((current) =>
+        current.map((submission) =>
+          submission.id === submissionId
+            ? {
+                ...submission,
+                spotlightBrief,
+              }
+            : submission,
+        ),
+      );
+    } catch (error) {
+      setSubmissionError(toErrorMessage(error));
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
   async function handleClaimReview(
     claimId: string,
     action: "APPROVE" | "REJECT",
@@ -869,6 +906,7 @@ export function AdminConsole() {
               submissionNotes={submissionNotes}
               setSubmissionNotes={setSubmissionNotes}
               handleSubmissionReview={handleSubmissionReview}
+              handleSubmissionSpotlightLink={handleSubmissionSpotlightLink}
               hasPendingAction={hasPendingAction}
               isActionPending={isActionPending}
             />

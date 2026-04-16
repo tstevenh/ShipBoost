@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertCircle, Check } from "lucide-react";
 
+import { startupDirectoriesMarketingCountLabel } from "@/content/resources/startup-directories-meta";
 import { requestStartupDirectoriesAccess } from "@/lib/startup-directories-access";
 
 const source = "homepage_sidebar_directory_list";
@@ -61,7 +62,8 @@ export function SidebarLeadMagnetForm() {
         Founder resource
       </h3>
       <h4 className="font-black text-lg mb-3 relative leading-tight">
-        Search 300+ startup directories in one place.
+        Search {startupDirectoriesMarketingCountLabel} startup directories in
+        one place.
       </h4>
       <p className="text-xs text-muted-foreground mb-6 leading-relaxed relative">
         Get the hosted ShipBoost resource and work through founder distribution
@@ -88,7 +90,8 @@ export function SidebarLeadMagnetForm() {
       </form>
 
       <p className="mt-4 text-[10px] font-black tracking-[0.14em] text-muted-foreground/45">
-        300+ directories and launch sites. Access link sent by email.
+        {startupDirectoriesMarketingCountLabel} directories and launch sites.
+        Access link sent by email.
       </p>
 
       {successMessage ? (

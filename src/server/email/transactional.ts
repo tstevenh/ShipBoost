@@ -519,11 +519,13 @@ export async function sendPremiumLaunchPaidEmailMessage(input: {
   to: string;
   name?: string | null;
   dashboardUrl: string;
+  spotlightBriefUrl: string;
   toolName: string;
   launchDate: string;
 }) {
   const subject = `${input.toolName} premium launch is reserved`;
-  const preview = "Payment received and your premium launch slot is confirmed.";
+  const preview =
+    "Payment received, your premium launch slot is confirmed, and your spotlight brief is ready.";
   const html = renderEmailDocument({
     title: subject,
     preview,
@@ -539,6 +541,13 @@ export async function sendPremiumLaunchPaidEmailMessage(input: {
           input.launchDate,
         )}</strong>.`,
       ),
+      paragraph(
+        "As part of the founding offer, your premium launch also includes one ShipBoost editorial launch spotlight. Fill in the short dashboard brief so ShipBoost has the angle, audience, and CTA for launch week coverage.",
+      ),
+      ctaButton(input.spotlightBriefUrl, "Complete spotlight brief"),
+      paragraph(
+        "If you leave the brief unfinished, ShipBoost can still publish your spotlight using the listing details you already submitted.",
+      ),
       ctaButton(input.dashboardUrl, "Open dashboard"),
     ].join(""),
   });
@@ -552,6 +561,75 @@ export async function sendPremiumLaunchPaidEmailMessage(input: {
       "",
       `Payment was received for ${input.toolName}.`,
       `Premium launch date: ${input.launchDate}`,
+      `Spotlight brief: ${input.spotlightBriefUrl}`,
+      "Your founding bonus includes one ShipBoost editorial launch spotlight during launch week.",
+      `Dashboard: ${input.dashboardUrl}`,
+    ].join("\n"),
+  });
+}
+
+export type SpotlightReminderStage = "THREE_DAYS_BEFORE" | "LAUNCH_WEEK_START";
+
+export async function sendPremiumLaunchSpotlightReminderEmailMessage(input: {
+  to: string;
+  name?: string | null;
+  toolName: string;
+  launchDate: string;
+  dashboardUrl: string;
+  stage: SpotlightReminderStage;
+}) {
+  const subject =
+    input.stage === "THREE_DAYS_BEFORE"
+      ? `${input.toolName} spotlight brief is due soon`
+      : `${input.toolName} launch week spotlight is still waiting`;
+  const preview =
+    input.stage === "THREE_DAYS_BEFORE"
+      ? "ShipBoost needs your short spotlight brief before launch week starts."
+      : "Launch week has started. Finish the spotlight brief or ShipBoost will use your listing details.";
+  const intro =
+    input.stage === "THREE_DAYS_BEFORE"
+      ? `your premium launch for <strong>${escapeHtml(
+          input.toolName,
+        )}</strong> is three days away.`
+      : `launch week for <strong>${escapeHtml(
+          input.toolName,
+        )}</strong> has started.`;
+  const reminder =
+    input.stage === "THREE_DAYS_BEFORE"
+      ? "Complete the spotlight brief now so ShipBoost can publish your editorial launch spotlight during launch week with the angle and CTA you want."
+      : "Complete the spotlight brief if you still want to shape the editorial angle. If it stays unfinished, ShipBoost can still publish using your existing listing and submission details.";
+
+  const html = renderEmailDocument({
+    title: subject,
+    preview,
+    content: [
+      h1("Finish your launch spotlight brief"),
+      paragraph(`${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}${intro}`),
+      paragraph(
+        `Your scheduled premium launch week begins <strong>${escapeHtml(
+          input.launchDate,
+        )}</strong>.`,
+      ),
+      paragraph(reminder),
+      ctaButton(input.dashboardUrl, "Open spotlight brief"),
+      paragraph(
+        "The editorial launch spotlight is a standardized ShipBoost founder feature, not a custom commissioned article.",
+      ),
+    ].join(""),
+  });
+
+  await sendTransactionalEmail({
+    to: input.to,
+    subject,
+    html,
+    text: [
+      input.name ? `Hi ${input.name},` : "Hi,",
+      "",
+      input.stage === "THREE_DAYS_BEFORE"
+        ? `${input.toolName} launches in three days.`
+        : `${input.toolName} launch week has started.`,
+      `Scheduled launch week: ${input.launchDate}`,
+      reminder,
       `Dashboard: ${input.dashboardUrl}`,
     ].join("\n"),
   });

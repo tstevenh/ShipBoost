@@ -7,6 +7,7 @@ import {
   getSubmissionByIdForFounder,
 } from "@/server/repositories/submission-repository";
 import { getDodoClient, getDodoDashboardReturnUrl } from "@/server/dodo";
+import { capturePostHogEventSafely } from "@/server/posthog";
 import {
   getLaunchpadGoLiveAtUtc,
   isAnchoredLaunchWeekStart,
@@ -143,6 +144,15 @@ async function applyPremiumLaunchPaymentSucceeded(
       });
     }
 
+    await tx.submissionSpotlightBrief.upsert({
+      where: { submissionId: submission.id },
+      update: {},
+      create: {
+        submissionId: submission.id,
+        status: "NOT_STARTED",
+      },
+    });
+
     return submission.id;
   });
 
@@ -165,6 +175,7 @@ async function applyPremiumLaunchPaymentSucceeded(
       to: updatedSubmission.user.email,
       name: updatedSubmission.user.name,
       dashboardUrl: getDashboardUrl(),
+      spotlightBriefUrl: `${getDashboardUrl()}?tab=submissions`,
       toolName: updatedSubmission.tool.name,
       launchDate: formatLaunchDateForEmail(
         premiumLaunch?.launchDate ??
@@ -172,6 +183,27 @@ async function applyPremiumLaunchPaymentSucceeded(
           new Date(),
       ),
     }),
+  );
+
+  await capturePostHogEventSafely(
+    {
+      distinctId: updatedSubmission.user.id,
+      event: "premium_launch_paid",
+      properties: {
+        submission_id: updatedSubmission.id,
+        tool_id: updatedSubmission.tool.id,
+        tool_slug: updatedSubmission.tool.slug,
+        tool_name: updatedSubmission.tool.name,
+        payment_id: payment.id,
+        checkout_session_id:
+          payment.checkoutSessionId ?? updatedSubmission.polarCheckoutId ?? null,
+        launch_date:
+          premiumLaunch?.launchDate.toISOString() ??
+          updatedSubmission.preferredLaunchDate?.toISOString() ??
+          null,
+      },
+    },
+    "handlePremiumLaunchPaymentSucceeded",
   );
 
   return updatedSubmission;

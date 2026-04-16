@@ -14,6 +14,7 @@ import {
   premiumLaunchAvailable,
   premiumLaunchUnavailableMessage,
 } from "@/lib/premium-launch";
+import { captureBrowserPostHogEvent } from "@/lib/posthog-browser";
 import { cn } from "@/lib/utils";
 
 type CategoryOption = {
@@ -600,6 +601,10 @@ export function SubmitProductForm({
           throw new Error(payload.error || "Unable to start checkout.");
         }
 
+        captureBrowserPostHogEvent("premium_launch_checkout_started", {
+          submission_id: savedDraft.id,
+          source_surface: "submit_product_form",
+        });
         window.location.href = payload.data.checkoutUrl;
         return;
       }
@@ -1154,9 +1159,9 @@ export function SubmitProductForm({
                 {foundingPremiumPrice.label}
               </p>
               <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
-                Best for founders who care about timing, want less submission
-                friction, and want stronger baseline placement in the weekly
-                board.
+                Best for founders who care about timing, lower friction,
+                stronger placement, and an editorial launch spotlight during
+                launch week.
               </p>
               {!premiumLaunchAvailable ? (
                 <p className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-relaxed text-amber-700">
@@ -1164,7 +1169,13 @@ export function SubmitProductForm({
                 </p>
               ) : null}
               <ul className="space-y-4 mb-10">
-                {["Reserve a specific launch week", "Skip badge verification", "Stronger baseline board placement", "Lower-friction launch flow", "Founding offer pricing"].map(p => (
+                {[
+                  "Reserve a specific launch week",
+                  "Skip badge verification and launch faster",
+                  "Stronger baseline board placement",
+                  "Keep a permanent public listing",
+                  "Includes one editorial launch spotlight during launch week",
+                ].map((p) => (
                   <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
                     <Check size={16} className="text-foreground mt-0.5" /> {p}
                   </li>
@@ -1215,6 +1226,11 @@ export function SubmitProductForm({
                     : "Reserve Premium Launch"
                   : "Temporarily unavailable"}
               </button>
+              <p className="mt-3 text-[10px] font-bold tracking-widest text-muted-foreground">
+                After checkout, ShipBoost reserves your week, opens your
+                spotlight brief in the dashboard, and publishes the editorial
+                launch spotlight during launch week.
+              </p>
             </div>
           </div>
 

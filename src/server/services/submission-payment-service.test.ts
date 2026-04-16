@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
+  capturePostHogEventSafelyMock,
   prismaMock,
   getEnvMock,
   getSubmissionByIdMock,
@@ -10,6 +11,7 @@ const {
   sendPremiumLaunchPaidEmailMessageMock,
   sendProductEmailSafelyMock,
 } = vi.hoisted(() => ({
+  capturePostHogEventSafelyMock: vi.fn(),
   prismaMock: {
     $transaction: vi.fn(),
     submission: {
@@ -17,6 +19,9 @@ const {
       findFirst: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
+    },
+    submissionSpotlightBrief: {
+      upsert: vi.fn(),
     },
   },
   getEnvMock: vi.fn(),
@@ -48,6 +53,10 @@ vi.mock("@/server/dodo", () => ({
 
 vi.mock("@/server/email/transactional", () => ({
   sendPremiumLaunchPaidEmailMessage: sendPremiumLaunchPaidEmailMessageMock,
+}));
+
+vi.mock("@/server/posthog", () => ({
+  capturePostHogEventSafely: capturePostHogEventSafelyMock,
 }));
 
 vi.mock("@/server/services/launch-scheduling", () => ({
@@ -94,6 +103,9 @@ type PaymentTx = {
     findUnique: ReturnType<typeof vi.fn>;
     findFirst: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+  };
+  submissionSpotlightBrief: {
+    upsert: ReturnType<typeof vi.fn>;
   };
   tool: {
     update: ReturnType<typeof vi.fn>;
@@ -195,11 +207,13 @@ describe("submission-payment-service", () => {
       ...submission,
       paymentStatus: "PAID",
       user: {
+        id: "founder_1",
         email: "founder@acme.com",
         name: "Founder",
       },
       tool: {
         ...submission.tool,
+        id: "tool_1",
         name: "Acme",
         launches: [
           {
@@ -217,6 +231,9 @@ describe("submission-payment-service", () => {
             findUnique: vi.fn().mockResolvedValue(null),
             findFirst: vi.fn().mockResolvedValue(submission),
             update: vi.fn(),
+          },
+          submissionSpotlightBrief: {
+            upsert: vi.fn(),
           },
           tool: {
             update: vi.fn(),
@@ -249,6 +266,14 @@ describe("submission-payment-service", () => {
             reviewStatus: "APPROVED",
           }),
         });
+        expect(tx.submissionSpotlightBrief.upsert).toHaveBeenCalledWith({
+          where: { submissionId: "submission_1" },
+          update: {},
+          create: {
+            submissionId: "submission_1",
+            status: "NOT_STARTED",
+          },
+        });
         return result;
       },
     );
@@ -261,6 +286,22 @@ describe("submission-payment-service", () => {
     });
 
     expect(sendProductEmailSafelyMock).toHaveBeenCalledTimes(1);
+    expect(capturePostHogEventSafelyMock).toHaveBeenCalledWith(
+      {
+        distinctId: "founder_1",
+        event: "premium_launch_paid",
+        properties: {
+          submission_id: "submission_1",
+          tool_id: "tool_1",
+          tool_slug: undefined,
+          tool_name: "Acme",
+          payment_id: "pay_1",
+          checkout_session_id: "cs_test_1",
+          launch_date: "2026-05-08T00:00:00.000Z",
+        },
+      },
+      "handlePremiumLaunchPaymentSucceeded",
+    );
   });
 
   it("reconciles a successful Dodo payment from dashboard return parameters", async () => {
@@ -318,6 +359,9 @@ describe("submission-payment-service", () => {
             findUnique: vi.fn().mockResolvedValue(submission),
             findFirst: vi.fn().mockResolvedValue(null),
             update: vi.fn(),
+          },
+          submissionSpotlightBrief: {
+            upsert: vi.fn(),
           },
           tool: {
             update: vi.fn(),

@@ -31,6 +31,18 @@ const founderSubmissionToolSummarySelect = {
   },
 } satisfies Prisma.ToolSelect;
 
+const founderSubmissionSpotlightSummarySelect = {
+  status: true,
+  updatedAt: true,
+  publishedAt: true,
+  publishedArticle: {
+    select: {
+      slug: true,
+      title: true,
+    },
+  },
+} satisfies Prisma.SubmissionSpotlightBriefSelect;
+
 export const founderSubmissionSummarySelect = {
   id: true,
   submissionType: true,
@@ -38,6 +50,9 @@ export const founderSubmissionSummarySelect = {
   preferredLaunchDate: true,
   paymentStatus: true,
   badgeVerification: true,
+  spotlightBrief: {
+    select: founderSubmissionSpotlightSummarySelect,
+  },
   tool: {
     select: founderSubmissionToolSummarySelect,
   },
@@ -119,6 +134,9 @@ export function listAdminSubmissions(
   return db.submission.findMany({
     where,
     include: {
+      spotlightBrief: {
+        select: founderSubmissionSpotlightSummarySelect,
+      },
       user: true,
       tool: {
         include: toolDetailsInclude,

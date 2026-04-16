@@ -14,6 +14,7 @@ import {
   replaceToolCategories,
   replaceToolTags,
 } from "@/server/repositories/tool-repository";
+import { capturePostHogEventSafely } from "@/server/posthog";
 import { assertCatalogAssignments } from "@/server/services/catalog";
 import { createUniqueToolSlug } from "@/server/services/slug";
 import {
@@ -629,6 +630,24 @@ export async function submitSubmissionDraft(
         ? formatLaunchDateForEmail(submitted.preferredLaunchDate)
         : null,
     });
+
+  await capturePostHogEventSafely(
+    {
+      distinctId: submission.userId,
+      event: "tool_submission_completed",
+      properties: {
+        submission_id: submission.id,
+        submission_type: submission.submissionType,
+        tool_id: submission.tool.id,
+        tool_slug: submission.tool.slug,
+        tool_name: submission.tool.name,
+        has_affiliate_url: Boolean(submission.tool.affiliateUrl),
+        category_count: submission.tool.toolCategories.length,
+        tag_count: submission.tool.toolTags.length,
+      },
+    },
+    "submitSubmissionDraft",
+  );
 
   return {
     submission: submitted,
