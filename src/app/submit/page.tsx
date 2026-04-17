@@ -79,7 +79,7 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
                 Prelaunch Mode
               </p>
               <p className="mt-3 text-sm font-bold text-foreground">
-                ShipBoost opens on May 1, 2026 UTC. Submit now to line up your
+                ShipBoost opens on May 4, 2026 UTC. Submit now to line up your
                 launch before the public opening.
               </p>
             </div>

@@ -32,7 +32,7 @@ export function PrelaunchSurface({ tools }: { tools: PrelaunchTool[] }) {
               Reserve a launch week before public opening.
             </h2>
             <p className="text-xl font-medium leading-relaxed text-muted-foreground/80 max-w-2xl">
-              ShipBoost opens on May 1, 2026 UTC. Free launches enter weekly
+              ShipBoost opens on May 4, 2026 UTC. Free launches enter weekly
               cohorts. Premium launches can lock a week early and skip badge
               verification.
             </p>

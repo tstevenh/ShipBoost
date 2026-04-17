@@ -107,7 +107,7 @@ export default async function PricingPage() {
   const schema = buildPricingPageSchema({
     title: "Pricing",
     description: isPrelaunch
-      ? "Choose the ShipBoost launch path that fits your product stage. Start free, reserve a Premium Launch for the May 1 opening cohort, or use our partner submission service."
+      ? "Choose the ShipBoost launch path that fits your product stage. Start free, reserve a Premium Launch for the May 4 opening cohort, or use our partner submission service."
       : "Choose the ShipBoost launch path that fits your product stage. Start free, reserve a Premium Launch, or use our partner submission service.",
     url: `${env.NEXT_PUBLIC_APP_URL}/pricing`,
   });
@@ -127,7 +127,7 @@ export default async function PricingPage() {
           </h1>
           <p className="mt-6 text-xl font-medium leading-relaxed text-muted-foreground/80">
             {isPrelaunch
-              ? "ShipBoost opens on May 1, 2026 UTC. Start free if you want a credible listing and weekly visibility, reserve Premium if timing and lower friction matter more, or use our partner service for broader directory submissions."
+              ? "ShipBoost opens on May 4, 2026 UTC. Start free if you want a credible listing and weekly visibility, reserve Premium if timing and lower friction matter more, or use our partner service for broader directory submissions."
               : "Start free if you want a credible listing and weekly visibility. Upgrade to Premium if timing, lower friction, and stronger baseline placement matter more."}
           </p>
         </div>

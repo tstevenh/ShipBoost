@@ -1064,7 +1064,7 @@ export function SubmitProductForm({
                 Prelaunch Mode
               </p>
               <p className="mt-3 text-sm font-bold leading-relaxed text-foreground">
-                ShipBoost opens on May 1, 2026 UTC. Free launches are queued
+                ShipBoost opens on May 4, 2026 UTC. Free launches are queued
                 into weekly cohorts, and premium launches can reserve a launch
                 week ahead of the opening.
               </p>
@@ -1206,7 +1206,7 @@ export function SubmitProductForm({
                 </select>
                 <p className="text-[10px] font-bold  tracking-widest text-muted-foreground">
                   {isPrelaunch
-                    ? "Choose one of the available weekly launch windows starting May 1, 2026 UTC."
+                    ? "Choose one of the available weekly launch windows starting May 4, 2026 UTC."
                     : "Premium launches are reserved by week, not by day."}
                 </p>
               </div>

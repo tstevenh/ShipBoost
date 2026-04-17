@@ -138,7 +138,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               Prelaunch Mode
             </p>
             <p className="mt-3 text-sm font-bold leading-relaxed text-foreground">
-              ShipBoost opens on May 1, 2026 UTC. Your free launches are being
+              ShipBoost opens on May 4, 2026 UTC. Your free launches are being
               queued into weekly cohorts, and premium launches can reserve
               their preferred launch week ahead of go-live.
             </p>

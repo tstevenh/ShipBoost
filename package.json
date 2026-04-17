@@ -14,6 +14,7 @@
     "db:migrate": "node scripts/run-with-env.mjs prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "node prisma/seed.mjs",
+    "launchpad:shift-go-live-to-may4": "node scripts/run-with-env.mjs node scripts/shift-launchpad-go-live-to-may-4.mjs",
     "tools:import-csv": "node scripts/run-with-env.mjs node scripts/import-seeded-tools.mjs",
     "tags:prune-category-duplicates": "node scripts/run-with-env.mjs node scripts/prune-category-duplicate-tags.mjs",
     "tags:sync": "node scripts/run-with-env.mjs node scripts/sync-tag-taxonomy.mjs",
