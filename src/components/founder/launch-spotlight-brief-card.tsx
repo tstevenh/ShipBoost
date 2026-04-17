@@ -48,6 +48,7 @@ type LaunchSpotlightBriefCardProps = {
   submissionId: string;
   status: SpotlightStatus;
   initialPublishedArticle?: SpotlightArticleSummary;
+  initialBrief?: SpotlightBriefResponse;
 };
 
 function emptyDraft(): SpotlightFormDraft {
@@ -137,19 +138,38 @@ export function LaunchSpotlightBriefCard({
   submissionId,
   status: initialStatus,
   initialPublishedArticle = null,
+  initialBrief,
 }: LaunchSpotlightBriefCardProps) {
-  const [draft, setDraft] = useState<SpotlightFormDraft>(emptyDraft);
-  const [savedDraft, setSavedDraft] = useState<SpotlightFormDraft>(emptyDraft);
-  const [status, setStatus] = useState<SpotlightStatus>(initialStatus);
+  const initialDraft = initialBrief ? toDraft(initialBrief) : emptyDraft();
+  const initialSavedAtLabel = initialBrief
+    ? new Intl.DateTimeFormat("en", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(initialBrief.updatedAt))
+    : null;
+
+  const [draft, setDraft] = useState<SpotlightFormDraft>(initialDraft);
+  const [savedDraft, setSavedDraft] = useState<SpotlightFormDraft>(initialDraft);
+  const [status, setStatus] = useState<SpotlightStatus>(
+    initialBrief?.status ?? initialStatus,
+  );
   const [publishedArticle, setPublishedArticle] =
-    useState<SpotlightArticleSummary>(initialPublishedArticle);
-  const [toolName, setToolName] = useState<string>("your product");
-  const [launchDate, setLaunchDate] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+    useState<SpotlightArticleSummary>(
+      initialBrief?.publishedArticle ?? initialPublishedArticle,
+    );
+  const [toolName, setToolName] = useState<string>(
+    initialBrief?.toolName ?? "your product",
+  );
+  const [launchDate, setLaunchDate] = useState<string | null>(
+    initialBrief?.launchDate ?? null,
+  );
+  const [isLoading, setIsLoading] = useState(!initialBrief);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [savedAtLabel, setSavedAtLabel] = useState<string | null>(null);
+  const [savedAtLabel, setSavedAtLabel] = useState<string | null>(
+    initialSavedAtLabel,
+  );
 
   const isDirty = useMemo(
     () => serializeDraft(draft) !== serializeDraft(savedDraft),
@@ -174,6 +194,10 @@ export function LaunchSpotlightBriefCard({
   });
 
   useEffect(() => {
+    if (initialBrief) {
+      return;
+    }
+
     let cancelled = false;
 
     void (async () => {
@@ -202,7 +226,7 @@ export function LaunchSpotlightBriefCard({
     return () => {
       cancelled = true;
     };
-  }, [submissionId, syncFromResponse]);
+  }, [initialBrief, submissionId]);
 
   const saveDraft = useEffectEvent(async () => {
     if (status === "PUBLISHED" || isSaving) {
@@ -237,7 +261,7 @@ export function LaunchSpotlightBriefCard({
     }, 800);
 
     return () => window.clearTimeout(timeout);
-  }, [draft, isDirty, isLoading, saveDraft, status]);
+  }, [draft, isDirty, isLoading, status]);
 
   const launchWindowLabel = launchDate
     ? new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(

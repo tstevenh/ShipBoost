@@ -275,6 +275,158 @@ export function SubmissionDetailView({
           </div>
         ) : null}
       </section>
+
+      {submission.submissionType === "FEATURED_LAUNCH" &&
+      submission.paymentStatus === "PAID" ? (
+        <section className="rounded-3xl border border-border bg-card p-8 shadow-xl shadow-black/5">
+          <div className="flex flex-wrap items-center gap-3">
+            <h3 className="text-xl font-black">Spotlight brief</h3>
+            <StatusChip
+              label={`Spotlight: ${
+                submission.spotlightBrief?.status ?? "NOT_STARTED"
+              }`}
+              tone={
+                submission.spotlightBrief?.status === "PUBLISHED" ||
+                submission.spotlightBrief?.status === "READY"
+                  ? "green"
+                  : submission.spotlightBrief?.status === "IN_PROGRESS"
+                    ? "amber"
+                    : "slate"
+              }
+            />
+          </div>
+
+          {submission.spotlightBrief ? (
+            <div className="mt-6 space-y-8">
+              <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div>
+                  <dt className="text-[10px] font-black tracking-widest text-muted-foreground">
+                    Last updated
+                  </dt>
+                  <dd className="mt-1 text-sm font-medium">
+                    {formatDate(submission.spotlightBrief.updatedAt.toISOString())}
+                  </dd>
+                </div>
+                {submission.spotlightBrief.firstTouchedAt ? (
+                  <div>
+                    <dt className="text-[10px] font-black tracking-widest text-muted-foreground">
+                      First touched
+                    </dt>
+                    <dd className="mt-1 text-sm font-medium">
+                      {formatDate(
+                        submission.spotlightBrief.firstTouchedAt.toISOString(),
+                      )}
+                    </dd>
+                  </div>
+                ) : null}
+                {submission.spotlightBrief.completedAt ? (
+                  <div>
+                    <dt className="text-[10px] font-black tracking-widest text-muted-foreground">
+                      Completed
+                    </dt>
+                    <dd className="mt-1 text-sm font-medium">
+                      {formatDate(
+                        submission.spotlightBrief.completedAt.toISOString(),
+                      )}
+                    </dd>
+                  </div>
+                ) : null}
+                {submission.spotlightBrief.publishedAt ? (
+                  <div>
+                    <dt className="text-[10px] font-black tracking-widest text-muted-foreground">
+                      Published
+                    </dt>
+                    <dd className="mt-1 text-sm font-medium">
+                      {formatDate(
+                        submission.spotlightBrief.publishedAt.toISOString(),
+                      )}
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
+
+              {submission.spotlightBrief.publishedArticle ? (
+                <div>
+                  <p className="text-[10px] font-black tracking-widest text-muted-foreground">
+                    Published article
+                  </p>
+                  <a
+                    href={`/blog/${submission.spotlightBrief.publishedArticle.slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-2 text-sm font-black text-primary hover:opacity-80"
+                  >
+                    {submission.spotlightBrief.publishedArticle.title}
+                  </a>
+                </div>
+              ) : null}
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div>
+                  <p className="text-[10px] font-black tracking-widest text-muted-foreground">
+                    Audience
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm font-medium text-muted-foreground">
+                    {submission.spotlightBrief.audience ?? "Not provided."}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black tracking-widest text-muted-foreground">
+                    Primary CTA URL
+                  </p>
+                  <p className="mt-1 break-all whitespace-pre-wrap text-sm font-medium text-muted-foreground">
+                    {submission.spotlightBrief.primaryCtaUrl ?? "Not provided."}
+                  </p>
+                </div>
+                <div className="lg:col-span-2">
+                  <p className="text-[10px] font-black tracking-widest text-muted-foreground">
+                    Problem
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                    {submission.spotlightBrief.problem ?? "Not provided."}
+                  </p>
+                </div>
+                <div className="lg:col-span-2">
+                  <p className="text-[10px] font-black tracking-widest text-muted-foreground">
+                    Differentiator
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                    {submission.spotlightBrief.differentiator ?? "Not provided."}
+                  </p>
+                </div>
+                <div className="lg:col-span-2">
+                  <p className="text-[10px] font-black tracking-widest text-muted-foreground">
+                    Emphasis
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                    {submission.spotlightBrief.emphasis ?? "Not provided."}
+                  </p>
+                </div>
+                <div className="lg:col-span-2">
+                  <p className="text-[10px] font-black tracking-widest text-muted-foreground">
+                    Founder quote
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                    {submission.spotlightBrief.founderQuote ?? "Not provided."}
+                  </p>
+                </div>
+                <div className="lg:col-span-2">
+                  <p className="text-[10px] font-black tracking-widest text-muted-foreground">
+                    Wording to avoid
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                    {submission.spotlightBrief.wordingToAvoid ?? "Not provided."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-6 text-sm font-medium text-muted-foreground">
+              No spotlight brief has been started yet.
+            </p>
+          )}
+        </section>
+      ) : null}
     </div>
   );
 }

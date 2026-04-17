@@ -14,7 +14,6 @@ import {
 } from "@/lib/premium-launch";
 import { captureBrowserPostHogEvent } from "@/lib/posthog-browser";
 import { cn } from "@/lib/utils";
-import { LaunchSpotlightBriefCard } from "@/components/founder/launch-spotlight-brief-card";
 
 type FounderSubmission = {
   id: string;
@@ -115,6 +114,34 @@ function submissionStateTone(tone: SubmissionStateSummary["tone"]) {
   if (tone === "rose") return "bg-rose-50 border-rose-200 text-rose-700";
   if (tone === "slate") return "bg-slate-100 border-slate-200 text-slate-700";
   return "bg-amber-50 border-amber-200 text-amber-700";
+}
+
+function spotlightStatusTone(status: NonNullable<FounderSubmission["spotlightBrief"]>["status"]) {
+  if (status === "READY" || status === "PUBLISHED") {
+    return "bg-emerald-50 border-emerald-200 text-emerald-700";
+  }
+
+  if (status === "IN_PROGRESS") {
+    return "bg-amber-50 border-amber-200 text-amber-700";
+  }
+
+  return "bg-slate-100 border-slate-200 text-slate-700";
+}
+
+function spotlightStatusLabel(status: NonNullable<FounderSubmission["spotlightBrief"]>["status"]) {
+  if (status === "NOT_STARTED") {
+    return "Not started";
+  }
+
+  if (status === "IN_PROGRESS") {
+    return "In progress";
+  }
+
+  if (status === "READY") {
+    return "Ready";
+  }
+
+  return "Published";
 }
 
 function getSubmissionTypeLabel(submissionType: FounderSubmission["submissionType"]) {
@@ -461,13 +488,67 @@ export function FounderDashboard({
                   </div>
                     {sub.submissionType === "FEATURED_LAUNCH" &&
                     sub.paymentStatus === "PAID" ? (
-                      <LaunchSpotlightBriefCard
-                        submissionId={sub.id}
-                        status={sub.spotlightBrief?.status ?? "NOT_STARTED"}
-                        initialPublishedArticle={
-                          sub.spotlightBrief?.publishedArticle ?? null
-                        }
-                      />
+                      <div className="rounded-[1.5rem] border border-border bg-muted/20 p-4 sm:p-5">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-black tracking-[0.2em] text-primary">
+                                Founding bonus
+                              </span>
+                              <span
+                                className={cn(
+                                  "rounded-full border px-3 py-1 text-[10px] font-black tracking-widest",
+                                  spotlightStatusTone(
+                                    sub.spotlightBrief?.status ?? "NOT_STARTED",
+                                  ),
+                                )}
+                              >
+                                Spotlight:{" "}
+                                {spotlightStatusLabel(
+                                  sub.spotlightBrief?.status ?? "NOT_STARTED",
+                                )}
+                              </span>
+                            </div>
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-black tracking-tight text-foreground">
+                                Editorial launch spotlight
+                              </h4>
+                              <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground/80">
+                                Keep the dashboard clean here and finish the
+                                short spotlight brief on its own page.
+                              </p>
+                              {sub.spotlightBrief?.updatedAt ? (
+                                <p className="text-xs font-bold tracking-widest text-muted-foreground">
+                                  Last updated {formatDate(sub.spotlightBrief.updatedAt)}
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2 md:min-w-[220px]">
+                            {sub.spotlightBrief?.publishedArticle ? (
+                              <Link
+                                href={`/blog/${sub.spotlightBrief.publishedArticle.slug}`}
+                                target="_blank"
+                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-black hover:bg-muted"
+                              >
+                                <ExternalLink size={14} />
+                                View spotlight
+                              </Link>
+                            ) : null}
+                            {sub.spotlightBrief?.status !== "PUBLISHED" ? (
+                              <Link
+                                href={`/dashboard/submissions/${sub.id}/spotlight`}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-black text-primary-foreground shadow-lg shadow-black/10 hover:opacity-90"
+                              >
+                                <Edit size={14} />
+                                {sub.spotlightBrief?.status === "IN_PROGRESS"
+                                  ? "Continue spotlight brief"
+                                  : "Open spotlight brief"}
+                              </Link>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
                     ) : null}
                   </article>
                 );

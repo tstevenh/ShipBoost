@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { deleteImageFromCloudinary } from "@/server/cloudinary";
 import { prisma } from "@/server/db/client";
+import { toolDetailsInclude } from "@/server/db/includes";
 import { sendSubmissionReceivedEmailMessage } from "@/server/email/transactional";
 import { AppError } from "@/server/http/app-error";
 import {
@@ -528,7 +529,37 @@ export async function getFounderSubmissionDraft(
 }
 
 export async function getAdminSubmissionDetail(submissionId: string) {
-  const submission = await getSubmissionById(prisma, submissionId);
+  const submission = await prisma.submission.findUnique({
+    where: { id: submissionId },
+    include: {
+      spotlightBrief: {
+        select: {
+          status: true,
+          audience: true,
+          problem: true,
+          differentiator: true,
+          emphasis: true,
+          primaryCtaUrl: true,
+          founderQuote: true,
+          wordingToAvoid: true,
+          firstTouchedAt: true,
+          completedAt: true,
+          publishedAt: true,
+          updatedAt: true,
+          publishedArticle: {
+            select: {
+              slug: true,
+              title: true,
+            },
+          },
+        },
+      },
+      user: true,
+      tool: {
+        include: toolDetailsInclude,
+      },
+    },
+  });
 
   if (!submission) {
     throw new AppError(404, "Submission not found.");

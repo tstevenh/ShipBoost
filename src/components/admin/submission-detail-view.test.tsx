@@ -5,14 +5,29 @@ import { SubmissionDetailView } from "@/components/admin/submission-detail-view"
 
 const submission = {
   id: "submission_1",
-  submissionType: "FREE_LAUNCH",
+  submissionType: "FEATURED_LAUNCH",
   reviewStatus: "DRAFT",
-  preferredLaunchDate: null,
-  paymentStatus: "NOT_REQUIRED",
+  preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
+  paymentStatus: "PAID",
   badgeFooterUrl: "https://acme.test",
   badgeVerification: "PENDING",
   founderVisibleNote: null,
   internalReviewNote: null,
+  spotlightBrief: {
+    status: "IN_PROGRESS",
+    audience: "Founders and growth operators",
+    problem: "Finding a clean climbing gym directory takes too long.",
+    differentiator: "It focuses only on indoor climbing gyms with better filters.",
+    emphasis: "Lean into trust and discovery speed.",
+    primaryCtaUrl: "https://acme.test/signup",
+    founderQuote: "We built the gym directory we wanted ourselves.",
+    wordingToAvoid: "Avoid calling it a marketplace.",
+    firstTouchedAt: new Date("2026-04-17T02:00:00.000Z"),
+    completedAt: null,
+    publishedAt: null,
+    updatedAt: new Date("2026-04-17T03:00:00.000Z"),
+    publishedArticle: null,
+  },
   createdAt: new Date("2026-04-17T00:00:00.000Z"),
   updatedAt: new Date("2026-04-17T01:00:00.000Z"),
   user: { id: "user_1", name: "Founder", email: "founder@example.com" },
@@ -48,7 +63,7 @@ const submission = {
     launches: [
       {
         id: "launch_1",
-        launchType: "FREE",
+        launchType: "FEATURED",
         status: "APPROVED",
         launchDate: new Date("2026-05-08T00:00:00.000Z"),
       },
@@ -61,10 +76,14 @@ describe("submission-detail-view", () => {
     render(<SubmissionDetailView submission={submission as never} />);
 
     expect(screen.getByRole("heading", { name: "Acme" })).toBeInTheDocument();
-    expect(screen.getByText("Badge: Pending")).toBeInTheDocument();
-    expect(screen.getByText(/Launch date/i)).toBeInTheDocument();
+    expect(screen.getByText("Badge: Not required")).toBeInTheDocument();
+    expect(screen.getAllByText(/Launch date/i).length).toBeGreaterThan(0);
     expect(screen.getByText("Analytics")).toBeInTheDocument();
     expect(screen.getByText("AI")).toBeInTheDocument();
     expect(screen.getByText("https://x.com/acme")).toBeInTheDocument();
+    expect(screen.getByText("Spotlight brief")).toBeInTheDocument();
+    expect(screen.getByText("Founders and growth operators")).toBeInTheDocument();
+    expect(screen.getByText("https://acme.test/signup")).toBeInTheDocument();
+    expect(screen.getByText("Avoid calling it a marketplace.")).toBeInTheDocument();
   });
 });

@@ -20,10 +20,6 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("@/components/founder/launch-spotlight-brief-card", () => ({
-  LaunchSpotlightBriefCard: () => <div>spotlight brief</div>,
-}));
-
 describe("founder-dashboard", () => {
   it("shows Scheduled for approved free launches with a future launch slot", () => {
     render(
@@ -64,5 +60,54 @@ describe("founder-dashboard", () => {
 
     expect(screen.getByText("Scheduled")).toBeInTheDocument();
     expect(screen.getByText(/Launch date:/i)).toBeInTheDocument();
+  });
+
+  it("shows a compact spotlight summary with Continue spotlight brief for paid premium launches", () => {
+    render(
+      <FounderDashboard
+        initialSubmissions={[
+          {
+            id: "submission_2",
+            submissionType: "FEATURED_LAUNCH",
+            reviewStatus: "APPROVED",
+            preferredLaunchDate: "2099-05-12T00:00:00.000Z",
+            paymentStatus: "PAID",
+            badgeVerification: "NOT_REQUIRED",
+            spotlightBrief: {
+              status: "IN_PROGRESS",
+              updatedAt: "2099-05-01T02:00:00.000Z",
+              publishedAt: null,
+              publishedArticle: null,
+            },
+            tool: {
+              id: "tool_2",
+              slug: "acme-premium",
+              name: "Acme Premium",
+              websiteUrl: "https://acme-premium.test",
+              logoMedia: null,
+              launches: [
+                {
+                  id: "launch_2",
+                  launchType: "FEATURED",
+                  status: "APPROVED",
+                  launchDate: "2099-05-12T00:00:00.000Z",
+                },
+              ],
+            },
+          },
+        ]}
+        initialTools={[]}
+        initialClaims={[]}
+        founderEmail="founder@example.com"
+        founderRole="FOUNDER"
+        initialActiveNav="submissions"
+      />,
+    );
+
+    expect(screen.getByText(/Editorial launch spotlight/i)).toBeInTheDocument();
+    expect(screen.getByText(/Spotlight: In progress/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Continue spotlight brief/i }),
+    ).toHaveAttribute("href", "/dashboard/submissions/submission_2/spotlight");
   });
 });
