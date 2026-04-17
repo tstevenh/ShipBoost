@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { prismaMock, resendInstance, emailMock, envMock } = vi.hoisted(() => ({
+const { prismaMock, resendSyncMock, emailMock, envMock } = vi.hoisted(() => ({
   prismaMock: {
     lead: {
       findUnique: vi.fn(),
@@ -8,17 +8,7 @@ const { prismaMock, resendInstance, emailMock, envMock } = vi.hoisted(() => ({
       update: vi.fn(),
     },
   },
-  resendInstance: {
-    contacts: {
-      get: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      segments: {
-        list: vi.fn(),
-        add: vi.fn(),
-      },
-    },
-  },
+  resendSyncMock: vi.fn(),
   emailMock: {},
   envMock: {
     RESEND_API_KEY: "re_test",
@@ -33,8 +23,8 @@ vi.mock("@/server/db/client", () => ({
   prisma: prismaMock,
 }));
 
-vi.mock("resend", () => ({
-  Resend: vi.fn(() => resendInstance),
+vi.mock("@/server/services/resend-contact-service", () => ({
+  upsertResendContact: resendSyncMock,
 }));
 
 vi.mock("@/server/email/transactional", () => emailMock);
@@ -48,6 +38,7 @@ import { captureLead } from "@/server/services/lead-service";
 describe("captureLead", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resendSyncMock.mockResolvedValue(null);
   });
 
   it("creates a new active lead", async () => {
@@ -71,11 +62,7 @@ describe("captureLead", () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    resendInstance.contacts.get.mockResolvedValueOnce({ data: null, error: null });
-    resendInstance.contacts.create.mockResolvedValueOnce({
-      data: { id: "contact_1" },
-      error: null,
-    });
+    resendSyncMock.mockResolvedValueOnce("contact_1");
     prismaMock.lead.update.mockResolvedValueOnce({
       id: "lead_1",
       email: "founder@example.com",
@@ -115,12 +102,12 @@ describe("captureLead", () => {
         }),
       }),
     );
-    expect(resendInstance.contacts.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        email: "founder@example.com",
-        segments: [{ id: "segment_1" }],
-      }),
-    );
+    expect(resendSyncMock).toHaveBeenCalledWith({
+      email: "founder@example.com",
+      name: null,
+      resendContactId: null,
+      segmentId: "segment_1",
+    });
     expect(result.created).toBe(true);
     expect(result.lead.email).toBe("founder@example.com");
   });
@@ -184,22 +171,7 @@ describe("captureLead", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-    resendInstance.contacts.update.mockResolvedValueOnce({
-      data: { id: "contact_1" },
-      error: null,
-    });
-    resendInstance.contacts.segments.list.mockResolvedValueOnce({
-      data: {
-        object: "list",
-        data: [],
-        has_more: false,
-      },
-      error: null,
-    });
-    resendInstance.contacts.segments.add.mockResolvedValueOnce({
-      data: { id: "segment_1" },
-      error: null,
-    });
+    resendSyncMock.mockResolvedValueOnce("contact_1");
 
     const result = await captureLead({
       email: "founder@example.com",
@@ -215,11 +187,10 @@ describe("captureLead", () => {
 
     expect(prismaMock.lead.create).not.toHaveBeenCalled();
     expect(prismaMock.lead.update).toHaveBeenCalled();
-    expect(resendInstance.contacts.segments.list).toHaveBeenCalledWith({
-      contactId: "contact_1",
-    });
-    expect(resendInstance.contacts.segments.add).toHaveBeenCalledWith({
-      contactId: "contact_1",
+    expect(resendSyncMock).toHaveBeenCalledWith({
+      email: "founder@example.com",
+      name: null,
+      resendContactId: "contact_1",
       segmentId: "segment_1",
     });
     expect(result.created).toBe(false);
@@ -261,7 +232,12 @@ describe("captureLead", () => {
     });
 
     expect(result.created).toBe(true);
-    expect(resendInstance.contacts.create).not.toHaveBeenCalled();
+    expect(resendSyncMock).toHaveBeenCalledWith({
+      email: "solo@example.com",
+      name: null,
+      resendContactId: null,
+      segmentId: "segment_1",
+    });
     envMock.RESEND_API_KEY = "re_test";
     envMock.RESEND_LEADS_SEGMENT_ID = "segment_1";
   });

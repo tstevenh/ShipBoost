@@ -15,6 +15,7 @@ import {
 } from "../server/email/transactional";
 import { getEnv } from "../server/env";
 import { capturePostHogEventSafely } from "../server/posthog";
+import { syncSignupContactToResend } from "../server/services/resend-contact-service";
 import { getEmailDomain } from "./posthog-shared";
 
 const env = getEnv();
@@ -66,6 +67,15 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
+      try {
+        await syncSignupContactToResend({
+          email: user.email,
+          name: user.name,
+        });
+      } catch (error) {
+        console.error("[shipboost signup:resend-sync-error]", error);
+      }
+
       await sendVerificationEmailMessage({
         to: user.email,
         name: user.name,

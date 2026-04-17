@@ -176,9 +176,8 @@ async function main() {
     headerRow.map((header, index) => [normalizeHeader(header), index]),
   );
 
-  const requiredHeaders = [
-    "name",
-    "url",
+  const requiredHeaders = ["name", "url"];
+  const importableHeaders = [
     "tagline",
     "rich_description",
     "pricing_model",
@@ -213,58 +212,16 @@ async function main() {
 
   for (const rawRow of dataRows) {
     const row = Object.fromEntries(
-      requiredHeaders.map((header) => [header, rawRow[headerMap.get(header)]?.trim() ?? ""]),
+      [...requiredHeaders, ...importableHeaders].map((header) => [
+        header,
+        headerMap.has(header)
+          ? rawRow[headerMap.get(header)]?.trim() ?? ""
+          : undefined,
+      ]),
     );
 
     if (!row.name || !row.url) {
       continue;
-    }
-
-    const normalizedCategorySlugs = parseList(row.categories).map((categorySlug) => {
-      const normalizedCategorySlug = slugify(categorySlug);
-      const categoryId = categoryBySlug.get(normalizedCategorySlug);
-
-      if (!categoryId) {
-        throw new Error(
-          `Unknown category "${categorySlug}" for tool "${row.name}"`,
-        );
-      }
-
-      return normalizedCategorySlug;
-    });
-    const categoryIds = normalizedCategorySlugs.map((categorySlug) =>
-      categoryBySlug.get(categorySlug),
-    );
-
-    const tagIds = [];
-
-    for (const tagName of parseList(row.tags)) {
-      const tagSlug = slugify(tagName);
-
-      if (categorySlugs.has(tagSlug)) {
-        continue;
-      }
-
-      let tag = tagBySlug.get(tagSlug);
-
-      if (!tag) {
-        tag = await prisma.tag.upsert({
-          where: { slug: tagSlug },
-          update: {
-            name: tagName,
-            isActive: true,
-          },
-          create: {
-            slug: tagSlug,
-            name: tagName,
-            isActive: true,
-          },
-          select: { id: true, slug: true, name: true },
-        });
-        tagBySlug.set(tagSlug, tag);
-      }
-
-      tagIds.push(tag.id);
     }
 
     const baseSlug = slugify(row.name);
@@ -283,42 +240,111 @@ async function main() {
       },
     });
 
+    if (!existingTool) {
+      for (const header of [
+        "tagline",
+        "rich_description",
+        "pricing_model",
+        "categories",
+        "tags",
+      ]) {
+        if (!row[header]) {
+          throw new Error(
+            `Cannot create new tool "${row.name}" without CSV column "${header}"`,
+          );
+        }
+      }
+    }
+
+    const normalizedCategorySlugs =
+      row.categories === undefined
+        ? []
+        : parseList(row.categories).map((categorySlug) => {
+            const normalizedCategorySlug = slugify(categorySlug);
+            const categoryId = categoryBySlug.get(normalizedCategorySlug);
+
+            if (!categoryId) {
+              throw new Error(
+                `Unknown category "${categorySlug}" for tool "${row.name}"`,
+              );
+            }
+
+            return normalizedCategorySlug;
+          });
+    const categoryIds = normalizedCategorySlugs.map((categorySlug) =>
+      categoryBySlug.get(categorySlug),
+    );
+
+    const tagIds = [];
+
+    if (row.tags !== undefined) {
+      for (const tagName of parseList(row.tags)) {
+        const tagSlug = slugify(tagName);
+
+        if (categorySlugs.has(tagSlug)) {
+          continue;
+        }
+
+        let tag = tagBySlug.get(tagSlug);
+
+        if (!tag) {
+          tag = await prisma.tag.upsert({
+            where: { slug: tagSlug },
+            update: {
+              name: tagName,
+              isActive: true,
+            },
+            create: {
+              slug: tagSlug,
+              name: tagName,
+              isActive: true,
+            },
+            select: { id: true, slug: true, name: true },
+          });
+          tagBySlug.set(tagSlug, tag);
+        }
+
+        tagIds.push(tag.id);
+      }
+    }
+
     const nextSlug = existingTool
       ? existingTool.slug
       : await createUniqueToolSlug(row.name);
 
     await prisma.$transaction(async (tx) => {
+      const updateData = {
+        slug: nextSlug,
+        name: row.name,
+        websiteUrl: row.url,
+        moderationStatus: "APPROVED",
+        publicationStatus: "PUBLISHED",
+        internalNote: "Imported from seeded CSV",
+      };
+
+      if (row.tagline !== undefined) {
+        updateData.tagline = row.tagline;
+      }
+
+      if (row.rich_description !== undefined) {
+        updateData.richDescription = row.rich_description;
+      }
+
+      if (row.pricing_model !== undefined) {
+        updateData.pricingModel = mapPricingModel(row.pricing_model);
+      }
+
       const tool = existingTool
         ? await tx.tool.update({
             where: { id: existingTool.id },
-            data: {
-              slug: nextSlug,
-              name: row.name,
-              tagline: row.tagline,
-              websiteUrl: row.url,
-              richDescription: row.rich_description,
-              pricingModel: mapPricingModel(row.pricing_model),
-              moderationStatus: "APPROVED",
-              publicationStatus: "PUBLISHED",
-              internalNote: "Imported from seeded CSV",
-            },
+            data: updateData,
             select: {
               id: true,
               logoMediaId: true,
             },
           })
         : await tx.tool.create({
-            data: {
-              slug: nextSlug,
-              name: row.name,
-              tagline: row.tagline,
-              websiteUrl: row.url,
-              richDescription: row.rich_description,
-              pricingModel: mapPricingModel(row.pricing_model),
-              moderationStatus: "APPROVED",
-              publicationStatus: "PUBLISHED",
-              internalNote: "Imported from seeded CSV",
-            },
+            data: updateData,
             select: {
               id: true,
               logoMediaId: true,
@@ -355,8 +381,13 @@ async function main() {
         }
       }
 
-      await replaceToolCategories(tx, tool.id, categoryIds);
-      await replaceToolTags(tx, tool.id, tagIds);
+      if (row.categories !== undefined) {
+        await replaceToolCategories(tx, tool.id, categoryIds);
+      }
+
+      if (row.tags !== undefined) {
+        await replaceToolTags(tx, tool.id, tagIds);
+      }
     });
 
     if (existingTool) {

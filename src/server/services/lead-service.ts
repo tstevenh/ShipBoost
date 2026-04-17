@@ -1,8 +1,7 @@
-import { Resend } from "resend";
-
 import { prisma } from "@/server/db/client";
 import { getEnv } from "@/server/env";
 import { AppError } from "@/server/http/app-error";
+import { upsertResendContact } from "@/server/services/resend-contact-service";
 import type { LeadCaptureInput } from "@/server/validators/lead";
 
 function normalizeEmail(email: string) {
@@ -22,151 +21,8 @@ function getLeadDelegate() {
   return leadDelegate;
 }
 
-function getResendClient() {
-  const env = getEnv();
-
-  if (!env.RESEND_API_KEY) {
-    return null;
-  }
-
-  return new Resend(env.RESEND_API_KEY);
-}
-
 function getResendLeadSegmentId() {
   return getEnv().RESEND_LEADS_SEGMENT_ID;
-}
-
-function splitName(name?: string | null) {
-  if (!name?.trim()) {
-    return { firstName: undefined, lastName: undefined };
-  }
-
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-
-  return {
-    firstName: parts[0],
-    lastName: parts.length > 1 ? parts.slice(1).join(" ") : undefined,
-  };
-}
-
-async function syncLeadToResend(lead: {
-  id: string;
-  email: string;
-  name: string | null;
-  resendContactId: string | null;
-  source: string;
-  leadMagnet: string;
-  utmSource: string | null;
-  utmMedium: string | null;
-  utmCampaign: string | null;
-  utmContent: string | null;
-  utmTerm: string | null;
-}) {
-  const resendClient = getResendClient();
-  const resendLeadSegmentId = getResendLeadSegmentId();
-
-  if (!resendClient) {
-    return null;
-  }
-
-  const resend = resendClient;
-
-  const { firstName, lastName } = splitName(lead.name);
-  const payload = {
-    firstName,
-    lastName,
-    unsubscribed: false,
-    properties: {
-      source: lead.source,
-      lead_magnet: lead.leadMagnet,
-      utm_source: lead.utmSource ?? "",
-      utm_medium: lead.utmMedium ?? "",
-      utm_campaign: lead.utmCampaign ?? "",
-      utm_content: lead.utmContent ?? "",
-      utm_term: lead.utmTerm ?? "",
-    },
-  };
-
-  async function ensureLeadInSegment(contactId: string) {
-    if (!resendLeadSegmentId) {
-      return;
-    }
-
-    const segments = await resend.contacts.segments.list({ contactId });
-
-    if (segments.error) {
-      throw new Error(segments.error.message);
-    }
-
-    const isInSegment = segments.data?.data.some(
-      (segment) => segment.id === resendLeadSegmentId,
-    );
-
-    if (isInSegment) {
-      return;
-    }
-
-    const addToSegment = await resend.contacts.segments.add({
-      contactId,
-      segmentId: resendLeadSegmentId,
-    });
-
-    if (addToSegment.error) {
-      throw new Error(addToSegment.error.message);
-    }
-  }
-
-  if (lead.resendContactId) {
-    const response = await resend.contacts.update({
-      id: lead.resendContactId,
-      ...payload,
-    });
-
-    if (response.error) {
-      throw new Error(response.error.message);
-    }
-
-    const contactId = response.data?.id ?? lead.resendContactId;
-    await ensureLeadInSegment(contactId);
-
-    return contactId;
-  }
-
-  const existing = await resend.contacts.get({
-    email: lead.email,
-  });
-
-  if (existing.data?.id) {
-    const response = await resend.contacts.update({
-      id: existing.data.id,
-      ...payload,
-    });
-
-    if (response.error) {
-      throw new Error(response.error.message);
-    }
-
-    const contactId = response.data?.id ?? existing.data.id;
-    await ensureLeadInSegment(contactId);
-
-    return contactId;
-  }
-
-  const response = await resend.contacts.create({
-    email: lead.email,
-    ...payload,
-    ...(resendLeadSegmentId
-      ? {
-          segments: [{ id: resendLeadSegmentId }],
-        }
-      : {}),
-  });
-
-  if (response.error) {
-    throw new Error(response.error.message);
-  }
-
-  return response.data?.id ?? null;
 }
 
 export async function captureLead(input: LeadCaptureInput) {
@@ -209,7 +65,12 @@ export async function captureLead(input: LeadCaptureInput) {
       });
 
   try {
-    const resendContactId = await syncLeadToResend(lead);
+    const resendContactId = await upsertResendContact({
+      email: lead.email,
+      name: lead.name,
+      resendContactId: lead.resendContactId,
+      segmentId: getResendLeadSegmentId(),
+    });
 
     if (resendContactId && resendContactId !== lead.resendContactId) {
       lead.resendContactId = resendContactId;
