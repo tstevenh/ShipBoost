@@ -192,6 +192,7 @@ export async function reviewSubmission(
       launchDate: launch.launchDate,
     })),
   ];
+  const responseUpdatedAt = new Date();
   const reviewedSubmission = {
     id: submission.id,
     submissionType: submission.submissionType,
@@ -203,6 +204,7 @@ export async function reviewSubmission(
     founderVisibleNote,
     internalReviewNote,
     createdAt: submission.createdAt,
+    updatedAt: responseUpdatedAt,
     user: {
       id: submission.user.id,
       name: submission.user.name,

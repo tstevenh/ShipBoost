@@ -101,7 +101,7 @@ function getSubmissionState(submission: FounderSubmission): SubmissionStateSumma
   if (currentLaunch?.status === "LIVE") {
     return { label: "Live", tone: "green" };
   }
-  if (submission.submissionType === "FEATURED_LAUNCH" && submission.paymentStatus === "PAID" && currentLaunch?.status === "APPROVED") {
+  if (currentLaunch?.status === "APPROVED") {
     return { label: "Scheduled", tone: "green" };
   }
   if (submission.reviewStatus === "APPROVED") {

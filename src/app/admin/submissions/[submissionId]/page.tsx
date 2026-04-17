@@ -12,16 +12,13 @@ export default async function AdminSubmissionDetailPage({
   params,
 }: RouteContext) {
   const { submissionId } = await params;
-
-  try {
-    const submission = await getAdminSubmissionDetail(submissionId);
-
-    return <SubmissionDetailView submission={submission} />;
-  } catch (error) {
+  const submission = await getAdminSubmissionDetail(submissionId).catch((error) => {
     if (error instanceof AppError && error.statusCode === 404) {
       notFound();
     }
 
     throw error;
-  }
+  });
+
+  return <SubmissionDetailView submission={submission} />;
 }
