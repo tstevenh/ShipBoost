@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useState } from "react";
 import { ExternalLink, Check, X, RefreshCw, Clock, Rocket } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,6 +7,7 @@ import {
   SectionCard,
   StatusChip,
   formatDate,
+  getSubmissionBadgeLabel,
   getPaymentStatusLabel,
   getSubmissionLifecycle,
   textInputClassName,
@@ -120,6 +122,7 @@ export function SubmissionReviewPanel({
         {submissions.map((submission) => {
           const draft = getSubmissionReviewDraft(submission);
           const lifecycle = getSubmissionLifecycle(submission);
+          const latestLaunch = submission.tool.launches[0] ?? null;
           const requiresManualReview =
             submission.reviewStatus === "PENDING" &&
             !(
@@ -144,6 +147,10 @@ export function SubmissionReviewPanel({
                         label={`Pay: ${getPaymentStatusLabel(submission)}`}
                         tone="neutral"
                       />
+                      <StatusChip
+                        label={getSubmissionBadgeLabel(submission)}
+                        tone="neutral"
+                      />
                     </div>
 
                     <div className="flex gap-4">
@@ -156,7 +163,12 @@ export function SubmissionReviewPanel({
                         ) : <Rocket size={16} className="text-muted-foreground" />}
                       </div>
                       <div className="space-y-0.5">
-                        <h3 className="text-base font-black text-foreground">{submission.tool.name}</h3>
+                        <Link
+                          href={`/admin/submissions/${submission.id}`}
+                          className="text-base font-black text-foreground hover:opacity-80"
+                        >
+                          {submission.tool.name}
+                        </Link>
                         <p className="text-[10px] font-black  tracking-widest text-muted-foreground/50">
                           Submitted {formatDate(submission.createdAt)}
                         </p>
@@ -164,13 +176,25 @@ export function SubmissionReviewPanel({
                     </div>
 
                     <div className="grid gap-2 text-[10px] font-bold text-muted-foreground/80">
-                      <p>Founder: {submission.user.email}</p>
+                      <p>
+                        Founder:{" "}
+                        <Link
+                          href={`/admin/submissions/${submission.id}`}
+                          className="text-foreground underline decoration-border underline-offset-4"
+                        >
+                          {submission.user.email}
+                        </Link>
+                      </p>
                       <p>Slug: {submission.tool.slug}</p>
+                      <p>Last updated: {formatDate(submission.updatedAt)}</p>
                       {submission.preferredLaunchDate && (
                         <p className="text-primary flex items-center gap-1">
                           <Clock size={10} />
                           {formatDate(submission.preferredLaunchDate)}
                         </p>
+                      )}
+                      {latestLaunch && (
+                        <p>Launch date: {formatDate(latestLaunch.launchDate)}</p>
                       )}
                     </div>
                   </div>

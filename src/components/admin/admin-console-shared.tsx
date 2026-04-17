@@ -76,6 +76,7 @@ export type Submission = {
   founderVisibleNote: string | null;
   internalReviewNote: string | null;
   createdAt: string;
+  updatedAt: string;
   spotlightBrief: {
     status: "NOT_STARTED" | "IN_PROGRESS" | "READY" | "PUBLISHED";
     updatedAt: string;
@@ -344,6 +345,10 @@ export function formatDate(value: string) {
 }
 
 export function getSubmissionLifecycle(submission: Submission) {
+  if (submission.reviewStatus === "DRAFT") {
+    return { label: "Draft", tone: "slate" as const };
+  }
+
   if (submission.reviewStatus === "REJECTED") {
     return { label: "Needs changes", tone: "rose" as const };
   }
@@ -360,6 +365,22 @@ export function getSubmissionLifecycle(submission: Submission) {
   }
 
   return { label: "Pending review", tone: "amber" as const };
+}
+
+export function getSubmissionBadgeLabel(submission: Submission) {
+  if (submission.submissionType !== "FREE_LAUNCH") {
+    return "Badge: Not required";
+  }
+
+  if (submission.badgeVerification === "VERIFIED") {
+    return "Badge: Verified";
+  }
+
+  if (submission.badgeVerification === "FAILED") {
+    return "Badge: Failed";
+  }
+
+  return "Badge: Pending";
 }
 
 export function getPaymentStatusLabel(submission: Submission) {
