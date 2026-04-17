@@ -32,6 +32,7 @@ In scope:
 - show a compact draft-progress summary directly on the moderation card
 - make founder and tool names clickable
 - add an admin submission detail page that shows the saved submission data in read-only form
+- make scheduled launch dates clearer after approval, especially for free launches
 
 Out of scope:
 
@@ -74,6 +75,7 @@ The page should show:
 
 - top summary with review status, submission type, payment status, badge status, created at, updated at
 - founder info and tool identity
+- assigned launch date when a launch has already been created
 - saved general fields: name, slug, website URL, pricing model, tagline, description, category, tags
 - saved media: logo and screenshots
 - saved social links
@@ -96,6 +98,7 @@ The existing `Submission` record already contains enough state to support the fi
 - `updatedAt`
 - linked `tool` fields
 - linked `user` fields
+- linked `launches`, which already include the assigned `launchDate`
 
 The existing admin list endpoint can continue to return mixed submissions. It only needs to expose `updatedAt` in its serialized payload if that is not already present in the client type.
 
@@ -106,7 +109,7 @@ The new detail page should use a dedicated admin-only loader that fetches one su
 - tool
 - tool media
 - categories and tags
-- launches if useful for context
+- launches for assigned schedule context
 
 ## Status Rules
 
@@ -131,6 +134,12 @@ Badge summary logic:
 
 This is inference from saved state, not exact behavioral telemetry.
 
+Launch schedule logic:
+
+- once a free launch is approved with go-live scheduling enabled, the system assigns the next available weekly slot
+- once a launch record exists, both admin and founder surfaces should show the assigned launch date
+- founder-facing state should prefer `Scheduled` over the generic `Approved` label when the latest launch exists and has status `APPROVED`, including free launches
+
 ## Components
 
 ### Existing components to update
@@ -141,11 +150,19 @@ This is inference from saved state, not exact behavioral telemetry.
 
 - `src/components/admin/submission-review-panel.tsx`
   - show badge status and last-updated metadata
+  - show assigned launch date when present
   - make founder and tool names linkable
   - keep review actions conditional on real review items only
 
 - `src/components/admin/admin-console.tsx`
   - pass through any newly serialized fields such as `updatedAt`
+
+- `src/components/founder/founder-dashboard.tsx`
+  - ensure assigned launch dates are clearly visible for free launches
+  - map approved launches with an assigned future slot to a founder-facing `Scheduled` state instead of the generic `Approved` state
+
+- `src/app/dashboard/page.tsx`
+  - continue serializing launch data needed by the founder dashboard
 
 ### New server surface
 
@@ -164,7 +181,7 @@ This is inference from saved state, not exact behavioral telemetry.
 4. Admin clicks founder name or tool name
 5. App navigates to `/admin/submissions/[submissionId]`
 6. Server loads the submission and related saved tool data
-7. Admin inspects the saved draft or review-ready submission
+7. Admin inspects the saved draft or review-ready submission, including assigned launch date when scheduled
 
 ## Error Handling
 
@@ -188,6 +205,8 @@ Add or update tests for:
 - badge summary renders correctly for free vs premium submissions
 - detail page loader returns 404 for missing submission
 - detail page renders saved submission fields for a known draft
+- founder dashboard shows assigned launch date for approved free launches
+- founder dashboard maps approved launches with a future assigned slot to `Scheduled`
 
 ## Tradeoffs
 
@@ -202,6 +221,11 @@ Known limitation:
 
 - this does not tell us whether a founder viewed the badge section and abandoned it
 - it only tells us the last persisted state after a draft save
+
+Existing email behavior:
+
+- the approval email already supports a launch date and sends `Your launch is scheduled for ...` when one exists
+- no new email template is required in this pass unless copy changes are desired
 
 If exact abandonment analytics becomes necessary later, that should be a separate follow-up using explicit progress events or saved progress markers.
 
