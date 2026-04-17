@@ -60,10 +60,10 @@ vi.mock("@/server/posthog", () => ({
 }));
 
 vi.mock("@/server/services/launch-scheduling", () => ({
-  getLaunchpadGoLiveAtUtc: () => new Date("2026-05-01T00:00:00.000Z"),
+  getLaunchpadGoLiveAtUtc: () => new Date("2026-05-04T00:00:00.000Z"),
   isAnchoredLaunchWeekStart: (date: Date, options?: { goLiveAt?: Date }) => {
     const launchpadGoLiveAt =
-      options?.goLiveAt ?? new Date("2026-05-01T00:00:00.000Z");
+      options?.goLiveAt ?? new Date("2026-05-04T00:00:00.000Z");
     const normalized = new Date(
       Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
     );
@@ -137,7 +137,7 @@ describe("submission-payment-service", () => {
       id: "submission_1",
       toolId: "tool_1",
       submissionType: "FEATURED_LAUNCH",
-      preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
+      preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
       paymentStatus: "PENDING",
       reviewStatus: "DRAFT",
     });
@@ -174,7 +174,7 @@ describe("submission-payment-service", () => {
         shipboostSubmissionId: "submission_1",
         shipboostToolId: "tool_1",
         shipboostSubmissionType: "FEATURED_LAUNCH",
-        shipboostPreferredLaunchDate: "2026-05-08T00:00:00.000Z",
+        shipboostPreferredLaunchDate: "2026-05-11T00:00:00.000Z",
       },
     });
     expect(prismaMock.submission.update).toHaveBeenCalledWith({
@@ -196,7 +196,7 @@ describe("submission-payment-service", () => {
       toolId: "tool_1",
       userId: "founder_1",
       submissionType: "FEATURED_LAUNCH",
-      preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
+      preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
       paymentStatus: "PENDING",
       polarCheckoutId: "cs_test_1",
       tool: {
@@ -218,7 +218,7 @@ describe("submission-payment-service", () => {
         launches: [
           {
             launchType: "FEATURED",
-            launchDate: new Date("2026-05-08T00:00:00.000Z"),
+            launchDate: new Date("2026-05-11T00:00:00.000Z"),
           },
         ],
       },
@@ -297,7 +297,7 @@ describe("submission-payment-service", () => {
           tool_name: "Acme",
           payment_id: "pay_1",
           checkout_session_id: "cs_test_1",
-          launch_date: "2026-05-08T00:00:00.000Z",
+          launch_date: "2026-05-11T00:00:00.000Z",
         },
       },
       "handlePremiumLaunchPaymentSucceeded",
@@ -310,7 +310,7 @@ describe("submission-payment-service", () => {
       toolId: "tool_1",
       userId: "founder_1",
       submissionType: "FEATURED_LAUNCH",
-      preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
+      preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
       paymentStatus: "PENDING",
       polarCheckoutId: "cs_test_1",
       tool: {
@@ -407,14 +407,14 @@ describe("submission-payment-service", () => {
       toolId: "tool_1",
       submissionType: "FEATURED_LAUNCH",
       paymentStatus: "PAID",
-      preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
+      preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
       tool: {
         launches: [
           {
             id: "launch_1",
             launchType: "FEATURED",
             status: "APPROVED",
-            launchDate: new Date("2026-05-08T00:00:00.000Z"),
+            launchDate: new Date("2026-05-11T00:00:00.000Z"),
           },
         ],
       },
@@ -428,7 +428,7 @@ describe("submission-payment-service", () => {
         },
         { id: "founder_1" },
       ),
-    ).rejects.toThrow("Choose May 1, 2026 UTC or later.");
+    ).rejects.toThrow("Choose May 4, 2026 UTC or later.");
   });
 
   it("rejects premium launch dates that are not aligned to launch week boundaries", async () => {
@@ -437,14 +437,14 @@ describe("submission-payment-service", () => {
       toolId: "tool_1",
       submissionType: "FEATURED_LAUNCH",
       paymentStatus: "PAID",
-      preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
+      preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
       tool: {
         launches: [
           {
             id: "launch_1",
             launchType: "FEATURED",
             status: "APPROVED",
-            launchDate: new Date("2026-05-08T00:00:00.000Z"),
+            launchDate: new Date("2026-05-11T00:00:00.000Z"),
           },
         ],
       },

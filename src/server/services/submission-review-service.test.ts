@@ -59,7 +59,7 @@ vi.mock("@/server/services/submission-service-shared", async () => {
 });
 
 vi.mock("@/server/services/launch-scheduling", () => ({
-  getLaunchpadGoLiveAtUtc: () => new Date("2026-05-01T00:00:00.000Z"),
+  getLaunchpadGoLiveAtUtc: () => new Date("2026-05-04T00:00:00.000Z"),
   scheduleNextFreeLaunchDate: scheduleNextFreeLaunchDateMock,
 }));
 
@@ -276,13 +276,13 @@ describe("submission-review-service", () => {
 
     getSubmissionByIdMock.mockResolvedValueOnce(submission);
     scheduleNextFreeLaunchDateMock.mockResolvedValueOnce(
-      new Date("2026-05-01T00:00:00.000Z"),
+      new Date("2026-05-04T00:00:00.000Z"),
     );
     prismaMock.launch.create.mockResolvedValue({
       id: "launch_free_1",
       launchType: "FREE",
       status: "APPROVED",
-      launchDate: new Date("2026-05-01T00:00:00.000Z"),
+      launchDate: new Date("2026-05-04T00:00:00.000Z"),
     });
     prismaMock.$transaction.mockImplementation(
       async (

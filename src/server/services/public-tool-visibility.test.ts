@@ -112,9 +112,9 @@ describe("getPubliclyVisibleToolWhere", () => {
       isLaunchPubliclyVisible(
         {
           status: "APPROVED",
-          launchDate: new Date("2026-05-08T00:00:00.000Z"),
+          launchDate: new Date("2026-05-11T00:00:00.000Z"),
         },
-        new Date("2026-05-01T00:00:00.000Z"),
+        new Date("2026-05-04T00:00:00.000Z"),
       ),
     ).toBe(false);
   });
@@ -128,11 +128,11 @@ describe("getPubliclyVisibleToolWhere", () => {
           launches: [
             {
               status: "APPROVED",
-              launchDate: new Date("2026-05-08T00:00:00.000Z"),
+              launchDate: new Date("2026-05-11T00:00:00.000Z"),
             },
           ],
         },
-        new Date("2026-05-01T00:00:00.000Z"),
+        new Date("2026-05-04T00:00:00.000Z"),
       ),
     ).toBe(false);
   });

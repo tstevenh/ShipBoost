@@ -44,7 +44,7 @@ function assertValidPremiumLaunchWeekStart(date: Date) {
   const launchWeekStart = startOfUtcDay(date);
 
   if (launchWeekStart < goLiveFloor) {
-    throw new AppError(400, "Choose May 1, 2026 UTC or later.");
+    throw new AppError(400, "Choose May 4, 2026 UTC or later.");
   }
 
   if (!isAnchoredLaunchWeekStart(launchWeekStart, { goLiveAt: goLiveFloor })) {
@@ -384,7 +384,7 @@ export async function reschedulePremiumLaunch(
   const goLiveFloor = getLaunchpadGoLiveAtUtc();
 
   if (nextLaunchDate < goLiveFloor) {
-    throw new AppError(400, "Choose May 1, 2026 UTC or later.");
+    throw new AppError(400, "Choose May 4, 2026 UTC or later.");
   }
 
   if (nextLaunchDate <= now) {

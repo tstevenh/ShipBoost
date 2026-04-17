@@ -33,7 +33,7 @@ const envSchema = z.object({
     .string()
     .trim()
     .datetime({ offset: true })
-    .default("2026-05-01T00:00:00Z"),
+    .default("2026-05-04T00:00:00Z"),
   FREE_LAUNCH_SLOTS_PER_WEEK: z.coerce.number().int().positive().default(10),
   FOUNDING_PREMIUM_LAUNCH_LIMIT: z.coerce.number().int().positive().default(100),
   CLOUDINARY_CLOUD_NAME: z.string().trim().min(1).optional(),
