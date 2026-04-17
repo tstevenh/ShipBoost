@@ -527,6 +527,16 @@ export async function getFounderSubmissionDraft(
   return submission;
 }
 
+export async function getAdminSubmissionDetail(submissionId: string) {
+  const submission = await getSubmissionById(prisma, submissionId);
+
+  if (!submission) {
+    throw new AppError(404, "Submission not found.");
+  }
+
+  return submission;
+}
+
 export async function listAdminSubmissionQueue(
   filters: AdminSubmissionListQueryInput,
 ) {

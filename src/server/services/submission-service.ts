@@ -1,5 +1,6 @@
 export {
   createSubmission,
+  getAdminSubmissionDetail,
   getFounderSubmissionDraft,
   listAdminSubmissionQueue,
   listFounderSubmissions,
