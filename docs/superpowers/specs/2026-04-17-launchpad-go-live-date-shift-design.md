@@ -49,7 +49,7 @@ As a result:
 
 ### 1. Shift the Scheduling Anchor
 
-Change the default/fallback `LAUNCHPAD_GO_LIVE_AT` from:
+Change the code-level default/fallback `LAUNCHPAD_GO_LIVE_AT` from:
 
 - `2026-05-01T00:00:00Z`
 
@@ -60,6 +60,8 @@ to:
 This will automatically make launch weeks run Monday-to-Monday because the existing scheduling logic derives week boundaries from the configured go-live date.
 
 No scheduling algorithm rewrite is needed.
+
+This is important because the current environment does **not** define `LAUNCHPAD_GO_LIVE_AT`, so the application is using the fallback from code. The implementation must therefore change the fallback directly in code rather than relying on an environment update.
 
 ### 2. Move Existing Launch Data
 
@@ -171,6 +173,7 @@ Add or adjust coverage to confirm:
 ## Acceptance Criteria
 
 - `LAUNCHPAD_GO_LIVE_AT` defaults to `2026-05-04T00:00:00Z`
+- the application behaves correctly even when `LAUNCHPAD_GO_LIVE_AT` is absent from the environment, because the code fallback is now May 4
 - free launch scheduling starts at Monday, May 4, 2026 UTC
 - premium launch validation and week selection are anchored to Monday, May 4, 2026 UTC
 - the existing manually scheduled free launch is moved from May 1 to May 4
