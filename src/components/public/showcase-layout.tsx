@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Rocket } from "lucide-react";
 import { DeferredHomeSearchModal } from "@/components/public/deferred-home-search-modal";
+import { FrogDrBadge } from "@/components/public/frog-dr-badge";
 import { SidebarLeadMagnetForm } from "@/components/public/sidebar-lead-magnet-form";
 
 export function SponsorSlot() {
@@ -76,6 +77,8 @@ export function ShowcaseLayout({
                 <Rocket size={18} className="group-hover:translate-y-[-2px] transition-transform" />
                 Submit your product
               </Link>
+
+              <FrogDrBadge />
 
               <SponsorSlot />
               <SponsorSlot />

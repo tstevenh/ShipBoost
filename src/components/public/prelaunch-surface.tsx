@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Zap,
 } from "lucide-react";
+import { FrogDrBadge } from "./frog-dr-badge";
 import { HomeLeadMagnetForm } from "./home-lead-magnet-form";
 
 type PrelaunchTool = {
@@ -84,6 +85,8 @@ export function PrelaunchSurface({ tools }: { tools: PrelaunchTool[] }) {
               </li>
             ))}
           </ul>
+
+          <FrogDrBadge className="bg-background" />
         </aside>
       </section>
 

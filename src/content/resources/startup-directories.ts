@@ -114,7 +114,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "saas hub saashub.com https://saashub.com"
   },
   {
-    "id": "theres-an-ai-for-that-014",
+    "id": "there-s-an-ai-for-that-014",
     "name": "There's an AI for that",
     "url": "https://theresanaiforthat.com",
     "domain": "theresanaiforthat.com",
@@ -2410,15 +2410,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "agencysource agencysource.com https://agencysource.com"
   },
   {
-    "id": "bowora-301",
-    "name": "Bowora",
-    "url": "https://bowora.com",
-    "domain": "bowora.com",
-    "dr": 6,
-    "searchText": "bowora bowora.com https://bowora.com"
-  },
-  {
-    "id": "1000tools-302",
+    "id": "1000tools-301",
     "name": "1000Tools",
     "url": "https://1000tools.best/",
     "domain": "1000tools.best",
@@ -2426,7 +2418,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "1000tools 1000tools.best https://1000tools.best/"
   },
   {
-    "id": "launchy-tools-303",
+    "id": "launchy-tools-302",
     "name": "Launchy.tools",
     "url": "https://launchy.tools",
     "domain": "launchy.tools",
@@ -2434,7 +2426,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "launchy.tools launchy.tools https://launchy.tools"
   },
   {
-    "id": "productlaunchpad-304",
+    "id": "productlaunchpad-303",
     "name": "ProductLaunchpad",
     "url": "https://productlaunchpad.app",
     "domain": "productlaunchpad.app",
@@ -2442,7 +2434,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "productlaunchpad productlaunchpad.app https://productlaunchpad.app"
   },
   {
-    "id": "startup-credits-305",
+    "id": "startup-credits-304",
     "name": "Startup Credits",
     "url": "https://startupcredits.io",
     "domain": "startupcredits.io",
@@ -2450,7 +2442,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "startup credits startupcredits.io https://startupcredits.io"
   },
   {
-    "id": "micro-saas-apps-306",
+    "id": "micro-saas-apps-305",
     "name": "Micro Saas apps",
     "url": "https://microsaasapps.com",
     "domain": "microsaasapps.com",
@@ -2458,7 +2450,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "micro saas apps microsaasapps.com https://microsaasapps.com"
   },
   {
-    "id": "1000ai-307",
+    "id": "1000ai-306",
     "name": "1000AI",
     "url": "https://1000ai.best/",
     "domain": "1000ai.best",
@@ -2466,7 +2458,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "1000ai 1000ai.best https://1000ai.best/"
   },
   {
-    "id": "1000saas-308",
+    "id": "1000saas-307",
     "name": "1000SaaS",
     "url": "https://1000saas.best/",
     "domain": "1000saas.best",
@@ -2474,7 +2466,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "1000saas 1000saas.best https://1000saas.best/"
   },
   {
-    "id": "apps-and-reports-309",
+    "id": "apps-and-reports-308",
     "name": "Apps and reports",
     "url": "https://appsandreports.com",
     "domain": "appsandreports.com",
@@ -2482,7 +2474,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "apps and reports appsandreports.com https://appsandreports.com"
   },
   {
-    "id": "join-launchloop-310",
+    "id": "join-launchloop-309",
     "name": "Join LaunchLoop",
     "url": "https://www.joinlaunchloop.com/",
     "domain": "joinlaunchloop.com",
@@ -2490,7 +2482,16 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "join launchloop joinlaunchloop.com https://www.joinlaunchloop.com/"
   },
   {
-    "id": "vibecodinglist-312",
+    "id": "shipboost-310",
+    "name": "ShipBoost",
+    "url": "https://shipboost.io",
+    "domain": "shipboost.io",
+    "dr": 21,
+    "recommended": true,
+    "searchText": "shipboost shipboost.io https://shipboost.io"
+  },
+  {
+    "id": "vibecodinglist-311",
     "name": "Vibecodinglist",
     "url": "https://vibecodinglist.com/",
     "domain": "vibecodinglist.com",
@@ -2498,7 +2499,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "vibecodinglist vibecodinglist.com https://vibecodinglist.com/"
   },
   {
-    "id": "orynth-313",
+    "id": "orynth-312",
     "name": "Orynth",
     "url": "https://www.orynth.dev/",
     "domain": "orynth.dev",
@@ -2506,7 +2507,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "orynth orynth.dev https://www.orynth.dev/"
   },
   {
-    "id": "anoncrib-314",
+    "id": "anoncrib-313",
     "name": "Anoncrib",
     "url": "https://www.anoncrib.com/",
     "domain": "anoncrib.com",
@@ -2514,7 +2515,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "anoncrib anoncrib.com https://www.anoncrib.com/"
   },
   {
-    "id": "launchitx-315",
+    "id": "launchitx-314",
     "name": "Launchitx",
     "url": "https://launchitx.com/",
     "domain": "launchitx.com",
@@ -2522,7 +2523,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "launchitx launchitx.com https://launchitx.com/"
   },
   {
-    "id": "productburst-316",
+    "id": "productburst-315",
     "name": "Productburst",
     "url": "https://productburst.com/",
     "domain": "productburst.com",
@@ -2530,7 +2531,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "productburst productburst.com https://productburst.com/"
   },
   {
-    "id": "madewithlovable-317",
+    "id": "madewithlovable-316",
     "name": "MadewithLovable",
     "url": "https://madewithlovable.com/",
     "domain": "madewithlovable.com",
@@ -2538,7 +2539,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "madewithlovable madewithlovable.com https://madewithlovable.com/"
   },
   {
-    "id": "bowora-318",
+    "id": "bowora-317",
     "name": "Bowora",
     "url": "https://bowora.com/",
     "domain": "bowora.com",
@@ -2546,7 +2547,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "bowora bowora.com https://bowora.com/"
   },
   {
-    "id": "buildvoyage-319",
+    "id": "buildvoyage-318",
     "name": "BuildVoyage",
     "url": "https://buildvoyage.com/",
     "domain": "buildvoyage.com",
@@ -2554,7 +2555,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "buildvoyage buildvoyage.com https://buildvoyage.com/"
   },
   {
-    "id": "madewithbolt-320",
+    "id": "madewithbolt-319",
     "name": "MadewithBolt",
     "url": "https://madewithbolt.com/",
     "domain": "madewithbolt.com",
@@ -2562,7 +2563,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "madewithbolt madewithbolt.com https://madewithbolt.com/"
   },
   {
-    "id": "indiedeals-321",
+    "id": "indiedeals-320",
     "name": "IndieDeals",
     "url": "https://indie.deals/",
     "domain": "indie.deals",
@@ -2570,7 +2571,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "indiedeals indie.deals https://indie.deals/"
   },
   {
-    "id": "indiehackerstacks-322",
+    "id": "indiehackerstacks-321",
     "name": "Indiehackerstacks",
     "url": "https://indiehackerstacks.com/",
     "domain": "indiehackerstacks.com",
@@ -2578,12 +2579,27 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "indiehackerstacks indiehackerstacks.com https://indiehackerstacks.com/"
   },
   {
-    "id": "shipboost-311",
-    "name": "ShipBoost",
-    "url": "https://shipboost.io",
-    "domain": "shipboost.io",
-    "dr": 0,
-    "recommended": true,
-    "searchText": "shipboost shipboost.io https://shipboost.io"
+    "id": "launchpasms-322",
+    "name": "Launchpasms",
+    "url": "https://launchpad.ms/",
+    "domain": "launchpad.ms",
+    "dr": 18,
+    "searchText": "launchpasms launchpad.ms https://launchpad.ms/"
+  },
+  {
+    "id": "showmeyoursite-323",
+    "name": "Showmeyoursite",
+    "url": "https://showmeyour.site/",
+    "domain": "showmeyour.site",
+    "dr": 22,
+    "searchText": "showmeyoursite showmeyour.site https://showmeyour.site/"
+  },
+  {
+    "id": "dirbear-324",
+    "name": "Dirbear",
+    "url": "https://dirbear.com/",
+    "domain": "dirbear.com",
+    "dr": 15,
+    "searchText": "dirbear dirbear.com https://dirbear.com/"
   }
 ];

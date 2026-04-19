@@ -10,7 +10,7 @@ vi.mock("@/content/resources/startup-directories", () => ({
       name: "ShipBoost",
       url: "https://shipboost.io",
       domain: "shipboost.io",
-      dr: 0,
+      dr: 21,
       recommended: true,
       searchText: "shipboost shipboost.io https://shipboost.io",
     },

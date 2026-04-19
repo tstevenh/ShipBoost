@@ -8,6 +8,7 @@ import { JsonLdScript } from "@/components/seo/json-ld";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
 import { LaunchpadShowcase } from "@/components/public/launchpad-showcase";
 import { PrelaunchSurface } from "@/components/public/prelaunch-surface";
+import { FrogDrBadge } from "@/components/public/frog-dr-badge";
 import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { getEnv } from "@/server/env";
 import { getCachedHomePageData } from "@/server/cache/public-content";
@@ -235,6 +236,8 @@ export default async function Home() {
                   Browse the startup directories resource
                 </Link>
               </div>
+
+              {!isPrelaunch ? <FrogDrBadge className="mt-6 xl:hidden" /> : null}
             </div>
           </div>
         </ShowcaseLayout>
