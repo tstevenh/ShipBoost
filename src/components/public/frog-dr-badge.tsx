@@ -7,7 +7,7 @@ type FrogDrBadgeProps = {
 export function FrogDrBadge({ className }: FrogDrBadgeProps) {
   return (
     <a
-      href="https://frogdr.com?via=Shipboost"
+      href="https://frogdr.com/shipboost.io?via=Shipboost&utm_source=shipboost.io"
       target="_blank"
       rel="noopener noreferrer"
       className={cn("mx-auto block w-fit", className)}
