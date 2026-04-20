@@ -29,6 +29,42 @@ const CRM_TOOLS = {
   apollo: "apollo",
 } as const;
 
+const EMAIL_TOOLS = {
+  mailchimp: "mailchimp",
+  convertkit: "convertkit",
+  activecampaign: "activecampaign",
+  mailerlite: "mailerlite",
+  brevo: "brevo",
+  klaviyo: "klaviyo",
+  beehiiv: "beehiiv",
+} as const;
+
+const FORM_TOOLS = {
+  typeform: "typeform",
+  jotform: "jotform",
+  surveymonkey: "surveymonkey",
+  formstack: "formstack",
+  tally: "tally",
+  fillout: "fillout",
+  paperform: "paperform",
+} as const;
+
+const SCHEDULING_TOOLS = {
+  calendly: "calendly",
+  acuity: "acuity-scheduling",
+  tidycal: "tidycal",
+  savvycal: "savvycal",
+  calCom: "cal-com",
+} as const;
+
+const SOCIAL_TOOLS = {
+  buffer: "buffer",
+  later: "later",
+  vistaSocial: "vista-social",
+  skedSocial: "sked-social",
+  sociamonials: "sociamonials",
+} as const;
+
 export const bestPagesRegistry: Record<string, BestPageEntry> = {
   "help-desk-software": {
     slug: "help-desk-software",
@@ -1000,6 +1036,1000 @@ export const bestPagesRegistry: Record<string, BestPageEntry> = {
     primaryCategorySlug: "sales",
     supportingTagSlugs: ["crm", "small-business", "lead-management"],
   },
+  "email-marketing-for-small-business": {
+    slug: "email-marketing-for-small-business",
+    targetKeyword: "best email marketing for small business",
+    title: "Best Email Marketing for Small Business",
+    metaTitle: "Best Email Marketing for Small Business | ShipBoost",
+    metaDescription:
+      "Compare the best email marketing tools for small businesses, with clear verdicts, practical tradeoffs, and buyer-focused recommendations across leading email platforms.",
+    intro:
+      "The best email marketing tool for a small business depends on whether you need simplicity, automation, ecommerce fit, or newsletter-led audience growth. The right choice should make sending consistently easier, not heavier.",
+    whoItsFor:
+      "This page is for small business owners, marketers, and founders choosing an email platform for campaigns, automations, newsletters, and audience growth without taking on unnecessary complexity.",
+    howWeEvaluated: [
+      "Ease of use for lean teams",
+      "Email campaign and newsletter workflow quality",
+      "Automation depth and segmentation",
+      "Pricing fit for small businesses",
+      "Overall buyer fit for small-business marketing needs",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: {
+          [EMAIL_TOOLS.mailchimp]: "Broad SMB email marketing",
+          [EMAIL_TOOLS.mailerlite]: "Simple and affordable campaigns",
+          [EMAIL_TOOLS.brevo]: "Multichannel communication",
+          [EMAIL_TOOLS.convertkit]: "Creator-led email growth",
+          [EMAIL_TOOLS.activecampaign]: "Deeper automation",
+          [EMAIL_TOOLS.klaviyo]: "Ecommerce retention",
+          [EMAIL_TOOLS.beehiiv]: "Newsletter-led growth",
+        },
+      },
+      {
+        label: "Pricing posture",
+        valuesByToolSlug: {
+          [EMAIL_TOOLS.mailchimp]: "Broad SMB plans",
+          [EMAIL_TOOLS.mailerlite]: "Affordable",
+          [EMAIL_TOOLS.brevo]: "Accessible multichannel pricing",
+          [EMAIL_TOOLS.convertkit]: "Creator-focused paid plans",
+          [EMAIL_TOOLS.activecampaign]: "Automation-first premium",
+          [EMAIL_TOOLS.klaviyo]: "Premium ecommerce fit",
+          [EMAIL_TOOLS.beehiiv]: "Newsletter growth pricing",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: EMAIL_TOOLS.mailchimp,
+        rank: 1,
+        verdict:
+          "Mailchimp remains the default benchmark for many small businesses because it balances familiarity, campaign breadth, and practical day-to-day sending better than most all-round alternatives.",
+        bestFor:
+          "Small businesses that want a familiar email platform with broad campaign support and a credible growth path.",
+        notIdealFor:
+          "Buyers that want the lightest product possible or a more specialized creator or ecommerce workflow.",
+        criteriaHighlights: ["Broad SMB fit", "Brand familiarity", "Campaign breadth"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.mailerlite,
+        rank: 2,
+        verdict:
+          "MailerLite is one of the strongest picks for small businesses that want a lighter, more affordable email platform without losing the core workflows that matter.",
+        bestFor:
+          "Small teams that want practical email marketing with lower cost and less operational drag.",
+        notIdealFor:
+          "Buyers that need the broadest ecosystem or heavier lifecycle automation from day one.",
+        criteriaHighlights: ["Simplicity", "Affordability", "Practicality"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.brevo,
+        rank: 3,
+        verdict:
+          "Brevo makes sense when a small business wants email plus broader communication coverage like SMS or transactional messaging in one stack.",
+        bestFor:
+          "Businesses that want multichannel communication alongside email campaigns and automation.",
+        notIdealFor:
+          "Teams that want a pure email-first experience with narrower scope.",
+        criteriaHighlights: ["Multichannel", "Automation", "Broader communications"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.convertkit,
+        rank: 4,
+        verdict:
+          "ConvertKit, now Kit, is strongest when the business thinks in audiences, newsletters, and creator-style email growth rather than classic campaign management alone.",
+        bestFor:
+          "Audience-led businesses, creators, and newsletter-first brands.",
+        notIdealFor:
+          "Traditional small businesses that want more conventional SMB email defaults.",
+        criteriaHighlights: ["Creator fit", "Newsletter workflows", "Audience growth"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.activecampaign,
+        rank: 5,
+        verdict:
+          "ActiveCampaign rises when the small business cares more about lifecycle automation, segmentation, and journeys than the simplest day-to-day sending experience.",
+        bestFor:
+          "Small businesses that prioritize automation depth and customer journey logic.",
+        notIdealFor:
+          "Teams that want the fastest setup and the least operational complexity.",
+        criteriaHighlights: ["Automation", "Segmentation", "Lifecycle marketing"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.klaviyo,
+        rank: 6,
+        verdict:
+          "Klaviyo is especially compelling for ecommerce businesses, but it is more specialized than some of the broader SMB email platforms on this page.",
+        bestFor:
+          "Commerce businesses that want stronger retention marketing and data-driven email programs.",
+        notIdealFor:
+          "Non-ecommerce businesses that do not benefit from the commerce-specific depth.",
+        criteriaHighlights: ["Ecommerce fit", "Retention marketing", "Segmentation"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.beehiiv,
+        rank: 7,
+        verdict:
+          "Beehiiv is compelling when newsletter growth and publication-style email is the central job, not general-purpose SMB email marketing.",
+        bestFor:
+          "Newsletter-first businesses and creators growing a media-style email audience.",
+        notIdealFor:
+          "Traditional small businesses that mainly need campaigns, automations, and broad SMB workflow coverage.",
+        criteriaHighlights: ["Newsletter growth", "Creator fit", "Audience-first"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the best email marketing tool for a small business?",
+        answer:
+          "For many small businesses, Mailchimp, MailerLite, and Brevo are strong starting points because they balance usability, pricing, and practical campaign tools.",
+      },
+      {
+        question: "Should a small business choose a simple email tool or a more advanced one?",
+        answer:
+          "Choose the lightest tool that still supports your real sending needs. Overbuying for advanced automation too early usually creates more operational friction than leverage.",
+      },
+      {
+        question: "Is Mailchimp still good for small businesses?",
+        answer:
+          "Yes. Mailchimp is still one of the strongest default options for small businesses, especially when the buyer wants a broad, recognizable, and capable email platform.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore the broader marketing category on ShipBoost.",
+      },
+      {
+        href: "/alternatives/mailchimp",
+        label: "Compare Mailchimp alternatives",
+        description: "See which email tools compete most directly with Mailchimp.",
+      },
+      {
+        href: "/tags/email-marketing",
+        label: "Browse email marketing tools",
+        description: "See more tools grouped by email-marketing intent.",
+      },
+    ],
+    primaryCategorySlug: "marketing",
+    supportingTagSlugs: ["email-marketing", "newsletter", "email-automation"],
+    customSections: [
+      {
+        heading: "How to use this ranking",
+        body:
+          "If your business sends broad promotional campaigns, start with the most practical all-rounders. If your growth motion is more creator-led or ecommerce-heavy, prioritize the tools built around that operating model instead of forcing a generic platform to fit.",
+      },
+    ],
+  },
+  "email-marketing-platform-for-small-business": {
+    slug: "email-marketing-platform-for-small-business",
+    targetKeyword: "best email marketing platform for small business",
+    title: "Best Email Marketing Platform for Small Business",
+    metaTitle:
+      "Best Email Marketing Platform for Small Business | ShipBoost",
+    metaDescription:
+      "Compare the best email marketing platforms for small businesses that need campaigns, automation, segmentation, and audience growth without oversized complexity.",
+    intro:
+      "The best email marketing platform for a small business is the one that matches how the team actually grows: broad campaigns, newsletter-led growth, ecommerce retention, or more automation-heavy lifecycle marketing.",
+    whoItsFor:
+      "This page is for small businesses that want a fuller email marketing platform decision, not just a simple newsletter tool, and need to balance campaigns, segmentation, automation, and audience fit.",
+    howWeEvaluated: [
+      "How complete the platform feels for small-business marketing",
+      "Campaigns, segmentation, and automation depth",
+      "Audience growth and list-management quality",
+      "Fit for different small-business go-to-market motions",
+      "Whether the product creates leverage without adding unnecessary complexity",
+    ],
+    comparisonTable: [
+      {
+        label: "Platform strength",
+        valuesByToolSlug: {
+          [EMAIL_TOOLS.mailchimp]: "Broad all-round platform",
+          [EMAIL_TOOLS.activecampaign]: "Automation-heavy lifecycle platform",
+          [EMAIL_TOOLS.brevo]: "Email plus multichannel communications",
+          [EMAIL_TOOLS.klaviyo]: "Commerce-first lifecycle platform",
+          [EMAIL_TOOLS.mailerlite]: "Lightweight SMB platform",
+          [EMAIL_TOOLS.convertkit]: "Audience-led platform",
+          [EMAIL_TOOLS.beehiiv]: "Newsletter publication platform",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: EMAIL_TOOLS.mailchimp,
+        rank: 1,
+        verdict:
+          "Mailchimp leads this page because it still gives many small businesses the most complete blend of campaigns, audience management, automation, and familiarity in one platform.",
+        bestFor:
+          "Small businesses that want a broad email marketing platform without optimizing too hard around a niche use case.",
+        notIdealFor:
+          "Buyers that need creator-led audience growth or deeper automation than a broad SMB platform usually provides.",
+        criteriaHighlights: ["All-round platform", "Breadth", "SMB fit"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.activecampaign,
+        rank: 2,
+        verdict:
+          "ActiveCampaign is one of the strongest platform choices when automation and customer journeys are central to the marketing motion.",
+        bestFor:
+          "Small businesses that want lifecycle marketing depth and stronger automation than simpler campaign tools provide.",
+        notIdealFor:
+          "Teams that want the lightest setup and the least day-to-day operational complexity.",
+        criteriaHighlights: ["Automation depth", "Journeys", "Segmentation"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.brevo,
+        rank: 3,
+        verdict:
+          "Brevo is a strong platform pick when the business wants email connected to broader communication channels instead of treating email as an isolated tool.",
+        bestFor:
+          "Businesses that want email, SMS, and broader customer communication in a more unified system.",
+        notIdealFor:
+          "Teams that only want a focused email platform and nothing more.",
+        criteriaHighlights: ["Multichannel", "Platform breadth", "Practicality"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.klaviyo,
+        rank: 4,
+        verdict:
+          "Klaviyo earns a higher rank on the platform page because its value is clearest when email sits inside a more data-driven commerce marketing system.",
+        bestFor:
+          "Ecommerce businesses that want stronger retention, segmentation, and revenue-oriented email programs.",
+        notIdealFor:
+          "Non-commerce businesses that do not need a commerce-centered platform.",
+        criteriaHighlights: ["Ecommerce platform", "Data depth", "Retention"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.mailerlite,
+        rank: 5,
+        verdict:
+          "MailerLite is lighter than some of the platform-heavy tools here, but that is also why it remains such a strong small-business recommendation.",
+        bestFor:
+          "Small businesses that want a credible platform without the operational burden of heavier enterprise-style tools.",
+        notIdealFor:
+          "Buyers who expect advanced lifecycle marketing to be the center of the stack.",
+        criteriaHighlights: ["Lightweight platform", "Usability", "Value"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.convertkit,
+        rank: 6,
+        verdict:
+          "ConvertKit is a better platform fit when the business grows through content, audience trust, and newsletter-led distribution rather than conventional campaign management alone.",
+        bestFor:
+          "Creators and audience-led businesses that think in subscribers, content, and newsletter growth.",
+        notIdealFor:
+          "Traditional SMB buyers who want a more standard business email platform.",
+        criteriaHighlights: ["Audience-led", "Creator platform", "Newsletter growth"],
+      },
+      {
+        toolSlug: EMAIL_TOOLS.beehiiv,
+        rank: 7,
+        verdict:
+          "Beehiiv belongs on the platform page because it represents a different model entirely: media-style growth through newsletter publishing rather than classic business email marketing.",
+        bestFor:
+          "Newsletter-first businesses and media operators that treat email as the product or growth engine.",
+        notIdealFor:
+          "Small businesses that mainly need campaigns, automation, and conventional marketing workflows.",
+        criteriaHighlights: ["Publication-led", "Newsletter growth", "Audience product"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the difference between an email marketing platform and an email tool?",
+        answer:
+          "An email marketing platform usually implies a broader system for campaigns, automation, segmentation, and audience growth, while an email tool can sometimes mean a simpler sending product.",
+      },
+      {
+        question: "What is the best email marketing platform for small business?",
+        answer:
+          "For many small businesses, the best starting points are Mailchimp, ActiveCampaign, and Brevo because they cover different tradeoffs across breadth, automation, and multichannel communication.",
+      },
+      {
+        question: "Do small businesses need advanced automation from the start?",
+        answer:
+          "Not always. Many small businesses benefit more from consistent sending and clean audience management first, then add deeper automation when the customer journey becomes more complex.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/best/email-marketing-for-small-business",
+        label: "Best email marketing for small business",
+        description: "See the broader SMB email ranking with more emphasis on practical fit.",
+      },
+      {
+        href: "/alternatives/activecampaign",
+        label: "Compare ActiveCampaign alternatives",
+        description: "Explore email platforms competing with ActiveCampaign.",
+      },
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "See the wider marketing category on ShipBoost.",
+      },
+    ],
+    primaryCategorySlug: "marketing",
+    supportingTagSlugs: ["email-marketing", "marketing-automation", "newsletter"],
+  },
+  "online-form-builder": {
+    slug: "online-form-builder",
+    targetKeyword: "best online form builder",
+    title: "Best Online Form Builder",
+    metaTitle: "Best Online Form Builder for Modern Teams | ShipBoost",
+    metaDescription:
+      "Compare the best online form builders for surveys, lead capture, workflows, and branded forms, with clear verdicts and buyer-fit guidance across the top tools.",
+    intro:
+      "The best online form builder depends on whether you care most about conversational form UX, flexible no-code building, workflow-heavy business forms, or better survey and feedback collection. The right tool should match the job, not just the template gallery.",
+    whoItsFor:
+      "This page is for founders, marketers, operators, and product teams choosing a form platform for lead capture, customer feedback, workflows, research, or internal business processes.",
+    howWeEvaluated: [
+      "How flexible the builder feels for real business forms",
+      "Form UX quality for respondents and teams",
+      "Fit for lead capture, surveys, and workflow use cases",
+      "Depth of customization, logic, and integrations",
+      "Overall buyer fit for modern online form needs",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: {
+          [FORM_TOOLS.typeform]: "Conversational forms",
+          [FORM_TOOLS.jotform]: "Broad business form building",
+          [FORM_TOOLS.fillout]: "Modern no-code forms",
+          [FORM_TOOLS.tally]: "Lightweight creator-friendly forms",
+          [FORM_TOOLS.paperform]: "Branded forms and payments",
+          [FORM_TOOLS.surveymonkey]: "Survey workflows",
+          [FORM_TOOLS.formstack]: "Workflow-heavy business forms",
+        },
+      },
+      {
+        label: "Strongest angle",
+        valuesByToolSlug: {
+          [FORM_TOOLS.typeform]: "Form experience",
+          [FORM_TOOLS.jotform]: "Breadth and practicality",
+          [FORM_TOOLS.fillout]: "Modern no-code workflow",
+          [FORM_TOOLS.tally]: "Simplicity and speed",
+          [FORM_TOOLS.paperform]: "Branding and payment flows",
+          [FORM_TOOLS.surveymonkey]: "Research and feedback",
+          [FORM_TOOLS.formstack]: "Operations and approvals",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: FORM_TOOLS.typeform,
+        rank: 1,
+        verdict:
+          "Typeform remains the benchmark for online form builder intent because it still leads on form experience and brand recognition when the front-end response flow matters.",
+        bestFor:
+          "Teams that want forms to feel polished, conversational, and more experience-led than utility-led.",
+        notIdealFor:
+          "Buyers that care more about operational breadth or heavy internal workflow use cases than respondent experience.",
+        criteriaHighlights: ["Form UX", "Brand benchmark", "Experience-led forms"],
+      },
+      {
+        toolSlug: FORM_TOOLS.jotform,
+        rank: 2,
+        verdict:
+          "Jotform is the strongest all-round practical alternative because it covers a wider range of business form jobs without locking buyers into a single style of form building.",
+        bestFor:
+          "Teams that want a broad, capable online form platform for mixed business needs.",
+        notIdealFor:
+          "Buyers that want the most modern product feel or a more opinionated lightweight workflow.",
+        criteriaHighlights: ["Breadth", "Practicality", "Business form coverage"],
+      },
+      {
+        toolSlug: FORM_TOOLS.fillout,
+        rank: 3,
+        verdict:
+          "Fillout earns a high position because it feels modern, flexible, and more aligned with the no-code workflow expectations many teams now have from online forms.",
+        bestFor:
+          "Teams that want modern no-code forms with flexible logic and a cleaner working model.",
+        notIdealFor:
+          "Buyers that specifically want the strongest survey brand recognition or legacy business-form depth.",
+        criteriaHighlights: ["Modern no-code", "Flexibility", "Workflow-friendly"],
+      },
+      {
+        toolSlug: FORM_TOOLS.tally,
+        rank: 4,
+        verdict:
+          "Tally is one of the best lightweight choices when speed, simplicity, and fast form creation matter more than enterprise-style breadth.",
+        bestFor:
+          "Creators, startups, and lean teams that want a fast form builder with low friction.",
+        notIdealFor:
+          "Teams that need heavier operational process support or broader enterprise workflows.",
+        criteriaHighlights: ["Simplicity", "Speed", "Creator-friendly"],
+      },
+      {
+        toolSlug: FORM_TOOLS.paperform,
+        rank: 5,
+        verdict:
+          "Paperform is a strong pick when branding, polished presentation, and payment-capable forms matter more than survey specialization or heavier back-office workflows.",
+        bestFor:
+          "Businesses that want forms to feel more branded and customer-facing, especially when payments or polished presentation matter.",
+        notIdealFor:
+          "Teams that need broader survey tooling or heavier workflow operations.",
+        criteriaHighlights: ["Branding", "Payments", "Presentation"],
+      },
+      {
+        toolSlug: FORM_TOOLS.surveymonkey,
+        rank: 6,
+        verdict:
+          "SurveyMonkey stays relevant because survey and feedback workflows are still a distinct job, but it is not the strongest default answer for general form-builder intent.",
+        bestFor:
+          "Teams focused on surveys, customer feedback, and structured research workflows.",
+        notIdealFor:
+          "Buyers who want a broader online form builder for mixed business use cases.",
+        criteriaHighlights: ["Survey focus", "Feedback", "Research workflows"],
+      },
+      {
+        toolSlug: FORM_TOOLS.formstack,
+        rank: 7,
+        verdict:
+          "Formstack belongs on the list because it solves real workflow-heavy form problems, but it is more operations-oriented than the default buyer intent behind online form builder searches.",
+        bestFor:
+          "Teams that need forms tied to approvals, workflows, and more structured business processes.",
+        notIdealFor:
+          "Buyers that mainly want a cleaner modern form builder for lead capture or external-facing forms.",
+        criteriaHighlights: ["Workflow depth", "Approvals", "Business operations"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the best online form builder?",
+        answer:
+          "For many buyers, the strongest shortlist starts with Typeform, Jotform, and Fillout because they cover the most important tradeoffs across form experience, flexibility, and general business fit.",
+      },
+      {
+        question: "What is the difference between a form builder and a survey tool?",
+        answer:
+          "A form builder usually covers broader jobs like lead capture, internal workflows, registrations, and business forms. A survey tool is more specialized around feedback collection, research, and structured response analysis.",
+      },
+      {
+        question: "Should I choose a conversational form tool or a broader business form platform?",
+        answer:
+          "Choose conversational forms when the response experience itself matters, like lead capture or customer-facing flows. Choose a broader business platform when you need more workflow depth, logic, operational flexibility, or internal business use cases.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore the broader marketing category on ShipBoost.",
+      },
+      {
+        href: "/alternatives/typeform",
+        label: "Compare Typeform alternatives",
+        description: "See which tools compete most directly with Typeform.",
+      },
+      {
+        href: "/tags/form-builder",
+        label: "Browse form builder tools",
+        description: "See more products grouped by form-builder intent.",
+      },
+    ],
+    primaryCategorySlug: "marketing",
+    supportingTagSlugs: ["form-builder", "online-forms", "survey-tool"],
+  },
+  "scheduling-app-for-small-business": {
+    slug: "scheduling-app-for-small-business",
+    targetKeyword: "best scheduling app for small business",
+    title: "Best Scheduling App for Small Business",
+    metaTitle: "Best Scheduling App for Small Business | ShipBoost",
+    metaDescription:
+      "Compare the best scheduling apps for small businesses, with clear verdicts and buyer-fit guidance across Calendly, SavvyCal, TidyCal, Acuity Scheduling, and Cal.com.",
+    intro:
+      "The best scheduling app for a small business should make booking easier for both sides without turning calendar setup into a project. The right choice depends on how much simplicity, polish, flexibility, and pricing efficiency you need.",
+    whoItsFor:
+      "This page is for small businesses, founders, consultants, and service teams choosing a scheduling app for meetings, bookings, and day-to-day appointment coordination.",
+    howWeEvaluated: [
+      "How easy the tool is to adopt and keep running",
+      "Booking flow quality for small-business use cases",
+      "Pricing fit and practical value",
+      "Customization and flexibility where it matters",
+      "Overall buyer fit for small-business scheduling needs",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: {
+          [SCHEDULING_TOOLS.calendly]: "Default scheduling benchmark",
+          [SCHEDULING_TOOLS.savvycal]: "Modern premium scheduling",
+          [SCHEDULING_TOOLS.tidycal]: "Value-focused small teams",
+          [SCHEDULING_TOOLS.acuity]: "Appointment booking businesses",
+          [SCHEDULING_TOOLS.calCom]: "Flexible technical teams",
+        },
+      },
+      {
+        label: "Strongest angle",
+        valuesByToolSlug: {
+          [SCHEDULING_TOOLS.calendly]: "Simplicity and familiarity",
+          [SCHEDULING_TOOLS.savvycal]: "Modern UX and polish",
+          [SCHEDULING_TOOLS.tidycal]: "SMB value",
+          [SCHEDULING_TOOLS.acuity]: "Booking and appointment fit",
+          [SCHEDULING_TOOLS.calCom]: "Customization and control",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: SCHEDULING_TOOLS.calendly,
+        rank: 1,
+        verdict:
+          "Calendly remains the clearest default recommendation because it balances simplicity, familiarity, and dependable booking workflows better than almost any scheduling app in the category.",
+        bestFor:
+          "Small businesses that want the safest scheduling choice with minimal friction and broad customer familiarity.",
+        notIdealFor:
+          "Buyers that want more product differentiation or stronger control over the scheduling experience.",
+        criteriaHighlights: ["Benchmark", "Simplicity", "Booking flow"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.savvycal,
+        rank: 2,
+        verdict:
+          "SavvyCal is the strongest modern premium alternative when the buyer wants better user experience and a more polished meeting-scheduling feel than default scheduling tools usually offer.",
+        bestFor:
+          "Professionals and teams that want premium scheduling UX without giving up practical core functionality.",
+        notIdealFor:
+          "Price-sensitive buyers who mainly want the most affordable scheduling setup.",
+        criteriaHighlights: ["Modern UX", "Premium feel", "Scheduling polish"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.tidycal,
+        rank: 3,
+        verdict:
+          "TidyCal earns a high spot because small businesses often care most about value, and it covers the essential scheduling job without requiring a premium ongoing commitment.",
+        bestFor:
+          "Small businesses that want practical scheduling at a stronger value point.",
+        notIdealFor:
+          "Buyers that want the most premium interface or broader enterprise scheduling capability.",
+        criteriaHighlights: ["Value", "SMB fit", "Practicality"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.acuity,
+        rank: 4,
+        verdict:
+          "Acuity Scheduling stays relevant for appointment-heavy businesses, but it feels more appointment-specific and less like the clean default answer for general small-business scheduling.",
+        bestFor:
+          "Businesses that think in appointments, bookings, and customer scheduling workflows rather than simple meeting links.",
+        notIdealFor:
+          "Teams that just want a lighter default scheduling app.",
+        criteriaHighlights: ["Appointments", "Booking workflows", "Business scheduling"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.calCom,
+        rank: 5,
+        verdict:
+          "Cal.com is powerful and flexible, but it is not the most natural first recommendation for many small-business buyers who want simpler defaults and faster time to value.",
+        bestFor:
+          "Teams that care more about flexibility, control, or technical customization than default simplicity.",
+        notIdealFor:
+          "Small businesses that mainly want a plug-and-play scheduling app.",
+        criteriaHighlights: ["Flexibility", "Control", "Customization"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the best scheduling app for a small business?",
+        answer:
+          "For many small businesses, the strongest options are Calendly, SavvyCal, and TidyCal because they balance ease of use, booking quality, and practical value.",
+      },
+      {
+        question: "What should a small business prioritize in a scheduling app?",
+        answer:
+          "The most important factors are simple booking flows, easy calendar setup, strong default usability, and enough customization to match how the business actually books meetings or appointments.",
+      },
+      {
+        question: "Is Calendly still the best scheduling app?",
+        answer:
+          "Calendly is still the benchmark for many buyers, but alternatives like SavvyCal and TidyCal can be better fits depending on whether you care more about premium UX or stronger value.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/sales",
+        label: "Browse sales tools",
+        description: "Explore the broader sales category on ShipBoost.",
+      },
+      {
+        href: "/alternatives/calendly",
+        label: "Compare Calendly alternatives",
+        description: "See which scheduling tools compete most directly with Calendly.",
+      },
+      {
+        href: "/tags/scheduling",
+        label: "Browse scheduling tools",
+        description: "See more products grouped by scheduling intent.",
+      },
+    ],
+    primaryCategorySlug: "sales",
+    supportingTagSlugs: ["scheduling", "appointment-booking", "meeting-scheduling"],
+  },
+  "scheduling-software-for-small-business": {
+    slug: "scheduling-software-for-small-business",
+    targetKeyword: "best scheduling software for small business",
+    title: "Best Scheduling Software for Small Business",
+    metaTitle: "Best Scheduling Software for Small Business | ShipBoost",
+    metaDescription:
+      "Compare the best scheduling software for small businesses that need booking workflows, calendar coordination, and practical flexibility without unnecessary complexity.",
+    intro:
+      "Scheduling software for a small business is slightly broader than a simple booking app. The right product should fit how the business coordinates appointments, meetings, and calendar workflows over time, not just how it shares a link today.",
+    whoItsFor:
+      "This page is for small businesses that want scheduling software with stronger workflow fit, integrations, and longer-term operational usefulness beyond the most basic scheduling app setup.",
+    howWeEvaluated: [
+      "How well the product fits longer-term scheduling operations",
+      "Flexibility across booking, calendar, and workflow needs",
+      "Integration and configuration practicality",
+      "Usability for lean small-business teams",
+      "Overall buyer fit for small-business scheduling software",
+    ],
+    comparisonTable: [
+      {
+        label: "Platform fit",
+        valuesByToolSlug: {
+          [SCHEDULING_TOOLS.calendly]: "Broad default scheduling software",
+          [SCHEDULING_TOOLS.savvycal]: "Premium modern scheduling",
+          [SCHEDULING_TOOLS.tidycal]: "Value-focused scheduling",
+          [SCHEDULING_TOOLS.acuity]: "Appointments and services",
+          [SCHEDULING_TOOLS.calCom]: "Flexible technical scheduling",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: SCHEDULING_TOOLS.calendly,
+        rank: 1,
+        verdict:
+          "Calendly leads here too because it remains the strongest default software choice for most small businesses that want dependable scheduling with a low operational learning curve.",
+        bestFor:
+          "Small businesses that want a scheduling platform they can roll out quickly and trust for day-to-day booking operations.",
+        notIdealFor:
+          "Buyers who want a more opinionated premium experience or more control than the default setup provides.",
+        criteriaHighlights: ["Default platform fit", "Dependability", "Ease of rollout"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.savvycal,
+        rank: 2,
+        verdict:
+          "SavvyCal stays near the top because it delivers a stronger modern experience and still feels close enough to the core scheduling job that small-business buyers can justify it.",
+        bestFor:
+          "Teams that want premium scheduling software with a more refined booking experience.",
+        notIdealFor:
+          "Price-sensitive buyers that care more about value than polish.",
+        criteriaHighlights: ["Modern platform", "Premium UX", "Buyer experience"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.tidycal,
+        rank: 3,
+        verdict:
+          "TidyCal remains one of the most practical value picks for small businesses that need useful scheduling software without platform sprawl or premium pricing pressure.",
+        bestFor:
+          "Small businesses that want strong practical scheduling value with low overhead.",
+        notIdealFor:
+          "Buyers who need the most polished experience or broader appointment complexity.",
+        criteriaHighlights: ["Value", "Practicality", "Small-team fit"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.acuity,
+        rank: 4,
+        verdict:
+          "Acuity Scheduling fits better on the software page than the pure app page because it becomes more compelling when the business has real appointment workflows rather than simple meeting-booking needs.",
+        bestFor:
+          "Appointment-driven businesses that want software aligned to booking operations over time.",
+        notIdealFor:
+          "Teams that only need a lightweight scheduling app for simple meetings.",
+        criteriaHighlights: ["Appointments", "Operational fit", "Booking workflows"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.calCom,
+        rank: 5,
+        verdict:
+          "Cal.com earns its place as the flexibility play in the category, but it still ranks lower for default small-business fit than the more straightforward scheduling tools above it.",
+        bestFor:
+          "Teams that care deeply about control, customization, or a more technical scheduling setup.",
+        notIdealFor:
+          "Small businesses that simply want an easy scheduling system with minimal setup.",
+        criteriaHighlights: ["Customization", "Control", "Flexible setup"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the best scheduling software for a small business?",
+        answer:
+          "For many small businesses, Calendly, SavvyCal, and TidyCal are the strongest options because they combine practical scheduling workflows with easy adoption and clear buyer fit.",
+      },
+      {
+        question: "What is the difference between a scheduling app and scheduling software?",
+        answer:
+          "A scheduling app usually emphasizes quick meeting booking and simplicity. Scheduling software implies a broader operational layer for appointments, calendar coordination, and longer-term scheduling workflows.",
+      },
+      {
+        question: "Does a small business need more than a simple scheduling app?",
+        answer:
+          "Only if the scheduling workflow is becoming part of core operations. If bookings, appointments, or customer scheduling are central to the business, broader scheduling software can be worth it.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/sales",
+        label: "Browse sales tools",
+        description: "Explore the broader sales category on ShipBoost.",
+      },
+      {
+        href: "/alternatives/acuity-scheduling",
+        label: "Compare Acuity Scheduling alternatives",
+        description: "See which tools compete most directly with Acuity Scheduling.",
+      },
+      {
+        href: "/tags/scheduling",
+        label: "Browse scheduling tools",
+        description: "See more products grouped by scheduling intent.",
+      },
+    ],
+    primaryCategorySlug: "sales",
+    supportingTagSlugs: ["scheduling", "calendar-tools", "booking-software"],
+  },
+  "survey-tool": {
+    slug: "survey-tool",
+    targetKeyword: "best survey tool",
+    title: "Best Survey Tool",
+    metaTitle: "Best Survey Tool for Feedback and Research | ShipBoost",
+    metaDescription:
+      "Compare the best survey tools for customer feedback, research, and structured response collection, with clear verdicts across survey-first and form-capable platforms.",
+    intro:
+      "The best survey tool depends on whether you care most about research workflows, survey response experience, internal feedback collection, or broader form flexibility. The right choice should match the kind of insight you actually need to collect.",
+    whoItsFor:
+      "This page is for teams choosing a survey tool for customer feedback, research, product input, or structured internal response collection without overbuying a broader platform they do not need.",
+    howWeEvaluated: [
+      "How well the product fits survey and feedback collection jobs",
+      "Response experience and survey flow quality",
+      "Flexibility for research, forms, and structured data collection",
+      "Practicality for teams collecting recurring feedback",
+      "Overall buyer fit for survey-first use cases",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: {
+          [FORM_TOOLS.surveymonkey]: "Survey-first workflows",
+          [FORM_TOOLS.typeform]: "Better survey experience",
+          [FORM_TOOLS.jotform]: "Broad business surveys",
+          [FORM_TOOLS.fillout]: "Modern survey-capable forms",
+          [FORM_TOOLS.formstack]: "Operational survey workflows",
+          [FORM_TOOLS.tally]: "Lightweight survey collection",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: FORM_TOOLS.surveymonkey,
+        rank: 1,
+        verdict:
+          "SurveyMonkey remains the clearest survey benchmark because it is still the most obvious fit when the main job is feedback, research, and structured response collection rather than broad form-building.",
+        bestFor:
+          "Teams that want a survey-first product for feedback and research workflows.",
+        notIdealFor:
+          "Buyers who want a broader no-code form builder that only sometimes does surveys.",
+        criteriaHighlights: ["Survey benchmark", "Feedback collection", "Research fit"],
+      },
+      {
+        toolSlug: FORM_TOOLS.typeform,
+        rank: 2,
+        verdict:
+          "Typeform stays near the top because survey response quality matters, and it still creates one of the best respondent experiences in the category.",
+        bestFor:
+          "Teams that want more engaging, conversational surveys and stronger respondent experience.",
+        notIdealFor:
+          "Buyers that mainly care about deeper operations or lower-cost survey collection.",
+        criteriaHighlights: ["Survey UX", "Response experience", "Conversational flow"],
+      },
+      {
+        toolSlug: FORM_TOOLS.jotform,
+        rank: 3,
+        verdict:
+          "Jotform is a strong practical survey option when the team wants one platform that can handle surveys and broader business form jobs without much friction.",
+        bestFor:
+          "Teams that want surveys plus broader form-building flexibility in one product.",
+        notIdealFor:
+          "Buyers that want a more survey-specialized workflow and identity.",
+        criteriaHighlights: ["Flexibility", "Practicality", "Business coverage"],
+      },
+      {
+        toolSlug: FORM_TOOLS.fillout,
+        rank: 4,
+        verdict:
+          "Fillout earns a place because it feels modern and flexible while still being credible for surveys, especially when the team already thinks in no-code workflows.",
+        bestFor:
+          "Teams that want modern form tooling that can still handle strong survey use cases.",
+        notIdealFor:
+          "Buyers that specifically want the strongest survey-first brand and workflow.",
+        criteriaHighlights: ["Modern workflow", "Survey-capable", "No-code fit"],
+      },
+      {
+        toolSlug: FORM_TOOLS.formstack,
+        rank: 5,
+        verdict:
+          "Formstack is more operations-oriented than survey-first, but it is still credible when surveys are tied into broader business workflows and structured processes.",
+        bestFor:
+          "Teams that need surveys or questionnaires tied into approvals and operational workflows.",
+        notIdealFor:
+          "Buyers that mainly want a cleaner, lighter survey product.",
+        criteriaHighlights: ["Operational fit", "Workflow depth", "Structured processes"],
+      },
+      {
+        toolSlug: FORM_TOOLS.tally,
+        rank: 6,
+        verdict:
+          "Tally is a practical lightweight option when the team wants low-friction survey collection without moving into heavier enterprise-style tools.",
+        bestFor:
+          "Lean teams that want fast, simple survey and questionnaire creation.",
+        notIdealFor:
+          "Teams that need heavier research depth or more operational workflow support.",
+        criteriaHighlights: ["Simplicity", "Lightweight", "Low-friction surveys"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the best survey tool?",
+        answer:
+          "For many teams, SurveyMonkey and Typeform are the strongest starting points because they balance survey-specific fit with strong response collection and usability.",
+      },
+      {
+        question: "What is the difference between a survey tool and a form builder?",
+        answer:
+          "A survey tool is more specialized for collecting feedback, opinions, and structured responses. A form builder is broader and can handle lead capture, registrations, workflows, and surveys all in one product.",
+      },
+      {
+        question: "Should I use a dedicated survey tool or a broader form platform?",
+        answer:
+          "Choose a dedicated survey tool when feedback and research are the main job. Choose a broader form platform when surveys are just one part of a wider data collection or workflow setup.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore the broader marketing category on ShipBoost.",
+      },
+      {
+        href: "/tags/survey-tool",
+        label: "Browse survey tools",
+        description: "See more products grouped by survey intent.",
+      },
+      {
+        href: "/best/online-form-builder",
+        label: "Compare online form builders",
+        description: "See the broader form-builder guide for adjacent workflows.",
+      },
+    ],
+    primaryCategorySlug: "marketing",
+    supportingTagSlugs: ["survey-tool", "feedback-collection", "online-forms"],
+  },
+  "social-media-scheduling-tools": {
+    slug: "social-media-scheduling-tools",
+    targetKeyword: "best social media scheduling tools",
+    title: "Best Social Media Scheduling Tools",
+    metaTitle: "Best Social Media Scheduling Tools | ShipBoost",
+    metaDescription:
+      "Compare the best social media scheduling tools for planning, publishing, and managing social content workflows across Buffer, Later, Vista Social, Sked Social, and Sociamonials.",
+    intro:
+      "The best social media scheduling tool depends on whether you care most about simple post planning, stronger agency workflows, visual scheduling, or broader publishing operations. The right choice should make consistent publishing easier, not heavier.",
+    whoItsFor:
+      "This page is for marketers, creators, agencies, and small teams choosing a social scheduling tool for planning, publishing, and managing recurring social content workflows.",
+    howWeEvaluated: [
+      "How well the product supports real social scheduling workflows",
+      "Publishing and planning practicality across teams",
+      "Usability for lean marketing or content teams",
+      "Fit for creators, agencies, and small-business social workflows",
+      "Overall buyer fit for social scheduling and publishing",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: {
+          [SOCIAL_TOOLS.buffer]: "Simple publishing workflows",
+          [SOCIAL_TOOLS.later]: "Visual social planning",
+          [SOCIAL_TOOLS.vistaSocial]: "Broader social management",
+          [SOCIAL_TOOLS.skedSocial]: "Content and scheduling operations",
+          [SOCIAL_TOOLS.sociamonials]: "Campaign-heavy social workflows",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: SOCIAL_TOOLS.buffer,
+        rank: 1,
+        verdict:
+          "Buffer remains the cleanest default recommendation because it keeps social scheduling understandable and useful without overwhelming lean teams.",
+        bestFor:
+          "Teams that want a straightforward social scheduling tool with broad familiarity and simple publishing workflows.",
+        notIdealFor:
+          "Buyers that want deeper campaign or agency-specific workflow complexity.",
+        criteriaHighlights: ["Simplicity", "Publishing workflow", "Default fit"],
+      },
+      {
+        toolSlug: SOCIAL_TOOLS.later,
+        rank: 2,
+        verdict:
+          "Later is one of the strongest alternatives when visual planning and more creator-friendly social workflows matter more than Buffer-style simplicity alone.",
+        bestFor:
+          "Teams that care about visual social planning and content-oriented workflow support.",
+        notIdealFor:
+          "Buyers that want the most minimal, utility-first social scheduler.",
+        criteriaHighlights: ["Visual planning", "Creator fit", "Content workflow"],
+      },
+      {
+        toolSlug: SOCIAL_TOOLS.vistaSocial,
+        rank: 3,
+        verdict:
+          "Vista Social is a strong pick when the buyer wants broader social management features while still keeping scheduling and publishing at the center.",
+        bestFor:
+          "Teams that want social scheduling plus a broader management layer.",
+        notIdealFor:
+          "Buyers that mainly want the lightest publishing tool possible.",
+        criteriaHighlights: ["Broader management", "Scheduling", "Team workflow"],
+      },
+      {
+        toolSlug: SOCIAL_TOOLS.skedSocial,
+        rank: 4,
+        verdict:
+          "Sked Social earns its place for teams that care about more operational scheduling structure and content workflow support across recurring publishing work.",
+        bestFor:
+          "Teams that want stronger scheduling operations and more structured publishing workflows.",
+        notIdealFor:
+          "Buyers that want the cleanest lightweight interface and the fewest moving parts.",
+        criteriaHighlights: ["Operational scheduling", "Publishing structure", "Workflow support"],
+      },
+      {
+        toolSlug: SOCIAL_TOOLS.sociamonials,
+        rank: 5,
+        verdict:
+          "Sociamonials is credible when the team wants social scheduling inside a more campaign-heavy operating model, but it is less default-fit than the tools above for general scheduling intent.",
+        bestFor:
+          "Teams that want social scheduling connected to broader campaign workflows.",
+        notIdealFor:
+          "Buyers who just want a clean, mainstream social scheduling tool.",
+        criteriaHighlights: ["Campaign fit", "Scheduling", "Broader workflow"],
+      },
+    ],
+    faq: [
+      {
+        question: "What are the best social media scheduling tools?",
+        answer:
+          "For many teams, the strongest shortlist starts with Buffer, Later, and Vista Social because they balance publishing workflow quality, usability, and buyer fit for different kinds of social teams.",
+      },
+      {
+        question: "What should a small team prioritize in a social scheduling tool?",
+        answer:
+          "The most important factors are easy scheduling, clean publishing workflows, sensible collaboration, and a product that matches how the team actually plans content.",
+      },
+      {
+        question: "Should I pick a simple social scheduler or a broader social management platform?",
+        answer:
+          "Choose a simple scheduler when publishing consistency is the main job. Choose a broader platform when approvals, campaign workflows, or more operational complexity are part of the day-to-day process.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore the broader marketing category on ShipBoost.",
+      },
+      {
+        href: "/alternatives/buffer",
+        label: "Compare Buffer alternatives",
+        description: "See which tools compete most directly with Buffer.",
+      },
+      {
+        href: "/tags/social-scheduling",
+        label: "Browse social scheduling tools",
+        description: "See more products grouped by social scheduling intent.",
+      },
+    ],
+    primaryCategorySlug: "marketing",
+    supportingTagSlugs: ["social-scheduling", "social-publishing", "social-media"],
+  },
 };
 
 export const bestHubSections: BestHubSection[] = [
@@ -1049,10 +2079,132 @@ export const bestHubSections: BestHubSection[] = [
       },
     ],
   },
+  {
+    slug: "email-marketing",
+    title: "Email Marketing",
+    intro:
+      "These pages narrow email marketing decisions by small-business fit, platform depth, and the tradeoffs between broad campaign tools, creator-led products, and automation-heavy systems.",
+    pageSlugs: [
+      "email-marketing-for-small-business",
+      "email-marketing-platform-for-small-business",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore the broader marketing category on ShipBoost.",
+      },
+      {
+        href: "/alternatives",
+        label: "Compare email alternatives",
+        description: "See comparison pages for major email marketing products.",
+      },
+    ],
+  },
+  {
+    slug: "forms-surveys",
+    title: "Forms and Surveys",
+    intro:
+      "These pages help buyers compare online form builders and survey tools by real job-to-be-done fit, from conversational forms to workflow-heavy business form systems.",
+    pageSlugs: ["online-form-builder"],
+    supportingLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore the broader marketing category on ShipBoost.",
+      },
+      {
+        href: "/alternatives",
+        label: "Compare form alternatives",
+        description: "See comparison pages for major form and survey products.",
+      },
+    ],
+  },
+  {
+    slug: "scheduling",
+    title: "Scheduling",
+    intro:
+      "These pages help small-business buyers compare scheduling tools by booking flow quality, day-to-day usability, and the tradeoffs between simple scheduling apps and broader scheduling software.",
+    pageSlugs: [
+      "scheduling-app-for-small-business",
+      "scheduling-software-for-small-business",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/sales",
+        label: "Browse sales tools",
+        description: "Explore the broader sales category on ShipBoost.",
+      },
+      {
+        href: "/alternatives",
+        label: "Compare scheduling alternatives",
+        description: "See comparison pages for major scheduling products.",
+      },
+    ],
+  },
+  {
+    slug: "surveys",
+    title: "Surveys",
+    intro:
+      "These pages help buyers compare survey-focused tools and broader form platforms when the main job is collecting feedback, research responses, and structured customer input.",
+    pageSlugs: ["survey-tool"],
+    supportingLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore the broader marketing category on ShipBoost.",
+      },
+      {
+        href: "/best/online-form-builder",
+        label: "Compare form builders",
+        description: "See the broader form-builder guide for adjacent workflows.",
+      },
+    ],
+  },
+  {
+    slug: "social-scheduling",
+    title: "Social Scheduling",
+    intro:
+      "These pages help buyers compare social media scheduling tools by publishing fit, workflow quality, and the tradeoffs between simple planners and broader scheduling platforms.",
+    pageSlugs: ["social-media-scheduling-tools"],
+    supportingLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore the broader marketing category on ShipBoost.",
+      },
+      {
+        href: "/alternatives",
+        label: "Compare social alternatives",
+        description: "See comparison pages for social scheduling products.",
+      },
+    ],
+  },
 ];
 
 export function getBestHubPageEntries(pageSlugs: string[]) {
   return pageSlugs
     .map((slug) => bestPagesRegistry[slug])
     .filter((entry): entry is BestPageEntry => Boolean(entry));
+}
+
+export function getBestGuideEntriesForTool({
+  primaryCategorySlug,
+  toolTagSlugs,
+}: {
+  primaryCategorySlug: string | null | undefined;
+  toolTagSlugs: string[];
+}) {
+  if (!primaryCategorySlug) {
+    return [];
+  }
+
+  const toolTagSlugSet = new Set(toolTagSlugs);
+
+  return Object.values(bestPagesRegistry)
+    .filter((entry) => entry.primaryCategorySlug === primaryCategorySlug)
+    .filter((entry) =>
+      entry.supportingTagSlugs.some((tagSlug) => toolTagSlugSet.has(tagSlug)),
+    )
+    .slice(0, 3);
 }

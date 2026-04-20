@@ -16,7 +16,7 @@ import { buildCollectionListingSchema } from "@/server/seo/page-schema";
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Best SaaS Software Buying Guides | ShipBoost",
   description:
-    "Browse grouped buying guides for help desk, customer support, CRM, and other high-intent SaaS software comparisons on ShipBoost.",
+    "Browse grouped buying guides for help desk, customer support, CRM, email marketing, forms, surveys, scheduling, social publishing, and other high-intent SaaS software comparisons on ShipBoost.",
   url: "/best",
 });
 
@@ -28,7 +28,7 @@ export default function BestIndexPage() {
   const schema = buildCollectionListingSchema({
     name: "Best SaaS Software Buying Guides",
     description:
-      "Grouped buying guides for support and CRM software comparisons on ShipBoost.",
+      "Grouped buying guides for support, CRM, email marketing, forms, surveys, scheduling, and social publishing software comparisons on ShipBoost.",
     url: `${env.NEXT_PUBLIC_APP_URL}/best`,
     items: hubEntries.map((entry) => ({
       name: entry.title,
@@ -61,7 +61,8 @@ export default function BestIndexPage() {
             <p className="text-lg font-medium leading-relaxed text-muted-foreground/80">
               Browse grouped buying guides built for specific comparison jobs,
               not just broad directories. These pages are where ShipBoost narrows
-              categories into real software decisions.
+              categories like support, CRM, email marketing, forms, surveys,
+              scheduling, and social publishing into real software decisions.
             </p>
           </div>
 

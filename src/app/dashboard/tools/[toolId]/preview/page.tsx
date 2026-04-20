@@ -5,7 +5,7 @@ import { ToolPageContent } from "@/components/public/tool-page-content";
 import { getServerSession } from "@/server/auth/session";
 import { getCachedRelatedPublishedTools } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
-import { bestPagesRegistry } from "@/server/seo/best-pages";
+import { getBestGuideEntriesForTool } from "@/server/seo/best-pages";
 import { resolveSameOriginCanonicalUrl } from "@/server/seo/page-metadata";
 import { hasAlternativesSeoPage } from "@/server/services/seo-service";
 import {
@@ -81,16 +81,14 @@ export default async function FounderToolPreviewPage(context: RouteContext) {
     tool.toolTags.map((item) => item.tag.id),
   );
   const primaryCategory = tool.toolCategories[0]?.category ?? null;
-  const bestGuideLinks = primaryCategory
-    ? Object.values(bestPagesRegistry)
-        .filter((entry) => entry.primaryCategorySlug === primaryCategory.slug)
-        .slice(0, 3)
-        .map((entry) => ({
-          href: `/best/${entry.slug}`,
-          label: entry.title,
-          description: entry.metaDescription,
-        }))
-    : [];
+  const bestGuideLinks = getBestGuideEntriesForTool({
+    primaryCategorySlug: primaryCategory?.slug,
+    toolTagSlugs: tool.toolTags.map((item) => item.tag.slug),
+  }).map((entry) => ({
+    href: `/best/${entry.slug}`,
+    label: entry.title,
+    description: entry.metaDescription,
+  }));
   const relatedListingLinks = [
     ...(primaryCategory
       ? [
