@@ -8,6 +8,7 @@ type ToolCardTool = {
   slug: string;
   name: string;
   tagline: string;
+  websiteUrl: string;
   pricingModel: string;
   affiliateUrl: string | null;
   isFeatured: boolean;
@@ -40,6 +41,7 @@ export function PublicToolCard({
           <LogoFallback
             name={tool.name}
             src={tool.logoMedia?.url}
+            websiteUrl={tool.websiteUrl}
             sizes="56px"
             className="h-14 w-14 shrink-0 rounded-xl border border-border"
           />
@@ -86,7 +88,7 @@ export function PublicToolCard({
         {tool.toolTags.slice(0, 3).map((item) => (
           <Link
             key={item.tag.slug}
-            href={`/best/tag/${item.tag.slug}`}
+            href={`/tags/${item.tag.slug}`}
             className="rounded-md border border-border bg-background px-2 py-0.5 text-[10px] font-bold text-muted-foreground/60"
           >
             {item.tag.name}

@@ -8,6 +8,7 @@ import {
   getCachedBestTagStaticParams,
   getCachedCategoryStaticParams,
   getCachedToolStaticParams,
+  getBestSeoStaticParams,
   getLaunchBoardStaticParams,
 } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
@@ -26,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getCachedBestTagStaticParams(),
     getCachedToolStaticParams(),
   ]);
+  const bestPageParams = getBestSeoStaticParams();
   const [blogArticleParams, blogCategoryParams, blogTagParams] = await Promise.all([
     getCachedBlogArticleStaticParams(),
     getCachedBlogCategoryStaticParams(),
@@ -53,6 +55,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: toAbsoluteUrl("/categories", appUrl),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
+      url: toAbsoluteUrl("/best", appUrl),
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.9,
@@ -148,10 +156,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const bestTagRoutes: MetadataRoute.Sitemap = bestTagParams.map(({ slug }) => ({
-    url: toAbsoluteUrl(`/best/tag/${slug}`, appUrl),
+    url: toAbsoluteUrl(`/tags/${slug}`, appUrl),
     lastModified: now,
     changeFrequency: "weekly",
     priority: 0.7,
+  }));
+
+  const bestPageRoutes: MetadataRoute.Sitemap = bestPageParams.map(({ slug }) => ({
+    url: toAbsoluteUrl(`/best/${slug}`, appUrl),
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.9,
   }));
 
   const alternativeRoutes: MetadataRoute.Sitemap = getAlternativesStaticParams().map(
@@ -202,6 +217,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...launchBoardRoutes,
     ...categoryRoutes,
     ...bestTagRoutes,
+    ...bestPageRoutes,
     ...alternativeRoutes,
     ...toolRoutes,
     ...blogArticleRoutes,

@@ -1,5 +1,3 @@
-"use client";
-
 import Script from "next/script";
 
 const UMAMI_SCRIPT_SRC = "https://cloud.umami.is/script.js";

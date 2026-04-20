@@ -23,6 +23,42 @@ vi.mock("@/server/seo/registry", () => ({
   },
 }));
 
+vi.mock("@/server/seo/best-pages", () => ({
+  bestPagesRegistry: {
+    "help-desk-software": {
+      slug: "help-desk-software",
+      targetKeyword: "best help desk software",
+      title: "Best Help Desk Software",
+      metaTitle: "Best Help Desk Software | ShipBoost",
+      metaDescription: "Curated help desk picks.",
+      intro: "Support tools ranked by fit.",
+      whoItsFor: "Support teams choosing a help desk.",
+      howWeEvaluated: ["Ease of use", "Ticketing depth"],
+      comparisonTable: [],
+      rankedTools: [
+        {
+          toolSlug: "zendesk",
+          rank: 1,
+          verdict: "Strong benchmark.",
+          bestFor: "Scaling teams",
+          notIdealFor: "Very small teams",
+        },
+        {
+          toolSlug: "freshdesk",
+          rank: 2,
+          verdict: "Balanced choice.",
+          bestFor: "Growing teams",
+          notIdealFor: "Messaging-first teams",
+        },
+      ],
+      faq: [],
+      internalLinks: [],
+      primaryCategorySlug: "support",
+      supportingTagSlugs: ["help-desk"],
+    },
+  },
+}));
+
 vi.mock("@/server/db/client", () => ({
   prisma: {
     tool: {
@@ -38,13 +74,19 @@ vi.mock("@/server/db/client", () => ({
 import { prisma } from "@/server/db/client";
 import {
   getAlternativesSeoPage,
+  getBestSeoPage,
   getBestTagSeoPage,
+  hasBestSeoPage,
   hasAlternativesSeoPage,
 } from "@/server/services/seo-service";
 
 describe("seo-service", () => {
   it("returns null for missing alternatives registry entries", async () => {
     await expect(getAlternativesSeoPage("missing-tool")).resolves.toBeNull();
+  });
+
+  it("returns null when a best page is missing from the registry", async () => {
+    await expect(getBestSeoPage("missing-page")).resolves.toBeNull();
   });
 
   it("filters missing and unpublished tools out of best-tag pages", async () => {
@@ -108,15 +150,56 @@ describe("seo-service", () => {
 
     const page = await getBestTagSeoPage("seo");
 
-    expect(page?.entry.title).toBe(
-      "Best SEO tools for bootstrapped SaaS founders",
-    );
+    expect(page?.entry.title).toBe("Best SEO SaaS Tools");
     expect(page?.entry.metaDescription).toBe(
-      "Explore published SEO tools curated for bootstrapped SaaS founders on ShipBoost.",
+      "Browse the best SEO tools on ShipBoost. Compare curated products, discover alternatives, and find founder-friendly picks.",
     );
   });
 
   it("exposes link helpers for configured alternatives pages", () => {
     expect(hasAlternativesSeoPage("example-tool")).toBe(true);
+  });
+
+  it("resolves a best page with ranked tools in registry order", async () => {
+    vi.mocked(prisma.tool.findMany).mockResolvedValueOnce([
+      {
+        id: "tool_1",
+        slug: "zendesk",
+        name: "Zendesk",
+        tagline: "Customer support",
+        isFeatured: false,
+        logoMedia: null,
+        media: [],
+        toolCategories: [],
+        toolTags: [],
+        submissions: [],
+        launches: [],
+      },
+      {
+        id: "tool_2",
+        slug: "freshdesk",
+        name: "Freshdesk",
+        tagline: "Ticketing and support",
+        isFeatured: false,
+        logoMedia: null,
+        media: [],
+        toolCategories: [],
+        toolTags: [],
+        submissions: [],
+        launches: [],
+      },
+    ] as never);
+
+    const page = await getBestSeoPage("help-desk-software");
+
+    expect(page?.tools.map((tool) => tool.slug)).toEqual([
+      "zendesk",
+      "freshdesk",
+    ]);
+    expect(page?.entry.title).toBe("Best Help Desk Software");
+  });
+
+  it("exposes a registry helper for best pages", () => {
+    expect(hasBestSeoPage("help-desk-software")).toBe(true);
   });
 });

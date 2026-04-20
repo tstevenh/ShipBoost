@@ -11,6 +11,7 @@ export type SortableToolGridItem = {
   name: string;
   tagline: string;
   logoUrl?: string;
+  websiteUrl?: string | null;
   votes: number;
   tags: string[];
   linkedTags?: Array<{
@@ -81,6 +82,7 @@ export function SortableToolGrid({
           name={tool.name}
           tagline={tool.tagline}
           logoUrl={tool.logoUrl}
+          websiteUrl={tool.websiteUrl}
           slug={tool.slug}
           votes={tool.votes}
           tags={tool.tags}

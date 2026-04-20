@@ -1,5 +1,6 @@
 import { prisma } from "@/server/db/client";
 import { publicToolCardSelect } from "@/server/db/public-selects";
+import { bestPagesRegistry } from "@/server/seo/best-pages";
 import {
   alternativesSeoRegistry,
   bestTagSeoRegistry,
@@ -7,6 +8,7 @@ import {
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
 import type {
   AlternativesSeoEntry,
+  BestPageEntry,
   BestTagSeoEntry,
 } from "@/server/seo/types";
 
@@ -34,6 +36,10 @@ async function getPublishedToolsBySlugs(slugs: string[]) {
 
 export function hasAlternativesSeoPage(slug: string) {
   return Boolean(alternativesSeoRegistry[slug]);
+}
+
+export function hasBestSeoPage(slug: string) {
+  return Boolean(bestPagesRegistry[slug]);
 }
 
 function buildBestTagTitle(tagName: string) {
@@ -104,6 +110,26 @@ export async function getAlternativesSeoPage(slug: string) {
   return {
     entry,
     anchorTool,
+    tools,
+  };
+}
+
+export async function getBestSeoPage(slug: string) {
+  const entry: BestPageEntry | undefined = bestPagesRegistry[slug];
+
+  if (!entry) {
+    return null;
+  }
+
+  const rankedSlugs = entry.rankedTools.map((item) => item.toolSlug);
+  const tools = await getPublishedToolsBySlugs(rankedSlugs);
+
+  if (tools.length !== rankedSlugs.length) {
+    return null;
+  }
+
+  return {
+    entry,
     tools,
   };
 }

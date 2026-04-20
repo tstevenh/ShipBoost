@@ -26,6 +26,7 @@ function makeLaunch(input: {
       slug: input.toolId,
       name: input.toolId,
       tagline: `${input.toolId} tagline`,
+      websiteUrl: `https://${input.toolId}.example.com`,
       logoMedia: null,
       toolCategories: [],
       _count: {
