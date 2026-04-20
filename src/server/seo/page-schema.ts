@@ -91,6 +91,46 @@ export function buildCollectionWithBreadcrumbSchema(input: {
   ];
 }
 
+export function buildBestPageSchema(input: {
+  title: string;
+  description: string;
+  url: string;
+  breadcrumbs: { name: string; url: string }[];
+  items: { name: string; url: string }[];
+  faq?: { question: string; answer: string }[];
+}) {
+  const schemas = buildCollectionWithBreadcrumbSchema({
+    name: input.title,
+    description: input.description,
+    url: input.url,
+    breadcrumbs: input.breadcrumbs,
+    items: input.items,
+  });
+
+  if (!input.faq?.length) {
+    return schemas;
+  }
+
+  return [
+    ...schemas,
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      name: input.title,
+      description: input.description,
+      url: input.url,
+      mainEntity: input.faq.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.answer,
+        },
+      })),
+    },
+  ];
+}
+
 export function buildArticlePageSchema(input: {
   title: string;
   description: string;

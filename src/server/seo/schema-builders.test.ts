@@ -37,7 +37,7 @@ describe("schema-builders", () => {
 
   it("builds a collection page with a linked item list", () => {
     const list = buildItemList([
-      { name: "AI", url: "https://shipboost.io/best/tag/ai" },
+      { name: "AI", url: "https://shipboost.io/tags/ai" },
     ]);
     const schema = buildCollectionPage({
       name: "Browse Tags",

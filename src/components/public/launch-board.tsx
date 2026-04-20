@@ -71,6 +71,7 @@ export function LaunchBoard({
                 <LogoFallback
                   name={launch.tool.name}
                   src={launch.tool.logoMedia?.url}
+                  websiteUrl={launch.tool.websiteUrl}
                   sizes="64px"
                   className="h-16 w-16 shrink-0 rounded-xl border border-border"
                   textClassName="text-lg"

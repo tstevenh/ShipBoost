@@ -8,6 +8,7 @@ import { JsonLdScript } from "@/components/seo/json-ld";
 import { InternalLinkSection } from "@/components/seo/internal-link-section";
 import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
 import { getEnv } from "@/server/env";
+import { bestPagesRegistry } from "@/server/seo/best-pages";
 import { ShowcaseLayout } from "@/components/public/showcase-layout";
 import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { Footer } from "@/components/ui/footer";
@@ -34,6 +35,7 @@ function mapToolToGridItem(tool: {
   slug: string;
   name: string;
   tagline: string;
+  websiteUrl: string;
   createdAt: Date | string;
   isFeatured: boolean;
   logoMedia: { url: string } | null;
@@ -60,6 +62,7 @@ function mapToolToGridItem(tool: {
     name: tool.name,
     tagline: tool.tagline,
     logoUrl: tool.logoMedia?.url ?? undefined,
+    websiteUrl: tool.websiteUrl,
     votes: tool._count?.toolVotes ?? 0,
     tags: tool.toolTags
       .map((item) => item.tag?.name)
@@ -107,6 +110,7 @@ function renderStaticToolGrid(
           name={tool.name}
           tagline={tool.tagline}
           logoUrl={tool.logoUrl}
+          websiteUrl={tool.websiteUrl}
           slug={tool.slug}
           votes={tool.votes}
           tags={tool.tags}
@@ -140,7 +144,7 @@ export async function generateMetadata(
     `Best ${category.name} Tools for SaaS Founders | ShipBoost`;
   const description =
     category.metaDescription?.trim() ||
-    `Discover the best ${category.name.toLowerCase()} tools on ShipBoost. Compare curated products, featured listings, and founder-friendly options.`;
+    `Discover the best ${category.name.toLowerCase()} tools on ShipBoost. Compare curated products, featured listings, and buyer-friendly options.`;
   const canonical = `${env.NEXT_PUBLIC_APP_URL}/categories/${category.slug}`;
 
   return buildPublicPageMetadata({
@@ -172,7 +176,7 @@ export default async function CategoryPage(context: RouteContext) {
   const canonical = `${env.NEXT_PUBLIC_APP_URL}/categories/${category.slug}`;
   const description =
     category.metaDescription?.trim() ||
-    `Discover the best ${category.name.toLowerCase()} tools on ShipBoost. Compare curated products, featured listings, and founder-friendly options.`;
+    `Discover the best ${category.name.toLowerCase()} tools on ShipBoost. Compare curated products, featured listings, and buyer-friendly options.`;
   const schema = buildCollectionWithBreadcrumbSchema({
     name: `${category.name} Tools`,
     description,
@@ -193,10 +197,18 @@ export default async function CategoryPage(context: RouteContext) {
     description: `Explore more ${item.name.toLowerCase()} tools on ShipBoost.`,
   }));
   const topTagLinks = (category.topTags || []).map((tag) => ({
-    href: `/best/tag/${tag.slug}`,
+    href: `/tags/${tag.slug}`,
     label: tag.name,
     description: `Browse tools tagged ${tag.name}.`,
   }));
+  const bestPageLinks = Object.values(bestPagesRegistry)
+    .filter((entry) => entry.primaryCategorySlug === category.slug)
+    .slice(0, 3)
+    .map((entry) => ({
+      href: `/best/${entry.slug}`,
+      label: entry.title,
+      description: entry.metaDescription,
+    }));
   const topTagNames = (category.topTags || []).slice(0, 3).map((tag) => tag.name);
   const relatedCategoryNames = (category.relatedCategories || [])
     .slice(0, 3)
@@ -396,6 +408,13 @@ export default async function CategoryPage(context: RouteContext) {
               title={`Keep exploring beyond ${category.name}`}
               description="Category pages work best when they help you branch into adjacent tool clusters and narrower use cases."
               links={relatedCategoryLinks}
+            />
+
+            <InternalLinkSection
+              eyebrow="Buyer Guides"
+              title={`Best ${category.name} pages for specific buying intent`}
+              description="These pages narrow the category down into specific comparison jobs instead of one broad directory view."
+              links={bestPageLinks}
             />
 
             <InternalLinkSection

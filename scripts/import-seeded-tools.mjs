@@ -98,10 +98,36 @@ function parseList(value) {
   return [...new Set(value.split(",").map((item) => item.trim()).filter(Boolean))];
 }
 
+function parseTagColumnValues(rawRow, headerMap) {
+  return Array.from(headerMap.entries())
+    .filter(([header]) => /^tag_\d+$/.test(header))
+    .sort((left, right) => left[0].localeCompare(right[0], undefined, { numeric: true }))
+    .map(([, index]) => rawRow[index]?.trim() ?? "")
+    .filter(Boolean);
+}
+
 function ensureAbsolutePath(inputPath) {
   return path.isAbsolute(inputPath)
     ? inputPath
     : path.resolve(process.cwd(), inputPath);
+}
+
+function buildFaviconProviderUrl(websiteUrl) {
+  if (!websiteUrl) {
+    return null;
+  }
+
+  try {
+    const hostname = new URL(websiteUrl).hostname.replace(/^www\./, "");
+
+    if (!hostname) {
+      return null;
+    }
+
+    return `https://favicon.im/${hostname}`;
+  } catch {
+    return null;
+  }
 }
 
 async function createUniqueToolSlug(baseValue) {
@@ -182,6 +208,7 @@ async function main() {
     "rich_description",
     "pricing_model",
     "categories",
+    "category",
     "tags",
     "logo_url",
   ];
@@ -211,6 +238,7 @@ async function main() {
   let updatedCount = 0;
 
   for (const rawRow of dataRows) {
+    const tagColumnValues = parseTagColumnValues(rawRow, headerMap);
     const row = Object.fromEntries(
       [...requiredHeaders, ...importableHeaders].map((header) => [
         header,
@@ -223,6 +251,20 @@ async function main() {
     if (!row.name || !row.url) {
       continue;
     }
+
+    const normalizedCategoriesValue =
+      row.categories !== undefined
+        ? row.categories
+        : row.category !== undefined
+          ? row.category
+          : undefined;
+    const normalizedTagsValue =
+      row.tags !== undefined
+        ? row.tags
+        : tagColumnValues.length > 0
+          ? tagColumnValues.join(",")
+          : undefined;
+    const resolvedLogoUrl = row.logo_url || buildFaviconProviderUrl(row.url);
 
     const baseSlug = slugify(row.name);
     const existingTool = await prisma.tool.findFirst({
@@ -245,8 +287,6 @@ async function main() {
         "tagline",
         "rich_description",
         "pricing_model",
-        "categories",
-        "tags",
       ]) {
         if (!row[header]) {
           throw new Error(
@@ -254,12 +294,24 @@ async function main() {
           );
         }
       }
+
+      if (!normalizedCategoriesValue) {
+        throw new Error(
+          `Cannot create new tool "${row.name}" without CSV column "categories" or "category"`,
+        );
+      }
+
+      if (!normalizedTagsValue) {
+        throw new Error(
+          `Cannot create new tool "${row.name}" without CSV column "tags" or at least one "tag_n" column`,
+        );
+      }
     }
 
     const normalizedCategorySlugs =
-      row.categories === undefined
+      normalizedCategoriesValue === undefined
         ? []
-        : parseList(row.categories).map((categorySlug) => {
+        : parseList(normalizedCategoriesValue).map((categorySlug) => {
             const normalizedCategorySlug = slugify(categorySlug);
             const categoryId = categoryBySlug.get(normalizedCategorySlug);
 
@@ -277,8 +329,8 @@ async function main() {
 
     const tagIds = [];
 
-    if (row.tags !== undefined) {
-      for (const tagName of parseList(row.tags)) {
+    if (normalizedTagsValue !== undefined) {
+      for (const tagName of parseList(normalizedTagsValue)) {
         const tagSlug = slugify(tagName);
 
         if (categorySlugs.has(tagSlug)) {
@@ -351,12 +403,12 @@ async function main() {
             },
           });
 
-      if (row.logo_url) {
+      if (resolvedLogoUrl) {
         if (tool.logoMediaId) {
           await tx.toolMedia.update({
             where: { id: tool.logoMediaId },
             data: {
-              url: row.logo_url,
+              url: resolvedLogoUrl,
               type: "LOGO",
               sortOrder: 0,
             },
@@ -366,7 +418,7 @@ async function main() {
             data: {
               toolId: tool.id,
               type: "LOGO",
-              url: row.logo_url,
+              url: resolvedLogoUrl,
               sortOrder: 0,
             },
             select: { id: true },
@@ -381,11 +433,11 @@ async function main() {
         }
       }
 
-      if (row.categories !== undefined) {
+      if (normalizedCategoriesValue !== undefined) {
         await replaceToolCategories(tx, tool.id, categoryIds);
       }
 
-      if (row.tags !== undefined) {
+      if (normalizedTagsValue !== undefined) {
         await replaceToolTags(tx, tool.id, tagIds);
       }
     });

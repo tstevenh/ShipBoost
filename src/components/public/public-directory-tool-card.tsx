@@ -8,6 +8,7 @@ type PublicDirectoryToolCardProps = {
   name: string;
   tagline: string;
   logoUrl?: string | null;
+  websiteUrl?: string | null;
   slug: string;
   rank?: number;
   votes: number;
@@ -28,6 +29,7 @@ export function PublicDirectoryToolCard({
   name,
   tagline,
   logoUrl,
+  websiteUrl,
   slug,
   rank,
   votes,
@@ -46,6 +48,7 @@ export function PublicDirectoryToolCard({
         <LogoFallback
           name={name}
           src={logoUrl}
+          websiteUrl={websiteUrl}
           sizes="48px"
           priority={imagePriority}
           className="h-12 w-12 rounded-lg border border-border"
@@ -85,7 +88,7 @@ export function PublicDirectoryToolCard({
             {visibleLinkedTags.map((tag) => (
               <Link
                 key={tag.slug}
-                href={`/best/tag/${tag.slug}`}
+                href={`/tags/${tag.slug}`}
                 className="text-[10px] font-black tracking-wider text-muted-foreground/60 transition-colors hover:text-foreground"
               >
                 #{tag.name}

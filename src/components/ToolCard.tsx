@@ -10,6 +10,7 @@ interface ToolCardProps {
   name: string;
   tagline: string;
   logoUrl?: string;
+  websiteUrl?: string | null;
   slug: string;
   rank?: number;
   votes: number;
@@ -31,6 +32,7 @@ export function ToolCard({
   name,
   tagline,
   logoUrl,
+  websiteUrl,
   slug,
   rank,
   votes,
@@ -50,6 +52,7 @@ export function ToolCard({
         <LogoFallback
           name={name}
           src={logoUrl}
+          websiteUrl={websiteUrl}
           sizes="48px"
           className="h-12 w-12 rounded-lg border border-border"
           textClassName="text-lg"
@@ -88,7 +91,7 @@ export function ToolCard({
             {visibleLinkedTags.map((tag) => (
               <Link
                 key={tag.slug}
-                href={`/best/tag/${tag.slug}`}
+                href={`/tags/${tag.slug}`}
                 className="text-[10px] font-black tracking-wider text-muted-foreground/60 transition-colors hover:text-foreground"
               >
                 #{tag.name}

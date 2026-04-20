@@ -26,7 +26,7 @@ export default async function TagsPage() {
     url: `${env.NEXT_PUBLIC_APP_URL}/tags`,
     items: tags.map((tag) => ({
       name: tag.name,
-      url: `${env.NEXT_PUBLIC_APP_URL}/best/tag/${tag.slug}`,
+      url: `${env.NEXT_PUBLIC_APP_URL}/tags/${tag.slug}`,
     })),
   });
 
@@ -62,7 +62,7 @@ export default async function TagsPage() {
             {tags.map((tag) => (
               <Link
                 key={tag.id}
-                href={`/best/tag/${tag.slug}`}
+                href={`/tags/${tag.slug}`}
                 className="group flex items-center gap-3 px-5 py-3 bg-card border border-border rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5 hover:border-foreground/20"
               >
                 <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground group-hover:bg-foreground group-hover:text-background transition-all">

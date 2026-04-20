@@ -15,18 +15,24 @@ import {
 } from "@/server/services/blog-service";
 import { listLaunchBoard } from "@/server/services/launch-service";
 import { getPublicCategoryPageBySlug } from "@/server/services/catalog-service";
-import { getAlternativesSeoPage, getBestTagSeoPage } from "@/server/services/seo-service";
+import {
+  getAlternativesSeoPage,
+  getBestSeoPage,
+  getBestTagSeoPage,
+} from "@/server/services/seo-service";
 import {
   getPublishedToolBySlug,
   listRelatedPublishedTools,
 } from "@/server/services/tool-service";
 import { alternativesSeoRegistry } from "@/server/seo/registry";
+import { bestPagesRegistry } from "@/server/seo/best-pages";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
 
 export const PUBLIC_HOME_REVALIDATE = 300;
 export const PUBLIC_LAUNCH_BOARD_REVALIDATE = 300;
 export const PUBLIC_CATEGORY_REVALIDATE = 1800;
 export const PUBLIC_BEST_TAG_REVALIDATE = 1800;
+export const PUBLIC_BEST_PAGE_REVALIDATE = 1800;
 export const PUBLIC_ALTERNATIVES_REVALIDATE = 1800;
 export const PUBLIC_TOOL_REVALIDATE = 3600;
 export const PUBLIC_HEADER_REVALIDATE = 3600;
@@ -50,6 +56,7 @@ export const PUBLIC_CACHE_TAGS = {
   launchBoards: "public:launch-boards",
   categories: "public:categories",
   bestTags: "public:best-tags",
+  bestPages: "public:best-pages",
   alternatives: "public:alternatives",
   tools: "public:tools",
   blogIndex: "public:blog:index",
@@ -91,13 +98,16 @@ export function revalidateAllPublicContent() {
   revalidateTag(PUBLIC_CACHE_TAGS.launchBoards, "max");
   revalidateTag(PUBLIC_CACHE_TAGS.categories, "max");
   revalidateTag(PUBLIC_CACHE_TAGS.bestTags, "max");
+  revalidateTag(PUBLIC_CACHE_TAGS.bestPages, "max");
   revalidateTag(PUBLIC_CACHE_TAGS.alternatives, "max");
   revalidatePublicToolContent();
   revalidatePublicBlogContent();
   revalidatePath("/");
+  revalidatePath("/best");
+  revalidatePath("/best/[slug]", "page");
   revalidatePath("/alternatives");
   revalidatePath("/alternatives/[slug]", "page");
-  revalidatePath("/best/tag/[slug]", "page");
+  revalidatePath("/tags/[slug]", "page");
   revalidatePath("/categories");
   revalidatePath("/categories/[slug]", "page");
   revalidatePath("/launches/[board]", "page");
@@ -253,7 +263,7 @@ export const getCachedBestTagPage = cache(
   async (slug: string, sort: PublicCatalogSort = "newest") =>
     unstable_cache(
       () => getBestTagSeoPage(slug, sort),
-      ["public-best-tag-page", "v2", slug, sort],
+      ["public-best-tag-page", "v3", slug, sort],
       {
         revalidate: PUBLIC_BEST_TAG_REVALIDATE,
         tags: [
@@ -265,10 +275,21 @@ export const getCachedBestTagPage = cache(
     )(),
 );
 
+export const getCachedBestSeoPage = cache(async (slug: string) =>
+  unstable_cache(
+    () => getBestSeoPage(slug),
+    ["public-best-page", "v2", slug],
+    {
+      revalidate: PUBLIC_BEST_PAGE_REVALIDATE,
+      tags: [PUBLIC_CACHE_TAGS.bestPages, `public:best-page:${slug}`],
+    },
+  )(),
+);
+
 export const getCachedAlternativesPage = cache(async (slug: string) =>
   unstable_cache(
     () => getAlternativesSeoPage(slug),
-    ["public-alternatives-page", "v2", slug],
+    ["public-alternatives-page", "v3", slug],
     {
       revalidate: PUBLIC_ALTERNATIVES_REVALIDATE,
       tags: [PUBLIC_CACHE_TAGS.alternatives, `public:alternatives:${slug}`],
@@ -433,6 +454,12 @@ export const getCachedBestTagStaticParams = cache(async () =>
     },
   )(),
 );
+
+export function getBestSeoStaticParams() {
+  return Object.keys(bestPagesRegistry)
+    .sort((left, right) => left.localeCompare(right))
+    .map((slug) => ({ slug }));
+}
 
 export const getCachedToolStaticParams = cache(async () =>
   unstable_cache(

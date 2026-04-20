@@ -98,7 +98,7 @@ export default async function AlternativesPage(context: RouteContext) {
     .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
     .slice(0, 6)
     .map((item) => ({
-      href: `/best/tag/${item.slug}`,
+      href: `/tags/${item.slug}`,
       label: item.name,
       description: `See tools tagged ${item.name}.`,
     }));
@@ -213,6 +213,7 @@ export default async function AlternativesPage(context: RouteContext) {
                   name={tool.name}
                   tagline={tool.tagline}
                   logoUrl={tool.logoMedia?.url}
+                  websiteUrl={tool.websiteUrl}
                   slug={tool.slug}
                   votes={tool._count?.toolVotes ?? 0}
                   tags={(tool.toolTags || []).map(tt => tt.tag?.name).filter((name): name is string => Boolean(name))}

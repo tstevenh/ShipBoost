@@ -66,12 +66,18 @@ export function ToolPageContent({
   tool,
   relatedTools,
   relatedListingLinks,
+  bestGuideLinks,
   canonicalUrl,
   isPreview = false,
 }: {
   tool: ToolPageData;
   relatedTools: RelatedTool[];
   relatedListingLinks: {
+    href: string;
+    label: string;
+    description: string;
+  }[];
+  bestGuideLinks: {
     href: string;
     label: string;
     description: string;
@@ -104,6 +110,14 @@ export function ToolPageContent({
           : `Use related tags and alternatives when you want a broader comparison set around ${tool.name}.`
       }
       links={relatedListingLinks.slice(0, 4)}
+    />
+  ) : null;
+  const buyerGuidesSection = bestGuideLinks.length > 0 ? (
+    <InternalLinkSection
+      eyebrow="Buyer Guides"
+      title={`Where ${tool.name} fits in current buying guides`}
+      description="These pages narrow the broader category down into specific comparison jobs and help you evaluate buyer fit more directly."
+      links={bestGuideLinks}
     />
   ) : null;
 
@@ -190,6 +204,8 @@ export function ToolPageContent({
                 />
               ) : null}
 
+              <div className="hidden lg:block">{buyerGuidesSection}</div>
+
               <div className="hidden lg:block">{morePathsSection}</div>
             </div>
 
@@ -258,7 +274,7 @@ export function ToolPageContent({
                     {tool.toolTags.map((item) => (
                       <Link
                         key={item.tag.slug}
-                        href={`/best/tag/${item.tag.slug}`}
+                        href={`/tags/${item.tag.slug}`}
                         className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-bold text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
                       >
                         #{item.tag.name}
@@ -269,6 +285,8 @@ export function ToolPageContent({
               ) : null}
 
               <ToolRelatedProducts relatedTools={relatedTools} />
+
+              <div className="lg:hidden">{buyerGuidesSection}</div>
 
               <div className="lg:hidden">{morePathsSection}</div>
             </aside>

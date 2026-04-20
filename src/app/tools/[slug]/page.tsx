@@ -8,6 +8,7 @@ import {
   getCachedRelatedPublishedTools,
   getCachedToolStaticParams,
 } from "@/server/cache/public-content";
+import { bestPagesRegistry } from "@/server/seo/best-pages";
 import { resolveSameOriginCanonicalUrl } from "@/server/seo/page-metadata";
 import { hasAlternativesSeoPage } from "@/server/services/seo-service";
 import {
@@ -94,6 +95,16 @@ export default async function ToolPage(context: RouteContext) {
     tool.toolCategories.map((item) => item.category.id),
     tool.toolTags.map((item) => item.tag.id),
   );
+  const bestGuideLinks = primaryCategory
+    ? Object.values(bestPagesRegistry)
+        .filter((entry) => entry.primaryCategorySlug === primaryCategory.slug)
+        .slice(0, 3)
+        .map((entry) => ({
+          href: `/best/${entry.slug}`,
+          label: entry.title,
+          description: entry.metaDescription,
+        }))
+    : [];
   const relatedListingLinks = [
     ...(primaryCategory
       ? [
@@ -105,7 +116,7 @@ export default async function ToolPage(context: RouteContext) {
         ]
       : []),
     ...tool.toolTags.slice(0, 3).map((item) => ({
-      href: `/best/tag/${item.tag.slug}`,
+      href: `/tags/${item.tag.slug}`,
       label: `More ${item.tag.name} tools`,
       description: `See other products tagged ${item.tag.name}.`,
     })),
@@ -125,6 +136,7 @@ export default async function ToolPage(context: RouteContext) {
       tool={tool}
       relatedTools={relatedTools}
       relatedListingLinks={relatedListingLinks}
+      bestGuideLinks={bestGuideLinks}
       canonicalUrl={canonical}
     />
   );

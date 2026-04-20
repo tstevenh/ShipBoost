@@ -23,39 +23,50 @@ const siteConfig = {
       ],
     },
     {
-      title: "Alternatives",
+      title: "Tags",
       links: [
-        { id: 7, title: "ShipFast Alternatives", url: "/alternatives/shipfast" },
-        { id: 8, title: "DirStarter Alternatives", url: "/alternatives/dirstarter" },
-        { id: 9, title: "Tapfiliate Alternatives", url: "/alternatives/tapfiliate" },
-        { id: 10, title: "Frase Alternatives", url: "/alternatives/frase" },
-        { id: 11, title: "Vista Social Alternatives", url: "/alternatives/vista-social" },
-        { id: 12, title: "Browse all", url: "/alternatives" },
+        { id: 7, title: "AI-Powered", url: "/tags/ai" },
+        { id: 8, title: "Open Source", url: "/tags/open-source" },
+        { id: 9, title: "Bootstrapped", url: "/tags/bootstrapped" },
+        { id: 10, title: "Next.js Boilerplates", url: "/tags/nextjs" },
+        { id: 11, title: "Indie Hackers", url: "/tags/indie-hackers" },
+        { id: 12, title: "View all", url: "/tags" },
       ],
     },
     {
-      title: "Best Tags",
+      title: "Best Pages",
       links: [
-        { id: 13, title: "AI-Powered", url: "/best/tag/ai" },
-        { id: 14, title: "Open Source", url: "/best/tag/open-source" },
-        { id: 15, title: "Bootstrapped", url: "/best/tag/bootstrapped" },
-        { id: 16, title: "Next.js Boilerplates", url: "/best/tag/nextjs" },
-        { id: 17, title: "Indie Hackers", url: "/best/tag/indie-hackers" },
-        { id: 18, title: "View all", url: "/tags" },
+        { id: 14, title: "Best Help Desk Software", url: "/best/help-desk-software" },
+        { id: 15, title: "Best Customer Support Software", url: "/best/customer-support-software" },
+        { id: 16, title: "Best Support Software for SMB", url: "/best/customer-support-software-for-small-business" },
+        { id: 17, title: "Best CRM Software", url: "/best/crm-software" },
+        { id: 18, title: "Best CRM for Startups", url: "/best/crm-for-startups" },
+        { id: 19, title: "View all", url: "/best" },
+      ],
+    },
+    {
+      title: "Alternatives",
+      links: [
+        { id: 20, title: "HubSpot Alternatives", url: "/alternatives/hubspot" },
+        { id: 21, title: "Zendesk Alternatives", url: "/alternatives/zendesk" },
+        { id: 22, title: "Intercom Alternatives", url: "/alternatives/intercom" },
+        { id: 23, title: "Freshdesk Alternatives", url: "/alternatives/freshdesk" },
+        { id: 24, title: "Pipedrive Alternatives", url: "/alternatives/pipedrive" },
+        { id: 25, title: "Browse all", url: "/alternatives" },
       ],
     },
     {
       title: "Company",
       links: [
-        { id: 19, title: "About", url: "/about" },
-        { id: 20, title: "Pricing", url: "/pricing" },
-        { id: 21, title: "Blog", url: "/blog" },
-        { id: 22, title: "Submit Product", url: "/submit" },
-        { id: 23, title: "How It Works", url: "/how-it-works" },
-        { id: 24, title: "Launch Guide", url: "/launch-guide" },
-        { id: 25, title: "Startup Directories", url: "/resources/startup-directories" },
-        { id: 26, title: "FAQs", url: "/faqs" },
-        { id: 27, title: "Contact", url: "/contact" },
+        { id: 26, title: "About", url: "/about" },
+        { id: 27, title: "Pricing", url: "/pricing" },
+        { id: 28, title: "Blog", url: "/blog" },
+        { id: 29, title: "Submit Product", url: "/submit" },
+        { id: 30, title: "How It Works", url: "/how-it-works" },
+        { id: 31, title: "Launch Guide", url: "/launch-guide" },
+        { id: 32, title: "Startup Directories", url: "/resources/startup-directories" },
+        { id: 33, title: "FAQs", url: "/faqs" },
+        { id: 34, title: "Contact", url: "/contact" },
       ],
     },
   ],
@@ -1090,8 +1101,8 @@ export function FlickeringFooter({ className, ...props }: FlickeringFooterProps)
             {siteConfig.hero.description}
           </p>
         </div>
-        <div className="pt-5 md:pt-0 md:w-2/3 lg:w-3/4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 lg:pl-10">
+        <div className="pt-5 md:pt-0 md:flex-1">
+          <div className="grid grid-cols-2 gap-10 md:grid-cols-3 lg:grid-cols-5 lg:pl-10">
             {siteConfig.footerLinks.map((column) => (
               <ul key={column.title} className="flex flex-col gap-y-2">
                 <li className="mb-2 text-[10px] font-black tracking-widest text-foreground/70">

@@ -40,6 +40,7 @@ export function LaunchpadShowcase({
             name={launch.tool.name}
             tagline={launch.tool.tagline}
             logoUrl={launch.tool.logoMedia?.url}
+            websiteUrl={launch.tool.websiteUrl}
             slug={launch.tool.slug}
             votes={launch.tool.upvoteCount}
             primaryCategory={launch.tool.toolCategories[0]?.category ?? null}

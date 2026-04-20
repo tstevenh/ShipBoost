@@ -42,6 +42,7 @@ export const publicToolCardSelect = Prisma.validator<Prisma.ToolSelect>()({
   slug: true,
   name: true,
   tagline: true,
+  websiteUrl: true,
   createdAt: true,
   pricingModel: true,
   affiliateUrl: true,
@@ -117,6 +118,7 @@ const publicLaunchToolSelect = {
   slug: true,
   name: true,
   tagline: true,
+  websiteUrl: true,
   logoMedia: {
     select: {
       url: true,

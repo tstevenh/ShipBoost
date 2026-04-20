@@ -20,6 +20,24 @@ function buildInitials(name: string) {
   return "SB";
 }
 
+function buildFaviconFallbackUrl(websiteUrl?: string | null) {
+  if (!websiteUrl) {
+    return null;
+  }
+
+  try {
+    const hostname = new URL(websiteUrl).hostname.replace(/^www\./, "");
+
+    if (!hostname) {
+      return null;
+    }
+
+    return `https://favicon.im/${hostname}`;
+  } catch {
+    return null;
+  }
+}
+
 type LogoFallbackProps = {
   alt?: string;
   className?: string;
@@ -29,6 +47,7 @@ type LogoFallbackProps = {
   sizes?: string;
   src?: string | null;
   textClassName?: string;
+  websiteUrl?: string | null;
 };
 
 export function LogoFallback({
@@ -40,9 +59,16 @@ export function LogoFallback({
   sizes = "64px",
   src,
   textClassName,
+  websiteUrl,
 }: LogoFallbackProps) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const showImage = Boolean(src) && !imageFailed;
+  const fallbackSrc = buildFaviconFallbackUrl(websiteUrl);
+  const imageSources = [src, fallbackSrc].filter(
+    (value, index, array): value is string =>
+      Boolean(value) && array.indexOf(value) === index,
+  );
+  const [imageIndex, setImageIndex] = useState(0);
+  const currentImageSrc = imageSources[imageIndex];
+  const showImage = Boolean(currentImageSrc);
 
   return (
     <div
@@ -53,12 +79,12 @@ export function LogoFallback({
     >
       {showImage ? (
         <Image
-          src={src ?? ""}
+          src={currentImageSrc ?? ""}
           alt={alt ?? `${name} logo`}
           fill
           sizes={sizes}
           className={cn("object-cover", imageClassName)}
-          onError={() => setImageFailed(true)}
+          onError={() => setImageIndex((current) => current + 1)}
           priority={priority}
         />
       ) : (
