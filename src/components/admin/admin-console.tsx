@@ -797,7 +797,7 @@ export function AdminConsole() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 items-start">
+    <div className="flex min-w-0 flex-col gap-8 items-start lg:flex-row">
       {/* Admin Sidebar */}
       <aside className="w-full lg:w-64 shrink-0 space-y-4 lg:sticky lg:top-32">
         <div className="rounded-3xl border border-border bg-card p-2 shadow-sm">
@@ -848,7 +848,7 @@ export function AdminConsole() {
       </aside>
 
       {/* Admin Content Area */}
-      <div className="flex-1 w-full space-y-10">
+      <div className="min-w-0 flex-1 w-full space-y-10">
         {activeNav === "overview" && (
           <div className="space-y-10 animate-in fade-in duration-500">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -939,12 +939,13 @@ export function AdminConsole() {
 
         {activeNav === "taxonomy" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <CatalogPanel
-              categories={categories}
-              tags={tags}
-              categoryDraft={categoryDraft}
-              setCategoryDraft={setCategoryDraft}
-              tagDraft={tagDraft}
+          <CatalogPanel
+            categories={categories}
+            tags={tags}
+            tools={tools}
+            categoryDraft={categoryDraft}
+            setCategoryDraft={setCategoryDraft}
+            tagDraft={tagDraft}
               setTagDraft={setTagDraft}
               setEditingCategories={setEditingCategories}
               setEditingTags={setEditingTags}
