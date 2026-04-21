@@ -258,7 +258,7 @@ export function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xl shadow-black/5">
+    <section className="min-w-0 overflow-x-hidden rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xl shadow-black/5">
       <div className="max-w-3xl">
         <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40  mb-2">
           {eyebrow}
@@ -270,7 +270,7 @@ export function SectionCard({
           {description}
         </p>
       </div>
-      <div className="mt-8">{children}</div>
+      <div className="mt-8 min-w-0">{children}</div>
     </section>
   );
 }

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Globe, Home as HomeIcon, Lock } from "lucide-react";
 
+import { ToolPageViewTracker } from "@/components/analytics/tool-page-view-tracker";
 import { MarkdownContent } from "@/components/content/markdown-content";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { InternalLinkSection } from "@/components/seo/internal-link-section";
@@ -125,6 +126,14 @@ export function ToolPageContent({
     <ViewerVoteStateProvider toolIds={[tool.id]}>
       <main className="flex-1 bg-background pt-28">
         <JsonLdScript data={toolSchema} />
+        <ToolPageViewTracker
+          enabled={!isPreview}
+          toolId={tool.id}
+          toolSlug={tool.slug}
+          toolName={tool.name}
+          categorySlugs={tool.toolCategories.map((item) => item.category.slug)}
+          tagSlugs={tool.toolTags.map((item) => item.tag.slug)}
+        />
         <section className="bg-card border-b border-border py-8">
           <div className="mx-auto max-w-7xl px-6">
             <nav className="mb-8 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-muted-foreground/60">
