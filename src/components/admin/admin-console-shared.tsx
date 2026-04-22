@@ -130,6 +130,35 @@ export type ListingClaim = {
   };
 };
 
+export type AdminLaunchEntry = {
+  id: string;
+  toolId: string;
+  toolSlug: string;
+  toolName: string;
+  toolLogoUrl: string | null;
+  launchType: "FREE" | "FEATURED" | "RELAUNCH";
+  status: "PENDING" | "APPROVED" | "LIVE";
+  launchDate: string;
+  priorityWeight: number;
+  latestSubmission: {
+    id: string;
+    submissionType: "LISTING_ONLY" | "FREE_LAUNCH" | "FEATURED_LAUNCH" | "RELAUNCH";
+    reviewStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+    founderName: string | null;
+    founderEmail: string;
+  } | null;
+};
+
+export type AdminLaunchWeek = {
+  weekStart: string;
+  weekEnd: string;
+  launchCount: number;
+  days: Array<{
+    date: string;
+    entries: AdminLaunchEntry[];
+  }>;
+};
+
 export type SubmissionReviewResult = {
   submission: Submission;
   tool: {

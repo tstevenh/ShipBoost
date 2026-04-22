@@ -3,18 +3,11 @@ import path from "node:path";
 
 import { PrismaClient } from "@prisma/client";
 
+import { getTagDisplayName, slugify } from "./tag-display-name.mjs";
+
 const prisma = new PrismaClient();
 
 const ADMIN_USER_ID = "1iCnKbnXDil3Ng2ck4GVlMYsx8flZ2A0";
-
-function slugify(value) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 80);
-}
 
 function parseCsv(text) {
   const rows = [];
@@ -224,14 +217,15 @@ async function main() {
     const tagIds = [];
     for (const tagName of tagNames) {
       const tagSlug = slugify(tagName);
+      const tagDisplayName = getTagDisplayName(tagName);
       if (categorySlugs.has(tagSlug)) continue;
 
       let tag = tagBySlug.get(tagSlug);
       if (!tag) {
         tag = await prisma.tag.upsert({
           where: { slug: tagSlug },
-          update: { name: tagName, isActive: true },
-          create: { slug: tagSlug, name: tagName, isActive: true },
+          update: { name: tagDisplayName, isActive: true },
+          create: { slug: tagSlug, name: tagDisplayName, isActive: true },
           select: { id: true, slug: true, name: true },
         });
         tagBySlug.set(tagSlug, tag);

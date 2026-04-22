@@ -56,7 +56,27 @@ describe("outbound-click-service", () => {
     });
 
     expect(result.destinationUrl).toBe("https://partner.com/acme");
-    expect(capturePostHogEventMock).toHaveBeenCalledWith(
+    expect(capturePostHogEventMock).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        distinctId: "user_1",
+        event: "outbound_link_clicked",
+        properties: expect.objectContaining({
+          href: "https://partner.com/acme",
+          destination_domain: "partner.com",
+          source_path: "/tools/acme?tab=overview",
+          source_surface: "tool_page",
+          link_context: "tool_page",
+          tracking_method: "server_redirect",
+          is_tool_link: true,
+          tool_id: "tool_1",
+          tool_slug: "acme",
+          tool_name: "Acme",
+        }),
+      }),
+    );
+    expect(capturePostHogEventMock).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         distinctId: "user_1",
         event: "tool_outbound_click",
@@ -96,6 +116,19 @@ describe("outbound-click-service", () => {
     });
 
     expect(result.destinationUrl).toBe("https://partner.com/acme");
+    expect(capturePostHogEventMock).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        event: "outbound_link_clicked",
+        properties: expect.objectContaining({
+          href: "https://partner.com/acme",
+          source_surface: "alternatives_page",
+          link_context: "tool_listing",
+          tracking_method: "server_redirect",
+          is_tool_link: true,
+        }),
+      }),
+    );
   });
 
   it("falls back to the plain website URL and preserves existing query params", async () => {
@@ -217,6 +250,7 @@ describe("outbound-click-service", () => {
     expect(result.destinationUrl).toBe(
       "https://acme.com/?utm_source=shipboost&utm_medium=referral&utm_campaign=launch_board&utm_content=acme",
     );
+    expect(capturePostHogEventMock).toHaveBeenCalledTimes(1);
 
     consoleErrorSpy.mockRestore();
   });

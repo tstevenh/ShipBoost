@@ -90,14 +90,14 @@ function InventoryDrawer({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex justify-end">
+    <div className="fixed inset-0 z-[60] flex justify-end pt-24">
       <button
         type="button"
         aria-label="Close drawer"
         className="absolute inset-0 bg-black/35 backdrop-blur-[1px]"
         onClick={onClose}
       />
-      <aside className="relative z-10 flex h-full w-full max-w-2xl flex-col border-l border-border bg-background shadow-2xl">
+      <aside className="relative z-10 flex h-[calc(100vh-6rem)] w-full max-w-2xl flex-col border-l border-border bg-background shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
           <div className="space-y-1">
             <h3 className="text-lg font-black tracking-tight text-foreground">

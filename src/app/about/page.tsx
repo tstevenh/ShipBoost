@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { TrackedExternalLink } from "@/components/analytics/tracked-external-link";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { ContentPageShell } from "@/components/marketing/content-page-shell";
 import { getEnv } from "@/server/env";
@@ -258,14 +259,17 @@ export default function AboutPage() {
             <div className="pt-2 text-sm font-medium text-muted-foreground">
               <p className="font-black text-foreground">Tim Hart</p>
               <p>Founder, ShipBoost</p>
-              <Link
+              <TrackedExternalLink
                 href="https://x.com/Timhrt_"
                 target="_blank"
                 rel="noreferrer"
+                sourceSurface="about_page"
+                linkContext="about"
+                linkText="Follow Tim Hart on X"
                 className="mt-3 inline-flex text-sm font-black text-foreground hover:underline underline-offset-4"
               >
                 Follow on X
-              </Link>
+              </TrackedExternalLink>
             </div>
           </div>
         </section>

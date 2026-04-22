@@ -7,6 +7,10 @@ const SUPPORT_TOOLS = {
   intercom: "intercom",
   gorgias: "gorgias",
   crisp: "crisp",
+  liveChat: "livechat",
+  jivoChat: "jivochat",
+  respondIo: "respond-io",
+  sleekFlow: "sleekflow",
   front: "front",
   zohoDesk: "zoho-desk",
   liveAgent: "liveagent",
@@ -43,6 +47,7 @@ const FORM_TOOLS = {
   typeform: "typeform",
   jotform: "jotform",
   surveymonkey: "surveymonkey",
+  googleForms: "google-forms",
   formstack: "formstack",
   tally: "tally",
   fillout: "fillout",
@@ -55,11 +60,17 @@ const SCHEDULING_TOOLS = {
   tidycal: "tidycal",
   savvycal: "savvycal",
   calCom: "cal-com",
+  onceHub: "oncehub",
+  motion: "motion",
 } as const;
 
 const SOCIAL_TOOLS = {
+  sproutSocial: "sprout-social",
+  hootsuite: "hootsuite",
   buffer: "buffer",
   later: "later",
+  socialbee: "socialbee",
+  publer: "publer",
   vistaSocial: "vista-social",
   skedSocial: "sked-social",
   sociamonials: "sociamonials",
@@ -1770,6 +1781,167 @@ export const bestPagesRegistry: Record<string, BestPageEntry> = {
     primaryCategorySlug: "sales",
     supportingTagSlugs: ["scheduling", "calendar-tools", "booking-software"],
   },
+  "appointment-scheduling-software-for-small-business": {
+    slug: "appointment-scheduling-software-for-small-business",
+    targetKeyword: "best appointment scheduling software for small business",
+    title: "Best Appointment Scheduling Software for Small Business",
+    metaTitle:
+      "Best Appointment Scheduling Software for Small Business | ShipBoost",
+    metaDescription:
+      "Compare the best appointment scheduling software for small businesses, with clear verdicts across Acuity Scheduling, Calendly, OnceHub, TidyCal, SavvyCal, Cal.com, and Motion.",
+    intro:
+      "The best appointment scheduling software for a small business should do more than share a meeting link. It should support booking workflows, customer-facing appointments, and day-to-day scheduling operations without adding unnecessary setup or admin drag.",
+    whoItsFor:
+      "This page is for small businesses, service providers, consultants, and customer-facing teams choosing appointment scheduling software for bookings, lead routing, and scheduling workflows that go beyond simple calendar links.",
+    howWeEvaluated: [
+      "How well the product fits appointment-driven workflows",
+      "Booking flow quality for customers and prospects",
+      "Usability for small-business teams without dedicated admins",
+      "Flexibility across appointments, meetings, and routing needs",
+      "Overall buyer fit for small-business appointment scheduling",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: {
+          [SCHEDULING_TOOLS.acuity]: "Appointment-heavy businesses",
+          [SCHEDULING_TOOLS.calendly]: "General booking defaults",
+          [SCHEDULING_TOOLS.onceHub]: "Routing and structured booking flows",
+          [SCHEDULING_TOOLS.tidycal]: "Value-focused appointment setup",
+          [SCHEDULING_TOOLS.savvycal]: "Premium scheduling UX",
+          [SCHEDULING_TOOLS.calCom]: "Flexible technical scheduling",
+          [SCHEDULING_TOOLS.motion]: "Calendar-heavy workflow automation",
+        },
+      },
+      {
+        label: "Strongest angle",
+        valuesByToolSlug: {
+          [SCHEDULING_TOOLS.acuity]: "Booking workflow fit",
+          [SCHEDULING_TOOLS.calendly]: "Simplicity and familiarity",
+          [SCHEDULING_TOOLS.onceHub]: "Lead routing and structure",
+          [SCHEDULING_TOOLS.tidycal]: "SMB value",
+          [SCHEDULING_TOOLS.savvycal]: "Premium buyer experience",
+          [SCHEDULING_TOOLS.calCom]: "Control and customization",
+          [SCHEDULING_TOOLS.motion]: "Scheduling plus calendar orchestration",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: SCHEDULING_TOOLS.acuity,
+        rank: 1,
+        verdict:
+          "Acuity Scheduling is the strongest fit for this keyword because it is built around real appointment workflows, not just lightweight meeting links. It makes the most sense when bookings are part of the business model itself.",
+        bestFor:
+          "Appointment-driven small businesses that need customer booking workflows, calendar coordination, and scheduling software with stronger operational fit.",
+        notIdealFor:
+          "Teams that mainly want a simple default scheduling tool for general meetings.",
+        criteriaHighlights: ["Appointments", "Booking workflows", "Operational fit"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.calendly,
+        rank: 2,
+        verdict:
+          "Calendly stays near the top because it is still the cleanest default for many small businesses, even if it is less appointment-specific than Acuity.",
+        bestFor:
+          "Small businesses that want dependable booking software with low setup friction and broad familiarity.",
+        notIdealFor:
+          "Businesses that need richer appointment-specific workflows or more structured booking logic.",
+        criteriaHighlights: ["Default fit", "Ease of use", "Booking reliability"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.onceHub,
+        rank: 3,
+        verdict:
+          "OnceHub becomes more compelling when the appointment workflow is tied to routing, qualification, or a more structured sales and service process.",
+        bestFor:
+          "Teams that want appointments connected to lead routing, qualification, or more deliberate customer booking flows.",
+        notIdealFor:
+          "Small businesses that just want a simpler plug-and-play booking tool.",
+        criteriaHighlights: ["Routing", "Structured workflows", "Business process fit"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.tidycal,
+        rank: 4,
+        verdict:
+          "TidyCal is a strong value option for small businesses that need practical appointment scheduling without premium pricing pressure.",
+        bestFor:
+          "Small businesses that want useful booking workflows and strong value with lower overhead.",
+        notIdealFor:
+          "Buyers that want the most polished scheduling UX or richer advanced workflows.",
+        criteriaHighlights: ["Value", "Practicality", "SMB fit"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.savvycal,
+        rank: 5,
+        verdict:
+          "SavvyCal earns its place when the booking experience itself matters, especially for businesses that care about polish and a more premium customer-facing flow.",
+        bestFor:
+          "Businesses that want premium scheduling UX and a stronger buyer experience than default scheduling tools usually provide.",
+        notIdealFor:
+          "Price-sensitive buyers optimizing mainly for value or operational breadth.",
+        criteriaHighlights: ["Premium UX", "Customer experience", "Scheduling polish"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.calCom,
+        rank: 6,
+        verdict:
+          "Cal.com is the flexibility play in the category, but it ranks lower for a typical small-business appointment buyer who usually values faster defaults over deeper control.",
+        bestFor:
+          "Teams that care about customization, control, or more technical scheduling setup.",
+        notIdealFor:
+          "Small businesses that want the simplest appointment software with the least configuration.",
+        criteriaHighlights: ["Customization", "Control", "Flexible setup"],
+      },
+      {
+        toolSlug: SCHEDULING_TOOLS.motion,
+        rank: 7,
+        verdict:
+          "Motion is adjacent rather than a pure appointment specialist, but it is still relevant when scheduling decisions overlap heavily with calendar management and day-to-day planning.",
+        bestFor:
+          "Teams that want scheduling tied more closely to calendar orchestration and time management workflows.",
+        notIdealFor:
+          "Buyers looking for a dedicated appointment-booking platform first and foremost.",
+        criteriaHighlights: ["Calendar orchestration", "Workflow overlap", "Adjacent fit"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the best appointment scheduling software for a small business?",
+        answer:
+          "For many small businesses, Acuity Scheduling and Calendly are the strongest starting points because they balance booking flow quality, usability, and practical day-to-day scheduling value.",
+      },
+      {
+        question: "What is the difference between scheduling software and appointment scheduling software?",
+        answer:
+          "Appointment scheduling software is narrower and focuses more directly on customer bookings, appointment workflows, and service-oriented scheduling. Broader scheduling software can also cover general meetings, calendar coordination, and wider team workflows.",
+      },
+      {
+        question: "When should a small business choose Acuity instead of Calendly?",
+        answer:
+          "Choose Acuity when appointments are part of the core business workflow and you need stronger appointment-booking support. Choose Calendly when you want the cleanest general scheduling default.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/sales",
+        label: "Browse sales tools",
+        description: "Explore the broader sales category on ShipBoost.",
+      },
+      {
+        href: "/alternatives/acuity-scheduling",
+        label: "Compare Acuity Scheduling alternatives",
+        description: "See which tools compete most directly with Acuity Scheduling.",
+      },
+      {
+        href: "/tags/appointment-booking",
+        label: "Browse appointment booking tools",
+        description: "See more products grouped by appointment-booking intent.",
+      },
+    ],
+    primaryCategorySlug: "sales",
+    supportingTagSlugs: ["scheduling", "appointment-booking", "small-business"],
+  },
   "survey-tool": {
     slug: "survey-tool",
     targetKeyword: "best survey tool",
@@ -1906,6 +2078,486 @@ export const bestPagesRegistry: Record<string, BestPageEntry> = {
     primaryCategorySlug: "marketing",
     supportingTagSlugs: ["survey-tool", "feedback-collection", "online-forms"],
   },
+  "survey-software-for-small-business": {
+    slug: "survey-software-for-small-business",
+    targetKeyword: "best survey software for small business",
+    title: "Best Survey Software for Small Business",
+    metaTitle: "Best Survey Software for Small Business | ShipBoost",
+    metaDescription:
+      "Compare the best survey software for small businesses, with clear verdicts across SurveyMonkey, Google Forms, Jotform, Typeform, Fillout, Tally, and Paperform.",
+    intro:
+      "The best survey software for a small business should make it easy to collect feedback, customer input, and structured responses without forcing the team into heavyweight research tooling. The right choice depends on whether you care most about survey-specific depth, ease of use, or broader form flexibility.",
+    whoItsFor:
+      "This page is for small businesses, lean SaaS teams, agencies, and operators choosing survey software for customer feedback, research, internal input, or structured response collection.",
+    howWeEvaluated: [
+      "How well the product fits recurring small-business feedback needs",
+      "Ease of setup and response collection for lean teams",
+      "Survey depth versus broader form flexibility",
+      "Practical value for small-business workflows",
+      "Overall buyer fit for small-business survey software",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: {
+          [FORM_TOOLS.surveymonkey]: "Dedicated survey workflows",
+          [FORM_TOOLS.googleForms]: "Simple free response collection",
+          [FORM_TOOLS.jotform]: "Broad business survey flexibility",
+          [FORM_TOOLS.typeform]: "Higher-quality response experience",
+          [FORM_TOOLS.fillout]: "Modern survey-capable forms",
+          [FORM_TOOLS.tally]: "Lightweight surveys and questionnaires",
+          [FORM_TOOLS.paperform]: "Branded survey-style flows",
+        },
+      },
+      {
+        label: "Strongest angle",
+        valuesByToolSlug: {
+          [FORM_TOOLS.surveymonkey]: "Survey-first credibility",
+          [FORM_TOOLS.googleForms]: "Speed and simplicity",
+          [FORM_TOOLS.jotform]: "General-purpose flexibility",
+          [FORM_TOOLS.typeform]: "Response experience",
+          [FORM_TOOLS.fillout]: "Modern no-code fit",
+          [FORM_TOOLS.tally]: "Low-friction setup",
+          [FORM_TOOLS.paperform]: "Presentation and branding",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: FORM_TOOLS.surveymonkey,
+        rank: 1,
+        verdict:
+          "SurveyMonkey is still the clearest benchmark for this keyword because it is purpose-built for surveys and remains one of the strongest options when feedback and response collection are the primary jobs.",
+        bestFor:
+          "Small businesses that want dedicated survey software with stronger survey-first identity and workflow fit.",
+        notIdealFor:
+          "Buyers that mainly want a broader no-code form builder that only occasionally handles surveys.",
+        criteriaHighlights: ["Survey-first fit", "Feedback collection", "Benchmark"],
+      },
+      {
+        toolSlug: FORM_TOOLS.googleForms,
+        rank: 2,
+        verdict:
+          "Google Forms ranks high because many small businesses care most about simplicity, zero-friction adoption, and familiar response collection that works immediately.",
+        bestFor:
+          "Small teams that want fast survey setup, internal feedback collection, and a highly accessible free option.",
+        notIdealFor:
+          "Businesses that need stronger branding, richer logic, or more polished customer-facing survey experiences.",
+        criteriaHighlights: ["Simplicity", "Accessibility", "Practical value"],
+      },
+      {
+        toolSlug: FORM_TOOLS.jotform,
+        rank: 3,
+        verdict:
+          "Jotform is a strong all-round choice when the business wants surveys plus broader form-building flexibility in the same platform.",
+        bestFor:
+          "Teams that want one platform for surveys, questionnaires, registrations, and broader business form use cases.",
+        notIdealFor:
+          "Buyers that want the strongest survey-specific specialization or the lightest possible product.",
+        criteriaHighlights: ["Flexibility", "Business coverage", "All-round fit"],
+      },
+      {
+        toolSlug: FORM_TOOLS.typeform,
+        rank: 4,
+        verdict:
+          "Typeform stays relevant when the response experience matters more than operational depth, especially for customer-facing surveys where completion quality matters.",
+        bestFor:
+          "Businesses that want more engaging survey flows and a stronger customer-facing response experience.",
+        notIdealFor:
+          "Teams that mainly care about lower cost, simpler setup, or broader workflow depth.",
+        criteriaHighlights: ["Response experience", "Conversational flow", "Customer-facing surveys"],
+      },
+      {
+        toolSlug: FORM_TOOLS.fillout,
+        rank: 5,
+        verdict:
+          "Fillout is a modern alternative when the buyer wants no-code flexibility and survey-capable workflows without locking into a traditional survey-first product.",
+        bestFor:
+          "Teams that want modern forms and survey flexibility in a cleaner no-code workflow.",
+        notIdealFor:
+          "Buyers that want the strongest survey-first brand and most dedicated survey positioning.",
+        criteriaHighlights: ["Modern workflow", "No-code fit", "Survey-capable"],
+      },
+      {
+        toolSlug: FORM_TOOLS.tally,
+        rank: 6,
+        verdict:
+          "Tally is a practical lightweight option for small teams that want simple surveys and questionnaires without operational overhead.",
+        bestFor:
+          "Lean teams that want low-friction survey creation and practical response collection.",
+        notIdealFor:
+          "Businesses that need more polish, stronger survey depth, or richer workflow support.",
+        criteriaHighlights: ["Lightweight", "Low-friction", "Practicality"],
+      },
+      {
+        toolSlug: FORM_TOOLS.paperform,
+        rank: 7,
+        verdict:
+          "Paperform is more relevant when presentation and branded experience matter, but that makes it a useful option for some customer-facing survey-style workflows.",
+        bestFor:
+          "Businesses that want surveys or questionnaires presented in a more polished, branded, and flexible format.",
+        notIdealFor:
+          "Teams that mainly want dedicated survey software or the simplest practical option.",
+        criteriaHighlights: ["Branding", "Presentation", "Flexible format"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the best survey software for a small business?",
+        answer:
+          "For many small businesses, SurveyMonkey, Google Forms, and Jotform are the strongest starting points because they balance survey fit, ease of use, and practical day-to-day value.",
+      },
+      {
+        question: "Should a small business use dedicated survey software or a form builder?",
+        answer:
+          "Choose dedicated survey software when feedback and research are the main job. Choose a broader form builder when surveys are only one part of a wider form and workflow setup.",
+      },
+      {
+        question: "Is Google Forms enough for small-business surveys?",
+        answer:
+          "Yes for many simple use cases. But once branding, conditional logic, customer-facing polish, or workflow depth become important, alternatives like Jotform, Typeform, or Fillout become more compelling.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore the broader marketing category on ShipBoost.",
+      },
+      {
+        href: "/alternatives/google-forms",
+        label: "Compare Google Forms alternatives",
+        description: "See which tools compete most directly with Google Forms.",
+      },
+      {
+        href: "/tags/survey-tool",
+        label: "Browse survey tools",
+        description: "See more products grouped by survey intent.",
+      },
+    ],
+    primaryCategorySlug: "marketing",
+    supportingTagSlugs: ["survey-tool", "feedback-collection", "online-forms"],
+  },
+  "live-chat-software-for-small-business": {
+    slug: "live-chat-software-for-small-business",
+    targetKeyword: "best live chat software for small business",
+    title: "Best Live Chat Software for Small Business",
+    metaTitle: "Best Live Chat Software for Small Business | ShipBoost",
+    metaDescription:
+      "Compare the best live chat software for small businesses, with clear verdicts across Tidio, Crisp, LiveChat, JivoChat, Intercom, SleekFlow, and respond.io.",
+    intro:
+      "The best live chat software for a small business should help the team answer questions faster, capture leads, and manage customer conversations without turning support into a heavyweight operations stack. The right choice depends on whether you care most about chat simplicity, broader messaging, or a more premium support layer.",
+    whoItsFor:
+      "This page is for small businesses, early-stage SaaS teams, online stores, and lean support teams choosing live chat software for customer communication, sales conversations, and support coverage.",
+    howWeEvaluated: [
+      "How quickly a small team can get value from live chat",
+      "Chat workflow quality for sales and support conversations",
+      "Pricing and practical accessibility for lean teams",
+      "Breadth across live chat, messaging, and collaboration needs",
+      "Overall buyer fit for small-business live chat software",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: {
+          [SUPPORT_TOOLS.tidio]: "Small-business live chat plus bots",
+          [SUPPORT_TOOLS.crisp]: "Lean SaaS chat-led support",
+          [SUPPORT_TOOLS.liveChat]: "Dedicated live chat workflows",
+          [SUPPORT_TOOLS.jivoChat]: "Practical SMB chat coverage",
+          [SUPPORT_TOOLS.intercom]: "Premium messaging-led support",
+          [SUPPORT_TOOLS.sleekFlow]: "Omnichannel messaging workflows",
+          [SUPPORT_TOOLS.respondIo]: "Inbox-first messaging operations",
+        },
+      },
+      {
+        label: "Strongest angle",
+        valuesByToolSlug: {
+          [SUPPORT_TOOLS.tidio]: "Accessibility and quick setup",
+          [SUPPORT_TOOLS.crisp]: "Chat plus support balance",
+          [SUPPORT_TOOLS.liveChat]: "Dedicated chat focus",
+          [SUPPORT_TOOLS.jivoChat]: "SMB practicality",
+          [SUPPORT_TOOLS.intercom]: "Premium messaging breadth",
+          [SUPPORT_TOOLS.sleekFlow]: "Omnichannel operations",
+          [SUPPORT_TOOLS.respondIo]: "Structured conversation management",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: SUPPORT_TOOLS.tidio,
+        rank: 1,
+        verdict:
+          "Tidio is the strongest default fit for many small businesses because it gives teams fast live chat coverage, simple automation, and a lower-friction setup than heavier messaging platforms.",
+        bestFor:
+          "Small businesses that want practical live chat, bots, and customer communication without premium complexity.",
+        notIdealFor:
+          "Teams that want a broader premium support and messaging layer with deeper operational sophistication.",
+        criteriaHighlights: ["Accessibility", "Fast setup", "Small-business fit"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.crisp,
+        rank: 2,
+        verdict:
+          "Crisp ranks highly because it balances live chat, messaging, and support well for lean digital teams that want more than a basic widget without stepping into enterprise pricing.",
+        bestFor:
+          "Lean SaaS teams and digital businesses that want strong chat-led support with a broader support layer.",
+        notIdealFor:
+          "Buyers that only want the simplest live chat utility with minimal extra features.",
+        criteriaHighlights: ["Chat-led support", "Value", "Broader support fit"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.liveChat,
+        rank: 3,
+        verdict:
+          "LiveChat stays near the top because it is a dedicated category benchmark and remains one of the clearest options when the team wants live chat to be the center of the workflow.",
+        bestFor:
+          "Businesses that want a dedicated live chat platform for support and sales conversations.",
+        notIdealFor:
+          "Teams that want a broader shared-inbox or omnichannel messaging platform first.",
+        criteriaHighlights: ["Dedicated chat focus", "Benchmark", "Sales and support"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.jivoChat,
+        rank: 4,
+        verdict:
+          "JivoChat is a practical SMB-oriented choice when the buyer wants live chat coverage, lead capture, and customer conversations in one straightforward system.",
+        bestFor:
+          "Small businesses that want practical chat-first communication with a sales and support angle.",
+        notIdealFor:
+          "Teams that need more premium support workflows or broader platform depth.",
+        criteriaHighlights: ["SMB practicality", "Lead capture", "Chat-first fit"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.intercom,
+        rank: 5,
+        verdict:
+          "Intercom is powerful, but for this specific keyword it ranks lower because many small businesses do not need its premium messaging stack to solve the live chat job well.",
+        bestFor:
+          "Digital businesses that want live chat inside a broader premium support and messaging platform.",
+        notIdealFor:
+          "Price-sensitive teams that mainly want effective live chat without broader platform overhead.",
+        criteriaHighlights: ["Premium messaging", "Support breadth", "Modern UX"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.sleekFlow,
+        rank: 6,
+        verdict:
+          "SleekFlow is more conversation-platform oriented than pure live chat, but it remains relevant when the business wants live chat tied into wider omnichannel messaging.",
+        bestFor:
+          "Teams that want live chat plus broader customer messaging and omnichannel conversation workflows.",
+        notIdealFor:
+          "Buyers looking for a simpler live-chat-only deployment.",
+        criteriaHighlights: ["Omnichannel", "Messaging breadth", "Operational workflows"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.respondIo,
+        rank: 7,
+        verdict:
+          "respond.io fits best when the buyer thinks in inbox operations and conversation management rather than pure live chat alone, which makes it useful but slightly less direct for this keyword.",
+        bestFor:
+          "Teams that want live chat inside a more structured inbox-first messaging operation.",
+        notIdealFor:
+          "Small businesses that only need classic website chat coverage and fast setup.",
+        criteriaHighlights: ["Inbox-first operations", "Conversation management", "Messaging platform"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the best live chat software for a small business?",
+        answer:
+          "For many small businesses, Tidio, Crisp, and LiveChat are the strongest starting points because they balance usability, pricing, and real-world live chat workflow quality.",
+      },
+      {
+        question: "Does a small business need live chat software or a full support platform?",
+        answer:
+          "If the main job is answering website questions quickly and capturing leads, live chat software is often enough. If support is spreading across channels and teammates, a broader support platform may make more sense.",
+      },
+      {
+        question: "Is Intercom too much for a small business?",
+        answer:
+          "Often, yes. Intercom can still be a strong fit for some digital businesses, but many small teams get better value and faster time to value from lighter live chat tools first.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/support",
+        label: "Browse support tools",
+        description: "Explore the broader support category on ShipBoost.",
+      },
+      {
+        href: "/alternatives/livechat",
+        label: "Compare LiveChat alternatives",
+        description: "See which tools compete most directly with LiveChat.",
+      },
+      {
+        href: "/tags/live-chat",
+        label: "Browse live chat tools",
+        description: "See more products grouped by live-chat intent.",
+      },
+    ],
+    primaryCategorySlug: "support",
+    supportingTagSlugs: ["live-chat", "customer-messaging", "small-business"],
+  },
+  "shared-inbox-software": {
+    slug: "shared-inbox-software",
+    targetKeyword: "best shared inbox software",
+    title: "Best Shared Inbox Software",
+    metaTitle: "Best Shared Inbox Software for Teams | ShipBoost",
+    metaDescription:
+      "Compare the best shared inbox software for customer communication and team collaboration, with clear verdicts across Front, Help Scout, Intercom, respond.io, SleekFlow, Zendesk, and Freshdesk.",
+    intro:
+      "The best shared inbox software helps teams manage customer conversations together without letting communication turn into chaos. The right choice depends on whether you want email-style collaboration, support workflows, or a broader conversation platform that handles shared ownership more operationally.",
+    whoItsFor:
+      "This page is for support teams, operations leads, customer-success teams, and small businesses choosing shared inbox software for collaborative customer communication, internal coordination, and inbox-first workflows.",
+    howWeEvaluated: [
+      "How well the product supports shared ownership of conversations",
+      "Collaboration quality across inbox, routing, and internal coordination",
+      "Fit for inbox-first workflows versus broader support operations",
+      "Usability for lean teams handling customer communication together",
+      "Overall buyer fit for shared inbox software",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: {
+          [SUPPORT_TOOLS.front]: "Inbox-first collaboration",
+          [SUPPORT_TOOLS.helpScout]: "Simple collaborative support",
+          [SUPPORT_TOOLS.intercom]: "Messaging-led team workflows",
+          [SUPPORT_TOOLS.respondIo]: "Inbox-first conversation operations",
+          [SUPPORT_TOOLS.sleekFlow]: "Omnichannel shared messaging",
+          [SUPPORT_TOOLS.zendesk]: "Structured support operations",
+          [SUPPORT_TOOLS.freshdesk]: "Balanced collaborative support",
+        },
+      },
+      {
+        label: "Strongest angle",
+        valuesByToolSlug: {
+          [SUPPORT_TOOLS.front]: "Team collaboration",
+          [SUPPORT_TOOLS.helpScout]: "Calm support workflow",
+          [SUPPORT_TOOLS.intercom]: "Modern messaging layer",
+          [SUPPORT_TOOLS.respondIo]: "Operational inbox management",
+          [SUPPORT_TOOLS.sleekFlow]: "Omnichannel messaging breadth",
+          [SUPPORT_TOOLS.zendesk]: "Support structure and process",
+          [SUPPORT_TOOLS.freshdesk]: "All-round service balance",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: SUPPORT_TOOLS.front,
+        rank: 1,
+        verdict:
+          "Front is the clearest fit for this keyword because it is purpose-built around collaborative inbox workflows. It does the shared-inbox job more directly than broader support platforms that only include inbox collaboration as one feature among many.",
+        bestFor:
+          "Teams that want customer communication to feel like a shared operational inbox with strong collaboration, assignment, and cross-functional coordination.",
+        notIdealFor:
+          "Support organizations that mainly want classic ticket-first help-desk workflows over inbox-first collaboration.",
+        criteriaHighlights: ["Shared inbox fit", "Collaboration", "Inbox-first workflow"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.helpScout,
+        rank: 2,
+        verdict:
+          "Help Scout ranks highly because it combines shared inbox simplicity with enough support structure to stay useful as the team grows.",
+        bestFor:
+          "Teams that want a calmer inbox-first support workflow with docs, chat, and collaboration without enterprise heaviness.",
+        notIdealFor:
+          "Buyers that want broader omnichannel messaging or more operationally complex routing.",
+        criteriaHighlights: ["Simplicity", "Collaborative support", "Human workflow"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.intercom,
+        rank: 3,
+        verdict:
+          "Intercom is a strong choice when the shared inbox sits inside a more modern messaging and customer-support layer rather than an email-style collaboration model alone.",
+        bestFor:
+          "Digital businesses that want inbox collaboration inside a premium messaging-led support platform.",
+        notIdealFor:
+          "Teams that mainly want a simpler, more direct shared inbox without premium platform overhead.",
+        criteriaHighlights: ["Messaging-led", "Modern support", "Platform breadth"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.respondIo,
+        rank: 4,
+        verdict:
+          "respond.io earns a high spot when the team thinks in operational inbox management across conversations and channels rather than just shared support email.",
+        bestFor:
+          "Teams that want a shared inbox tied to broader messaging operations and structured conversation workflows.",
+        notIdealFor:
+          "Buyers who want a more traditional inbox-first or support-first experience.",
+        criteriaHighlights: ["Operational inbox", "Conversation management", "Messaging workflows"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.sleekFlow,
+        rank: 5,
+        verdict:
+          "SleekFlow is especially relevant when the shared inbox is part of a wider omnichannel messaging setup and customer conversations are spread across channels.",
+        bestFor:
+          "Teams that want collaborative customer messaging across channels in one workspace.",
+        notIdealFor:
+          "Businesses that only need a simpler shared email-style inbox for support coordination.",
+        criteriaHighlights: ["Omnichannel", "Shared messaging", "Conversation breadth"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.freshdesk,
+        rank: 6,
+        verdict:
+          "Freshdesk remains credible because it balances support workflows and collaborative handling well, even if shared inbox is not its only or primary framing.",
+        bestFor:
+          "Support teams that want collaborative communication plus stronger ticketing and service workflows.",
+        notIdealFor:
+          "Buyers that want the purest inbox-first collaboration experience over broader support structure.",
+        criteriaHighlights: ["Balanced support", "Collaboration", "Service workflows"],
+      },
+      {
+        toolSlug: SUPPORT_TOOLS.zendesk,
+        rank: 7,
+        verdict:
+          "Zendesk belongs in the comparison as a benchmark, but for this specific keyword it is usually less direct and less elegant than tools built more explicitly around shared-inbox collaboration.",
+        bestFor:
+          "Teams that expect support complexity to scale and want shared communication inside a more structured help-desk platform.",
+        notIdealFor:
+          "Lean teams that primarily want simple inbox-first collaboration with lower operational overhead.",
+        criteriaHighlights: ["Benchmark", "Support structure", "Scale"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the best shared inbox software?",
+        answer:
+          "For many teams, Front and Help Scout are the strongest starting points because they handle collaborative customer communication cleanly without forcing buyers into unnecessary platform complexity.",
+      },
+      {
+        question: "What is the difference between a shared inbox and a help desk?",
+        answer:
+          "A shared inbox is usually centered on collaborative handling of conversations in one inbox-style workspace. A help desk is broader and often includes tickets, automations, SLAs, reporting, and service workflows on top of inbox collaboration.",
+      },
+      {
+        question: "When should a team choose Front instead of Help Scout?",
+        answer:
+          "Choose Front when the team wants a stronger inbox-first collaboration model across customer operations. Choose Help Scout when you want inbox simplicity plus a more support-oriented workflow with docs and chat.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/support",
+        label: "Browse support tools",
+        description: "Explore the broader support category on ShipBoost.",
+      },
+      {
+        href: "/alternatives/front",
+        label: "Compare Front alternatives",
+        description: "See which tools compete most directly with Front.",
+      },
+      {
+        href: "/tags/shared-inbox",
+        label: "Browse shared inbox tools",
+        description: "See more products grouped by shared-inbox intent.",
+      },
+    ],
+    primaryCategorySlug: "support",
+    supportingTagSlugs: ["shared-inbox", "customer-messaging", "small-business"],
+  },
   "social-media-scheduling-tools": {
     slug: "social-media-scheduling-tools",
     targetKeyword: "best social media scheduling tools",
@@ -2030,6 +2682,167 @@ export const bestPagesRegistry: Record<string, BestPageEntry> = {
     primaryCategorySlug: "marketing",
     supportingTagSlugs: ["social-scheduling", "social-publishing", "social-media"],
   },
+  "social-media-management-tools-for-small-business": {
+    slug: "social-media-management-tools-for-small-business",
+    targetKeyword: "best social media management tools for small business",
+    title: "Best Social Media Management Tools for Small Business",
+    metaTitle:
+      "Best Social Media Management Tools for Small Business | ShipBoost",
+    metaDescription:
+      "Compare the best social media management tools for small businesses, with clear verdicts across Sprout Social, Hootsuite, Buffer, SocialBee, Publer, Vista Social, and Later.",
+    intro:
+      "The best social media management tool for a small business should help the team plan, publish, collaborate, and measure results without dragging everyday content work into enterprise-style overhead. The right choice depends on whether you need broader management depth, cleaner publishing workflows, or a stronger value fit.",
+    whoItsFor:
+      "This page is for small businesses, agencies, and lean marketing teams choosing a social media management platform for publishing, approvals, analytics, and day-to-day social operations.",
+    howWeEvaluated: [
+      "How well the product supports real small-business social workflows",
+      "Publishing, planning, and collaboration quality",
+      "Analytics and reporting practicality for lean teams",
+      "Pricing posture relative to buyer value",
+      "Overall buyer fit for small-business social management",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: {
+          [SOCIAL_TOOLS.sproutSocial]: "Higher-consideration social management",
+          [SOCIAL_TOOLS.hootsuite]: "Recognizable all-round management",
+          [SOCIAL_TOOLS.buffer]: "Simple publishing workflows",
+          [SOCIAL_TOOLS.socialbee]: "SMB-friendly content management",
+          [SOCIAL_TOOLS.publer]: "Affordable multi-channel scheduling",
+          [SOCIAL_TOOLS.vistaSocial]: "Broader social operations",
+          [SOCIAL_TOOLS.later]: "Visual planning and creator workflows",
+        },
+      },
+      {
+        label: "Strongest angle",
+        valuesByToolSlug: {
+          [SOCIAL_TOOLS.sproutSocial]: "Analytics and team workflows",
+          [SOCIAL_TOOLS.hootsuite]: "Broad market coverage",
+          [SOCIAL_TOOLS.buffer]: "Simplicity",
+          [SOCIAL_TOOLS.socialbee]: "Content recycling and SMB fit",
+          [SOCIAL_TOOLS.publer]: "Value and scheduling utility",
+          [SOCIAL_TOOLS.vistaSocial]: "Management depth",
+          [SOCIAL_TOOLS.later]: "Visual content planning",
+        },
+      },
+    ],
+    rankedTools: [
+      {
+        toolSlug: SOCIAL_TOOLS.buffer,
+        rank: 1,
+        verdict:
+          "Buffer is the strongest default recommendation for most small businesses because it keeps social publishing, planning, and day-to-day execution clear without turning the workflow into a heavy operations project.",
+        bestFor:
+          "Small businesses that want a straightforward social management layer centered on practical publishing and team usability.",
+        notIdealFor:
+          "Teams that need deeper reporting, approvals, or a broader management layer than simple scheduling-first tools provide.",
+        criteriaHighlights: ["Simplicity", "Small-team fit", "Publishing workflow"],
+      },
+      {
+        toolSlug: SOCIAL_TOOLS.sproutSocial,
+        rank: 2,
+        verdict:
+          "Sprout Social is one of the best options when the small business wants a more serious management platform with stronger analytics, team workflows, and reporting depth than lighter tools usually offer.",
+        bestFor:
+          "Growing teams and agencies that want stronger structure, reporting, and collaboration inside a social management platform.",
+        notIdealFor:
+          "Price-sensitive businesses that mainly need clean publishing and basic planning.",
+        criteriaHighlights: ["Analytics", "Team workflows", "Management depth"],
+      },
+      {
+        toolSlug: SOCIAL_TOOLS.socialbee,
+        rank: 3,
+        verdict:
+          "SocialBee earns a high spot because it gives small businesses more content-management structure and evergreen workflow support without jumping fully into enterprise-style complexity.",
+        bestFor:
+          "Small businesses and agencies that care about organizing, recycling, and maintaining social content more systematically.",
+        notIdealFor:
+          "Teams that want the broadest reporting stack or the simplest lightweight scheduler possible.",
+        criteriaHighlights: ["Content organization", "Evergreen workflows", "SMB fit"],
+      },
+      {
+        toolSlug: SOCIAL_TOOLS.publer,
+        rank: 4,
+        verdict:
+          "Publer is a strong value pick when the buyer wants affordable multi-channel publishing with more utility than the lightest social tools usually provide.",
+        bestFor:
+          "Small teams that want broader scheduling utility, workspaces, and approvals without premium pricing pressure.",
+        notIdealFor:
+          "Buyers that care most about premium analytics depth or brand-led social management sophistication.",
+        criteriaHighlights: ["Value", "Multi-channel publishing", "Utility"],
+      },
+      {
+        toolSlug: SOCIAL_TOOLS.vistaSocial,
+        rank: 5,
+        verdict:
+          "Vista Social is especially compelling when a small business wants to move beyond posting alone into a more complete social operations layer.",
+        bestFor:
+          "Teams that want social scheduling plus stronger management features in one platform.",
+        notIdealFor:
+          "Buyers that mainly want a simpler publishing workflow with fewer moving parts.",
+        criteriaHighlights: ["Broader management", "Operations fit", "Platform depth"],
+      },
+      {
+        toolSlug: SOCIAL_TOOLS.later,
+        rank: 6,
+        verdict:
+          "Later remains credible when visual planning and creator-style content workflows matter more than broader management depth.",
+        bestFor:
+          "Brands and creators that care about visual planning and content-first workflow support.",
+        notIdealFor:
+          "Teams that want deeper team management and more structured social operations.",
+        criteriaHighlights: ["Visual planning", "Creator fit", "Content workflow"],
+      },
+      {
+        toolSlug: SOCIAL_TOOLS.hootsuite,
+        rank: 7,
+        verdict:
+          "Hootsuite still belongs in the shortlist because it is a recognizable benchmark, but for many small businesses it is no longer the clearest default recommendation compared with more focused or modern alternatives.",
+        bestFor:
+          "Teams that want a broadly recognized social management platform and are comfortable evaluating a more traditional all-rounder.",
+        notIdealFor:
+          "Small businesses that want the cleanest UX, strongest value, or the most opinionated small-team workflow fit.",
+        criteriaHighlights: ["Benchmark", "Breadth", "Recognition"],
+      },
+    ],
+    faq: [
+      {
+        question: "What is the best social media management tool for a small business?",
+        answer:
+          "For many small businesses, Buffer, Sprout Social, and SocialBee are the strongest starting points because they balance usability, publishing workflow quality, and fit for different team styles.",
+      },
+      {
+        question: "What is the difference between a social scheduling tool and a social media management tool?",
+        answer:
+          "A social scheduling tool focuses mainly on planning and publishing posts. A social media management tool is broader and can include approvals, analytics, inbox workflows, reporting, and team collaboration.",
+      },
+      {
+        question: "Should a small business choose a simpler tool or a more advanced social platform?",
+        answer:
+          "Choose the simplest platform that still supports the way your team actually works. If publishing is the main job, lighter tools usually win. If approvals, analytics, and collaboration matter daily, broader management platforms make more sense.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore the broader marketing category on ShipBoost.",
+      },
+      {
+        href: "/alternatives/sprout-social",
+        label: "Compare Sprout Social alternatives",
+        description: "See which tools compete most directly with Sprout Social.",
+      },
+      {
+        href: "/tags/social-management",
+        label: "Browse social management tools",
+        description: "See more products grouped by social-management intent.",
+      },
+    ],
+    primaryCategorySlug: "marketing",
+    supportingTagSlugs: ["social-management", "social-scheduling", "small-business"],
+  },
 };
 
 export const bestHubSections: BestHubSection[] = [
@@ -2042,6 +2855,8 @@ export const bestHubSections: BestHubSection[] = [
       "help-desk-software",
       "customer-support-software",
       "customer-support-software-for-small-business",
+      "live-chat-software-for-small-business",
+      "shared-inbox-software",
     ],
     supportingLinks: [
       {
@@ -2128,6 +2943,7 @@ export const bestHubSections: BestHubSection[] = [
     pageSlugs: [
       "scheduling-app-for-small-business",
       "scheduling-software-for-small-business",
+      "appointment-scheduling-software-for-small-business",
     ],
     supportingLinks: [
       {
@@ -2147,7 +2963,10 @@ export const bestHubSections: BestHubSection[] = [
     title: "Surveys",
     intro:
       "These pages help buyers compare survey-focused tools and broader form platforms when the main job is collecting feedback, research responses, and structured customer input.",
-    pageSlugs: ["survey-tool"],
+    pageSlugs: [
+      "survey-tool",
+      "survey-software-for-small-business",
+    ],
     supportingLinks: [
       {
         href: "/categories/marketing",
@@ -2165,8 +2984,11 @@ export const bestHubSections: BestHubSection[] = [
     slug: "social-scheduling",
     title: "Social Scheduling",
     intro:
-      "These pages help buyers compare social media scheduling tools by publishing fit, workflow quality, and the tradeoffs between simple planners and broader scheduling platforms.",
-    pageSlugs: ["social-media-scheduling-tools"],
+      "These pages help buyers compare social media scheduling and management tools by publishing fit, workflow quality, team coordination, and the tradeoffs between simple planners and broader social platforms.",
+    pageSlugs: [
+      "social-media-scheduling-tools",
+      "social-media-management-tools-for-small-business",
+    ],
     supportingLinks: [
       {
         href: "/categories/marketing",

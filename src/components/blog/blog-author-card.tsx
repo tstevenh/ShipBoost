@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { TrackedExternalLink } from "@/components/analytics/tracked-external-link";
 
 type BlogAuthorCardProps = {
   author: {
@@ -46,29 +46,43 @@ export function BlogAuthorCard({ author }: BlogAuthorCardProps) {
         <p className="text-sm leading-7 text-muted-foreground">{author.bio}</p>
         <div className="flex flex-wrap gap-4 text-sm font-black text-foreground">
           {author.xUrl ? (
-            <Link href={author.xUrl} target="_blank" rel="noreferrer" className="hover:underline">
+            <TrackedExternalLink
+              href={author.xUrl}
+              target="_blank"
+              rel="noreferrer"
+              sourceSurface="blog_author_card"
+              linkContext="blog"
+              linkText={`${author.name} on X`}
+              className="hover:underline"
+            >
               X
-            </Link>
+            </TrackedExternalLink>
           ) : null}
           {author.linkedinUrl ? (
-            <Link
+            <TrackedExternalLink
               href={author.linkedinUrl}
               target="_blank"
               rel="noreferrer"
+              sourceSurface="blog_author_card"
+              linkContext="blog"
+              linkText={`${author.name} on LinkedIn`}
               className="hover:underline"
             >
               LinkedIn
-            </Link>
+            </TrackedExternalLink>
           ) : null}
           {author.websiteUrl ? (
-            <Link
+            <TrackedExternalLink
               href={author.websiteUrl}
               target="_blank"
               rel="noreferrer"
+              sourceSurface="blog_author_card"
+              linkContext="blog"
+              linkText={`${author.name} website`}
               className="hover:underline"
             >
               Website
-            </Link>
+            </TrackedExternalLink>
           ) : null}
         </div>
       </div>

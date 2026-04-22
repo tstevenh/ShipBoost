@@ -1,6 +1,7 @@
 import { getSessionFromRequest } from "@/server/auth/session";
 import { prisma } from "@/server/db/client";
 import { AppError } from "@/server/http/app-error";
+import { buildOutboundLinkClickedProperties } from "@/lib/outbound-link";
 import { capturePostHogEvent } from "@/server/posthog";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
 import type { ToolOutboundSource, ToolOutboundTarget } from "@/lib/tool-outbound";
@@ -90,6 +91,10 @@ function getDestinationDomain(destinationUrl: string) {
   }
 }
 
+function getToolLinkContext(source: ToolOutboundSource) {
+  return source === "tool_page" ? "tool_page" : "tool_listing";
+}
+
 export async function resolveTrackedToolOutboundClick(input: {
   toolId: string;
   target: ToolOutboundTarget;
@@ -129,6 +134,23 @@ export async function resolveTrackedToolOutboundClick(input: {
   const sourcePath = getSourcePath(input.referer);
 
   try {
+    await capturePostHogEvent({
+      distinctId,
+      event: "outbound_link_clicked",
+      properties: buildOutboundLinkClickedProperties({
+        href: destinationUrl,
+        sourcePath: sourcePath ?? "/unknown",
+        sourceSurface: input.source,
+        linkContext: getToolLinkContext(input.source),
+        linkText: tool.name,
+        trackingMethod: "server_redirect",
+        isToolLink: true,
+        toolId: tool.id,
+        toolSlug: tool.slug,
+        toolName: tool.name,
+      }),
+    });
+
     await capturePostHogEvent({
       distinctId,
       event: "tool_outbound_click",

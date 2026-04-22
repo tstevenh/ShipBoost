@@ -2,6 +2,7 @@ import { ChevronRightIcon } from "@radix-ui/react-icons";
 import Image from "next/image";
 import Link from "next/link";
 
+import { TrackedExternalLink } from "@/components/analytics/tracked-external-link";
 import { FlickeringGridLogo } from "@/components/ui/flickering-grid-logo";
 import { cn } from "@/lib/utils";
 
@@ -1109,12 +1110,15 @@ function FeaturedBadgeRail() {
         >
           <div className="marquee-track flex w-max items-center gap-4">
             {marqueeBadges.map((badge, index) => (
-              <a
+              <TrackedExternalLink
                 key={`${badge.id}-${index}`}
                 href={badge.href}
                 target="_blank"
                 rel={badge.rel}
                 title={badge.title}
+                sourceSurface="footer"
+                linkContext="footer"
+                linkText={badge.title ?? badge.label ?? badge.alt}
                 className="flex h-12 min-w-[118px] items-center justify-center rounded-lg border border-border/70 bg-background/95 px-2.5 py-1.5 shadow-[0_10px_40px_-28px_rgba(10,10,10,0.9)] transition-transform duration-300 hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-background"
               >
                 {badge.content ? (
@@ -1139,7 +1143,7 @@ function FeaturedBadgeRail() {
                     {badge.label}
                   </span>
                 )}
-              </a>
+              </TrackedExternalLink>
             ))}
           </div>
         </div>

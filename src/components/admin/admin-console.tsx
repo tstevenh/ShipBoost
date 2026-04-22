@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Activity, Layers, Rocket, ClipboardList,
   Shield, AlertCircle, RefreshCw,
-  Layout, Package, FileText,
+  Layout, Package, FileText, CalendarDays,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import {
   type CategoryDraft,
   type Submission,
   type SubmissionReviewResult,
+  type AdminLaunchWeek,
   type Tag as TagType,
   type TagDraft,
   type Tool,
@@ -25,6 +26,7 @@ import {
 } from "@/components/admin/admin-console-shared";
 import { CatalogPanel } from "@/components/admin/catalog-panel";
 import { BlogPanel } from "@/components/admin/blog-panel";
+import { LaunchSchedulePanel } from "@/components/admin/launch-schedule-panel";
 import { ListingClaimPanel } from "@/components/admin/listing-claim-panel";
 import { SubmissionReviewPanel } from "@/components/admin/submission-review-panel";
 import { ToolOpsPanel } from "@/components/admin/tool-ops-panel";
@@ -73,7 +75,7 @@ function emptyTagDraft(): TagDraft {
   };
 }
 
-type AdminNavSection = "overview" | "moderate" | "inventory" | "taxonomy" | "blog";
+type AdminNavSection = "overview" | "moderate" | "launches" | "inventory" | "taxonomy" | "blog";
 type AdminNavItem = {
   id: AdminNavSection;
   label: string;
@@ -88,6 +90,7 @@ export function AdminConsole() {
   const [tools, setTools] = useState<Tool[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [claims, setClaims] = useState<ListingClaim[]>([]);
+  const [launchWeeks, setLaunchWeeks] = useState<AdminLaunchWeek[]>([]);
 
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [toolError, setToolError] = useState<string | null>(null);
@@ -279,13 +282,21 @@ export function AdminConsole() {
 
     void (async () => {
       try {
-        const [nextCategories, nextTags, nextTools, nextSubmissions, nextClaims] =
+        const [
+          nextCategories,
+          nextTags,
+          nextTools,
+          nextSubmissions,
+          nextClaims,
+          nextLaunchWeeks,
+        ] =
           await Promise.all([
             apiRequest<Category[]>("/api/admin/categories"),
             apiRequest<TagType[]>("/api/admin/tags"),
             apiRequest<Tool[]>("/api/admin/tools"),
             apiRequest<Submission[]>("/api/admin/submissions?reviewStatus=PENDING"),
             apiRequest<ListingClaim[]>("/api/admin/listing-claims?status=PENDING"),
+            apiRequest<AdminLaunchWeek[]>("/api/admin/launches"),
           ]);
 
         if (cancelled) {
@@ -297,6 +308,7 @@ export function AdminConsole() {
         setTools(nextTools);
         setSubmissions(nextSubmissions);
         setClaims(nextClaims);
+        setLaunchWeeks(nextLaunchWeeks);
       } catch (error) {
         if (!cancelled) {
           setBootError(toErrorMessage(error));
@@ -770,6 +782,7 @@ export function AdminConsole() {
   const navItems: AdminNavItem[] = [
     { id: "overview", label: "Dashboard", icon: Layout },
     { id: "moderate", label: "Moderate", icon: Shield, count: totalPending + pendingClaimCount },
+    { id: "launches", label: "Launches", icon: CalendarDays, count: launchWeeks.reduce((total, week) => total + week.launchCount, 0) },
     { id: "inventory", label: "Inventory", icon: Package, count: tools.length },
     { id: "taxonomy", label: "Taxonomy", icon: Layers, count: categories.length + tags.length },
     { id: "blog", label: "Blog", icon: FileText },
@@ -934,6 +947,12 @@ export function AdminConsole() {
               hasPendingAction={hasPendingAction}
               isActionPending={isActionPending}
             />
+          </div>
+        )}
+
+        {activeNav === "launches" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <LaunchSchedulePanel weeks={launchWeeks} />
           </div>
         )}
 

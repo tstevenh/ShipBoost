@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { TrackedExternalLink } from "@/components/analytics/tracked-external-link";
 import { startupDirectories } from "@/content/resources/startup-directories";
 
 type SortKey = "name" | "domain" | "dr";
@@ -170,10 +171,13 @@ export function StartupDirectoriesResource({
                 </td>
                 <td className="px-4 py-3 font-bold text-foreground">{item.dr}</td>
                 <td className="px-4 py-3">
-                  <a
+                  <TrackedExternalLink
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
+                    sourceSurface="startup_directories"
+                    linkContext="startup_directories"
+                    linkText={`Visit ${item.name}`}
                     className={`inline-flex items-center justify-center rounded-xl border px-3 py-2 text-xs font-black transition-colors ${
                       item.recommended
                         ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/15"
@@ -181,7 +185,7 @@ export function StartupDirectoriesResource({
                     }`}
                   >
                     Visit
-                  </a>
+                  </TrackedExternalLink>
                 </td>
               </tr>
             ))}

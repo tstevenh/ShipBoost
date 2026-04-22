@@ -5,6 +5,7 @@ import {
   premiumLaunchAvailable,
   premiumLaunchUnavailableMessage,
 } from "@/lib/premium-launch";
+import { TrackedExternalLink } from "@/components/analytics/tracked-external-link";
 import { cn } from "@/lib/utils";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
@@ -202,18 +203,36 @@ export default async function PricingPage() {
 
               <div className="mt-10">
                 {tier.ctaHref ? (
-                  <Link
-                    href={tier.ctaHref}
-                    className={cn(
-                      "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-black transition-all active:scale-95 shadow-xl",
-                      tier.highlight
-                        ? "bg-primary text-primary-foreground hover:opacity-90 shadow-black/20"
-                        : "bg-foreground text-background hover:opacity-90 shadow-black/10"
-                    )}
-                  >
-                    {tier.ctaLabel}
-                    <ArrowRight size={16} />
-                  </Link>
+                  tier.ctaHref.startsWith("http") ? (
+                    <TrackedExternalLink
+                      href={tier.ctaHref}
+                      sourceSurface="pricing_page"
+                      linkContext="pricing"
+                      linkText={tier.ctaLabel}
+                      className={cn(
+                        "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-black transition-all active:scale-95 shadow-xl",
+                        tier.highlight
+                          ? "bg-primary text-primary-foreground hover:opacity-90 shadow-black/20"
+                          : "bg-foreground text-background hover:opacity-90 shadow-black/10"
+                      )}
+                    >
+                      {tier.ctaLabel}
+                      <ArrowRight size={16} />
+                    </TrackedExternalLink>
+                  ) : (
+                    <Link
+                      href={tier.ctaHref}
+                      className={cn(
+                        "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-black transition-all active:scale-95 shadow-xl",
+                        tier.highlight
+                          ? "bg-primary text-primary-foreground hover:opacity-90 shadow-black/20"
+                          : "bg-foreground text-background hover:opacity-90 shadow-black/10"
+                      )}
+                    >
+                      {tier.ctaLabel}
+                      <ArrowRight size={16} />
+                    </Link>
+                  )
                 ) : (
                   <button
                     type="button"

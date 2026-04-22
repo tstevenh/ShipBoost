@@ -3,16 +3,9 @@ import path from "node:path";
 
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+import { getTagDisplayName, slugify } from "./tag-display-name.mjs";
 
-function slugify(value) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 80);
-}
+const prisma = new PrismaClient();
 
 function parseCsv(text) {
   const rows = [];
@@ -332,6 +325,7 @@ async function main() {
     if (normalizedTagsValue !== undefined) {
       for (const tagName of parseList(normalizedTagsValue)) {
         const tagSlug = slugify(tagName);
+        const tagDisplayName = getTagDisplayName(tagName);
 
         if (categorySlugs.has(tagSlug)) {
           continue;
@@ -343,12 +337,12 @@ async function main() {
           tag = await prisma.tag.upsert({
             where: { slug: tagSlug },
             update: {
-              name: tagName,
+              name: tagDisplayName,
               isActive: true,
             },
             create: {
               slug: tagSlug,
-              name: tagName,
+              name: tagDisplayName,
               isActive: true,
             },
             select: { id: true, slug: true, name: true },

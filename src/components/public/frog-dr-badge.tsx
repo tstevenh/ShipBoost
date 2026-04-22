@@ -1,3 +1,4 @@
+import { TrackedExternalLink } from "@/components/analytics/tracked-external-link";
 import { cn } from "@/lib/utils";
 
 type FrogDrBadgeProps = {
@@ -6,10 +7,13 @@ type FrogDrBadgeProps = {
 
 export function FrogDrBadge({ className }: FrogDrBadgeProps) {
   return (
-    <a
+    <TrackedExternalLink
       href="https://frogdr.com/shipboost.io?via=Shipboost&utm_source=shipboost.io"
       target="_blank"
       rel="noopener noreferrer"
+      sourceSurface="frogdr_badge"
+      linkContext="footer"
+      linkText="Monitor your Domain Rating with FrogDR"
       className={cn("mx-auto block w-fit", className)}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -28,6 +32,6 @@ export function FrogDrBadge({ className }: FrogDrBadgeProps) {
         height="54"
         className="hidden h-auto w-full max-w-[250px] dark:block"
       />
-    </a>
+    </TrackedExternalLink>
   );
 }

@@ -2,6 +2,11 @@
 
 import posthog from "posthog-js";
 
+import {
+  buildOutboundLinkClickedProperties,
+  type OutboundLinkClickedPropertiesInput,
+} from "@/lib/outbound-link";
+
 type PendingAuthIntentKind = "sign-in" | "sign-up";
 type PendingAuthMethod = "email" | "google" | "magic_link";
 
@@ -26,6 +31,15 @@ export function captureBrowserPostHogEvent(
   properties?: Record<string, unknown>,
 ) {
   posthog.capture(event, properties);
+}
+
+export function captureBrowserOutboundLinkClicked(
+  input: OutboundLinkClickedPropertiesInput,
+) {
+  posthog.capture(
+    "outbound_link_clicked",
+    buildOutboundLinkClickedProperties(input),
+  );
 }
 
 export function setPendingAuthIntent(

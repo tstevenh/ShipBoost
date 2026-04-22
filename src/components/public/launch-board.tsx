@@ -25,16 +25,8 @@ type LaunchItem = {
   };
 };
 
-function toneClassName(launchType: LaunchItem["launchType"]) {
-  if (launchType === "FEATURED") {
-    return "border-amber-500/20 bg-amber-500/10 text-amber-700";
-  }
-
-  if (launchType === "RELAUNCH") {
-    return "border-border bg-muted/50 text-muted-foreground";
-  }
-
-  return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700";
+function toneClassName() {
+  return "border-amber-500/20 bg-amber-500/10 text-amber-700";
 }
 
 export function LaunchBoard({
@@ -84,15 +76,13 @@ export function LaunchBoard({
                     >
                       {launch.tool.name}
                     </Link>
-                    <span
-                      className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-widest  ${toneClassName(
-                        launch.launchType,
-                      )}`}
-                    >
-                      {launch.launchType === "FEATURED"
-                        ? "Premium"
-                        : launch.launchType}
-                    </span>
+                    {launch.launchType === "FEATURED" ? (
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-widest ${toneClassName()}`}
+                      >
+                        Premium
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-1 line-clamp-1 text-base text-muted-foreground font-medium leading-relaxed">
                     {launch.tool.tagline}
