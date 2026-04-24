@@ -4,19 +4,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthForm } from "@/components/auth/auth-form";
 
 const {
-  clearPendingAuthIntentMock,
   pushMock,
   refreshMock,
-  setPendingAuthIntentMock,
   signInMagicLinkMock,
   signInEmailMock,
   signInSocialMock,
   signUpEmailMock,
 } = vi.hoisted(() => ({
-  clearPendingAuthIntentMock: vi.fn(),
   pushMock: vi.fn(),
   refreshMock: vi.fn(),
-  setPendingAuthIntentMock: vi.fn(),
   signInMagicLinkMock: vi.fn(),
   signInEmailMock: vi.fn(),
   signInSocialMock: vi.fn(),
@@ -41,11 +37,6 @@ vi.mock("@/lib/auth-client", () => ({
       email: signUpEmailMock,
     },
   },
-}));
-
-vi.mock("@/lib/posthog-browser", () => ({
-  clearPendingAuthIntent: clearPendingAuthIntentMock,
-  setPendingAuthIntent: setPendingAuthIntentMock,
 }));
 
 describe("AuthForm", () => {
@@ -82,16 +73,12 @@ describe("AuthForm", () => {
       });
     });
 
-    expect(setPendingAuthIntentMock).toHaveBeenCalledWith({
-      intent: "sign-in",
-      method: "magic_link",
-      email: "founder@example.com",
-      redirectTo: "/resources/startup-directories",
-      source: "auth_form",
-    });
+    expect(
+      screen.getByText(/check your inbox for your sign-in link/i),
+    ).toBeInTheDocument();
   });
 
-  it("stores a pending sign-in intent for email/password login", async () => {
+  it("signs in with email and password", async () => {
     signInEmailMock.mockResolvedValueOnce({});
 
     render(<AuthForm mode="sign-in" redirectTo="/dashboard" />);
@@ -112,16 +99,11 @@ describe("AuthForm", () => {
       });
     });
 
-    expect(setPendingAuthIntentMock).toHaveBeenCalledWith({
-      intent: "sign-in",
-      method: "email",
-      email: "founder@example.com",
-      redirectTo: "/dashboard",
-      source: "auth_form",
-    });
+    expect(pushMock).toHaveBeenCalledWith("/dashboard");
+    expect(refreshMock).toHaveBeenCalledTimes(1);
   });
 
-  it("stores a pending sign-up intent for account creation", async () => {
+  it("creates an account and sends the founder to email verification", async () => {
     signUpEmailMock.mockResolvedValueOnce({});
 
     render(<AuthForm mode="sign-up" redirectTo="/dashboard" />);
@@ -146,12 +128,9 @@ describe("AuthForm", () => {
       });
     });
 
-    expect(setPendingAuthIntentMock).toHaveBeenCalledWith({
-      intent: "sign-up",
-      method: "email",
-      email: "founder@example.com",
-      redirectTo: "/dashboard",
-      source: "auth_form",
-    });
+    expect(pushMock).toHaveBeenCalledWith(
+      "/verify-email?email=founder%40example.com&redirect=%2Fdashboard",
+    );
+    expect(refreshMock).toHaveBeenCalledTimes(1);
   });
 });

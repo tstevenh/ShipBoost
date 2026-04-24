@@ -106,7 +106,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "saas hub saashub.com https://saashub.com"
   },
   {
-    "id": "theres-an-ai-for-that-013",
+    "id": "there-s-an-ai-for-that-013",
     "name": "There's an AI for that",
     "url": "https://theresanaiforthat.com",
     "domain": "theresanaiforthat.com",
@@ -834,7 +834,15 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "trustiner trustiner.com https://trustiner.com"
   },
   {
-    "id": "promote-project-104",
+    "id": "theonestartup-104",
+    "name": "TheoneStartup",
+    "url": "https://theonestartup.com/",
+    "domain": "theonestartup.com",
+    "dr": 48,
+    "searchText": "theonestartup theonestartup.com https://theonestartup.com/"
+  },
+  {
+    "id": "promote-project-105",
     "name": "Promote Project",
     "url": "https://promoteproject.com",
     "domain": "promoteproject.com",
@@ -842,7 +850,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "promote project promoteproject.com https://promoteproject.com"
   },
   {
-    "id": "rankinpublic-xyz-105",
+    "id": "rankinpublic-xyz-106",
     "name": "rankinpublic.xyz",
     "url": "https://rankinpublic.xyz",
     "domain": "rankinpublic.xyz",
@@ -850,7 +858,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "rankinpublic.xyz rankinpublic.xyz https://rankinpublic.xyz"
   },
   {
-    "id": "launchitx-106",
+    "id": "launchitx-107",
     "name": "Launchitx",
     "url": "https://launchitx.com/",
     "domain": "launchitx.com",
@@ -858,7 +866,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "launchitx launchitx.com https://launchitx.com/"
   },
   {
-    "id": "best-tool-vault-107",
+    "id": "best-tool-vault-108",
     "name": "Best Tool Vault",
     "url": "https://besttoolvault.com",
     "domain": "besttoolvault.com",
@@ -866,7 +874,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "best tool vault besttoolvault.com https://besttoolvault.com"
   },
   {
-    "id": "software-bolt-108",
+    "id": "software-bolt-109",
     "name": "Software Bolt",
     "url": "https://softwarebolt.com",
     "domain": "softwarebolt.com",
@@ -874,7 +882,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "software bolt softwarebolt.com https://softwarebolt.com"
   },
   {
-    "id": "solver-tools-109",
+    "id": "solver-tools-110",
     "name": "Solver Tools",
     "url": "https://solvertools.com",
     "domain": "solvertools.com",
@@ -882,7 +890,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "solver tools solvertools.com https://solvertools.com"
   },
   {
-    "id": "startup-vessel-110",
+    "id": "startup-vessel-111",
     "name": "Startup Vessel",
     "url": "https://startupvessel.com",
     "domain": "startupvessel.com",
@@ -890,7 +898,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "startup vessel startupvessel.com https://startupvessel.com"
   },
   {
-    "id": "aigc160-111",
+    "id": "aigc160-112",
     "name": "Aigc160",
     "url": "https://aigc160.com/",
     "domain": "aigc160.com",
@@ -898,7 +906,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "aigc160 aigc160.com https://aigc160.com/"
   },
   {
-    "id": "drchecker-112",
+    "id": "drchecker-113",
     "name": "DRChecker",
     "url": "https://drchecker.net/",
     "domain": "drchecker.net",
@@ -906,7 +914,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "drchecker drchecker.net https://drchecker.net/"
   },
   {
-    "id": "awesome-tools-113",
+    "id": "awesome-tools-114",
     "name": "Awesome Tools",
     "url": "https://awesome.tools",
     "domain": "awesome.tools",
@@ -914,7 +922,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "awesome tools awesome.tools https://awesome.tools"
   },
   {
-    "id": "huzzler-114",
+    "id": "huzzler-115",
     "name": "Huzzler",
     "url": "https://huzzler.so",
     "domain": "huzzler.so",
@@ -922,7 +930,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "huzzler huzzler.so https://huzzler.so"
   },
   {
-    "id": "solopush-115",
+    "id": "solopush-116",
     "name": "SoloPush",
     "url": "https://solopush.com",
     "domain": "solopush.com",
@@ -930,7 +938,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "solopush solopush.com https://solopush.com"
   },
   {
-    "id": "launch-list-116",
+    "id": "launch-list-117",
     "name": "Launch-list",
     "url": "https://www.launch-list.org/",
     "domain": "launch-list.org",
@@ -938,7 +946,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "launch-list launch-list.org https://www.launch-list.org/"
   },
   {
-    "id": "appalist-117",
+    "id": "appalist-118",
     "name": "AppaList",
     "url": "https://appalist.com",
     "domain": "appalist.com",
@@ -946,7 +954,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "appalist appalist.com https://appalist.com"
   },
   {
-    "id": "ideakiln-118",
+    "id": "ideakiln-119",
     "name": "IdeaKiln",
     "url": "https://ideakiln.com",
     "domain": "ideakiln.com",
@@ -954,7 +962,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "ideakiln ideakiln.com https://ideakiln.com"
   },
   {
-    "id": "saas-wheel-119",
+    "id": "saas-wheel-120",
     "name": "SaaS Wheel",
     "url": "https://saaswheel.com",
     "domain": "saaswheel.com",
@@ -962,7 +970,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "saas wheel saaswheel.com https://saaswheel.com"
   },
   {
-    "id": "tool-find-dir-120",
+    "id": "tool-find-dir-121",
     "name": "Tool Find Dir",
     "url": "https://toolfinddir.com",
     "domain": "toolfinddir.com",
@@ -970,7 +978,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "tool find dir toolfinddir.com https://toolfinddir.com"
   },
   {
-    "id": "aitoolzs-121",
+    "id": "aitoolzs-122",
     "name": "Aitoolzs",
     "url": "https://aitoolzs.com/",
     "domain": "aitoolzs.com",
@@ -978,7 +986,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "aitoolzs aitoolzs.com https://aitoolzs.com/"
   },
   {
-    "id": "inbox-reads-122",
+    "id": "inbox-reads-123",
     "name": "Inbox Reads",
     "url": "https://inboxreads.co",
     "domain": "inboxreads.co",
@@ -986,7 +994,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "inbox reads inboxreads.co https://inboxreads.co"
   },
   {
-    "id": "startup-tracker-123",
+    "id": "startup-tracker-124",
     "name": "Startup tracker",
     "url": "https://startuptracker.io",
     "domain": "startuptracker.io",
@@ -994,7 +1002,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "startup tracker startuptracker.io https://startuptracker.io"
   },
   {
-    "id": "techpluto-124",
+    "id": "techpluto-125",
     "name": "TechPluto",
     "url": "https://techpluto.com",
     "domain": "techpluto.com",
@@ -1002,7 +1010,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "techpluto techpluto.com https://techpluto.com"
   },
   {
-    "id": "the-hive-index-125",
+    "id": "the-hive-index-126",
     "name": "the Hive index",
     "url": "https://thehiveindex.com/submit",
     "domain": "thehiveindex.com",
@@ -1010,7 +1018,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "the hive index thehiveindex.com https://thehiveindex.com/submit"
   },
   {
-    "id": "tooldirectory-126",
+    "id": "tooldirectory-127",
     "name": "Tooldirectory",
     "url": "https://tooldirectory.ai",
     "domain": "tooldirectory.ai",
@@ -1018,7 +1026,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "tooldirectory tooldirectory.ai https://tooldirectory.ai"
   },
   {
-    "id": "bestdirectories-127",
+    "id": "bestdirectories-128",
     "name": "BestDirectories",
     "url": "https://bestdirectories.org/",
     "domain": "bestdirectories.org",
@@ -1026,7 +1034,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "bestdirectories bestdirectories.org https://bestdirectories.org/"
   },
   {
-    "id": "productburst-128",
+    "id": "productburst-129",
     "name": "Productburst",
     "url": "https://productburst.com/",
     "domain": "productburst.com",
@@ -1034,7 +1042,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "productburst productburst.com https://productburst.com/"
   },
   {
-    "id": "appsy-tools-129",
+    "id": "appsy-tools-130",
     "name": "Appsy Tools",
     "url": "https://appsytools.com",
     "domain": "appsytools.com",
@@ -1042,7 +1050,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "appsy tools appsytools.com https://appsytools.com"
   },
   {
-    "id": "hunt-for-tools-130",
+    "id": "hunt-for-tools-131",
     "name": "Hunt for Tools",
     "url": "https://huntfortools.com",
     "domain": "huntfortools.com",
@@ -1050,7 +1058,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "hunt for tools huntfortools.com https://huntfortools.com"
   },
   {
-    "id": "saas-field-131",
+    "id": "saas-field-132",
     "name": "SaaS Field",
     "url": "https://saasfield.com",
     "domain": "saasfield.com",
@@ -1058,7 +1066,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "saas field saasfield.com https://saasfield.com"
   },
   {
-    "id": "startup-directory-132",
+    "id": "startup-directory-133",
     "name": "Startup Directory",
     "url": "https://startupdirectory.net",
     "domain": "startupdirectory.net",
@@ -1066,7 +1074,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "startup directory startupdirectory.net https://startupdirectory.net"
   },
   {
-    "id": "toshilist-133",
+    "id": "toshilist-134",
     "name": "Toshilist",
     "url": "https://toshilist.com",
     "domain": "toshilist.com",
@@ -1074,7 +1082,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "toshilist toshilist.com https://toshilist.com"
   },
   {
-    "id": "we-like-tools-134",
+    "id": "we-like-tools-135",
     "name": "We Like Tools",
     "url": "https://weliketools.com",
     "domain": "weliketools.com",
@@ -1082,7 +1090,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "we like tools weliketools.com https://weliketools.com"
   },
   {
-    "id": "ship-growth-135",
+    "id": "ship-growth-136",
     "name": "Ship Growth",
     "url": "https://shipgrowth.dev/",
     "domain": "shipgrowth.dev",
@@ -1090,7 +1098,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "ship growth shipgrowth.dev https://shipgrowth.dev/"
   },
   {
-    "id": "launchboard-136",
+    "id": "launchboard-137",
     "name": "Launchboard",
     "url": "https://www.launchboard.dev/",
     "domain": "launchboard.dev",
@@ -1098,7 +1106,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "launchboard launchboard.dev https://www.launchboard.dev/"
   },
   {
-    "id": "verifieddr-137",
+    "id": "verifieddr-138",
     "name": "VerifiedDR",
     "url": "https://verifieddr.com/",
     "domain": "verifieddr.com",
@@ -1106,7 +1114,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "verifieddr verifieddr.com https://verifieddr.com/"
   },
   {
-    "id": "ash-list-138",
+    "id": "ash-list-139",
     "name": "Ash List",
     "url": "https://ashlist.com",
     "domain": "ashlist.com",
@@ -1114,7 +1122,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "ash list ashlist.com https://ashlist.com"
   },
   {
-    "id": "launch-scroll-139",
+    "id": "launch-scroll-140",
     "name": "Launch Scroll",
     "url": "https://launchscroll.com",
     "domain": "launchscroll.com",
@@ -1122,7 +1130,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "launch scroll launchscroll.com https://launchscroll.com"
   },
   {
-    "id": "product-list-dir-140",
+    "id": "product-list-dir-141",
     "name": "Product List Dir",
     "url": "https://productlistdir.com",
     "domain": "productlistdir.com",
@@ -1130,7 +1138,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "product list dir productlistdir.com https://productlistdir.com"
   },
   {
-    "id": "thatappshow-141",
+    "id": "thatappshow-142",
     "name": "Thatappshow",
     "url": "https://thatappshow.com",
     "domain": "thatappshow.com",
@@ -1138,7 +1146,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "thatappshow thatappshow.com https://thatappshow.com"
   },
   {
-    "id": "shinylaunch-142",
+    "id": "shinylaunch-143",
     "name": "ShinyLaunch",
     "url": "https://shinylaunch.com",
     "domain": "shinylaunch.com",
@@ -1146,7 +1154,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "shinylaunch shinylaunch.com https://shinylaunch.com"
   },
   {
-    "id": "beam-tools-143",
+    "id": "beam-tools-144",
     "name": "Beam Tools",
     "url": "https://beamtools.com",
     "domain": "beamtools.com",
@@ -1154,7 +1162,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "beam tools beamtools.com https://beamtools.com"
   },
   {
-    "id": "betterlaunch-144",
+    "id": "betterlaunch-145",
     "name": "Betterlaunch",
     "url": "https://betterlaunch.co",
     "domain": "betterlaunch.co",
@@ -1162,7 +1170,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "betterlaunch betterlaunch.co https://betterlaunch.co"
   },
   {
-    "id": "my-start-tools-145",
+    "id": "my-start-tools-146",
     "name": "My Start Tools",
     "url": "https://mystarttools.com",
     "domain": "mystarttools.com",
@@ -1170,7 +1178,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "my start tools mystarttools.com https://mystarttools.com"
   },
   {
-    "id": "saas-hub-directory-146",
+    "id": "saas-hub-directory-147",
     "name": "SaaS Hub Directory",
     "url": "https://saashubdirectory.com",
     "domain": "saashubdirectory.com",
@@ -1178,7 +1186,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "saas hub directory saashubdirectory.com https://saashubdirectory.com"
   },
   {
-    "id": "source-dir-147",
+    "id": "source-dir-148",
     "name": "Source Dir",
     "url": "https://sourcedir.com",
     "domain": "sourcedir.com",
@@ -1186,7 +1194,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "source dir sourcedir.com https://sourcedir.com"
   },
   {
-    "id": "stack-directory-148",
+    "id": "stack-directory-149",
     "name": "Stack Directory",
     "url": "https://stackdirectory.com",
     "domain": "stackdirectory.com",
@@ -1194,7 +1202,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "stack directory stackdirectory.com https://stackdirectory.com"
   },
   {
-    "id": "top-trend-tools-149",
+    "id": "top-trend-tools-150",
     "name": "Top Trend Tools",
     "url": "https://toptrendtools.com",
     "domain": "toptrendtools.com",
@@ -1202,7 +1210,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "top trend tools toptrendtools.com https://toptrendtools.com"
   },
   {
-    "id": "smartkithub-150",
+    "id": "smartkithub-151",
     "name": "SmartKitHub",
     "url": "https://smartkithub.com/",
     "domain": "smartkithub.com",
@@ -1210,7 +1218,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "smartkithub smartkithub.com https://smartkithub.com/"
   },
   {
-    "id": "million-dot-homepage-151",
+    "id": "million-dot-homepage-152",
     "name": "Million Dot Homepage",
     "url": "https://milliondothomepage.com",
     "domain": "milliondothomepage.com",
@@ -1218,7 +1226,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "million dot homepage milliondothomepage.com https://milliondothomepage.com"
   },
   {
-    "id": "saasroots-152",
+    "id": "saasroots-153",
     "name": "Saasroots",
     "url": "https://saasroots.com/",
     "domain": "saasroots.com",
@@ -1226,7 +1234,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "saasroots saasroots.com https://saasroots.com/"
   },
   {
-    "id": "startupaideas-153",
+    "id": "startupaideas-154",
     "name": "Startupaideas",
     "url": "https://startupaideas.com/",
     "domain": "startupaideas.com",
@@ -1234,7 +1242,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "startupaideas startupaideas.com https://startupaideas.com/"
   },
   {
-    "id": "popularaitools-154",
+    "id": "popularaitools-155",
     "name": "Popularaitools",
     "url": "https://popularaitools.ai/submit-a-tool",
     "domain": "popularaitools.ai",
@@ -1242,7 +1250,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "popularaitools popularaitools.ai https://popularaitools.ai/submit-a-tool"
   },
   {
-    "id": "startuplist-ing-155",
+    "id": "startuplist-ing-156",
     "name": "startuplist.ing",
     "url": "https://startuplist.ing",
     "domain": "startuplist.ing",
@@ -1250,7 +1258,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "startuplist.ing startuplist.ing https://startuplist.ing"
   },
   {
-    "id": "productfame-156",
+    "id": "productfame-157",
     "name": "ProductFame",
     "url": "https://productfame.com/",
     "domain": "productfame.com",
@@ -1258,7 +1266,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "productfame productfame.com https://productfame.com/"
   },
   {
-    "id": "launchvault-157",
+    "id": "launchvault-158",
     "name": "LaunchVault",
     "url": "https://www.launchvault.dev/",
     "domain": "launchvault.dev",
@@ -1266,7 +1274,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "launchvault launchvault.dev https://www.launchvault.dev/"
   },
   {
-    "id": "saas-tools-dir-158",
+    "id": "saas-tools-dir-159",
     "name": "SaaS Tools Dir",
     "url": "https://saastoolsdir.com",
     "domain": "saastoolsdir.com",
@@ -1274,7 +1282,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "saas tools dir saastoolsdir.com https://saastoolsdir.com"
   },
   {
-    "id": "the-key-tools-159",
+    "id": "the-key-tools-160",
     "name": "The Key Tools",
     "url": "https://thekeytools.com",
     "domain": "thekeytools.com",
@@ -1282,7 +1290,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "the key tools thekeytools.com https://thekeytools.com"
   },
   {
-    "id": "tool-signal-160",
+    "id": "tool-signal-161",
     "name": "Tool Signal",
     "url": "https://toolsignal.com",
     "domain": "toolsignal.com",
@@ -1290,7 +1298,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "tool signal toolsignal.com https://toolsignal.com"
   },
   {
-    "id": "latestaiupdates-161",
+    "id": "latestaiupdates-162",
     "name": "Latestaiupdates",
     "url": "https://latestaiupdates.com/",
     "domain": "latestaiupdates.com",
@@ -1298,7 +1306,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "latestaiupdates latestaiupdates.com https://latestaiupdates.com/"
   },
   {
-    "id": "theapptools-162",
+    "id": "theapptools-163",
     "name": "Theapptools",
     "url": "https://theapptools.com/",
     "domain": "theapptools.com",
@@ -1306,7 +1314,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "theapptools theapptools.com https://theapptools.com/"
   },
   {
-    "id": "themegatools-163",
+    "id": "themegatools-164",
     "name": "Themegatools",
     "url": "https://themegatools.com/",
     "domain": "themegatools.com",
@@ -1314,7 +1322,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "themegatools themegatools.com https://themegatools.com/"
   },
   {
-    "id": "toolslisthq-164",
+    "id": "toolslisthq-165",
     "name": "Toolslisthq",
     "url": "https://toolslisthq.com/",
     "domain": "toolslisthq.com",
@@ -1322,7 +1330,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "toolslisthq toolslisthq.com https://toolslisthq.com/"
   },
   {
-    "id": "toolsunderradar-165",
+    "id": "toolsunderradar-166",
     "name": "Toolsunderradar",
     "url": "https://toolsunderradar.com/",
     "domain": "toolsunderradar.com",
@@ -1330,7 +1338,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "toolsunderradar toolsunderradar.com https://toolsunderradar.com/"
   },
   {
-    "id": "letterlist-166",
+    "id": "letterlist-167",
     "name": "Letterlist",
     "url": "https://letterlist.com/submit",
     "domain": "letterlist.com",
@@ -1338,7 +1346,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "letterlist letterlist.com https://letterlist.com/submit"
   },
   {
-    "id": "madewithlovable-167",
+    "id": "madewithlovable-168",
     "name": "MadewithLovable",
     "url": "https://madewithlovable.com/",
     "domain": "madewithlovable.com",
@@ -1346,7 +1354,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "madewithlovable madewithlovable.com https://madewithlovable.com/"
   },
   {
-    "id": "thecoretools-168",
+    "id": "thecoretools-169",
     "name": "Thecoretools",
     "url": "https://thecoretools.com/",
     "domain": "thecoretools.com",
@@ -1354,7 +1362,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "thecoretools thecoretools.com https://thecoretools.com/"
   },
   {
-    "id": "super-ai-boom-169",
+    "id": "super-ai-boom-170",
     "name": "Super AI Boom",
     "url": "https://superaiboom.com",
     "domain": "superaiboom.com",
@@ -1362,7 +1370,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "super ai boom superaiboom.com https://superaiboom.com"
   },
   {
-    "id": "tiny-tool-hub-170",
+    "id": "tiny-tool-hub-171",
     "name": "Tiny Tool Hub",
     "url": "https://tinytoolhub.com",
     "domain": "tinytoolhub.com",
@@ -1370,7 +1378,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "tiny tool hub tinytoolhub.com https://tinytoolhub.com"
   },
   {
-    "id": "tool-journey-171",
+    "id": "tool-journey-172",
     "name": "Tool Journey",
     "url": "https://tooljourney.com",
     "domain": "tooljourney.com",
@@ -1378,7 +1386,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "tool journey tooljourney.com https://tooljourney.com"
   },
   {
-    "id": "tool-prism-172",
+    "id": "tool-prism-173",
     "name": "Tool Prism",
     "url": "https://toolprism.com",
     "domain": "toolprism.com",
@@ -1386,7 +1394,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "tool prism toolprism.com https://toolprism.com"
   },
   {
-    "id": "aitrovex-173",
+    "id": "aitrovex-174",
     "name": "AItrovex",
     "url": "http://aitrovex.com/",
     "domain": "aitrovex.com",
@@ -1394,7 +1402,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "aitrovex aitrovex.com http://aitrovex.com/"
   },
   {
-    "id": "foundr-174",
+    "id": "foundr-175",
     "name": "Foundr",
     "url": "https://foundr.ai",
     "domain": "foundr.ai",
@@ -1402,7 +1410,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "foundr foundr.ai https://foundr.ai"
   },
   {
-    "id": "indiehub-175",
+    "id": "indiehub-176",
     "name": "IndieHub",
     "url": "https://indiehub.best",
     "domain": "indiehub.best",
@@ -1410,7 +1418,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "indiehub indiehub.best https://indiehub.best"
   },
   {
-    "id": "proofstories-176",
+    "id": "proofstories-177",
     "name": "Proofstories",
     "url": "https://proofstories.io/directory",
     "domain": "proofstories.io",
@@ -1418,7 +1426,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "proofstories proofstories.io https://proofstories.io/directory"
   },
   {
-    "id": "tinylaunchpad-177",
+    "id": "tinylaunchpad-178",
     "name": "TinyLaunchpad",
     "url": "https://tinylaunchpad.com",
     "domain": "tinylaunchpad.com",
@@ -1426,7 +1434,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "tinylaunchpad tinylaunchpad.com https://tinylaunchpad.com"
   },
   {
-    "id": "tool-cosmos-178",
+    "id": "tool-cosmos-179",
     "name": "Tool Cosmos",
     "url": "https://toolcosmos.com",
     "domain": "toolcosmos.com",
@@ -1434,7 +1442,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "tool cosmos toolcosmos.com https://toolcosmos.com"
   },
   {
-    "id": "indieaidirectory-179",
+    "id": "indieaidirectory-180",
     "name": "IndieAIdirectory",
     "url": "https://indieai.directory/",
     "domain": "indieai.directory",
@@ -1442,7 +1450,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "indieaidirectory indieai.directory https://indieai.directory/"
   },
   {
-    "id": "1000-tools-180",
+    "id": "1000-tools-181",
     "name": "1000 Tools",
     "url": "https://1000.tools",
     "domain": "1000.tools",
@@ -1450,7 +1458,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "1000 tools 1000.tools https://1000.tools"
   },
   {
-    "id": "ibp-hub-181",
+    "id": "ibp-hub-182",
     "name": "Ibp hub",
     "url": "https://ibphub.com",
     "domain": "ibphub.com",
@@ -1458,7 +1466,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "ibp hub ibphub.com https://ibphub.com"
   },
   {
-    "id": "top-startups-182",
+    "id": "top-startups-183",
     "name": "Top startups",
     "url": "https://topstartups.io",
     "domain": "topstartups.io",
@@ -1466,7 +1474,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "top startups topstartups.io https://topstartups.io"
   },
   {
-    "id": "wavel-183",
+    "id": "wavel-184",
     "name": "Wavel",
     "url": "https://wavel.io",
     "domain": "wavel.io",
@@ -1474,7 +1482,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "wavel wavel.io https://wavel.io"
   },
   {
-    "id": "inlinkswetrust-184",
+    "id": "inlinkswetrust-185",
     "name": "Inlinkswetrust",
     "url": "https://inlinkswetrust.com",
     "domain": "inlinkswetrust.com",
@@ -1482,7 +1490,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "inlinkswetrust inlinkswetrust.com https://inlinkswetrust.com"
   },
   {
-    "id": "nocode-list-185",
+    "id": "nocode-list-186",
     "name": "NoCode List",
     "url": "https://nocodelist.co",
     "domain": "nocodelist.co",
@@ -1490,7 +1498,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "nocode list nocodelist.co https://nocodelist.co"
   },
   {
-    "id": "postmake-186",
+    "id": "postmake-187",
     "name": "Postmake",
     "url": "https://postmake.io",
     "domain": "postmake.io",
@@ -1498,7 +1506,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "postmake postmake.io https://postmake.io"
   },
   {
-    "id": "stork-187",
+    "id": "stork-188",
     "name": "Stork",
     "url": "https://stork.ai",
     "domain": "stork.ai",
@@ -1506,7 +1514,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "stork stork.ai https://stork.ai"
   },
   {
-    "id": "that-ai-collection-188",
+    "id": "that-ai-collection-189",
     "name": "That AI Collection",
     "url": "https://thataicollection.com",
     "domain": "thataicollection.com",
@@ -1514,7 +1522,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "that ai collection thataicollection.com https://thataicollection.com"
   },
   {
-    "id": "victrays-189",
+    "id": "victrays-190",
     "name": "Victrays",
     "url": "https://victrays.com",
     "domain": "victrays.com",
@@ -1522,7 +1530,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "victrays victrays.com https://victrays.com"
   },
   {
-    "id": "allgpts-190",
+    "id": "allgpts-191",
     "name": "AllGPTs",
     "url": "https://allgpts.co",
     "domain": "allgpts.co",
@@ -1530,7 +1538,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "allgpts allgpts.co https://allgpts.co"
   },
   {
-    "id": "theindiewall-191",
+    "id": "theindiewall-192",
     "name": "Theindiewall",
     "url": "https://theindiewall.net",
     "domain": "theindiewall.net",
@@ -1538,7 +1546,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "theindiewall theindiewall.net https://theindiewall.net"
   },
   {
-    "id": "selected-site-192",
+    "id": "selected-site-193",
     "name": "Selected Site",
     "url": "https://selected.site/",
     "domain": "selected.site",
@@ -1546,7 +1554,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "selected site selected.site https://selected.site/"
   },
   {
-    "id": "saaspa-ge-193",
+    "id": "saaspa-ge-194",
     "name": "Saaspa.ge",
     "url": "https://saaspa.ge",
     "domain": "saaspa.ge",
@@ -1554,7 +1562,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "saaspa.ge saaspa.ge https://saaspa.ge"
   },
   {
-    "id": "launchclash-194",
+    "id": "launchclash-195",
     "name": "LaunchClash",
     "url": "https://launchclash.com",
     "domain": "launchclash.com",
@@ -1562,7 +1570,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "launchclash launchclash.com https://launchclash.com"
   },
   {
-    "id": "ai-center-195",
+    "id": "ai-center-196",
     "name": "AI Center",
     "url": "https://aicenter.ai",
     "domain": "aicenter.ai",
@@ -1570,7 +1578,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "ai center aicenter.ai https://aicenter.ai"
   },
   {
-    "id": "confettisaas-196",
+    "id": "confettisaas-197",
     "name": "ConfettiSaaS",
     "url": "https://confettisaas.com",
     "domain": "confettisaas.com",
@@ -1578,7 +1586,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "confettisaas confettisaas.com https://confettisaas.com"
   },
   {
-    "id": "devtool-197",
+    "id": "devtool-198",
     "name": "Devtool",
     "url": "https://devtool.io",
     "domain": "devtool.io",
@@ -1586,7 +1594,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "devtool devtool.io https://devtool.io"
   },
   {
-    "id": "rankyourai-198",
+    "id": "rankyourai-199",
     "name": "RankYourAI",
     "url": "https://rankyourai.com",
     "domain": "rankyourai.com",
@@ -1594,7 +1602,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "rankyourai rankyourai.com https://rankyourai.com"
   },
   {
-    "id": "web-review-199",
+    "id": "web-review-200",
     "name": "Web-review",
     "url": "https://web-review.com/",
     "domain": "web-review.com",
@@ -1602,7 +1610,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "web-review web-review.com https://web-review.com/"
   },
   {
-    "id": "9-sites-200",
+    "id": "9-sites-201",
     "name": "9 sites",
     "url": "https://www.9sites.net/",
     "domain": "9sites.net",
@@ -1610,7 +1618,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "9 sites 9sites.net https://www.9sites.net/"
   },
   {
-    "id": "toolfolio-201",
+    "id": "toolfolio-202",
     "name": "toolfolio",
     "url": "https://toolfolio.io",
     "domain": "toolfolio.io",
@@ -1618,7 +1626,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "toolfolio toolfolio.io https://toolfolio.io"
   },
   {
-    "id": "directoryhunt-202",
+    "id": "directoryhunt-203",
     "name": "DirectoryHunt",
     "url": "http://directoryhunt.org/",
     "domain": "directoryhunt.org",
@@ -1626,7 +1634,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "directoryhunt directoryhunt.org http://directoryhunt.org/"
   },
   {
-    "id": "ai-tool-mate-203",
+    "id": "ai-tool-mate-204",
     "name": "AI Tool Mate",
     "url": "https://aitoolmate.com",
     "domain": "aitoolmate.com",
@@ -1634,7 +1642,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "ai tool mate aitoolmate.com https://aitoolmate.com"
   },
   {
-    "id": "launch-cab-204",
+    "id": "launch-cab-205",
     "name": "launch.cab",
     "url": "https://launch.cab",
     "domain": "launch.cab",
@@ -1642,7 +1650,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "launch.cab launch.cab https://launch.cab"
   },
   {
-    "id": "launched-205",
+    "id": "launched-206",
     "name": "Launched",
     "url": "https://launched.io",
     "domain": "launched.io",
@@ -1650,7 +1658,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "launched launched.io https://launched.io"
   },
   {
-    "id": "saasdirectory-206",
+    "id": "saasdirectory-207",
     "name": "Saasdirectory",
     "url": "https://saasdirectory.com",
     "domain": "saasdirectory.com",
@@ -1658,7 +1666,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "saasdirectory saasdirectory.com https://saasdirectory.com"
   },
   {
-    "id": "shipyard-hq-207",
+    "id": "shipyard-hq-208",
     "name": "ShipYard HQ",
     "url": "https://shipyardhq.dev",
     "domain": "shipyardhq.dev",
@@ -1666,7 +1674,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "shipyard hq shipyardhq.dev https://shipyardhq.dev"
   },
   {
-    "id": "startups-fm-208",
+    "id": "startups-fm-209",
     "name": "Startups.fm",
     "url": "https://startups.fm",
     "domain": "startups.fm",
@@ -1674,7 +1682,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "startups.fm startups.fm https://startups.fm"
   },
   {
-    "id": "startupsfm-209",
+    "id": "startupsfm-210",
     "name": "StartupsFM",
     "url": "https://www.startups.fm/",
     "domain": "startups.fm",
@@ -1682,7 +1690,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "startupsfm startups.fm https://www.startups.fm/"
   },
   {
-    "id": "saasbison-210",
+    "id": "saasbison-211",
     "name": "SaaSBison",
     "url": "https://saasbison.com",
     "domain": "saasbison.com",
@@ -1690,944 +1698,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "saasbison saasbison.com https://saasbison.com"
   },
   {
-    "id": "ai-parabellum-211",
-    "name": "AI Parabellum",
-    "url": "https://aiparabellum.com",
-    "domain": "aiparabellum.com",
-    "dr": 33,
-    "searchText": "ai parabellum aiparabellum.com https://aiparabellum.com"
-  },
-  {
-    "id": "euroalternative-212",
-    "name": "EuroAlternative",
-    "url": "https://euroalternative.co",
-    "domain": "euroalternative.co",
-    "dr": 33,
-    "searchText": "euroalternative euroalternative.co https://euroalternative.co"
-  },
-  {
-    "id": "five-taco-213",
-    "name": "Five Taco",
-    "url": "https://fivetaco.com/submit",
-    "domain": "fivetaco.com",
-    "dr": 33,
-    "searchText": "five taco fivetaco.com https://fivetaco.com/submit"
-  },
-  {
-    "id": "startups-fyi-214",
-    "name": "Startups.fyi",
-    "url": "https://startups.fyi",
-    "domain": "startups.fyi",
-    "dr": 33,
-    "searchText": "startups.fyi startups.fyi https://startups.fyi"
-  },
-  {
-    "id": "submithunt-215",
-    "name": "SubmitHunt",
-    "url": "https://submithunt.com",
-    "domain": "submithunt.com",
-    "dr": 33,
-    "searchText": "submithunt submithunt.com https://submithunt.com"
-  },
-  {
-    "id": "the-great-apps-216",
-    "name": "the Great Apps",
-    "url": "https://thegreatapps.com",
-    "domain": "thegreatapps.com",
-    "dr": 33,
-    "searchText": "the great apps thegreatapps.com https://thegreatapps.com"
-  },
-  {
-    "id": "the-startup-inc-217",
-    "name": "the Startup inc",
-    "url": "https://thestartupinc.com",
-    "domain": "thestartupinc.com",
-    "dr": 33,
-    "searchText": "the startup inc thestartupinc.com https://thestartupinc.com"
-  },
-  {
-    "id": "shipstry-218",
-    "name": "Shipstry",
-    "url": "https://shipstry.com/",
-    "domain": "shipstry.com",
-    "dr": 33,
-    "searchText": "shipstry shipstry.com https://shipstry.com/"
-  },
-  {
-    "id": "domore-ai-219",
-    "name": "DoMore AI",
-    "url": "https://domore.ai",
-    "domain": "domore.ai",
-    "dr": 32,
-    "searchText": "domore ai domore.ai https://domore.ai"
-  },
-  {
-    "id": "llm-relevance-220",
-    "name": "LLM Relevance",
-    "url": "https://llmrelevance.com",
-    "domain": "llmrelevance.com",
-    "dr": 32,
-    "searchText": "llm relevance llmrelevance.com https://llmrelevance.com"
-  },
-  {
-    "id": "resource-fyi-221",
-    "name": "Resource fyi",
-    "url": "https://resource.fyi",
-    "domain": "resource.fyi",
-    "dr": 32,
-    "searchText": "resource fyi resource.fyi https://resource.fyi"
-  },
-  {
-    "id": "devhub-222",
-    "name": "DevHub",
-    "url": "https://devhub.best/",
-    "domain": "devhub.best",
-    "dr": 32,
-    "searchText": "devhub devhub.best https://devhub.best/"
-  },
-  {
-    "id": "aitoolguru-223",
-    "name": "Aitoolguru",
-    "url": "https://aitoolguru.com",
-    "domain": "aitoolguru.com",
-    "dr": 31,
-    "searchText": "aitoolguru aitoolguru.com https://aitoolguru.com"
-  },
-  {
-    "id": "awesome-indie-224",
-    "name": "Awesome Indie",
-    "url": "https://awesomeindie.com",
-    "domain": "awesomeindie.com",
-    "dr": 31,
-    "searchText": "awesome indie awesomeindie.com https://awesomeindie.com"
-  },
-  {
-    "id": "findyoursaas-225",
-    "name": "FindYourSaaS",
-    "url": "https://findyoursaas.com",
-    "domain": "findyoursaas.com",
-    "dr": 31,
-    "searchText": "findyoursaas findyoursaas.com https://findyoursaas.com"
-  },
-  {
-    "id": "builtbyme-226",
-    "name": "BuiltbyMe",
-    "url": "https://builtbyme.io/",
-    "domain": "builtbyme.io",
-    "dr": 31,
-    "searchText": "builtbyme builtbyme.io https://builtbyme.io/"
-  },
-  {
-    "id": "buildvoyage-227",
-    "name": "BuildVoyage",
-    "url": "https://buildvoyage.com/",
-    "domain": "buildvoyage.com",
-    "dr": 31,
-    "searchText": "buildvoyage buildvoyage.com https://buildvoyage.com/"
-  },
-  {
-    "id": "saasdb-228",
-    "name": "SaaSDB",
-    "url": "https://saasdb.net/",
-    "domain": "saasdb.net",
-    "dr": 31,
-    "searchText": "saasdb saasdb.net https://saasdb.net/"
-  },
-  {
-    "id": "indiedev-229",
-    "name": "Indiedev",
-    "url": "https://indiedev.tools",
-    "domain": "indiedev.tools",
-    "dr": 30,
-    "searchText": "indiedev indiedev.tools https://indiedev.tools"
-  },
-  {
-    "id": "toptools-230",
-    "name": "Toptools",
-    "url": "https://toptools.ai",
-    "domain": "toptools.ai",
-    "dr": 30,
-    "searchText": "toptools toptools.ai https://toptools.ai"
-  },
-  {
-    "id": "aat-ee-231",
-    "name": "aat.ee",
-    "url": "https://aat.ee",
-    "domain": "aat.ee",
-    "dr": 29,
-    "searchText": "aat.ee aat.ee https://aat.ee"
-  },
-  {
-    "id": "bulletin-232",
-    "name": "Bulletin",
-    "url": "https://bulletin.so",
-    "domain": "bulletin.so",
-    "dr": 29,
-    "searchText": "bulletin bulletin.so https://bulletin.so"
-  },
-  {
-    "id": "toolhub-233",
-    "name": "ToolHub",
-    "url": "https://toolhub.me",
-    "domain": "toolhub.me",
-    "dr": 28,
-    "searchText": "toolhub toolhub.me https://toolhub.me"
-  },
-  {
-    "id": "directoryscout-234",
-    "name": "DirectoryScout",
-    "url": "https://directoryscout.com/",
-    "domain": "directoryscout.com",
-    "dr": 28,
-    "searchText": "directoryscout directoryscout.com https://directoryscout.com/"
-  },
-  {
-    "id": "indiehackerstacks-235",
-    "name": "Indiehackerstacks",
-    "url": "https://indiehackerstacks.com/",
-    "domain": "indiehackerstacks.com",
-    "dr": 28,
-    "searchText": "indiehackerstacks indiehackerstacks.com https://indiehackerstacks.com/"
-  },
-  {
-    "id": "saascity-236",
-    "name": "SaaSCity",
-    "url": "https://saascity.io/",
-    "domain": "saascity.io",
-    "dr": 28,
-    "searchText": "saascity saascity.io https://saascity.io/"
-  },
-  {
-    "id": "earlylaunch-237",
-    "name": "EarlyLaunch",
-    "url": "http://earlylaunch.online/",
-    "domain": "earlylaunch.online",
-    "dr": 28,
-    "searchText": "earlylaunch earlylaunch.online http://earlylaunch.online/"
-  },
-  {
-    "id": "makerhunt-238",
-    "name": "Makerhunt",
-    "url": "https://makerhunt.io/",
-    "domain": "makerhunt.io",
-    "dr": 28,
-    "searchText": "makerhunt makerhunt.io https://makerhunt.io/"
-  },
-  {
-    "id": "hunt0-239",
-    "name": "HUNT0",
-    "url": "https://hunt0.com",
-    "domain": "hunt0.com",
-    "dr": 27,
-    "searchText": "hunt0 hunt0.com https://hunt0.com"
-  },
-  {
-    "id": "liiinks-240",
-    "name": "Liiinks",
-    "url": "https://liiinks.net",
-    "domain": "liiinks.net",
-    "dr": 27,
-    "searchText": "liiinks liiinks.net https://liiinks.net"
-  },
-  {
-    "id": "ranccoon-241",
-    "name": "Ranccoon",
-    "url": "https://www.ranccoon.com/directory",
-    "domain": "ranccoon.com",
-    "dr": 27,
-    "searchText": "ranccoon ranccoon.com https://www.ranccoon.com/directory"
-  },
-  {
-    "id": "startup-spotlight-242",
-    "name": "Startup Spotlight",
-    "url": "https://www.startupspotlight.co/",
-    "domain": "startupspotlight.co",
-    "dr": 27,
-    "searchText": "startup spotlight startupspotlight.co https://www.startupspotlight.co/"
-  },
-  {
-    "id": "sumodir-243",
-    "name": "Sumodir",
-    "url": "https://sumodir.com",
-    "domain": "sumodir.com",
-    "dr": 27,
-    "searchText": "sumodir sumodir.com https://sumodir.com"
-  },
-  {
-    "id": "ai-depot-244",
-    "name": "AI Depot",
-    "url": "https://aidepot.co",
-    "domain": "aidepot.co",
-    "dr": 26,
-    "searchText": "ai depot aidepot.co https://aidepot.co"
-  },
-  {
-    "id": "gptdemo-245",
-    "name": "Gptdemo",
-    "url": "https://gptdemo.net",
-    "domain": "gptdemo.net",
-    "dr": 26,
-    "searchText": "gptdemo gptdemo.net https://gptdemo.net"
-  },
-  {
-    "id": "hot100-246",
-    "name": "hot100",
-    "url": "https://hot100.ai",
-    "domain": "hot100.ai",
-    "dr": 26,
-    "searchText": "hot100 hot100.ai https://hot100.ai"
-  },
-  {
-    "id": "one-million-directory-247",
-    "name": "One Million Directory",
-    "url": "https://onemilliondirectory.com",
-    "domain": "onemilliondirectory.com",
-    "dr": 26,
-    "searchText": "one million directory onemilliondirectory.com https://onemilliondirectory.com"
-  },
-  {
-    "id": "saasgrow-248",
-    "name": "SaaSGrow",
-    "url": "https://saasgrow.app",
-    "domain": "saasgrow.app",
-    "dr": 26,
-    "searchText": "saasgrow saasgrow.app https://saasgrow.app"
-  },
-  {
-    "id": "sololaunches-249",
-    "name": "Sololaunches",
-    "url": "https://sololaunches.com",
-    "domain": "sololaunches.com",
-    "dr": 26,
-    "searchText": "sololaunches sololaunches.com https://sololaunches.com"
-  },
-  {
-    "id": "dododirectory-250",
-    "name": "DodoDirectory",
-    "url": "https://dododirectory.com",
-    "domain": "dododirectory.com",
-    "dr": 26,
-    "searchText": "dododirectory dododirectory.com https://dododirectory.com"
-  },
-  {
-    "id": "ai-tool-tracker-251",
-    "name": "Ai tool tracker",
-    "url": "https://aitooltracker.com",
-    "domain": "aitooltracker.com",
-    "dr": 25,
-    "searchText": "ai tool tracker aitooltracker.com https://aitooltracker.com"
-  },
-  {
-    "id": "stellar-launch-252",
-    "name": "Stellar Launch",
-    "url": "https://stellarlaunch.org",
-    "domain": "stellarlaunch.org",
-    "dr": 25,
-    "searchText": "stellar launch stellarlaunch.org https://stellarlaunch.org"
-  },
-  {
-    "id": "lowcodenocode-253",
-    "name": "LowCodeNoCode",
-    "url": "https://lowcodenocode.org/",
-    "domain": "lowcodenocode.org",
-    "dr": 25,
-    "searchText": "lowcodenocode lowcodenocode.org https://lowcodenocode.org/"
-  },
-  {
-    "id": "kick-product-254",
-    "name": "Kick Product",
-    "url": "https://www.kickproduct.com/",
-    "domain": "kickproduct.com",
-    "dr": 25,
-    "searchText": "kick product kickproduct.com https://www.kickproduct.com/"
-  },
-  {
-    "id": "strict-seal-255",
-    "name": "Strict Seal",
-    "url": "https://strictseal.com/",
-    "domain": "strictseal.com",
-    "dr": 24,
-    "searchText": "strict seal strictseal.com https://strictseal.com/"
-  },
-  {
-    "id": "launch-void-256",
-    "name": "Launch Void",
-    "url": "https://www.launchvoid.com/",
-    "domain": "launchvoid.com",
-    "dr": 24,
-    "searchText": "launch void launchvoid.com https://www.launchvoid.com/"
-  },
-  {
-    "id": "saassy-board-257",
-    "name": "Saassy Board",
-    "url": "https://saassy-board.com",
-    "domain": "saassy-board.com",
-    "dr": 23,
-    "searchText": "saassy board saassy-board.com https://saassy-board.com"
-  },
-  {
-    "id": "startuptile-258",
-    "name": "Startuptile",
-    "url": "https://startuptile.com",
-    "domain": "startuptile.com",
-    "dr": 23,
-    "searchText": "startuptile startuptile.com https://startuptile.com"
-  },
-  {
-    "id": "toolscout-ai-259",
-    "name": "Toolscout ai",
-    "url": "https://toolscout.ai",
-    "domain": "toolscout.ai",
-    "dr": 23,
-    "searchText": "toolscout ai toolscout.ai https://toolscout.ai"
-  },
-  {
-    "id": "vibecodinglist-260",
-    "name": "Vibecodinglist",
-    "url": "https://vibecodinglist.com/",
-    "domain": "vibecodinglist.com",
-    "dr": 23,
-    "searchText": "vibecodinglist vibecodinglist.com https://vibecodinglist.com/"
-  },
-  {
-    "id": "indie-showcase-261",
-    "name": "Indie Showcase",
-    "url": "https://indieshowcase.io/",
-    "domain": "indieshowcase.io",
-    "dr": 22,
-    "searchText": "indie showcase indieshowcase.io https://indieshowcase.io/"
-  },
-  {
-    "id": "showmeyoursite-262",
-    "name": "Showmeyoursite",
-    "url": "https://showmeyour.site/",
-    "domain": "showmeyour.site",
-    "dr": 22,
-    "searchText": "showmeyoursite showmeyour.site https://showmeyour.site/"
-  },
-  {
-    "id": "bro-263",
-    "name": "Bro",
-    "url": "https://bro.directory",
-    "domain": "bro.directory",
-    "dr": 21,
-    "searchText": "bro bro.directory https://bro.directory"
-  },
-  {
-    "id": "justgotfound-264",
-    "name": "Justgotfound",
-    "url": "https://justgotfound.com",
-    "domain": "justgotfound.com",
-    "dr": 21,
-    "searchText": "justgotfound justgotfound.com https://justgotfound.com"
-  },
-  {
-    "id": "shipboost-265",
-    "name": "ShipBoost",
-    "url": "https://shipboost.io",
-    "domain": "shipboost.io",
-    "dr": 21,
-    "recommended": true,
-    "searchText": "shipboost shipboost.io https://shipboost.io"
-  },
-  {
-    "id": "madewithbolt-266",
-    "name": "MadewithBolt",
-    "url": "https://madewithbolt.com/",
-    "domain": "madewithbolt.com",
-    "dr": 21,
-    "searchText": "madewithbolt madewithbolt.com https://madewithbolt.com/"
-  },
-  {
-    "id": "listmysaas-267",
-    "name": "Listmysaas",
-    "url": "https://listmysaas.xyz",
-    "domain": "listmysaas.xyz",
-    "dr": 21,
-    "searchText": "listmysaas listmysaas.xyz https://listmysaas.xyz"
-  },
-  {
-    "id": "saas-cubes-268",
-    "name": "SaaS Cubes",
-    "url": "http://saascubes.com/",
-    "domain": "saascubes.com",
-    "dr": 21,
-    "searchText": "saas cubes saascubes.com http://saascubes.com/"
-  },
-  {
-    "id": "appsthunder-269",
-    "name": "Appsthunder",
-    "url": "https://appsthunder.com",
-    "domain": "appsthunder.com",
-    "dr": 20,
-    "searchText": "appsthunder appsthunder.com https://appsthunder.com"
-  },
-  {
-    "id": "appy-dev-270",
-    "name": "Appy dev",
-    "url": "https://appydev.co",
-    "domain": "appydev.co",
-    "dr": 20,
-    "searchText": "appy dev appydev.co https://appydev.co"
-  },
-  {
-    "id": "how-to-buy-saas-271",
-    "name": "How to buy Saas",
-    "url": "https://howtobuysaas.com",
-    "domain": "howtobuysaas.com",
-    "dr": 20,
-    "searchText": "how to buy saas howtobuysaas.com https://howtobuysaas.com"
-  },
-  {
-    "id": "toollist-272",
-    "name": "Toollist",
-    "url": "https://toollist.ai",
-    "domain": "toollist.ai",
-    "dr": 20,
-    "searchText": "toollist toollist.ai https://toollist.ai"
-  },
-  {
-    "id": "ai-tools-guide-273",
-    "name": "AI Tools Guide",
-    "url": "https://aitoolsguide.com",
-    "domain": "aitoolsguide.com",
-    "dr": 19,
-    "searchText": "ai tools guide aitoolsguide.com https://aitoolsguide.com"
-  },
-  {
-    "id": "aiwizard-274",
-    "name": "Aiwizard",
-    "url": "https://aiwizard.ai",
-    "domain": "aiwizard.ai",
-    "dr": 19,
-    "searchText": "aiwizard aiwizard.ai https://aiwizard.ai"
-  },
-  {
-    "id": "spotstartups-275",
-    "name": "SpotStartups",
-    "url": "http://spotstartups.com/",
-    "domain": "spotstartups.com",
-    "dr": 19,
-    "searchText": "spotstartups spotstartups.com http://spotstartups.com/"
-  },
-  {
-    "id": "freetoolsland-276",
-    "name": "Freetoolsland",
-    "url": "https://freetoolsland.io",
-    "domain": "freetoolsland.io",
-    "dr": 18,
-    "searchText": "freetoolsland freetoolsland.io https://freetoolsland.io"
-  },
-  {
-    "id": "launch01-277",
-    "name": "Launch01",
-    "url": "https://launch01.com/",
-    "domain": "launch01.com",
-    "dr": 18,
-    "searchText": "launch01 launch01.com https://launch01.com/"
-  },
-  {
-    "id": "launchpasms-278",
-    "name": "Launchpasms",
-    "url": "https://launchpad.ms/",
-    "domain": "launchpad.ms",
-    "dr": 18,
-    "searchText": "launchpasms launchpad.ms https://launchpad.ms/"
-  },
-  {
-    "id": "ever-featured-279",
-    "name": "Ever featured",
-    "url": "https://everfeatured.com/",
-    "domain": "everfeatured.com",
-    "dr": 17,
-    "searchText": "ever featured everfeatured.com https://everfeatured.com/"
-  },
-  {
-    "id": "payonceapps-280",
-    "name": "Payonceapps",
-    "url": "https://payonceapps.com",
-    "domain": "payonceapps.com",
-    "dr": 17,
-    "searchText": "payonceapps payonceapps.com https://payonceapps.com"
-  },
-  {
-    "id": "startupaitools-281",
-    "name": "Startupaitools",
-    "url": "https://startupaitools.com",
-    "domain": "startupaitools.com",
-    "dr": 16,
-    "searchText": "startupaitools startupaitools.com https://startupaitools.com"
-  },
-  {
-    "id": "startuups-282",
-    "name": "startuups",
-    "url": "https://startuups.com",
-    "domain": "startuups.com",
-    "dr": 16,
-    "searchText": "startuups startuups.com https://startuups.com"
-  },
-  {
-    "id": "uneed-directories-283",
-    "name": "Uneed Directories",
-    "url": "https://uneed-directories.com",
-    "domain": "uneed-directories.com",
-    "dr": 16,
-    "searchText": "uneed directories uneed-directories.com https://uneed-directories.com"
-  },
-  {
-    "id": "nextlaunch-284",
-    "name": "Nextlaunch",
-    "url": "https://nextlaunch.io",
-    "domain": "nextlaunch.io",
-    "dr": 16,
-    "searchText": "nextlaunch nextlaunch.io https://nextlaunch.io"
-  },
-  {
-    "id": "b2-saas-285",
-    "name": "B2 Saas",
-    "url": "https://b2saas.com",
-    "domain": "b2saas.com",
-    "dr": 15,
-    "searchText": "b2 saas b2saas.com https://b2saas.com"
-  },
-  {
-    "id": "directories-286",
-    "name": "Directories",
-    "url": "https://directories.so",
-    "domain": "directories.so",
-    "dr": 15,
-    "searchText": "directories directories.so https://directories.so"
-  },
-  {
-    "id": "once-287",
-    "name": "Once",
-    "url": "https://once.tools",
-    "domain": "once.tools",
-    "dr": 15,
-    "searchText": "once once.tools https://once.tools"
-  },
-  {
-    "id": "indie-launch-288",
-    "name": "Indie Launch",
-    "url": "https://indielaunch.site/",
-    "domain": "indielaunch.site",
-    "dr": 15,
-    "searchText": "indie launch indielaunch.site https://indielaunch.site/"
-  },
-  {
-    "id": "trustviews-289",
-    "name": "TrustViews",
-    "url": "https://trustviews.io/",
-    "domain": "trustviews.io",
-    "dr": 15,
-    "searchText": "trustviews trustviews.io https://trustviews.io/"
-  },
-  {
-    "id": "dirbear-290",
-    "name": "Dirbear",
-    "url": "https://dirbear.com/",
-    "domain": "dirbear.com",
-    "dr": 15,
-    "searchText": "dirbear dirbear.com https://dirbear.com/"
-  },
-  {
-    "id": "collect-ai-tools-291",
-    "name": "Collect AI Tools",
-    "url": "http://collectai.tools/",
-    "domain": "collectai.tools",
-    "dr": 15,
-    "searchText": "collect ai tools collectai.tools http://collectai.tools/"
-  },
-  {
-    "id": "bowora-292",
-    "name": "Bowora",
-    "url": "https://bowora.com/",
-    "domain": "bowora.com",
-    "dr": 15,
-    "searchText": "bowora bowora.com https://bowora.com/"
-  },
-  {
-    "id": "ai-tool-board-293",
-    "name": "AI Tool Board",
-    "url": "https://aitoolboard.com",
-    "domain": "aitoolboard.com",
-    "dr": 14,
-    "searchText": "ai tool board aitoolboard.com https://aitoolboard.com"
-  },
-  {
-    "id": "free-ai-tools-directory-294",
-    "name": "Free Ai Tools Directory",
-    "url": "https://free-ai-tools-directory.com",
-    "domain": "free-ai-tools-directory.com",
-    "dr": 14,
-    "searchText": "free ai tools directory free-ai-tools-directory.com https://free-ai-tools-directory.com"
-  },
-  {
-    "id": "human-or-not-295",
-    "name": "Human or not",
-    "url": "https://humanornot.co",
-    "domain": "humanornot.co",
-    "dr": 14,
-    "searchText": "human or not humanornot.co https://humanornot.co"
-  },
-  {
-    "id": "madewithstack-296",
-    "name": "MadeWithStack",
-    "url": "https://www.madewithstack.com/",
-    "domain": "madewithstack.com",
-    "dr": 14,
-    "searchText": "madewithstack madewithstack.com https://www.madewithstack.com/"
-  },
-  {
-    "id": "the-saas-directory-297",
-    "name": "the Saas directory",
-    "url": "https://thesaasdirectory.com",
-    "domain": "thesaasdirectory.com",
-    "dr": 14,
-    "searchText": "the saas directory thesaasdirectory.com https://thesaasdirectory.com"
-  },
-  {
-    "id": "ai-directory-298",
-    "name": "Ai directory",
-    "url": "https://aidirectory.org",
-    "domain": "aidirectory.org",
-    "dr": 13,
-    "searchText": "ai directory aidirectory.org https://aidirectory.org"
-  },
-  {
-    "id": "easysaveai-299",
-    "name": "Easysaveai",
-    "url": "https://easysaveai.com",
-    "domain": "easysaveai.com",
-    "dr": 13,
-    "searchText": "easysaveai easysaveai.com https://easysaveai.com"
-  },
-  {
-    "id": "madgenius-300",
-    "name": "Madgenius",
-    "url": "https://madgenius.co",
-    "domain": "madgenius.co",
-    "dr": 13,
-    "searchText": "madgenius madgenius.co https://madgenius.co"
-  },
-  {
-    "id": "nextgentools-301",
-    "name": "Nextgentools",
-    "url": "https://nextgentools.me",
-    "domain": "nextgentools.me",
-    "dr": 13,
-    "searchText": "nextgentools nextgentools.me https://nextgentools.me"
-  },
-  {
-    "id": "prodpapa-302",
-    "name": "Prodpapa",
-    "url": "https://prodpapa.com",
-    "domain": "prodpapa.com",
-    "dr": 13,
-    "searchText": "prodpapa prodpapa.com https://prodpapa.com"
-  },
-  {
-    "id": "noonlaunch-303",
-    "name": "NoonLaunch",
-    "url": "https://noonlaunch.com/",
-    "domain": "noonlaunch.com",
-    "dr": 13,
-    "searchText": "noonlaunch noonlaunch.com https://noonlaunch.com/"
-  },
-  {
-    "id": "indie-products-304",
-    "name": "Indie Products",
-    "url": "https://www.indieproducts.io/",
-    "domain": "indieproducts.io",
-    "dr": 12,
-    "searchText": "indie products indieproducts.io https://www.indieproducts.io/"
-  },
-  {
-    "id": "saascurate-305",
-    "name": "Saascurate",
-    "url": "https://saascurate.com",
-    "domain": "saascurate.com",
-    "dr": 12,
-    "searchText": "saascurate saascurate.com https://saascurate.com"
-  },
-  {
-    "id": "saasscout-306",
-    "name": "SaaSScout",
-    "url": "http://saasscout.org/",
-    "domain": "saasscout.org",
-    "dr": 12,
-    "searchText": "saasscout saasscout.org http://saasscout.org/"
-  },
-  {
-    "id": "aiawesome-307",
-    "name": "Aiawesome",
-    "url": "https://aiawesome.com",
-    "domain": "aiawesome.com",
-    "dr": 11,
-    "searchText": "aiawesome aiawesome.com https://aiawesome.com"
-  },
-  {
-    "id": "appslisto-308",
-    "name": "AppsListo",
-    "url": "https://appslisto.com/submit-your-app",
-    "domain": "appslisto.com",
-    "dr": 11,
-    "searchText": "appslisto appslisto.com https://appslisto.com/submit-your-app"
-  },
-  {
-    "id": "launch-vibe-309",
-    "name": "Launch Vibe",
-    "url": "https://launchvibe.app",
-    "domain": "launchvibe.app",
-    "dr": 10,
-    "searchText": "launch vibe launchvibe.app https://launchvibe.app"
-  },
-  {
-    "id": "nextpedia-310",
-    "name": "Nextpedia",
-    "url": "https://nextpedia.io",
-    "domain": "nextpedia.io",
-    "dr": 10,
-    "searchText": "nextpedia nextpedia.io https://nextpedia.io"
-  },
-  {
-    "id": "find-ai-tools-311",
-    "name": "Find AI Tools",
-    "url": "https://findaitools.co/",
-    "domain": "findaitools.co",
-    "dr": 9,
-    "searchText": "find ai tools findaitools.co https://findaitools.co/"
-  },
-  {
-    "id": "foundigy-312",
-    "name": "Foundigy",
-    "url": "https://foundigy.com/",
-    "domain": "foundigy.com",
-    "dr": 9,
-    "searchText": "foundigy foundigy.com https://foundigy.com/"
-  },
-  {
-    "id": "every-ai-313",
-    "name": "Every Ai",
-    "url": "https://every-ai.com",
-    "domain": "every-ai.com",
-    "dr": 8,
-    "searchText": "every ai every-ai.com https://every-ai.com"
-  },
-  {
-    "id": "waildworld-314",
-    "name": "Waildworld",
-    "url": "https://waildworld.com",
-    "domain": "waildworld.com",
-    "dr": 8,
-    "searchText": "waildworld waildworld.com https://waildworld.com"
-  },
-  {
-    "id": "agencysource-315",
-    "name": "AgencySource",
-    "url": "https://agencysource.com",
-    "domain": "agencysource.com",
-    "dr": 7,
-    "searchText": "agencysource agencysource.com https://agencysource.com"
-  },
-  {
-    "id": "1000tools-316",
-    "name": "1000Tools",
-    "url": "https://1000tools.best/",
-    "domain": "1000tools.best",
-    "dr": 5,
-    "searchText": "1000tools 1000tools.best https://1000tools.best/"
-  },
-  {
-    "id": "launchy-tools-317",
-    "name": "Launchy.tools",
-    "url": "https://launchy.tools",
-    "domain": "launchy.tools",
-    "dr": 4,
-    "searchText": "launchy.tools launchy.tools https://launchy.tools"
-  },
-  {
-    "id": "productlaunchpad-318",
-    "name": "ProductLaunchpad",
-    "url": "https://productlaunchpad.app",
-    "domain": "productlaunchpad.app",
-    "dr": 4,
-    "searchText": "productlaunchpad productlaunchpad.app https://productlaunchpad.app"
-  },
-  {
-    "id": "startup-credits-319",
-    "name": "Startup Credits",
-    "url": "https://startupcredits.io",
-    "domain": "startupcredits.io",
-    "dr": 3,
-    "searchText": "startup credits startupcredits.io https://startupcredits.io"
-  },
-  {
-    "id": "micro-saas-apps-320",
-    "name": "Micro Saas apps",
-    "url": "https://microsaasapps.com",
-    "domain": "microsaasapps.com",
-    "dr": 2,
-    "searchText": "micro saas apps microsaasapps.com https://microsaasapps.com"
-  },
-  {
-    "id": "1000ai-321",
-    "name": "1000AI",
-    "url": "https://1000ai.best/",
-    "domain": "1000ai.best",
-    "dr": 2,
-    "searchText": "1000ai 1000ai.best https://1000ai.best/"
-  },
-  {
-    "id": "1000saas-322",
-    "name": "1000SaaS",
-    "url": "https://1000saas.best/",
-    "domain": "1000saas.best",
-    "dr": 2,
-    "searchText": "1000saas 1000saas.best https://1000saas.best/"
-  },
-  {
-    "id": "apps-and-reports-323",
-    "name": "Apps and reports",
-    "url": "https://appsandreports.com",
-    "domain": "appsandreports.com",
-    "dr": 1,
-    "searchText": "apps and reports appsandreports.com https://appsandreports.com"
-  },
-  {
-    "id": "join-launchloop-324",
-    "name": "Join LaunchLoop",
-    "url": "https://www.joinlaunchloop.com/",
-    "domain": "joinlaunchloop.com",
-    "dr": 0,
-    "searchText": "join launchloop joinlaunchloop.com https://www.joinlaunchloop.com/"
-  },
-  {
-    "id": "anoncrib-325",
-    "name": "Anoncrib",
-    "url": "https://www.anoncrib.com/",
-    "domain": "anoncrib.com",
-    "dr": 0,
-    "searchText": "anoncrib anoncrib.com https://www.anoncrib.com/"
-  },
-  {
-    "id": "zerostartup-326",
-    "name": "ZeroStartup",
-    "url": "https://www.zerostartup.in/",
-    "domain": "zerostartup.in",
-    "dr": 0,
-    "searchText": "zerostartup zerostartup.in https://www.zerostartup.in/"
-  },
-  {
-    "id": "startuplibrary-327",
-    "name": "StartupLibrary",
-    "url": "https://startuplibrary.net/",
-    "domain": "startuplibrary.net",
-    "dr": 0,
-    "searchText": "startuplibrary startuplibrary.net https://startuplibrary.net/"
-  },
-  {
-    "id": "tooldisk-328",
+    "id": "tooldisk-212",
     "name": "Tooldisk",
     "url": "https://tooldisk.com/",
     "domain": "tooldisk.com",
@@ -2635,15 +1706,231 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "tooldisk tooldisk.com https://tooldisk.com/"
   },
   {
-    "id": "producthot-329",
-    "name": "Producthot",
-    "url": "https://producthot.com/",
-    "domain": "producthot.com",
-    "dr": 21,
-    "searchText": "producthot producthot.com https://producthot.com/"
+    "id": "ai-parabellum-213",
+    "name": "AI Parabellum",
+    "url": "https://aiparabellum.com",
+    "domain": "aiparabellum.com",
+    "dr": 33,
+    "searchText": "ai parabellum aiparabellum.com https://aiparabellum.com"
   },
   {
-    "id": "startuptostartup-330",
+    "id": "euroalternative-214",
+    "name": "EuroAlternative",
+    "url": "https://euroalternative.co",
+    "domain": "euroalternative.co",
+    "dr": 33,
+    "searchText": "euroalternative euroalternative.co https://euroalternative.co"
+  },
+  {
+    "id": "five-taco-215",
+    "name": "Five Taco",
+    "url": "https://fivetaco.com/submit",
+    "domain": "fivetaco.com",
+    "dr": 33,
+    "searchText": "five taco fivetaco.com https://fivetaco.com/submit"
+  },
+  {
+    "id": "startups-fyi-216",
+    "name": "Startups.fyi",
+    "url": "https://startups.fyi",
+    "domain": "startups.fyi",
+    "dr": 33,
+    "searchText": "startups.fyi startups.fyi https://startups.fyi"
+  },
+  {
+    "id": "submithunt-217",
+    "name": "SubmitHunt",
+    "url": "https://submithunt.com",
+    "domain": "submithunt.com",
+    "dr": 33,
+    "searchText": "submithunt submithunt.com https://submithunt.com"
+  },
+  {
+    "id": "the-great-apps-218",
+    "name": "the Great Apps",
+    "url": "https://thegreatapps.com",
+    "domain": "thegreatapps.com",
+    "dr": 33,
+    "searchText": "the great apps thegreatapps.com https://thegreatapps.com"
+  },
+  {
+    "id": "the-startup-inc-219",
+    "name": "the Startup inc",
+    "url": "https://thestartupinc.com",
+    "domain": "thestartupinc.com",
+    "dr": 33,
+    "searchText": "the startup inc thestartupinc.com https://thestartupinc.com"
+  },
+  {
+    "id": "shipstry-220",
+    "name": "Shipstry",
+    "url": "https://shipstry.com/",
+    "domain": "shipstry.com",
+    "dr": 33,
+    "searchText": "shipstry shipstry.com https://shipstry.com/"
+  },
+  {
+    "id": "domore-ai-221",
+    "name": "DoMore AI",
+    "url": "https://domore.ai",
+    "domain": "domore.ai",
+    "dr": 32,
+    "searchText": "domore ai domore.ai https://domore.ai"
+  },
+  {
+    "id": "llm-relevance-222",
+    "name": "LLM Relevance",
+    "url": "https://llmrelevance.com",
+    "domain": "llmrelevance.com",
+    "dr": 32,
+    "searchText": "llm relevance llmrelevance.com https://llmrelevance.com"
+  },
+  {
+    "id": "resource-fyi-223",
+    "name": "Resource fyi",
+    "url": "https://resource.fyi",
+    "domain": "resource.fyi",
+    "dr": 32,
+    "searchText": "resource fyi resource.fyi https://resource.fyi"
+  },
+  {
+    "id": "devhub-224",
+    "name": "DevHub",
+    "url": "https://devhub.best/",
+    "domain": "devhub.best",
+    "dr": 32,
+    "searchText": "devhub devhub.best https://devhub.best/"
+  },
+  {
+    "id": "aitoolguru-225",
+    "name": "Aitoolguru",
+    "url": "https://aitoolguru.com",
+    "domain": "aitoolguru.com",
+    "dr": 31,
+    "searchText": "aitoolguru aitoolguru.com https://aitoolguru.com"
+  },
+  {
+    "id": "awesome-indie-226",
+    "name": "Awesome Indie",
+    "url": "https://awesomeindie.com",
+    "domain": "awesomeindie.com",
+    "dr": 31,
+    "searchText": "awesome indie awesomeindie.com https://awesomeindie.com"
+  },
+  {
+    "id": "findyoursaas-227",
+    "name": "FindYourSaaS",
+    "url": "https://findyoursaas.com",
+    "domain": "findyoursaas.com",
+    "dr": 31,
+    "searchText": "findyoursaas findyoursaas.com https://findyoursaas.com"
+  },
+  {
+    "id": "builtbyme-228",
+    "name": "BuiltbyMe",
+    "url": "https://builtbyme.io/",
+    "domain": "builtbyme.io",
+    "dr": 31,
+    "searchText": "builtbyme builtbyme.io https://builtbyme.io/"
+  },
+  {
+    "id": "buildvoyage-229",
+    "name": "BuildVoyage",
+    "url": "https://buildvoyage.com/",
+    "domain": "buildvoyage.com",
+    "dr": 31,
+    "searchText": "buildvoyage buildvoyage.com https://buildvoyage.com/"
+  },
+  {
+    "id": "saasdb-230",
+    "name": "SaaSDB",
+    "url": "https://saasdb.net/",
+    "domain": "saasdb.net",
+    "dr": 31,
+    "searchText": "saasdb saasdb.net https://saasdb.net/"
+  },
+  {
+    "id": "indiedev-231",
+    "name": "Indiedev",
+    "url": "https://indiedev.tools",
+    "domain": "indiedev.tools",
+    "dr": 30,
+    "searchText": "indiedev indiedev.tools https://indiedev.tools"
+  },
+  {
+    "id": "toptools-232",
+    "name": "Toptools",
+    "url": "https://toptools.ai",
+    "domain": "toptools.ai",
+    "dr": 30,
+    "searchText": "toptools toptools.ai https://toptools.ai"
+  },
+  {
+    "id": "aat-ee-233",
+    "name": "aat.ee",
+    "url": "https://aat.ee",
+    "domain": "aat.ee",
+    "dr": 29,
+    "searchText": "aat.ee aat.ee https://aat.ee"
+  },
+  {
+    "id": "bulletin-234",
+    "name": "Bulletin",
+    "url": "https://bulletin.so",
+    "domain": "bulletin.so",
+    "dr": 29,
+    "searchText": "bulletin bulletin.so https://bulletin.so"
+  },
+  {
+    "id": "toolhub-235",
+    "name": "ToolHub",
+    "url": "https://toolhub.me",
+    "domain": "toolhub.me",
+    "dr": 28,
+    "searchText": "toolhub toolhub.me https://toolhub.me"
+  },
+  {
+    "id": "directoryscout-236",
+    "name": "DirectoryScout",
+    "url": "https://directoryscout.com/",
+    "domain": "directoryscout.com",
+    "dr": 28,
+    "searchText": "directoryscout directoryscout.com https://directoryscout.com/"
+  },
+  {
+    "id": "indiehackerstacks-237",
+    "name": "Indiehackerstacks",
+    "url": "https://indiehackerstacks.com/",
+    "domain": "indiehackerstacks.com",
+    "dr": 28,
+    "searchText": "indiehackerstacks indiehackerstacks.com https://indiehackerstacks.com/"
+  },
+  {
+    "id": "saascity-238",
+    "name": "SaaSCity",
+    "url": "https://saascity.io/",
+    "domain": "saascity.io",
+    "dr": 28,
+    "searchText": "saascity saascity.io https://saascity.io/"
+  },
+  {
+    "id": "earlylaunch-239",
+    "name": "EarlyLaunch",
+    "url": "http://earlylaunch.online/",
+    "domain": "earlylaunch.online",
+    "dr": 28,
+    "searchText": "earlylaunch earlylaunch.online http://earlylaunch.online/"
+  },
+  {
+    "id": "makerhunt-240",
+    "name": "Makerhunt",
+    "url": "https://makerhunt.io/",
+    "domain": "makerhunt.io",
+    "dr": 28,
+    "searchText": "makerhunt makerhunt.io https://makerhunt.io/"
+  },
+  {
+    "id": "startuptostartup-241",
     "name": "StartuptoStartup",
     "url": "https://startuptostartup.com/",
     "domain": "startuptostartup.com",
@@ -2651,7 +1938,608 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "startuptostartup startuptostartup.com https://startuptostartup.com/"
   },
   {
-    "id": "sameproduct-331",
+    "id": "hunt0-242",
+    "name": "HUNT0",
+    "url": "https://hunt0.com",
+    "domain": "hunt0.com",
+    "dr": 27,
+    "searchText": "hunt0 hunt0.com https://hunt0.com"
+  },
+  {
+    "id": "liiinks-243",
+    "name": "Liiinks",
+    "url": "https://liiinks.net",
+    "domain": "liiinks.net",
+    "dr": 27,
+    "searchText": "liiinks liiinks.net https://liiinks.net"
+  },
+  {
+    "id": "ranccoon-244",
+    "name": "Ranccoon",
+    "url": "https://www.ranccoon.com/directory",
+    "domain": "ranccoon.com",
+    "dr": 27,
+    "searchText": "ranccoon ranccoon.com https://www.ranccoon.com/directory"
+  },
+  {
+    "id": "startup-spotlight-245",
+    "name": "Startup Spotlight",
+    "url": "https://www.startupspotlight.co/",
+    "domain": "startupspotlight.co",
+    "dr": 27,
+    "searchText": "startup spotlight startupspotlight.co https://www.startupspotlight.co/"
+  },
+  {
+    "id": "sumodir-246",
+    "name": "Sumodir",
+    "url": "https://sumodir.com",
+    "domain": "sumodir.com",
+    "dr": 27,
+    "searchText": "sumodir sumodir.com https://sumodir.com"
+  },
+  {
+    "id": "ai-depot-247",
+    "name": "AI Depot",
+    "url": "https://aidepot.co",
+    "domain": "aidepot.co",
+    "dr": 26,
+    "searchText": "ai depot aidepot.co https://aidepot.co"
+  },
+  {
+    "id": "gptdemo-248",
+    "name": "Gptdemo",
+    "url": "https://gptdemo.net",
+    "domain": "gptdemo.net",
+    "dr": 26,
+    "searchText": "gptdemo gptdemo.net https://gptdemo.net"
+  },
+  {
+    "id": "hot100-249",
+    "name": "hot100",
+    "url": "https://hot100.ai",
+    "domain": "hot100.ai",
+    "dr": 26,
+    "searchText": "hot100 hot100.ai https://hot100.ai"
+  },
+  {
+    "id": "one-million-directory-250",
+    "name": "One Million Directory",
+    "url": "https://onemilliondirectory.com",
+    "domain": "onemilliondirectory.com",
+    "dr": 26,
+    "searchText": "one million directory onemilliondirectory.com https://onemilliondirectory.com"
+  },
+  {
+    "id": "saasgrow-251",
+    "name": "SaaSGrow",
+    "url": "https://saasgrow.app",
+    "domain": "saasgrow.app",
+    "dr": 26,
+    "searchText": "saasgrow saasgrow.app https://saasgrow.app"
+  },
+  {
+    "id": "sololaunches-252",
+    "name": "Sololaunches",
+    "url": "https://sololaunches.com",
+    "domain": "sololaunches.com",
+    "dr": 26,
+    "searchText": "sololaunches sololaunches.com https://sololaunches.com"
+  },
+  {
+    "id": "dododirectory-253",
+    "name": "DodoDirectory",
+    "url": "https://dododirectory.com",
+    "domain": "dododirectory.com",
+    "dr": 26,
+    "searchText": "dododirectory dododirectory.com https://dododirectory.com"
+  },
+  {
+    "id": "ai-tool-tracker-254",
+    "name": "Ai tool tracker",
+    "url": "https://aitooltracker.com",
+    "domain": "aitooltracker.com",
+    "dr": 25,
+    "searchText": "ai tool tracker aitooltracker.com https://aitooltracker.com"
+  },
+  {
+    "id": "stellar-launch-255",
+    "name": "Stellar Launch",
+    "url": "https://stellarlaunch.org",
+    "domain": "stellarlaunch.org",
+    "dr": 25,
+    "searchText": "stellar launch stellarlaunch.org https://stellarlaunch.org"
+  },
+  {
+    "id": "lowcodenocode-256",
+    "name": "LowCodeNoCode",
+    "url": "https://lowcodenocode.org/",
+    "domain": "lowcodenocode.org",
+    "dr": 25,
+    "searchText": "lowcodenocode lowcodenocode.org https://lowcodenocode.org/"
+  },
+  {
+    "id": "kick-product-257",
+    "name": "Kick Product",
+    "url": "https://www.kickproduct.com/",
+    "domain": "kickproduct.com",
+    "dr": 25,
+    "searchText": "kick product kickproduct.com https://www.kickproduct.com/"
+  },
+  {
+    "id": "strict-seal-258",
+    "name": "Strict Seal",
+    "url": "https://strictseal.com/",
+    "domain": "strictseal.com",
+    "dr": 24,
+    "searchText": "strict seal strictseal.com https://strictseal.com/"
+  },
+  {
+    "id": "launch-void-259",
+    "name": "Launch Void",
+    "url": "https://www.launchvoid.com/",
+    "domain": "launchvoid.com",
+    "dr": 24,
+    "searchText": "launch void launchvoid.com https://www.launchvoid.com/"
+  },
+  {
+    "id": "saassy-board-260",
+    "name": "Saassy Board",
+    "url": "https://saassy-board.com",
+    "domain": "saassy-board.com",
+    "dr": 23,
+    "searchText": "saassy board saassy-board.com https://saassy-board.com"
+  },
+  {
+    "id": "startuptile-261",
+    "name": "Startuptile",
+    "url": "https://startuptile.com",
+    "domain": "startuptile.com",
+    "dr": 23,
+    "searchText": "startuptile startuptile.com https://startuptile.com"
+  },
+  {
+    "id": "toolscout-ai-262",
+    "name": "Toolscout ai",
+    "url": "https://toolscout.ai",
+    "domain": "toolscout.ai",
+    "dr": 23,
+    "searchText": "toolscout ai toolscout.ai https://toolscout.ai"
+  },
+  {
+    "id": "vibecodinglist-263",
+    "name": "Vibecodinglist",
+    "url": "https://vibecodinglist.com/",
+    "domain": "vibecodinglist.com",
+    "dr": 23,
+    "searchText": "vibecodinglist vibecodinglist.com https://vibecodinglist.com/"
+  },
+  {
+    "id": "indie-showcase-264",
+    "name": "Indie Showcase",
+    "url": "https://indieshowcase.io/",
+    "domain": "indieshowcase.io",
+    "dr": 22,
+    "searchText": "indie showcase indieshowcase.io https://indieshowcase.io/"
+  },
+  {
+    "id": "showmeyoursite-265",
+    "name": "Showmeyoursite",
+    "url": "https://showmeyour.site/",
+    "domain": "showmeyour.site",
+    "dr": 22,
+    "searchText": "showmeyoursite showmeyour.site https://showmeyour.site/"
+  },
+  {
+    "id": "bro-266",
+    "name": "Bro",
+    "url": "https://bro.directory",
+    "domain": "bro.directory",
+    "dr": 21,
+    "searchText": "bro bro.directory https://bro.directory"
+  },
+  {
+    "id": "justgotfound-267",
+    "name": "Justgotfound",
+    "url": "https://justgotfound.com",
+    "domain": "justgotfound.com",
+    "dr": 21,
+    "searchText": "justgotfound justgotfound.com https://justgotfound.com"
+  },
+  {
+    "id": "shipboost-268",
+    "name": "ShipBoost",
+    "url": "https://shipboost.io",
+    "domain": "shipboost.io",
+    "dr": 25,
+    "searchText": "shipboost shipboost.io https://shipboost.io",
+    "recommended": true
+  },
+  {
+    "id": "madewithbolt-269",
+    "name": "MadewithBolt",
+    "url": "https://madewithbolt.com/",
+    "domain": "madewithbolt.com",
+    "dr": 21,
+    "searchText": "madewithbolt madewithbolt.com https://madewithbolt.com/"
+  },
+  {
+    "id": "listmysaas-270",
+    "name": "Listmysaas",
+    "url": "https://listmysaas.xyz",
+    "domain": "listmysaas.xyz",
+    "dr": 21,
+    "searchText": "listmysaas listmysaas.xyz https://listmysaas.xyz"
+  },
+  {
+    "id": "saas-cubes-271",
+    "name": "SaaS Cubes",
+    "url": "http://saascubes.com/",
+    "domain": "saascubes.com",
+    "dr": 21,
+    "searchText": "saas cubes saascubes.com http://saascubes.com/"
+  },
+  {
+    "id": "producthot-272",
+    "name": "Producthot",
+    "url": "https://producthot.com/",
+    "domain": "producthot.com",
+    "dr": 21,
+    "searchText": "producthot producthot.com https://producthot.com/"
+  },
+  {
+    "id": "appsthunder-273",
+    "name": "Appsthunder",
+    "url": "https://appsthunder.com",
+    "domain": "appsthunder.com",
+    "dr": 20,
+    "searchText": "appsthunder appsthunder.com https://appsthunder.com"
+  },
+  {
+    "id": "appy-dev-274",
+    "name": "Appy dev",
+    "url": "https://appydev.co",
+    "domain": "appydev.co",
+    "dr": 20,
+    "searchText": "appy dev appydev.co https://appydev.co"
+  },
+  {
+    "id": "how-to-buy-saas-275",
+    "name": "How to buy Saas",
+    "url": "https://howtobuysaas.com",
+    "domain": "howtobuysaas.com",
+    "dr": 20,
+    "searchText": "how to buy saas howtobuysaas.com https://howtobuysaas.com"
+  },
+  {
+    "id": "toollist-276",
+    "name": "Toollist",
+    "url": "https://toollist.ai",
+    "domain": "toollist.ai",
+    "dr": 20,
+    "searchText": "toollist toollist.ai https://toollist.ai"
+  },
+  {
+    "id": "ai-tools-guide-277",
+    "name": "AI Tools Guide",
+    "url": "https://aitoolsguide.com",
+    "domain": "aitoolsguide.com",
+    "dr": 19,
+    "searchText": "ai tools guide aitoolsguide.com https://aitoolsguide.com"
+  },
+  {
+    "id": "aiwizard-278",
+    "name": "Aiwizard",
+    "url": "https://aiwizard.ai",
+    "domain": "aiwizard.ai",
+    "dr": 19,
+    "searchText": "aiwizard aiwizard.ai https://aiwizard.ai"
+  },
+  {
+    "id": "spotstartups-279",
+    "name": "SpotStartups",
+    "url": "http://spotstartups.com/",
+    "domain": "spotstartups.com",
+    "dr": 19,
+    "searchText": "spotstartups spotstartups.com http://spotstartups.com/"
+  },
+  {
+    "id": "freetoolsland-280",
+    "name": "Freetoolsland",
+    "url": "https://freetoolsland.io",
+    "domain": "freetoolsland.io",
+    "dr": 18,
+    "searchText": "freetoolsland freetoolsland.io https://freetoolsland.io"
+  },
+  {
+    "id": "launch01-281",
+    "name": "Launch01",
+    "url": "https://launch01.com/",
+    "domain": "launch01.com",
+    "dr": 18,
+    "searchText": "launch01 launch01.com https://launch01.com/"
+  },
+  {
+    "id": "launchpasms-282",
+    "name": "Launchpasms",
+    "url": "https://launchpad.ms/",
+    "domain": "launchpad.ms",
+    "dr": 18,
+    "searchText": "launchpasms launchpad.ms https://launchpad.ms/"
+  },
+  {
+    "id": "ever-featured-283",
+    "name": "Ever featured",
+    "url": "https://everfeatured.com/",
+    "domain": "everfeatured.com",
+    "dr": 17,
+    "searchText": "ever featured everfeatured.com https://everfeatured.com/"
+  },
+  {
+    "id": "payonceapps-284",
+    "name": "Payonceapps",
+    "url": "https://payonceapps.com",
+    "domain": "payonceapps.com",
+    "dr": 17,
+    "searchText": "payonceapps payonceapps.com https://payonceapps.com"
+  },
+  {
+    "id": "startupaitools-285",
+    "name": "Startupaitools",
+    "url": "https://startupaitools.com",
+    "domain": "startupaitools.com",
+    "dr": 16,
+    "searchText": "startupaitools startupaitools.com https://startupaitools.com"
+  },
+  {
+    "id": "startuups-286",
+    "name": "startuups",
+    "url": "https://startuups.com",
+    "domain": "startuups.com",
+    "dr": 16,
+    "searchText": "startuups startuups.com https://startuups.com"
+  },
+  {
+    "id": "uneed-directories-287",
+    "name": "Uneed Directories",
+    "url": "https://uneed-directories.com",
+    "domain": "uneed-directories.com",
+    "dr": 16,
+    "searchText": "uneed directories uneed-directories.com https://uneed-directories.com"
+  },
+  {
+    "id": "nextlaunch-288",
+    "name": "Nextlaunch",
+    "url": "https://nextlaunch.io",
+    "domain": "nextlaunch.io",
+    "dr": 16,
+    "searchText": "nextlaunch nextlaunch.io https://nextlaunch.io"
+  },
+  {
+    "id": "b2-saas-289",
+    "name": "B2 Saas",
+    "url": "https://b2saas.com",
+    "domain": "b2saas.com",
+    "dr": 15,
+    "searchText": "b2 saas b2saas.com https://b2saas.com"
+  },
+  {
+    "id": "directories-290",
+    "name": "Directories",
+    "url": "https://directories.so",
+    "domain": "directories.so",
+    "dr": 15,
+    "searchText": "directories directories.so https://directories.so"
+  },
+  {
+    "id": "once-291",
+    "name": "Once",
+    "url": "https://once.tools",
+    "domain": "once.tools",
+    "dr": 15,
+    "searchText": "once once.tools https://once.tools"
+  },
+  {
+    "id": "indie-launch-292",
+    "name": "Indie Launch",
+    "url": "https://indielaunch.site/",
+    "domain": "indielaunch.site",
+    "dr": 15,
+    "searchText": "indie launch indielaunch.site https://indielaunch.site/"
+  },
+  {
+    "id": "trustviews-293",
+    "name": "TrustViews",
+    "url": "https://trustviews.io/",
+    "domain": "trustviews.io",
+    "dr": 15,
+    "searchText": "trustviews trustviews.io https://trustviews.io/"
+  },
+  {
+    "id": "dirbear-294",
+    "name": "Dirbear",
+    "url": "https://dirbear.com/",
+    "domain": "dirbear.com",
+    "dr": 15,
+    "searchText": "dirbear dirbear.com https://dirbear.com/"
+  },
+  {
+    "id": "collect-ai-tools-295",
+    "name": "Collect AI Tools",
+    "url": "http://collectai.tools/",
+    "domain": "collectai.tools",
+    "dr": 15,
+    "searchText": "collect ai tools collectai.tools http://collectai.tools/"
+  },
+  {
+    "id": "bowora-296",
+    "name": "Bowora",
+    "url": "https://bowora.com/",
+    "domain": "bowora.com",
+    "dr": 15,
+    "searchText": "bowora bowora.com https://bowora.com/"
+  },
+  {
+    "id": "ai-tool-board-297",
+    "name": "AI Tool Board",
+    "url": "https://aitoolboard.com",
+    "domain": "aitoolboard.com",
+    "dr": 14,
+    "searchText": "ai tool board aitoolboard.com https://aitoolboard.com"
+  },
+  {
+    "id": "free-ai-tools-directory-298",
+    "name": "Free Ai Tools Directory",
+    "url": "https://free-ai-tools-directory.com",
+    "domain": "free-ai-tools-directory.com",
+    "dr": 14,
+    "searchText": "free ai tools directory free-ai-tools-directory.com https://free-ai-tools-directory.com"
+  },
+  {
+    "id": "human-or-not-299",
+    "name": "Human or not",
+    "url": "https://humanornot.co",
+    "domain": "humanornot.co",
+    "dr": 14,
+    "searchText": "human or not humanornot.co https://humanornot.co"
+  },
+  {
+    "id": "madewithstack-300",
+    "name": "MadeWithStack",
+    "url": "https://www.madewithstack.com/",
+    "domain": "madewithstack.com",
+    "dr": 14,
+    "searchText": "madewithstack madewithstack.com https://www.madewithstack.com/"
+  },
+  {
+    "id": "the-saas-directory-301",
+    "name": "the Saas directory",
+    "url": "https://thesaasdirectory.com",
+    "domain": "thesaasdirectory.com",
+    "dr": 14,
+    "searchText": "the saas directory thesaasdirectory.com https://thesaasdirectory.com"
+  },
+  {
+    "id": "ai-directory-302",
+    "name": "Ai directory",
+    "url": "https://aidirectory.org",
+    "domain": "aidirectory.org",
+    "dr": 13,
+    "searchText": "ai directory aidirectory.org https://aidirectory.org"
+  },
+  {
+    "id": "easysaveai-303",
+    "name": "Easysaveai",
+    "url": "https://easysaveai.com",
+    "domain": "easysaveai.com",
+    "dr": 13,
+    "searchText": "easysaveai easysaveai.com https://easysaveai.com"
+  },
+  {
+    "id": "madgenius-304",
+    "name": "Madgenius",
+    "url": "https://madgenius.co",
+    "domain": "madgenius.co",
+    "dr": 13,
+    "searchText": "madgenius madgenius.co https://madgenius.co"
+  },
+  {
+    "id": "nextgentools-305",
+    "name": "Nextgentools",
+    "url": "https://nextgentools.me",
+    "domain": "nextgentools.me",
+    "dr": 13,
+    "searchText": "nextgentools nextgentools.me https://nextgentools.me"
+  },
+  {
+    "id": "prodpapa-306",
+    "name": "Prodpapa",
+    "url": "https://prodpapa.com",
+    "domain": "prodpapa.com",
+    "dr": 13,
+    "searchText": "prodpapa prodpapa.com https://prodpapa.com"
+  },
+  {
+    "id": "noonlaunch-307",
+    "name": "NoonLaunch",
+    "url": "https://noonlaunch.com/",
+    "domain": "noonlaunch.com",
+    "dr": 13,
+    "searchText": "noonlaunch noonlaunch.com https://noonlaunch.com/"
+  },
+  {
+    "id": "indie-products-308",
+    "name": "Indie Products",
+    "url": "https://www.indieproducts.io/",
+    "domain": "indieproducts.io",
+    "dr": 12,
+    "searchText": "indie products indieproducts.io https://www.indieproducts.io/"
+  },
+  {
+    "id": "saascurate-309",
+    "name": "Saascurate",
+    "url": "https://saascurate.com",
+    "domain": "saascurate.com",
+    "dr": 12,
+    "searchText": "saascurate saascurate.com https://saascurate.com"
+  },
+  {
+    "id": "saasscout-310",
+    "name": "SaaSScout",
+    "url": "http://saasscout.org/",
+    "domain": "saasscout.org",
+    "dr": 12,
+    "searchText": "saasscout saasscout.org http://saasscout.org/"
+  },
+  {
+    "id": "aiawesome-311",
+    "name": "Aiawesome",
+    "url": "https://aiawesome.com",
+    "domain": "aiawesome.com",
+    "dr": 11,
+    "searchText": "aiawesome aiawesome.com https://aiawesome.com"
+  },
+  {
+    "id": "appslisto-312",
+    "name": "AppsListo",
+    "url": "https://appslisto.com/submit-your-app",
+    "domain": "appslisto.com",
+    "dr": 11,
+    "searchText": "appslisto appslisto.com https://appslisto.com/submit-your-app"
+  },
+  {
+    "id": "launch-vibe-313",
+    "name": "Launch Vibe",
+    "url": "https://launchvibe.app",
+    "domain": "launchvibe.app",
+    "dr": 10,
+    "searchText": "launch vibe launchvibe.app https://launchvibe.app"
+  },
+  {
+    "id": "nextpedia-314",
+    "name": "Nextpedia",
+    "url": "https://nextpedia.io",
+    "domain": "nextpedia.io",
+    "dr": 10,
+    "searchText": "nextpedia nextpedia.io https://nextpedia.io"
+  },
+  {
+    "id": "find-ai-tools-315",
+    "name": "Find AI Tools",
+    "url": "https://findaitools.co/",
+    "domain": "findaitools.co",
+    "dr": 9,
+    "searchText": "find ai tools findaitools.co https://findaitools.co/"
+  },
+  {
+    "id": "foundigy-316",
+    "name": "Foundigy",
+    "url": "https://foundigy.com/",
+    "domain": "foundigy.com",
+    "dr": 9,
+    "searchText": "foundigy foundigy.com https://foundigy.com/"
+  },
+  {
+    "id": "sameproduct-317",
     "name": "SameProduct",
     "url": "https://sameproduct.com/",
     "domain": "sameproduct.com",
@@ -2659,12 +2547,155 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "searchText": "sameproduct sameproduct.com https://sameproduct.com/"
   },
   {
-    "id": "theonestartup-332",
-    "name": "TheoneStartup",
-    "url": "https://theonestartup.com/",
-    "domain": "theonestartup.com",
-    "dr": 48,
-    "searchText": "theonestartup theonestartup.com https://theonestartup.com/"
+    "id": "every-ai-318",
+    "name": "Every Ai",
+    "url": "https://every-ai.com",
+    "domain": "every-ai.com",
+    "dr": 8,
+    "searchText": "every ai every-ai.com https://every-ai.com"
+  },
+  {
+    "id": "waildworld-319",
+    "name": "Waildworld",
+    "url": "https://waildworld.com",
+    "domain": "waildworld.com",
+    "dr": 8,
+    "searchText": "waildworld waildworld.com https://waildworld.com"
+  },
+  {
+    "id": "agencysource-320",
+    "name": "AgencySource",
+    "url": "https://agencysource.com",
+    "domain": "agencysource.com",
+    "dr": 7,
+    "searchText": "agencysource agencysource.com https://agencysource.com"
+  },
+  {
+    "id": "1000tools-321",
+    "name": "1000Tools",
+    "url": "https://1000tools.best/",
+    "domain": "1000tools.best",
+    "dr": 5,
+    "searchText": "1000tools 1000tools.best https://1000tools.best/"
+  },
+  {
+    "id": "launchy-tools-322",
+    "name": "Launchy.tools",
+    "url": "https://launchy.tools",
+    "domain": "launchy.tools",
+    "dr": 4,
+    "searchText": "launchy.tools launchy.tools https://launchy.tools"
+  },
+  {
+    "id": "productlaunchpad-323",
+    "name": "ProductLaunchpad",
+    "url": "https://productlaunchpad.app",
+    "domain": "productlaunchpad.app",
+    "dr": 4,
+    "searchText": "productlaunchpad productlaunchpad.app https://productlaunchpad.app"
+  },
+  {
+    "id": "startup-credits-324",
+    "name": "Startup Credits",
+    "url": "https://startupcredits.io",
+    "domain": "startupcredits.io",
+    "dr": 3,
+    "searchText": "startup credits startupcredits.io https://startupcredits.io"
+  },
+  {
+    "id": "micro-saas-apps-325",
+    "name": "Micro Saas apps",
+    "url": "https://microsaasapps.com",
+    "domain": "microsaasapps.com",
+    "dr": 2,
+    "searchText": "micro saas apps microsaasapps.com https://microsaasapps.com"
+  },
+  {
+    "id": "1000ai-326",
+    "name": "1000AI",
+    "url": "https://1000ai.best/",
+    "domain": "1000ai.best",
+    "dr": 2,
+    "searchText": "1000ai 1000ai.best https://1000ai.best/"
+  },
+  {
+    "id": "1000saas-327",
+    "name": "1000SaaS",
+    "url": "https://1000saas.best/",
+    "domain": "1000saas.best",
+    "dr": 2,
+    "searchText": "1000saas 1000saas.best https://1000saas.best/"
+  },
+  {
+    "id": "apps-and-reports-328",
+    "name": "Apps and reports",
+    "url": "https://appsandreports.com",
+    "domain": "appsandreports.com",
+    "dr": 1,
+    "searchText": "apps and reports appsandreports.com https://appsandreports.com"
+  },
+  {
+    "id": "join-launchloop-329",
+    "name": "Join LaunchLoop",
+    "url": "https://www.joinlaunchloop.com/",
+    "domain": "joinlaunchloop.com",
+    "dr": 0,
+    "searchText": "join launchloop joinlaunchloop.com https://www.joinlaunchloop.com/"
+  },
+  {
+    "id": "anoncrib-330",
+    "name": "Anoncrib",
+    "url": "https://www.anoncrib.com/",
+    "domain": "anoncrib.com",
+    "dr": 0,
+    "searchText": "anoncrib anoncrib.com https://www.anoncrib.com/"
+  },
+  {
+    "id": "zerostartup-331",
+    "name": "ZeroStartup",
+    "url": "https://www.zerostartup.in/",
+    "domain": "zerostartup.in",
+    "dr": 0,
+    "searchText": "zerostartup zerostartup.in https://www.zerostartup.in/"
+  },
+  {
+    "id": "startuplibrary-332",
+    "name": "StartupLibrary",
+    "url": "https://startuplibrary.net/",
+    "domain": "startuplibrary.net",
+    "dr": 0,
+    "searchText": "startuplibrary startuplibrary.net https://startuplibrary.net/"
+  },
+  {
+    "id": "shipitbuzz-333",
+    "name": "ShipitBuzz",
+    "url": "https://www.shipit.buzz/",
+    "domain": "shipit.buzz",
+    "dr": 51,
+    "searchText": "shipitbuzz shipit.buzz https://www.shipit.buzz/"
+  },
+  {
+    "id": "findgreatsites-334",
+    "name": "FindGreatSites",
+    "url": "https://www.findgreatsites.com/",
+    "domain": "findgreatsites.com",
+    "dr": 18,
+    "searchText": "findgreatsites findgreatsites.com https://www.findgreatsites.com/"
+  },
+  {
+    "id": "listyourproject-335",
+    "name": "ListYourProject",
+    "url": "https://www.listyourproject.com/",
+    "domain": "listyourproject.com",
+    "dr": 18,
+    "searchText": "listyourproject listyourproject.com https://www.listyourproject.com/"
+  },
+  {
+    "id": "webprojectlist-336",
+    "name": "WebProjectList",
+    "url": "https://www.webprojectlist.com/",
+    "domain": "webprojectlist.com",
+    "dr": 11,
+    "searchText": "webprojectlist webprojectlist.com https://www.webprojectlist.com/"
   }
 ];
-

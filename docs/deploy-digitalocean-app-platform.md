@@ -40,6 +40,10 @@ Use a production Postgres database and set:
 - `DATABASE_URL`
 - `DIRECT_URL`
 
+For Neon, use the pooled hostname for `DATABASE_URL` and the direct hostname
+for `DIRECT_URL`. Add `connect_timeout=15` to both URLs so Prisma has enough
+time to reconnect when Neon wakes an idle compute.
+
 For Prisma in production, run migrations with:
 
 ```bash

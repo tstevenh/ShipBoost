@@ -14,9 +14,7 @@ import {
   sendWelcomeEmailMessage,
 } from "../server/email/transactional";
 import { getEnv } from "../server/env";
-import { capturePostHogEventSafely } from "../server/posthog";
 import { syncSignupContactToResend } from "../server/services/resend-contact-service";
-import { getEmailDomain } from "./posthog-shared";
 
 const env = getEnv();
 const plugins: BetterAuthPlugin[] = [nextCookies()];
@@ -83,20 +81,6 @@ export const auth = betterAuth({
       });
     },
     afterEmailVerification: async (user) => {
-      await capturePostHogEventSafely(
-        {
-          distinctId: user.id,
-          event: "sign_up_completed",
-          properties: {
-            auth_method: "email",
-            auth_source: "email_verification",
-            email_domain: getEmailDomain(user.email),
-            role: "FOUNDER",
-          },
-        },
-        "afterEmailVerification",
-      );
-
       await sendWelcomeEmailMessage({
         to: user.email,
         name: user.name,

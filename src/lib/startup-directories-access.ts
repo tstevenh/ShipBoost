@@ -1,8 +1,5 @@
 import { authClient } from "@/lib/auth-client";
-import {
-  captureBrowserPostHogEvent,
-  setPendingAuthIntent,
-} from "@/lib/posthog-browser";
+import { captureBrowserPostHogEvent } from "@/lib/posthog-browser";
 import { getEmailDomain } from "@/lib/posthog-shared";
 
 type StartupDirectoriesAccessInput = {
@@ -56,14 +53,16 @@ export async function requestStartupDirectoriesAccess(
     utm_term: input.utmTerm ?? null,
   });
 
-  const magicLinkResult = await authClient.signIn.magicLink({
+  const magicLinkPayload = {
     email: normalizedEmail,
     callbackURL: "/resources/startup-directories",
     metadata: {
       intent: "directories-access",
       resource: "startup-directories",
     },
-  } as any);
+  } as Parameters<typeof authClient.signIn.magicLink>[0];
+
+  const magicLinkResult = await authClient.signIn.magicLink(magicLinkPayload);
 
   if (magicLinkResult?.error) {
     throw new Error(
@@ -71,14 +70,6 @@ export async function requestStartupDirectoriesAccess(
         "Your email was saved, but we could not send the access link right now.",
     );
   }
-
-  setPendingAuthIntent({
-    intent: "sign-in",
-    method: "magic_link",
-    email: normalizedEmail,
-    redirectTo: "/resources/startup-directories",
-    source: "directories_access",
-  });
 
   return normalizedEmail;
 }

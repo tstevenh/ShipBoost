@@ -2,11 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   captureBrowserPostHogEventMock,
-  setPendingAuthIntentMock,
   signInMagicLinkMock,
 } = vi.hoisted(() => ({
   captureBrowserPostHogEventMock: vi.fn(),
-  setPendingAuthIntentMock: vi.fn(),
   signInMagicLinkMock: vi.fn(),
 }));
 
@@ -20,7 +18,6 @@ vi.mock("@/lib/auth-client", () => ({
 
 vi.mock("@/lib/posthog-browser", () => ({
   captureBrowserPostHogEvent: captureBrowserPostHogEventMock,
-  setPendingAuthIntent: setPendingAuthIntentMock,
 }));
 
 import { requestStartupDirectoriesAccess } from "@/lib/startup-directories-access";
@@ -30,7 +27,7 @@ describe("startup-directories-access", () => {
     vi.clearAllMocks();
   });
 
-  it("captures the lead event and stores a pending auth intent after the access link succeeds", async () => {
+  it("captures the lead event after the access link succeeds", async () => {
     const fetchMock = vi.spyOn(global, "fetch").mockResolvedValueOnce(
       new Response(JSON.stringify({ id: "lead_1" }), { status: 201 }),
     );
@@ -64,14 +61,6 @@ describe("startup-directories-access", () => {
         resource: "startup-directories",
       },
     });
-    expect(setPendingAuthIntentMock).toHaveBeenCalledWith({
-      intent: "sign-in",
-      method: "magic_link",
-      email: "founder@example.com",
-      redirectTo: "/resources/startup-directories",
-      source: "directories_access",
-    });
-
     fetchMock.mockRestore();
   });
 });

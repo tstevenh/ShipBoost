@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useEffectEvent, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Activity, Layers, Rocket, ClipboardList,
@@ -122,6 +122,9 @@ export function AdminConsole() {
 
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
+  const didRunInitialToolsSearch = useRef(false);
+  const didRunInitialSubmissionsSearch = useRef(false);
+  const didRunInitialClaimsSearch = useRef(false);
 
   const totalPending = useMemo(
     () =>
@@ -322,14 +325,29 @@ export function AdminConsole() {
   }, []);
 
   useEffect(() => {
+    if (!didRunInitialToolsSearch.current) {
+      didRunInitialToolsSearch.current = true;
+      return;
+    }
+
     void syncToolsSearch(deferredToolSearch);
   }, [deferredToolSearch]);
 
   useEffect(() => {
+    if (!didRunInitialSubmissionsSearch.current) {
+      didRunInitialSubmissionsSearch.current = true;
+      return;
+    }
+
     void syncSubmissionsSearch(deferredSubmissionSearch, submissionFilter);
   }, [deferredSubmissionSearch, submissionFilter]);
 
   useEffect(() => {
+    if (!didRunInitialClaimsSearch.current) {
+      didRunInitialClaimsSearch.current = true;
+      return;
+    }
+
     void syncClaimsSearch(deferredClaimSearch, claimFilter);
   }, [claimFilter, deferredClaimSearch]);
 

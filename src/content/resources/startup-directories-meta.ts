@@ -1,1 +1,1 @@
-export const startupDirectoriesMarketingCountLabel = "332+";
+export const startupDirectoriesMarketingCountLabel = "336+";
