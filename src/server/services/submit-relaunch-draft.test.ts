@@ -55,6 +55,76 @@ describe("submit-relaunch-draft", () => {
     vi.clearAllMocks();
   });
 
+  it("allows an unverified free launch to enter standard review", async () => {
+    const submission = {
+      id: "submission_free_1",
+      toolId: "tool_free_1",
+      userId: "founder_1",
+      submissionType: "FREE_LAUNCH",
+      reviewStatus: "DRAFT",
+      preferredLaunchDate: null,
+      paymentStatus: "NOT_REQUIRED",
+      badgeVerification: "PENDING",
+      user: {
+        email: "founder@acme.com",
+        name: "Founder",
+      },
+      tool: {
+        id: "tool_free_1",
+        slug: "acme-free",
+        name: "Acme Free",
+        websiteUrl: "https://acme.test",
+        affiliateUrl: null,
+        logoMedia: null,
+        toolCategories: [{ categoryId: "cat_1" }],
+        toolTags: [{ tagId: "tag_1" }],
+        launches: [],
+      },
+    };
+
+    getSubmissionByIdForFounderMock.mockResolvedValueOnce(submission);
+    prismaMock.$transaction.mockImplementation(
+      async (
+        callback: (tx: {
+          submission: typeof prismaMock.submission;
+          tool: typeof prismaMock.tool;
+        }) => Promise<unknown>,
+      ) =>
+        callback({
+          submission: {
+            update: prismaMock.submission.update,
+          },
+          tool: {
+            update: prismaMock.tool.update,
+          },
+        }),
+    );
+
+    const result = await submitSubmissionDraft("submission_free_1", {
+      id: "founder_1",
+    });
+
+    expect(prismaMock.submission.update).toHaveBeenCalledWith({
+      where: { id: "submission_free_1" },
+      data: {
+        reviewStatus: "PENDING",
+      },
+    });
+    expect(prismaMock.tool.update).toHaveBeenCalledWith({
+      where: { id: "tool_free_1" },
+      data: {
+        moderationStatus: "PENDING",
+        publicationStatus: "UNPUBLISHED",
+      },
+    });
+    expect(result.submission).toMatchObject({
+      id: "submission_free_1",
+      submissionType: "FREE_LAUNCH",
+      reviewStatus: "PENDING",
+      badgeVerification: "PENDING",
+    });
+  });
+
   it("keeps the existing listing public when submitting a relaunch draft", async () => {
     const submission = {
       id: "submission_1",

@@ -19,7 +19,7 @@ const steps = [
   {
     title: "1. Submit your product",
     body:
-      "Founders submit their product, listing details, and launch preference. Free launches require badge verification. Premium Launches skip that step.",
+      "Founders submit their product, listing details, and launch preference. Free launches can add an optional ShipBoost badge for priority review within 24-48 hours.",
   },
   {
     title: "2. Enter the right launch flow",
@@ -38,7 +38,7 @@ const rules = [
     title: "Free Launch",
     points: [
       "Reviewed before approval",
-      "Requires badge verification",
+      "Optional badge for priority review within 24-48 hours",
       "Queued into the next available weekly cohort",
     ],
   },
@@ -46,7 +46,7 @@ const rules = [
     title: "Premium Launch",
     points: [
       "Choose a launch week",
-      "Skip badge verification",
+      "No badge step required",
       "Starts ahead of free launches outside the top vote slots",
     ],
   },
@@ -184,7 +184,7 @@ export default function HowItWorksPage() {
           {[
             {
               title: "Choose Free Launch if…",
-              body: "You want a credible public listing and weekly board visibility, and you are comfortable completing badge verification first.",
+              body: "You want a credible public listing and weekly board visibility, with the option to add a badge for priority review.",
             },
             {
               title: "Choose Premium Launch if…",

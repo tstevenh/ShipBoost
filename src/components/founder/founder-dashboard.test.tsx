@@ -21,6 +21,62 @@ vi.mock("next/link", () => ({
 }));
 
 describe("founder-dashboard", () => {
+  it("hides the Ownership tab when the founder has no pending or approved claims", () => {
+    render(
+      <FounderDashboard
+        initialSubmissions={[]}
+        initialTools={[]}
+        initialClaims={[
+          {
+            id: "claim_rejected",
+            status: "REJECTED",
+            websiteDomain: "rejected.test",
+            tool: {
+              id: "tool_rejected",
+              slug: "rejected",
+              name: "Rejected",
+              logoMedia: null,
+            },
+          },
+        ]}
+        founderEmail="founder@example.com"
+        founderRole="FOUNDER"
+        initialActiveNav="claims"
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /Ownership/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Mission Control")).toBeInTheDocument();
+  });
+
+  it("shows the Ownership tab when a founder has a pending claim", () => {
+    render(
+      <FounderDashboard
+        initialSubmissions={[]}
+        initialTools={[]}
+        initialClaims={[
+          {
+            id: "claim_pending",
+            status: "PENDING",
+            websiteDomain: "pending.test",
+            tool: {
+              id: "tool_pending",
+              slug: "pending",
+              name: "Pending Claim",
+              logoMedia: null,
+            },
+          },
+        ]}
+        founderEmail="founder@example.com"
+        founderRole="FOUNDER"
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /Ownership/i })).toBeInTheDocument();
+  });
+
   it("shows Scheduled for approved free launches with a future launch slot", () => {
     render(
       <FounderDashboard

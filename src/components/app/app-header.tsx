@@ -298,11 +298,11 @@ export function AppHeader({
                       
                       <div
                         className={cn(
-                          "absolute top-full right-0 z-20 mt-2 w-48 rounded-xl border border-border bg-card py-2 shadow-2xl transition-all duration-200",
+                          "mt-2 w-full rounded-xl border border-border bg-card py-2 shadow-2xl transition-all duration-200 lg:absolute lg:top-full lg:right-0 lg:z-20 lg:w-48",
                           isUserMenuOpen
-                            ? "visible translate-y-0 opacity-100"
-                            : "invisible translate-y-1 opacity-0",
-                          "group-hover/user:visible group-hover/user:translate-y-0 group-hover/user:opacity-100"
+                            ? "block translate-y-0 opacity-100"
+                            : "hidden translate-y-1 opacity-0 lg:invisible lg:block",
+                          "lg:group-hover/user:visible lg:group-hover/user:translate-y-0 lg:group-hover/user:opacity-100"
                         )}
                       >
                         <Link 

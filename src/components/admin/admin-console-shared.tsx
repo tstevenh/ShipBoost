@@ -406,10 +406,10 @@ export function getSubmissionBadgeLabel(submission: Submission) {
   }
 
   if (submission.badgeVerification === "FAILED") {
-    return "Badge: Failed";
+    return "Badge: Not verified";
   }
 
-  return "Badge: Pending";
+  return "Badge: Not verified";
 }
 
 export function getPaymentStatusLabel(submission: Submission) {

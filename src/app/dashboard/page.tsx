@@ -125,9 +125,19 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         ? {
             url: claim.tool.logoMedia.url,
           }
-        : null,
+      : null,
     },
   }));
+  const visibleOwnershipClaims = serializedClaims.filter(
+    (claim) => claim.status === "PENDING" || claim.status === "APPROVED",
+  );
+  const initialDashboardTab =
+    resolvedSearchParams?.tab === "submissions" ||
+    resolvedSearchParams?.tab === "products"
+      ? "products"
+      : resolvedSearchParams?.tab === "claims" && visibleOwnershipClaims.length > 0
+        ? "claims"
+        : "overview";
 
   return (
     <main className="flex flex-1 flex-col overflow-x-hidden bg-secondary/30 pt-32">
@@ -147,17 +157,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <FounderDashboard
           initialSubmissions={serializedSubmissions}
           initialTools={serializedTools}
-          initialClaims={serializedClaims}
+          initialClaims={visibleOwnershipClaims}
           founderEmail={session.user.email}
           founderRole={session.user.role ?? "FOUNDER"}
           initialSuccessMessage={initialSuccessMessage}
-          initialActiveNav={
-            resolvedSearchParams?.tab === "submissions" ||
-            resolvedSearchParams?.tab === "products" ||
-            resolvedSearchParams?.tab === "claims"
-              ? resolvedSearchParams.tab
-              : "overview"
-          }
+          initialActiveNav={initialDashboardTab}
         />
       </section>
       <Footer className="mt-auto" />

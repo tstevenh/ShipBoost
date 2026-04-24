@@ -44,12 +44,12 @@ const groups: FaqGroup[] = [
       {
         question: "What is the difference between Free Launch and Premium Launch?",
         answer:
-          "Free Launch goes through review, requires badge verification, and is queued into the next available weekly cohort. Premium Launch lets you reserve a launch week, skips badge verification, and gets stronger baseline placement.",
+          "Free Launch goes through manual review and is queued into the next available weekly cohort. Founders can add the ShipBoost badge for priority review within 24-48 hours. Premium Launch lets you reserve a launch week and gets stronger baseline placement.",
       },
       {
         question: "Do I need badge verification for Premium Launch?",
         answer:
-          "No. Badge verification is required for free launches, not Premium Launches.",
+          "No. The badge is optional for Free Launch and not part of the Premium Launch flow.",
       },
       {
         question: "What is the editorial launch spotlight?",
@@ -57,9 +57,9 @@ const groups: FaqGroup[] = [
           "For the first 100 Premium Launches, ShipBoost includes one standardized editorial launch spotlight published during launch week. It is a founder feature linked to your listing, not a custom commissioned article.",
       },
       {
-        question: "Why does Free Launch require a badge?",
+        question: "Why add the ShipBoost badge?",
         answer:
-          "Badge verification helps keep the free launch surface credible and filters low-intent or low-trust submissions. Premium Launch skips that step.",
+          "The badge helps visitors see where you launched, adds a simple trust signal to your site, and makes your free launch eligible for priority review within 24-48 hours.",
       },
     ],
   },

@@ -50,7 +50,10 @@ const SCREENSHOT_FILE_BY_SLUG = {
   apollo: "apollo.png",
   blogseo: "blogseo.png",
   buffer: "buffer.png",
+  "cognito-forms": "cognitoform.png",
+  "constant-contact": "constantcontact.png",
   directoryeasy: "directoryeasy.png",
+  drip: "drip.png",
   makerkit: "makerkit.png",
   supastarter: "supastarter.png",
   saasbrella: "saasbrella.png",
@@ -63,10 +66,19 @@ const SCREENSHOT_FILE_BY_SLUG = {
   mksaas: "mksaas.png",
   monokit: "monokit.png",
   "nextjs-directory": "nestjsdirectory.png",
+  "google-forms": "google form.png",
+  getresponse: "getrespond.png",
+  hootsuite: "hootsuite.png",
+  motion: "motion.png",
+  omnisend: "omnisend.png",
+  oncehub: "oncehub.png",
   pipedrive: "pipedrive.png",
+  publer: "publer.png",
   reply: "reply.png",
   shipfast: "shipfast.png",
   sleekflow: "sleekflow.png",
+  socialbee: "socialbee.png",
+  "sprout-social": "sproutsocial.png",
   tapfiliate: "tapfilliate.png",
   tidio: "tidio.png",
   trackdesk: "trackdesk.png",
@@ -99,12 +111,19 @@ const SCREENSHOT_FILE_BY_SLUG = {
   helpdesk: "helpdesk.png",
   chatbot: "chatbot.png",
   "respond-io": "respond.png",
+  wufoo: "wufoo.png",
 };
 
 const args = new Set(process.argv.slice(2));
 const shouldExecute = args.has("--execute");
 const shouldKeepExistingScreenshots = args.has("--keep-existing-screenshots");
 const shouldSkipRevalidation = args.has("--skip-revalidate");
+const heroDirArg = process.argv
+  .slice(2)
+  .find((arg) => arg.startsWith("--hero-dir="));
+const slugsArg = process.argv
+  .slice(2)
+  .find((arg) => arg.startsWith("--slugs="));
 
 function getRequiredEnv(name) {
   const value = process.env[name]?.trim();
@@ -135,6 +154,12 @@ function buildFaviconUrl(hostname) {
 }
 
 function buildHeroImagePath(filename) {
+  const customHeroDir = heroDirArg?.slice("--hero-dir=".length).trim();
+
+  if (customHeroDir) {
+    return path.resolve(customHeroDir, filename);
+  }
+
   return path.resolve(
     process.cwd(),
     "../ShipBoost-Docs/hero-image",
@@ -144,6 +169,21 @@ function buildHeroImagePath(filename) {
 
 function getAppUrl() {
   return process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "";
+}
+
+function getRequestedSlugs() {
+  const rawValue = slugsArg?.slice("--slugs=".length).trim();
+
+  if (!rawValue) {
+    return null;
+  }
+
+  const slugs = rawValue
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return slugs.length > 0 ? new Set(slugs) : null;
 }
 
 async function revalidatePublicContent() {
@@ -259,6 +299,7 @@ async function ensureLogoMedia(tx, tool, faviconUrl) {
 async function main() {
   const targetHosts = new Set(LOGO_SOURCE_DOMAINS.map(normalizeHostname));
   const screenshotSlugs = new Set(Object.keys(SCREENSHOT_FILE_BY_SLUG));
+  const requestedSlugs = getRequestedSlugs();
 
   const tools = await prisma.tool.findMany({
     where: {
@@ -304,7 +345,9 @@ async function main() {
     }));
 
   const matchedTools = toolsWithHosts.filter(
-    (tool) => targetHosts.has(tool.normalizedHost) || screenshotSlugs.has(tool.slug),
+    (tool) =>
+      (targetHosts.has(tool.normalizedHost) || screenshotSlugs.has(tool.slug)) &&
+      (!requestedSlugs || requestedSlugs.has(tool.slug)),
   );
 
   const missingDomains = [...targetHosts].filter(
@@ -337,6 +380,7 @@ async function main() {
     execute: shouldExecute,
     keepExistingScreenshots: shouldKeepExistingScreenshots,
     skipRevalidation: shouldSkipRevalidation,
+    requestedSlugs: requestedSlugs ? [...requestedSlugs] : null,
     matchedToolCount: matchedTools.length,
     missingDomains,
     missingScreenshotMappings,

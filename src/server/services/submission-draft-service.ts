@@ -244,7 +244,7 @@ export async function createSubmission(
             hasAffiliateProgram: input.hasAffiliateProgram,
             moderationStatus: "DRAFT",
             publicationStatus: "UNPUBLISHED",
-            launchBadgeRequired: input.submissionType === "FREE_LAUNCH",
+            launchBadgeRequired: false,
             badgeVerification: nextBadgeVerification,
             currentLaunchType: null,
             isFeatured: input.submissionType === "FEATURED_LAUNCH",
@@ -379,7 +379,7 @@ export async function createSubmission(
             input.requestedSlug ?? input.name,
             tx,
           );
-          const requiresBadge = input.submissionType === "FREE_LAUNCH";
+          const offersBadge = input.submissionType === "FREE_LAUNCH";
           const tool = await tx.tool.create({
             data: {
               ownerUserId: user.id,
@@ -394,8 +394,8 @@ export async function createSubmission(
               hasAffiliateProgram: input.hasAffiliateProgram,
               moderationStatus: "DRAFT",
               publicationStatus: "UNPUBLISHED",
-              launchBadgeRequired: requiresBadge,
-              badgeVerification: requiresBadge ? "PENDING" : "NOT_REQUIRED",
+              launchBadgeRequired: false,
+              badgeVerification: offersBadge ? "PENDING" : "NOT_REQUIRED",
               isFeatured: input.submissionType === "FEATURED_LAUNCH",
               founderXUrl: input.founderXUrl,
               founderGithubUrl: input.founderGithubUrl,
@@ -462,8 +462,8 @@ export async function createSubmission(
                 input.submissionType === "FEATURED_LAUNCH"
                   ? "PENDING"
                   : "NOT_REQUIRED",
-              badgeFooterUrl: requiresBadge ? input.websiteUrl : undefined,
-              badgeVerification: requiresBadge ? "PENDING" : "NOT_REQUIRED",
+              badgeFooterUrl: offersBadge ? input.websiteUrl : undefined,
+              badgeVerification: offersBadge ? "PENDING" : "NOT_REQUIRED",
               reviewStatus: "DRAFT",
             },
           });
@@ -604,16 +604,6 @@ export async function submitSubmissionDraft(
 
   if (submission.submissionType === "FEATURED_LAUNCH") {
     throw new AppError(400, "Premium launches must go through checkout.");
-  }
-
-  if (
-    submission.submissionType === "FREE_LAUNCH" &&
-    submission.badgeVerification !== "VERIFIED"
-  ) {
-    throw new AppError(
-      400,
-      "Verify the ShipBoost badge on your website before submitting the free launch.",
-    );
   }
 
   await prisma.$transaction(async (tx) => {
@@ -765,7 +755,7 @@ export async function verifyFreeLaunchBadge(
   return {
     verified,
     message: verified
-      ? "Badge verified. You can submit your free launch now."
+      ? "Badge verified. Your free launch is now eligible for priority review within 24-48 hours."
       : message,
     submission: updated,
   };

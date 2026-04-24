@@ -46,8 +46,18 @@ describe("admin-console-shared", () => {
     });
   });
 
-  it("returns a pending badge label for free-launch drafts", () => {
-    expect(getSubmissionBadgeLabel(buildSubmission())).toBe("Badge: Pending");
+  it("returns a not verified badge label for unverified free launches", () => {
+    expect(getSubmissionBadgeLabel(buildSubmission())).toBe("Badge: Not verified");
+  });
+
+  it("returns a verified badge label for verified free launches", () => {
+    expect(
+      getSubmissionBadgeLabel(
+        buildSubmission({
+          badgeVerification: "VERIFIED",
+        }),
+      ),
+    ).toBe("Badge: Verified");
   });
 
   it("returns not-required badge label for premium launches", () => {

@@ -49,7 +49,7 @@ export default async function PricingPage() {
       name: "Free Launch",
       price: "$0",
       description:
-        "Best for founders who want a founder-ready public listing, weekly launch visibility, and are comfortable qualifying through badge verification.",
+        "Best for founders who want a founder-ready public listing and weekly launch visibility. Add the ShipBoost badge if you want priority review within 24-48 hours.",
       eyebrow: "Weekly launchpad",
       ctaLabel: "Reserve free launch",
       ctaHref: "/submit",
@@ -59,7 +59,7 @@ export default async function PricingPage() {
         "Weekly launchpad placement",
         "Public listing on ShipBoost",
         "Founder-managed profile after approval",
-        "Requires badge verification",
+        "Optional badge for 24-48 hour review",
       ],
     },
     {
@@ -67,7 +67,7 @@ export default async function PricingPage() {
       price: foundingPremiumPrice.currentPrice,
       originalPrice: foundingPremiumPrice.compareAtPrice,
       description:
-        "Reserve your launch week, skip badge verification, get stronger baseline placement, and receive a ShipBoost editorial launch spotlight during your launch period.",
+        "Reserve your launch week, get stronger baseline placement, and receive a ShipBoost editorial launch spotlight during your launch period.",
       eyebrow: "Founding offer",
       foundingSpotsLabel: "First 100 Premium Launches",
       ctaLabel: premiumLaunchAvailable
@@ -81,7 +81,7 @@ export default async function PricingPage() {
       icon: Star,
       points: [
         "Reserve a specific launch week",
-        "Skip badge verification and go live faster",
+        "No badge step required",
         "Get stronger baseline board placement",
         "Keep a public listing that stays useful after launch",
         "Includes one editorial launch spotlight during launch period",

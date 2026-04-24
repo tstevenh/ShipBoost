@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { 
   Rocket, ShieldCheck, Star, Zap, Loader2, Check,
   ChevronDown, Layout, Image as ImageIcon, Share2, ExternalLink,
-  Search, X, ArrowRight, Trash2
+  Search, X, ArrowRight, Trash2, Copy
 } from "lucide-react";
 
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
@@ -307,6 +307,8 @@ export function SubmitProductForm({
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
   const [isVerifyingBadge, setIsVerifyingBadge] = useState(false);
+  const [isBadgePromptOpen, setIsBadgePromptOpen] = useState(false);
+  const [badgePromptSubmissionId, setBadgePromptSubmissionId] = useState<string | null>(null);
   const [slugStatus, setSlugStatus] = useState<string>("");
   const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(
     initialDraft?.id ?? null,
@@ -327,7 +329,7 @@ export function SubmitProductForm({
   );
   const [lastSavedPayloadSignature, setLastSavedPayloadSignature] = useState<string | null>(null);
   const [badgeTheme, setBadgeTheme] = useState<BadgeTheme>("light");
-  const [copiedBadgeSnippet, setCopiedBadgeSnippet] = useState(false);
+  const [copiedBadgeTheme, setCopiedBadgeTheme] = useState<BadgeTheme | null>(null);
   
   const [catSearch, setCatSearch] = useState("");
   const [tagSearch, setTagSearch] = useState("");
@@ -336,14 +338,17 @@ export function SubmitProductForm({
 
   const isBusy = isSavingDraft || isSubmittingDraft || isVerifyingBadge;
   const shipboostUrl = "https://shipboost.io";
-  const badgeAssetPath =
-    badgeTheme === "light"
+  const getBadgeAssetPath = (theme: BadgeTheme) =>
+    theme === "light"
       ? "/ShipBoost-Badge/ShipBoost-Light-Badge.svg"
       : "/ShipBoost-Badge/ShipBoost-Dark-Badge.svg";
-  const badgePreviewSrc = `${shipboostUrl}${badgeAssetPath}`;
-  const freeLaunchBadgeSnippet = `<a href="${shipboostUrl}" data-shipboost-badge="free-launch" target="_blank" rel="noopener">
-  <img src="${badgePreviewSrc}" alt="Launching soon on ShipBoost" style="height: 54px; width: auto;" />
+  const getBadgePreviewSrc = (theme: BadgeTheme) => `${shipboostUrl}${getBadgeAssetPath(theme)}`;
+  const getFreeLaunchBadgeSnippet = (theme: BadgeTheme) => `<a href="${shipboostUrl}" data-shipboost-badge="free-launch" target="_blank" rel="noopener">
+  <img src="${getBadgePreviewSrc(theme)}" alt="Launching soon on ShipBoost" style="height: 54px; width: auto;" />
 </a>`;
+  const badgeAssetPath = getBadgeAssetPath(badgeTheme);
+  const badgePreviewSrc = `${shipboostUrl}${badgeAssetPath}`;
+  const freeLaunchBadgeSnippet = getFreeLaunchBadgeSnippet(badgeTheme);
   const submissionChecklist = [
     { label: "Name", complete: form.name.trim().length >= 2 },
     { label: "Slug", complete: form.requestedSlug.trim().length > 0 },
@@ -374,11 +379,11 @@ export function SubmitProductForm({
     return () => { controller.abort(); clearTimeout(timer); };
   }, [draftSubmissionId, form.name]);
 
-  async function handleCopyBadgeSnippet() {
+  async function handleCopyBadgeSnippet(theme: BadgeTheme = badgeTheme) {
     try {
-      await navigator.clipboard.writeText(freeLaunchBadgeSnippet);
-      setCopiedBadgeSnippet(true);
-      window.setTimeout(() => setCopiedBadgeSnippet(false), 1500);
+      await navigator.clipboard.writeText(getFreeLaunchBadgeSnippet(theme));
+      setCopiedBadgeTheme(theme);
+      window.setTimeout(() => setCopiedBadgeTheme(null), 1500);
     } catch {
       setErrorMessage("Unable to copy the badge snippet.");
     }
@@ -563,10 +568,41 @@ export function SubmitProductForm({
             }
           : current,
       );
-      if (payload.data.verified) setSuccessMessage(payload.data.message);
-      else setErrorMessage(payload.data.message || "Badge not found. Make sure it's in your footer.");
+      if (payload.data.verified) {
+        setSuccessMessage(payload.data.message);
+        setIsBadgePromptOpen(false);
+      } else setErrorMessage(payload.data.message || "Badge not found. Make sure it's in your footer.");
     } catch { setErrorMessage("Verification failed."); }
     finally { setIsVerifyingBadge(false); }
+  }
+
+  async function submitDraftForReview(submissionId: string) {
+    const response = await fetch(`/api/submissions/${submissionId}/submit`, {
+      method: "POST",
+    });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error || "Unable to submit your launch.");
+    }
+
+    setSuccessMessage("Launch submitted for review.");
+    router.push("/dashboard");
+  }
+
+  async function handleSubmitWithoutBadge() {
+    if (!badgePromptSubmissionId) return;
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSubmittingDraft(true);
+
+    try {
+      await submitDraftForReview(badgePromptSubmissionId);
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, "Unable to submit your launch."));
+    } finally {
+      setIsSubmittingDraft(false);
+    }
   }
 
   async function handleFinalSubmit(type: SubmissionType) {
@@ -615,20 +651,12 @@ export function SubmitProductForm({
       });
 
       if (savedDraft.badgeVerification !== "VERIFIED") {
-        throw new Error("Badge must be verified for free launch.");
+        setBadgePromptSubmissionId(savedDraft.id);
+        setIsBadgePromptOpen(true);
+        return;
       }
 
-      const response = await fetch(`/api/submissions/${savedDraft.id}/submit`, {
-        method: "POST",
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Unable to submit your launch.");
-      }
-
-      setSuccessMessage("Launch submitted for review.");
-      router.push("/dashboard");
+      await submitDraftForReview(savedDraft.id);
     } catch (error) {
       setErrorMessage(getErrorMessage(error, "Unable to continue with this launch option."));
     }
@@ -637,6 +665,121 @@ export function SubmitProductForm({
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-10">
+      {isBadgePromptOpen ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 px-4 py-8 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="badge-priority-title"
+            className="w-full max-w-lg rounded-[2rem] border border-border bg-background p-6 shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black tracking-[0.18em] text-emerald-700">
+                  <ShieldCheck size={13} />
+                  Optional trust badge
+                </div>
+                <h3 id="badge-priority-title" className="text-2xl font-black tracking-tight text-foreground">
+                  Get reviewed within 24-48 hours
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBadgePromptOpen(false)}
+                className="rounded-xl border border-border bg-card p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                aria-label="Close badge prompt"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className="mt-5 text-sm font-medium leading-relaxed text-muted-foreground">
+              Add a small ShipBoost badge to your homepage or footer to unlock
+              priority review. It helps visitors see where you launched, adds a
+              simple trust signal to your site, and helps more founders
+              discover ShipBoost.
+            </p>
+            <p className="mt-3 text-sm font-medium leading-relaxed text-muted-foreground">
+              Your badge is optional. You can still submit without it, but
+              standard free launches are reviewed after priority submissions.
+            </p>
+
+            {errorMessage ? (
+              <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+                {errorMessage}
+              </p>
+            ) : null}
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {(["light", "dark"] as const).map((theme) => {
+                const isDarkBadge = theme === "dark";
+                return (
+                  <div
+                    key={theme}
+                    className={cn(
+                      "relative rounded-2xl border border-border p-5",
+                      isDarkBadge ? "bg-white" : "bg-muted/20",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => void handleCopyBadgeSnippet(theme)}
+                      className={cn(
+                        "absolute right-3 top-3 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-black tracking-[0.12em] transition",
+                        isDarkBadge
+                          ? "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                          : "border-border bg-card text-foreground hover:bg-muted",
+                      )}
+                    >
+                      <Copy size={12} />
+                      {copiedBadgeTheme === theme ? "Copied" : "Copy"}
+                    </button>
+                    <div className="pt-8">
+                      <p
+                        className={cn(
+                          "mb-4 text-[10px] font-black tracking-[0.18em]",
+                          isDarkBadge ? "text-slate-500" : "text-muted-foreground",
+                        )}
+                      >
+                        {isDarkBadge ? "Dark badge" : "Light badge"}
+                      </p>
+                      <a href={shipboostUrl} target="_blank" rel="noopener">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={getBadgePreviewSrc(theme)}
+                          alt={`${theme} ShipBoost badge preview`}
+                          className="h-auto max-h-16 w-auto"
+                        />
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => void handleVerifyBadge()}
+                disabled={isVerifyingBadge || !draftSubmissionId || !isValidUrl(form.websiteUrl)}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-black/10 transition hover:opacity-90 disabled:opacity-50"
+              >
+                {isVerifyingBadge ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                {isVerifyingBadge ? "Verifying..." : "I added it, verify now"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSubmitWithoutBadge()}
+                disabled={isSubmittingDraft}
+                className="rounded-2xl border border-border bg-background px-4 py-3 text-sm font-black text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+              >
+                {isSubmittingDraft ? "Submitting..." : "Submit without badge"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Multi-step Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-10">
@@ -1051,10 +1194,11 @@ export function SubmitProductForm({
           <div className="text-center space-y-4">
             <h2 className="text-4xl font-black tracking-tight ">Choose your launch path</h2>
             <p className="text-muted-foreground font-medium max-w-xl mx-auto">
-              Choose the path that fits your product stage. Free Launch is best
-              if you are flexible and happy to verify the badge. Premium Launch
-              is best if timing, lower friction, and stronger baseline placement
-              matter more.
+              Choose the path that fits your product stage. Free Launch goes
+              through manual review, with an optional ShipBoost badge for
+              priority review within 24-48 hours. Premium Launch is best if
+              timing, lower friction, and stronger baseline placement matter
+              more.
             </p>
           </div>
 
@@ -1083,10 +1227,10 @@ export function SubmitProductForm({
             </div>
           ) : null}
 
-          <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+          <div className="grid gap-8 md:grid-cols-2 md:items-start max-w-4xl mx-auto">
             {/* FREE PLAN */}
             <div className={cn(
-              "p-8 rounded-[2.5rem] border transition-all flex flex-col h-full",
+              "p-8 rounded-[2.5rem] border transition-all flex flex-col",
               form.submissionType === "FREE_LAUNCH" ? "border-foreground bg-card ring-4 ring-foreground/5 shadow-2xl" : "border-border bg-card hover:border-foreground/30"
             )}
             onClick={() => setForm({ ...form, submissionType: "FREE_LAUNCH" })}
@@ -1098,11 +1242,16 @@ export function SubmitProductForm({
               <h3 className="text-2xl font-black mb-2">Free Launch</h3>
               <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
                 {isPrelaunch
-                  ? "Best for founders who want a credible public listing and weekly launch visibility, and are comfortable qualifying through badge verification before the May opening cohort."
-                  : "Best for founders who want a credible public listing and weekly launch visibility, and are comfortable qualifying through badge verification."}
+                  ? "Best for founders who want a credible public listing and weekly launch visibility before the May opening cohort. Add the badge if you want priority review."
+                  : "Best for founders who want a credible public listing and weekly launch visibility. Add the badge if you want priority review."}
               </p>
               <ul className="space-y-4 mb-10">
-                {["Weekly launchpad placement", "Public listing on ShipBoost", "Founder trust signal", "Requires badge verification"].map(p => (
+                {[
+                  "Weekly launchpad placement",
+                  "Public listing on ShipBoost",
+                  "Manual review for every submission",
+                  "Optional badge unlocks 24-48 hour review",
+                ].map(p => (
                   <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
                     <Check size={16} className="text-emerald-500 mt-0.5" /> {p}
                   </li>
@@ -1111,25 +1260,23 @@ export function SubmitProductForm({
               
               <button 
                 onClick={() => handleFinalSubmit("FREE_LAUNCH")}
-                disabled={draftBadgeVerification !== "VERIFIED" || isBusy}
+                disabled={isBusy}
                 className={cn(
                   "w-full py-4 rounded-2xl font-black text-sm transition-all",
-                  draftBadgeVerification === "VERIFIED" && !isBusy
+                  !isBusy
                     ? "bg-primary text-primary-foreground shadow-xl shadow-black/10 hover:opacity-90 active:scale-95" 
                     : "bg-muted text-muted-foreground/50 cursor-not-allowed border border-border"
                 )}
               >
                 {isSubmittingDraft
                   ? "Submitting..."
-                  : draftBadgeVerification === "VERIFIED"
-                    ? "Submit Free Launch"
-                    : "Verify Badge First"}
+                  : "Submit Free Launch"}
               </button>
             </div>
 
             {/* PREMIUM PLAN */}
             <div className={cn(
-              "p-8 rounded-[2.5rem] border transition-all flex flex-col h-full relative",
+              "p-8 rounded-[2.5rem] border transition-all flex flex-col relative",
               form.submissionType === "FEATURED_LAUNCH"
                 ? "border-foreground bg-card ring-4 ring-foreground/5 shadow-2xl"
                 : premiumLaunchAvailable
@@ -1171,7 +1318,7 @@ export function SubmitProductForm({
               <ul className="space-y-4 mb-10">
                 {[
                   "Reserve a specific launch week",
-                  "Skip badge verification and launch faster",
+                  "No badge step required",
                   "Stronger baseline board placement",
                   "Keep a permanent public listing",
                   "Includes one editorial launch spotlight during launch week",
@@ -1238,17 +1385,15 @@ export function SubmitProductForm({
           <div className="max-w-4xl mx-auto bg-muted/20 border border-border rounded-[2.5rem] p-10 space-y-8">
             <div className="flex flex-col md:flex-row gap-10 items-center">
               <div className="flex-1 space-y-4 text-center md:text-left">
-                <h3 className="text-xl font-black">Free Launch Badge</h3>
+                <h3 className="text-xl font-black">Add the ShipBoost badge for priority review</h3>
                 <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                  To launch for free, please add our trust badge to your website
-                  footer. We verify the same website URL you entered in step 1.
-                  This keeps the free launch surface more credible and filters
-                  low-intent submissions.
+                  Place the badge on your homepage or footer to show visitors
+                  where you launched. Verified badge submissions get priority
+                  review within 24-48 hours.
                 </p>
                 <p className="text-xs font-bold leading-relaxed text-muted-foreground/80">
-                  Premium Launch skips badge verification. You can also update
-                  your listing later, and one category plus a few tags is enough
-                  to get started.
+                  The badge is optional. You can submit without it for standard
+                  review, or add it later if you want the extra trust signal.
                 </p>
                 <div className="rounded-2xl border border-border bg-background p-4">
                   <p className="text-[10px] font-black  tracking-widest text-muted-foreground mb-2">
@@ -1322,7 +1467,7 @@ export function SubmitProductForm({
                     onClick={() => void handleCopyBadgeSnippet()}
                     className="text-[10px] font-black  tracking-widest text-foreground underline decoration-border underline-offset-4"
                   >
-                    {copiedBadgeSnippet ? "Copied" : "Copy"}
+                    {copiedBadgeTheme === badgeTheme ? "Copied" : "Copy"}
                   </button>
                 </div>
                 <textarea 
@@ -1337,7 +1482,11 @@ export function SubmitProductForm({
               <div className="flex items-center gap-2 text-xs font-black  tracking-widest">
                 <span className="text-muted-foreground/60">Status:</span>
                 <span className={cn(draftBadgeVerification === "VERIFIED" ? "text-emerald-500" : "text-foreground")}>
-                  {draftBadgeVerification}
+                  {draftBadgeVerification === "VERIFIED"
+                    ? "Priority review active"
+                    : draftBadgeVerification === "FAILED"
+                      ? "Not verified yet"
+                      : "Optional"}
                 </span>
               </div>
               <button onClick={() => setStep(1)} className="text-xs font-bold text-muted-foreground hover:text-foreground underline decoration-border underline-offset-4">

@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   Rocket, Mail, Shield, Activity, CreditCard,
   ExternalLink, Edit, RefreshCw, Check, AlertCircle, Star,
-  Layout, Package, Send, Fingerprint,
+  Layout, Package, Fingerprint,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -70,7 +70,7 @@ type SubmissionStateSummary = {
 };
 
 type FounderNavItem = {
-  id: "overview" | "products" | "submissions" | "claims";
+  id: "overview" | "products" | "claims";
   label: string;
   icon: LucideIcon;
   count?: number;
@@ -173,6 +173,26 @@ async function apiRequest<T>(input: RequestInfo, init?: RequestInit): Promise<T>
 }
 
 type NavSection = "overview" | "products" | "submissions" | "claims";
+type ActiveNavSection = Exclude<NavSection, "submissions">;
+
+function isVisibleOwnershipClaim(claim: FounderListingClaim) {
+  return claim.status === "PENDING" || claim.status === "APPROVED";
+}
+
+function normalizeInitialNav(
+  nav: NavSection,
+  hasOwnershipClaims: boolean,
+): ActiveNavSection {
+  if (nav === "submissions") {
+    return "products";
+  }
+
+  if (nav === "claims" && !hasOwnershipClaims) {
+    return "overview";
+  }
+
+  return nav;
+}
 
 export function FounderDashboard({
   initialSubmissions,
@@ -191,7 +211,10 @@ export function FounderDashboard({
   initialSuccessMessage?: string | null;
   initialActiveNav?: NavSection;
 }) {
-  const [activeNav, setActiveNav] = useState<NavSection>(initialActiveNav);
+  const initialHasOwnershipClaims = initialClaims.some(isVisibleOwnershipClaim);
+  const [activeNav, setActiveNav] = useState<ActiveNavSection>(
+    normalizeInitialNav(initialActiveNav, initialHasOwnershipClaims),
+  );
   const [submissions, setSubmissions] = useState(initialSubmissions);
   const [tools, setTools] = useState(initialTools);
   const [claims, setClaims] = useState(initialClaims);
@@ -203,6 +226,39 @@ export function FounderDashboard({
   const pendingCount = submissions.filter(s => getSubmissionState(s).label === "Pending review").length;
   const awaitingPaymentCount = submissions.filter(s => getSubmissionState(s).label === "Awaiting payment").length;
   const pendingClaimCount = claims.filter(c => c.status === "PENDING").length;
+  const ownershipClaims = claims.filter(isVisibleOwnershipClaim);
+  const showOwnershipTab = ownershipClaims.length > 0;
+  const toolsById = new Map(tools.map((tool) => [tool.id, tool]));
+  const productItems = (() => {
+    const latestSubmissionByToolId = new Map<string, FounderSubmission>();
+
+    submissions.forEach((submission) => {
+      if (!latestSubmissionByToolId.has(submission.tool.id)) {
+        latestSubmissionByToolId.set(submission.tool.id, submission);
+      }
+    });
+
+    return [
+      ...Array.from(latestSubmissionByToolId.values()).map((submission) => ({
+        key: submission.tool.id,
+        submission,
+        tool: toolsById.get(submission.tool.id),
+      })),
+      ...tools
+        .filter((tool) => !latestSubmissionByToolId.has(tool.id))
+        .map((tool) => ({
+          key: tool.id,
+          submission: null,
+          tool,
+        })),
+    ];
+  })();
+
+  useEffect(() => {
+    if (activeNav === "claims" && !showOwnershipTab) {
+      setActiveNav("overview");
+    }
+  }, [activeNav, showOwnershipTab]);
 
   function refresh() {
     if (isRefreshing) return;
@@ -218,7 +274,7 @@ export function FounderDashboard({
         ]);
         setSubmissions(nextSub);
         setTools(nextTools);
-        setClaims(nextClaims);
+        setClaims(nextClaims.filter(isVisibleOwnershipClaim));
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : "Unable to refresh status.");
       } finally {
@@ -255,9 +311,17 @@ export function FounderDashboard({
 
   const navItems: FounderNavItem[] = [
     { id: "overview", label: "Overview", icon: Layout },
-    { id: "products", label: "My Products", icon: Package, count: tools.length },
-    { id: "submissions", label: "Submissions", icon: Send, count: submissions.length },
-    { id: "claims", label: "Ownership", icon: Fingerprint, count: claims.length },
+    { id: "products", label: "Products", icon: Package, count: productItems.length },
+    ...(showOwnershipTab
+      ? [
+          {
+            id: "claims" as const,
+            label: "Ownership",
+            icon: Fingerprint,
+            count: ownershipClaims.length,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -380,66 +444,36 @@ export function FounderDashboard({
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex min-w-0 items-end justify-between px-2">
               <div className="space-y-1">
-                <h2 className="text-3xl font-black tracking-tight">Public Profiles</h2>
-                <p className="text-xs font-bold text-muted-foreground  tracking-widest">Manage your active listings</p>
+                <h2 className="text-3xl font-black tracking-tight">Products</h2>
+                <p className="text-xs font-bold text-muted-foreground  tracking-widest">Manage drafts, launches, and live listings</p>
               </div>
             </div>
             <div className="grid gap-4">
-              {tools.map((tool) => (
-                <article key={tool.id} className="rounded-[2rem] border border-border bg-card p-5 sm:p-6 hover:shadow-xl hover:shadow-black/5 transition-all">
-                  <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-                    <div className="flex min-w-0 items-start gap-4 sm:gap-6">
-                      <div className="w-16 h-16 rounded-2xl bg-muted border border-border overflow-hidden shrink-0">
-                        {tool.logoMedia ? (
-                          <>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={tool.logoMedia.url} alt={`${tool.name} logo`} className="w-full h-full object-cover" />
-                          </>
-                        ) : <Package size={24} className="m-5 text-muted-foreground" />}
-                      </div>
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex min-w-0 flex-wrap items-center gap-2">
-                          <h3 className="truncate text-lg font-black">{tool.name}</h3>
-                          <StatusChip label={tool.publicationStatus} tone={tool.publicationStatus === 'PUBLISHED' ? 'green' : 'slate'} />
-                        </div>
-                        <p className="text-sm font-medium text-muted-foreground line-clamp-2 break-words">{tool.tagline}</p>
-                      </div>
-                    </div>
-                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                      <Link href={`/dashboard/tools/${tool.id}`} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-black text-primary-foreground shadow-lg shadow-black/10 hover:opacity-90 sm:w-auto">
-                        <Edit size={14} /> Edit
-                      </Link>
-                      <Link href={`/dashboard/tools/${tool.id}/preview`} target="_blank" className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-2.5 text-xs font-black hover:bg-muted sm:w-auto">
-                        <ExternalLink size={14} /> Preview
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              ))}
-              {tools.length === 0 && <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/30 px-5 py-16 text-center text-sm font-bold text-muted-foreground  tracking-widest">No listings yet.</div>}
-            </div>
-          </div>
-        )}
+              {productItems.map((item) => {
+                const sub = item.submission;
+                const tool = item.tool;
+                const state = sub ? getSubmissionState(sub) : null;
+                const latestLaunch = sub?.tool.launches[0] ?? null;
+                const name = sub?.tool.name ?? tool?.name ?? "Untitled product";
+                const slug = sub?.tool.slug ?? tool?.slug ?? "";
+                const logoMedia = sub?.tool.logoMedia ?? tool?.logoMedia ?? null;
+                const description =
+                  tool?.tagline ??
+                  (sub ? `${getSubmissionTypeLabel(sub.submissionType)} submission` : "");
 
-        {activeNav === "submissions" && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex min-w-0 items-end justify-between px-2">
-              <div className="space-y-1">
-                <h2 className="text-3xl font-black tracking-tight">Launch Queue</h2>
-                <p className="text-xs font-bold text-muted-foreground  tracking-widest">Track your submission status</p>
-              </div>
-            </div>
-            <div className="grid gap-4">
-              {submissions.map((sub) => {
-                const state = getSubmissionState(sub);
-                const latestLaunch = sub.tool.launches[0] ?? null;
                 return (
-                  <article key={sub.id} className="rounded-[2rem] border border-border bg-card p-5 sm:p-6 space-y-6">
+                  <article key={item.key} className="rounded-[2rem] border border-border bg-card p-5 sm:p-6 space-y-6">
                     <div className="flex min-w-0 flex-col gap-6 lg:flex-row lg:justify-between">
                       <div className="min-w-0 space-y-4">
                         <div className="flex flex-wrap gap-2">
-                          <span className={cn("px-3 py-1 rounded-full border text-[10px] font-black  tracking-widest", submissionStateTone(state.tone))}>{state.label}</span>
-                          <span className="px-3 py-1 rounded-full border border-border bg-muted/30 text-[10px] font-black  tracking-widest text-muted-foreground">{getSubmissionTypeLabel(sub.submissionType)}</span>
+                          {state ? (
+                            <span className={cn("px-3 py-1 rounded-full border text-[10px] font-black  tracking-widest", submissionStateTone(state.tone))}>{state.label}</span>
+                          ) : tool ? (
+                            <StatusChip label={tool.publicationStatus} tone={tool.publicationStatus === 'PUBLISHED' ? 'green' : 'slate'} />
+                          ) : null}
+                          {sub ? (
+                            <span className="px-3 py-1 rounded-full border border-border bg-muted/30 text-[10px] font-black  tracking-widest text-muted-foreground">{getSubmissionTypeLabel(sub.submissionType)}</span>
+                          ) : null}
                           {latestLaunch ? (
                             <span className="px-3 py-1 rounded-full border border-border bg-muted/30 text-[10px] font-black  tracking-widest text-muted-foreground">
                               Launch date:{" "}
@@ -451,26 +485,29 @@ export function FounderDashboard({
                         </div>
                         <div className="flex min-w-0 items-center gap-4">
                           <div className="w-12 h-12 rounded-xl bg-muted border border-border overflow-hidden shrink-0">
-                            {sub.tool.logoMedia ? (
+                            {logoMedia ? (
                               <>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={sub.tool.logoMedia.url} alt={`${sub.tool.name} logo`} className="w-full h-full object-cover" />
+                                <img src={logoMedia.url} alt={`${name} logo`} className="w-full h-full object-cover" />
                               </>
                             ) : <Rocket size={20} className="m-3 text-muted-foreground" />}
                           </div>
-                          <div className="min-w-0">
-                            <h3 className="truncate font-black text-foreground">{sub.tool.name}</h3>
-                            <p className="truncate text-xs text-muted-foreground  tracking-widest">Slug: {sub.tool.slug}</p>
+                          <div className="min-w-0 space-y-1">
+                            <h3 className="truncate font-black text-foreground">{name}</h3>
+                            <p className="truncate text-xs text-muted-foreground  tracking-widest">Slug: {slug}</p>
+                            {description ? (
+                              <p className="text-sm font-medium text-muted-foreground line-clamp-2 break-words">{description}</p>
+                            ) : null}
                           </div>
                         </div>
                       </div>
                       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-start">
-                        {sub.reviewStatus === "DRAFT" && (
+                        {sub?.reviewStatus === "DRAFT" ? (
                           <Link href={`/submit?draft=${sub.id}`} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90">
                             <Edit size={14} /> Continue Submission
                           </Link>
-                        )}
-                        {sub.reviewStatus !== "DRAFT" && sub.submissionType === "FEATURED_LAUNCH" && sub.paymentStatus !== "PAID" && (
+                        ) : null}
+                        {sub && sub.reviewStatus !== "DRAFT" && sub.submissionType === "FEATURED_LAUNCH" && sub.paymentStatus !== "PAID" && (
                           premiumLaunchAvailable ? (
                             <button onClick={() => beginPremiumCheckout(sub.id)} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90">
                               <Star size={14} /> Reserve Premium Launch
@@ -481,12 +518,19 @@ export function FounderDashboard({
                             </span>
                           )
                         )}
-                        <a href={sub.tool.websiteUrl} target="_blank" className="inline-flex items-center gap-2 border border-border bg-card px-4 py-2 rounded-xl text-xs font-black hover:bg-muted">
-                          <ExternalLink size={14} /> Site
-                        </a>
+                        {tool && sub?.reviewStatus !== "DRAFT" ? (
+                          <Link href={`/dashboard/tools/${tool.id}`} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90">
+                            <Edit size={14} /> Edit listing
+                          </Link>
+                        ) : null}
+                        {tool && sub?.reviewStatus !== "DRAFT" ? (
+                          <Link href={`/dashboard/tools/${tool.id}/preview`} target="_blank" className="inline-flex items-center gap-2 border border-border bg-card px-4 py-2 rounded-xl text-xs font-black hover:bg-muted">
+                            <ExternalLink size={14} /> Preview
+                          </Link>
+                        ) : null}
                       </div>
                   </div>
-                    {sub.submissionType === "FEATURED_LAUNCH" &&
+                    {sub?.submissionType === "FEATURED_LAUNCH" &&
                     sub.paymentStatus === "PAID" ? (
                       <div className="rounded-[1.5rem] border border-border bg-muted/20 p-4 sm:p-5">
                         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -553,12 +597,12 @@ export function FounderDashboard({
                   </article>
                 );
               })}
-              {submissions.length === 0 && <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/30 px-5 py-16 text-center text-sm font-bold text-muted-foreground  tracking-widest">No submissions yet.</div>}
+              {productItems.length === 0 && <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/30 px-5 py-16 text-center text-sm font-bold text-muted-foreground  tracking-widest">No products yet.</div>}
             </div>
           </div>
         )}
 
-        {activeNav === "claims" && (
+        {activeNav === "claims" && showOwnershipTab && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex min-w-0 items-end justify-between px-2">
               <div className="space-y-1">
@@ -567,7 +611,7 @@ export function FounderDashboard({
               </div>
             </div>
             <div className="grid gap-4">
-              {claims.map((claim) => (
+              {ownershipClaims.map((claim) => (
                 <article key={claim.id} className="rounded-[2rem] border border-border bg-card p-5 sm:p-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
                   <div className="flex min-w-0 items-center gap-4 sm:gap-6">
                     <div className="w-12 h-12 rounded-xl bg-muted border border-border overflow-hidden shrink-0">
@@ -591,7 +635,6 @@ export function FounderDashboard({
                   </div>
                 </article>
               ))}
-              {claims.length === 0 && <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/30 px-5 py-16 text-center text-sm font-bold text-muted-foreground  tracking-widest">No claims found.</div>}
             </div>
           </div>
         )}

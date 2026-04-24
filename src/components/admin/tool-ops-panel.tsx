@@ -2,6 +2,8 @@ import type { Dispatch, FormEvent, SetStateAction } from "react";
 import { useMemo, useState } from "react";
 import {
   Check,
+  ChevronDown,
+  ChevronRight,
   ExternalLink,
   Plus,
   RefreshCw,
@@ -71,6 +73,10 @@ function getPublicationTone(status: Tool["publicationStatus"]) {
   }
 
   return "slate" as const;
+}
+
+function isUserSubmissionTool(tool: Tool) {
+  return tool.submissions.length > 0 || tool.owner?.role === "FOUNDER";
 }
 
 type InventoryDrawerState =
@@ -179,6 +185,9 @@ export function ToolOpsPanel({
   const [featuredFilter, setFeaturedFilter] = useState<
     "ALL" | "FEATURED" | "STANDARD"
   >("ALL");
+  const [isUserSubmissionTableCollapsed, setIsUserSubmissionTableCollapsed] =
+    useState(false);
+  const [isSeededTableCollapsed, setIsSeededTableCollapsed] = useState(false);
   const [sortKey, setSortKey] = useState<
     "createdAt" | "name" | "category" | "moderation" | "publication"
   >("createdAt");
@@ -278,6 +287,15 @@ export function ToolOpsPanel({
     tools,
   ]);
 
+  const userSubmissionTools = useMemo(
+    () => filteredTools.filter(isUserSubmissionTool),
+    [filteredTools],
+  );
+  const seededTools = useMemo(
+    () => filteredTools.filter((tool) => !isUserSubmissionTool(tool)),
+    [filteredTools],
+  );
+
   function handleSort(
     nextSortKey: "createdAt" | "name" | "category" | "moderation" | "publication",
   ) {
@@ -324,96 +342,56 @@ export function ToolOpsPanel({
     );
   }
 
-  return (
-    <SectionCard
-      eyebrow="Inventory"
-      title="Directory Tuning"
-      description="Scan listings in one table, then open a focused side panel for creation and updates."
-    >
-      <div className="min-w-0 space-y-5">
-        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,0.6fr))]">
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                size={14}
-              />
-              <input
-                value={toolSearch}
-                onChange={(event) => onToolSearchChange(event.target.value)}
-                placeholder="Search by tool, tag, category, or URL..."
-                className={cn(textInputClassName(), "pl-10 py-2 text-xs")}
-              />
-            </div>
+  function renderInventoryTable({
+    title,
+    description,
+    sectionTools,
+    emptyMessage,
+    isCollapsed,
+    onToggleCollapsed,
+  }: {
+    title: string;
+    description: string;
+    sectionTools: Tool[];
+    emptyMessage: string;
+    isCollapsed: boolean;
+    onToggleCollapsed: () => void;
+  }) {
+    const CollapseIcon = isCollapsed ? ChevronRight : ChevronDown;
 
-            <select
-              value={moderationFilter}
-              onChange={(event) =>
-                setModerationFilter(
-                  event.target.value as Tool["moderationStatus"] | "ALL",
-                )
-              }
-              className={cn(textInputClassName(), "py-2 text-xs")}
-            >
-              <option value="ALL">All moderation</option>
-              {moderationStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={publicationFilter}
-              onChange={(event) =>
-                setPublicationFilter(
-                  event.target.value as Tool["publicationStatus"] | "ALL",
-                )
-              }
-              className={cn(textInputClassName(), "py-2 text-xs")}
-            >
-              <option value="ALL">All publication</option>
-              {publicationStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={featuredFilter}
-              onChange={(event) =>
-                setFeaturedFilter(
-                  event.target.value as "ALL" | "FEATURED" | "STANDARD",
-                )
-              }
-              className={cn(textInputClassName(), "py-2 text-xs")}
-            >
-              <option value="ALL">All premium states</option>
-              <option value="FEATURED">Premium only</option>
-              <option value="STANDARD">Standard only</option>
-            </select>
-            </div>
+    return (
+      <section className="min-w-0 space-y-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-base font-black tracking-tight text-foreground">
+              {title}
+            </h3>
+            <p className="text-xs font-medium text-muted-foreground">
+              {description}
+            </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setDrawerState({ mode: "create" })}
-            className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-primary px-4 py-2.5 text-xs font-black text-primary-foreground shadow-xl shadow-black/10 transition hover:opacity-90 xl:self-auto"
-          >
-            <Plus size={14} />
-            Create tool
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex w-fit items-center rounded-full border border-border bg-muted/20 px-3 py-1 text-[10px] font-black tracking-[0.18em] text-muted-foreground">
+              {sectionTools.length} tools
+            </div>
+            <button
+              type="button"
+              onClick={onToggleCollapsed}
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[10px] font-black tracking-[0.18em] text-foreground transition hover:bg-muted"
+              aria-expanded={!isCollapsed}
+            >
+              <CollapseIcon size={14} />
+              {isCollapsed ? "Expand" : "Collapse"}
+            </button>
+          </div>
         </div>
 
-        {toolError && (
-          <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-bold tracking-widest text-destructive">
-            {toolError}
-          </div>
-        )}
-
-        <div className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card">
+        <div
+          className={cn(
+            "min-w-0 overflow-hidden rounded-2xl border border-border bg-card",
+            isCollapsed && "hidden",
+          )}
+        >
           <div className="max-w-full overflow-x-auto">
             <table className="min-w-[1080px] divide-y divide-border text-left">
               <thead className="bg-muted/30">
@@ -493,17 +471,17 @@ export function ToolOpsPanel({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredTools.length === 0 ? (
+                {sectionTools.length === 0 ? (
                   <tr>
                     <td
                       colSpan={7}
                       className="px-4 py-16 text-center text-sm font-medium text-muted-foreground"
                     >
-                      No tools match the current filters.
+                      {emptyMessage}
                     </td>
                   </tr>
                 ) : (
-                  filteredTools.map((tool) => {
+                  sectionTools.map((tool) => {
                     const categoriesSummary = tool.toolCategories
                       .map((item) => item.category.name)
                       .join(", ");
@@ -624,6 +602,118 @@ export function ToolOpsPanel({
             </table>
           </div>
         </div>
+      </section>
+    );
+  }
+
+  return (
+    <SectionCard
+      eyebrow="Inventory"
+      title="Directory Tuning"
+      description="Scan submitted tools separately from imported listings, then open a focused side panel for creation and updates."
+    >
+      <div className="min-w-0 space-y-5">
+        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,0.6fr))]">
+              <div className="relative">
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={14}
+                />
+                <input
+                  value={toolSearch}
+                  onChange={(event) => onToolSearchChange(event.target.value)}
+                  placeholder="Search by tool, tag, category, or URL..."
+                  className={cn(textInputClassName(), "pl-10 py-2 text-xs")}
+                />
+              </div>
+
+              <select
+                value={moderationFilter}
+                onChange={(event) =>
+                  setModerationFilter(
+                    event.target.value as Tool["moderationStatus"] | "ALL",
+                  )
+                }
+                className={cn(textInputClassName(), "py-2 text-xs")}
+              >
+                <option value="ALL">All moderation</option>
+                {moderationStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={publicationFilter}
+                onChange={(event) =>
+                  setPublicationFilter(
+                    event.target.value as Tool["publicationStatus"] | "ALL",
+                  )
+                }
+                className={cn(textInputClassName(), "py-2 text-xs")}
+              >
+                <option value="ALL">All publication</option>
+                {publicationStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={featuredFilter}
+                onChange={(event) =>
+                  setFeaturedFilter(
+                    event.target.value as "ALL" | "FEATURED" | "STANDARD",
+                  )
+                }
+                className={cn(textInputClassName(), "py-2 text-xs")}
+              >
+                <option value="ALL">All premium states</option>
+                <option value="FEATURED">Premium only</option>
+                <option value="STANDARD">Standard only</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setDrawerState({ mode: "create" })}
+            className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-primary px-4 py-2.5 text-xs font-black text-primary-foreground shadow-xl shadow-black/10 transition hover:opacity-90 xl:self-auto"
+          >
+            <Plus size={14} />
+            Create tool
+          </button>
+        </div>
+
+        {toolError && (
+          <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-bold tracking-widest text-destructive">
+            {toolError}
+          </div>
+        )}
+
+        {renderInventoryTable({
+          title: "User submission tools",
+          description: "Tools connected to a founder account or submission flow.",
+          sectionTools: userSubmissionTools,
+          emptyMessage: "No user submission tools match the current filters.",
+          isCollapsed: isUserSubmissionTableCollapsed,
+          onToggleCollapsed: () =>
+            setIsUserSubmissionTableCollapsed((current) => !current),
+        })}
+
+        {renderInventoryTable({
+          title: "Seeded imports",
+          description: "Tools imported directly into the directory without a founder submission.",
+          sectionTools: seededTools,
+          emptyMessage: "No seeded imports match the current filters.",
+          isCollapsed: isSeededTableCollapsed,
+          onToggleCollapsed: () =>
+            setIsSeededTableCollapsed((current) => !current),
+        })}
       </div>
 
       {drawerState.mode === "create" ? (
