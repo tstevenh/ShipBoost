@@ -7,6 +7,7 @@ export function AuthBrand() {
   return (
     <Link
       href="/"
+      prefetch={false}
       aria-label="ShipBoost home"
       className="mb-12 flex items-center gap-4 group"
     >
@@ -16,6 +17,7 @@ export function AuthBrand() {
           alt=""
           fill
           className="object-contain block dark:hidden transition-transform group-hover:scale-105"
+          sizes="56px"
           priority
         />
         <Image
@@ -23,6 +25,7 @@ export function AuthBrand() {
           alt=""
           fill
           className="object-contain hidden dark:block transition-transform group-hover:scale-105"
+          sizes="56px"
           priority
         />
       </div>

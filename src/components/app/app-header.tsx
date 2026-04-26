@@ -3,13 +3,14 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition, useEffect } from "react";
 import { Menu, X, ChevronDown, Rocket, Tag, Layers, LogOut, User, Hash } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
+import { isAuthRoutePathname } from "@/lib/route-groups";
 
 type AppHeaderCategory = {
   id: string;
@@ -31,6 +32,20 @@ function getInitials(name: string | null | undefined) {
 }
 
 export function AppHeader({
+  categories,
+}: {
+  categories: AppHeaderCategory[];
+}) {
+  const pathname = usePathname();
+
+  if (isAuthRoutePathname(pathname)) {
+    return null;
+  }
+
+  return <AppHeaderInner categories={categories} />;
+}
+
+function AppHeaderInner({
   categories,
 }: {
   categories: AppHeaderCategory[];
@@ -92,6 +107,7 @@ export function AppHeader({
             <div className="flex w-full min-w-0 justify-between lg:w-auto">
               <Link
                 href="/"
+                prefetch={false}
                 aria-label="home"
                 className="flex min-w-0 items-center gap-3 group h-14 sm:gap-4"
               >
@@ -101,6 +117,7 @@ export function AppHeader({
                     alt=""
                     fill
                     className="object-contain block dark:hidden transition-transform group-hover:scale-110"
+                    sizes="56px"
                     priority
                   />
                   <Image
@@ -108,6 +125,7 @@ export function AppHeader({
                     alt=""
                     fill
                     className="object-contain hidden dark:block transition-transform group-hover:scale-110"
+                    sizes="56px"
                     priority
                   />
                 </div>
@@ -136,12 +154,12 @@ export function AppHeader({
             <div className="absolute inset-0 m-auto hidden size-fit lg:block">
               <ul className="flex gap-8 text-sm font-bold tracking-tight">
                 <li>
-                  <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link href="/" prefetch={false} className="text-muted-foreground hover:text-foreground transition-colors">
                     Launchpad
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link href="/pricing" prefetch={false} className="text-muted-foreground hover:text-foreground transition-colors">
                     Pricing
                   </Link>
                 </li>
@@ -171,12 +189,13 @@ export function AppHeader({
                             <Link 
                               key={cat.id} 
                               href={`/categories/${cat.slug}`}
+                              prefetch={false}
                               className="text-sm font-bold text-foreground hover:opacity-70 transition-colors block"
                             >
                               {cat.name}
                             </Link>
                           ))}
-                          <Link href="/categories" className="text-xs font-black text-foreground hover:underline pt-1">
+                          <Link href="/categories" prefetch={false} className="text-xs font-black text-foreground hover:underline pt-1">
                             View all categories →
                           </Link>
                         </div>
@@ -187,7 +206,7 @@ export function AppHeader({
                           <h3 className="text-[10px] font-black  tracking-[0.2em] text-muted-foreground/50 flex items-center gap-2">
                             Explore
                           </h3>
-                          <Link href="/tags" className="flex items-center gap-2 text-sm font-bold text-foreground hover:opacity-70 transition-colors block">
+                          <Link href="/tags" prefetch={false} className="flex items-center gap-2 text-sm font-bold text-foreground hover:opacity-70 transition-colors block">
                             <Hash size={14} className="text-foreground" /> Tags
                           </Link>
                         </div>
@@ -195,6 +214,7 @@ export function AppHeader({
                         <div className="pt-4 border-t border-border">
                           <Link 
                             href="/submit" 
+                            prefetch={false}
                             className="flex items-center gap-2 text-sm font-black text-foreground hover:opacity-70 transition-colors"
                           >
                             <Rocket size={16} /> Submit your product
@@ -215,6 +235,7 @@ export function AppHeader({
                 <div className="space-y-2">
                   <Link
                     href="/"
+                    prefetch={false}
                     onClick={() => setMenuState(false)}
                     className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-black text-foreground transition hover:bg-muted"
                   >
@@ -223,6 +244,7 @@ export function AppHeader({
                   </Link>
                   <Link
                     href="/pricing"
+                    prefetch={false}
                     onClick={() => setMenuState(false)}
                     className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-black text-foreground transition hover:bg-muted"
                   >
@@ -241,6 +263,7 @@ export function AppHeader({
                       <Link
                         key={category.id}
                         href={`/categories/${category.slug}`}
+                        prefetch={false}
                         onClick={() => setMenuState(false)}
                         className="block rounded-xl px-3 py-2 text-sm font-bold text-foreground transition hover:bg-background"
                       >
@@ -249,6 +272,7 @@ export function AppHeader({
                     ))}
                     <Link
                       href="/categories"
+                      prefetch={false}
                       onClick={() => setMenuState(false)}
                       className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-black text-foreground transition hover:bg-background"
                     >
@@ -257,6 +281,7 @@ export function AppHeader({
                     </Link>
                     <Link
                       href="/tags"
+                      prefetch={false}
                       onClick={() => setMenuState(false)}
                       className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-black text-foreground transition hover:bg-background"
                     >
@@ -265,6 +290,7 @@ export function AppHeader({
                     </Link>
                     <Link
                       href="/submit"
+                      prefetch={false}
                       onClick={() => setMenuState(false)}
                       className="flex items-center justify-between rounded-xl bg-primary px-3 py-2 text-sm font-black text-primary-foreground shadow-lg shadow-black/10 transition hover:opacity-90"
                     >
@@ -307,6 +333,7 @@ export function AppHeader({
                       >
                         <Link 
                           href={session.user.role === "ADMIN" ? "/admin" : "/dashboard"}
+                          prefetch={false}
                           onClick={() => {
                             setIsUserMenuOpen(false);
                             setMenuState(false);
@@ -318,6 +345,7 @@ export function AppHeader({
                         {session.user.role === "ADMIN" && (
                           <Link 
                             href="/admin"
+                            prefetch={false}
                             onClick={() => {
                               setIsUserMenuOpen(false);
                               setMenuState(false);
@@ -341,6 +369,7 @@ export function AppHeader({
                   <>
                     <Link
                       href="/sign-in"
+                      prefetch={false}
                       onClick={() => setMenuState(false)}
                       className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground shadow-lg shadow-black/10 transition-all hover:opacity-90 active:scale-95 sm:w-auto"
                     >

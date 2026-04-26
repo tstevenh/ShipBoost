@@ -7,7 +7,7 @@ export const DeferredHomeSearchModal = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-16 rounded-2xl border border-border bg-card shadow-sm" />
+      <div className="h-12 w-full max-w-[250px] rounded-xl border border-border bg-card shadow-sm" />
     ),
   },
 );

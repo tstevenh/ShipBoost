@@ -269,15 +269,15 @@ export function HomeSearchModal() {
 
   return (
     <>
-      <div className="rounded-2xl border border-border bg-card p-2 shadow-sm">
+      <div className="w-full max-w-[250px] rounded-xl border border-border bg-card p-1.5 shadow-sm">
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-muted-foreground transition-colors hover:bg-accent"
+          className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent"
           aria-label="Open search"
         >
-          <span className="text-sm font-medium">Search published products...</span>
-          <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[10px] font-bold tracking-wider text-muted-foreground ">
+          <span className="truncate text-xs font-bold">Search products</span>
+          <span className="shrink-0 rounded-md border border-border bg-muted px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-muted-foreground ">
             ⌘ K
           </span>
         </button>

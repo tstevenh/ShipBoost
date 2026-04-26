@@ -3,6 +3,7 @@
 import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { isAuthRoutePathname } from "@/lib/route-groups";
 
 const GOOGLE_TAG_ID = "G-KP03SBLNHT";
 
@@ -14,8 +15,13 @@ type AnalyticsWindow = Window & {
 export function GoogleAnalytics() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isAuthRoute = isAuthRoutePathname(pathname);
 
   useEffect(() => {
+    if (isAuthRoute) {
+      return;
+    }
+
     const analyticsWindow = window as AnalyticsWindow;
 
     if (!analyticsWindow.gtag) {
@@ -28,7 +34,11 @@ export function GoogleAnalytics() {
     analyticsWindow.gtag("config", GOOGLE_TAG_ID, {
       page_path: pagePath,
     });
-  }, [pathname, searchParams]);
+  }, [isAuthRoute, pathname, searchParams]);
+
+  if (isAuthRoute) {
+    return null;
+  }
 
   return (
     <>

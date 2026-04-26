@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { AuthForm } from "@/components/auth/auth-form";
-import { getServerSession } from "@/server/auth/session";
 import { getEnv } from "@/server/env";
 
 export const metadata: Metadata = {
@@ -30,13 +28,8 @@ export default async function SignInPage({
   searchParams: Promise<{ reset?: string; verified?: string; redirect?: string }>;
 }) {
   const env = getEnv();
-  const session = await getServerSession();
   const params = await searchParams;
   const redirectTo = params.redirect || "/dashboard";
-
-  if (session) {
-    redirect(redirectTo);
-  }
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 px-6 py-16 sm:py-20">

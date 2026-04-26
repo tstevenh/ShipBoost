@@ -4,11 +4,15 @@ import { prisma } from "@/server/db/client";
 import { publicLaunchCardSelect } from "@/server/db/public-selects";
 import { sendLaunchLiveEmailMessage } from "@/server/email/transactional";
 import { getEnv } from "@/server/env";
-import { getLaunchBoardWindow } from "@/server/services/launch-scheduling";
+import {
+  getLaunchBoardWindow,
+  getLaunchpadGoLiveAtUtc,
+  getLaunchWeekStart,
+} from "@/server/services/launch-scheduling";
 import {
   getPublicLaunchBoardWhere,
 } from "@/server/services/public-tool-visibility";
-import { subDays } from "@/server/services/time";
+import { addUtcDays, subDays } from "@/server/services/time";
 
 type PublicLaunchRecord = Prisma.LaunchGetPayload<{
   select: typeof publicLaunchCardSelect;
@@ -73,17 +77,20 @@ export function rankLaunchBoardLaunches(launches: RankedLaunchRecord[]) {
   return [...leaderboard.slice(0, 3), ...remainingLaunches];
 }
 
-export async function listLaunchBoard(
-  board: "weekly" | "monthly" | "yearly",
-) {
-  const now = new Date();
-  const { windowStart, windowEnd } = getLaunchBoardWindow(board, now);
-
+async function listRankedLaunchesForWindow(input: {
+  windowStart: Date;
+  windowEnd: Date;
+  now?: Date;
+  includeWindowEnd?: boolean;
+}) {
+  const now = input.now ?? new Date();
   const launches = await prisma.launch.findMany({
     where: {
       launchDate: {
-        gte: windowStart,
-        lte: windowEnd,
+        gte: input.windowStart,
+        ...(input.includeWindowEnd === false
+          ? { lt: input.windowEnd }
+          : { lte: input.windowEnd }),
       },
       ...getPublicLaunchBoardWhere(now),
     },
@@ -101,8 +108,10 @@ export async function listLaunchBoard(
         in: launches.map((launch) => launch.toolId),
       },
       createdAt: {
-        gte: windowStart,
-        lte: windowEnd,
+        gte: input.windowStart,
+        ...(input.includeWindowEnd === false
+          ? { lt: input.windowEnd }
+          : { lte: input.windowEnd }),
       },
     },
     _count: {
@@ -132,6 +141,34 @@ export async function listLaunchBoard(
       },
     };
   });
+}
+
+export async function listLaunchBoard(
+  board: "weekly" | "monthly" | "yearly",
+) {
+  const now = new Date();
+  const { windowStart, windowEnd } = getLaunchBoardWindow(board, now);
+
+  return listRankedLaunchesForWindow({ windowStart, windowEnd, now });
+}
+
+export async function getPreviousWeeklyTopWinner(now = new Date()) {
+  const goLiveAt = getLaunchpadGoLiveAtUtc();
+  const currentWeekStart = getLaunchWeekStart(now, { goLiveAt });
+  const previousWeekStart = addUtcDays(currentWeekStart, -7);
+
+  if (previousWeekStart.getTime() < goLiveAt.getTime()) {
+    return null;
+  }
+
+  const previousWeekLaunches = await listRankedLaunchesForWindow({
+    windowStart: previousWeekStart,
+    windowEnd: currentWeekStart,
+    now,
+    includeWindowEnd: false,
+  });
+
+  return previousWeekLaunches[0] ?? null;
 }
 
 export async function listPastLaunches(options?: { limit?: number }) {
@@ -247,3 +284,6 @@ export async function publishDueLaunches(now = new Date()) {
 }
 
 export type LaunchBoardEntry = Awaited<ReturnType<typeof listLaunchBoard>>[number];
+export type PreviousWeeklyTopWinner = NonNullable<
+  Awaited<ReturnType<typeof getPreviousWeeklyTopWinner>>
+>;

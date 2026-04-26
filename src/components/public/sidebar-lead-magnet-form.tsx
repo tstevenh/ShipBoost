@@ -57,20 +57,20 @@ export function SidebarLeadMagnetForm() {
   }
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm overflow-hidden relative">
-      <h3 className="font-bold text-[10px] tracking-[0.2em] text-foreground/40 mb-4 relative">
+    <div className="relative w-full max-w-[250px] overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm">
+      <h3 className="relative mb-3 text-[9px] font-bold tracking-[0.18em] text-foreground/40">
         Founder resource
       </h3>
-      <h4 className="font-black text-lg mb-3 relative leading-tight">
+      <h4 className="relative mb-2 text-base font-black leading-tight">
         Search {startupDirectoriesMarketingCountLabel} startup directories in
         one place.
       </h4>
-      <p className="text-xs text-muted-foreground mb-6 leading-relaxed relative">
+      <p className="relative mb-4 text-[11px] leading-relaxed text-muted-foreground">
         Get the hosted ShipBoost resource and work through founder distribution
         research faster.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-3 relative">
+      <form onSubmit={handleSubmit} className="relative space-y-2.5">
         <input
           required
           type="email"
@@ -78,31 +78,31 @@ export function SidebarLeadMagnetForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@startup.com"
-          className="w-full px-4 py-3 bg-muted/20 border border-border rounded-xl text-sm font-medium outline-none focus:border-foreground transition-all"
+          className="w-full rounded-xl border border-border bg-muted/20 px-3 py-2.5 text-xs font-medium outline-none transition-all focus:border-foreground"
         />
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3 bg-primary text-primary-foreground text-xs font-black rounded-xl shadow-lg shadow-black/10 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50"
+          className="w-full rounded-xl bg-primary py-2.5 text-[11px] font-black text-primary-foreground shadow-lg shadow-black/10 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
         >
           {isSubmitting ? "Sending..." : "Get the directory list"}
         </button>
       </form>
 
-      <p className="mt-4 text-[10px] font-black tracking-[0.14em] text-muted-foreground/45">
+      <p className="mt-3 text-[9px] font-black tracking-[0.12em] text-muted-foreground/45">
         {startupDirectoriesMarketingCountLabel} directories and launch sites.
         Access link sent by email.
       </p>
 
       {successMessage ? (
-        <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[11px] font-bold text-emerald-700">
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-[10px] font-bold text-emerald-700">
           <Check size={14} />
           {successMessage}
         </div>
       ) : null}
 
       {errorMessage ? (
-        <div className="mt-4 flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-[11px] font-bold text-destructive">
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-[10px] font-bold text-destructive">
           <AlertCircle size={14} />
           {errorMessage}
         </div>

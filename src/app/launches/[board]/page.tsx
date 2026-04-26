@@ -15,6 +15,7 @@ import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildCollectionListingSchema } from "@/server/seo/page-schema";
 import {
   getCachedLaunchBoard,
+  getCachedPreviousWeeklyTopWinner,
   getLaunchBoardStaticParams,
   isPublicLaunchBoard,
 } from "@/server/cache/public-content";
@@ -79,7 +80,10 @@ export default async function LaunchBoardPage(context: RouteContext) {
     notFound();
   }
 
-  const launches = await getCachedLaunchBoard(board);
+  const [launches, previousWeeklyTopWinner] = await Promise.all([
+    getCachedLaunchBoard(board),
+    getCachedPreviousWeeklyTopWinner(),
+  ]);
   const toolIds = launches.map((launch) => launch.tool.id);
   const categoryMap = new Map<string, { name: string; slug: string; count: number }>();
 
@@ -143,7 +147,7 @@ export default async function LaunchBoardPage(context: RouteContext) {
         <FilterBar launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT} />
       </Suspense>
       <ViewerVoteStateProvider toolIds={toolIds}>
-        <ShowcaseLayout isHomePage>
+        <ShowcaseLayout isHomePage topWinner={previousWeeklyTopWinner}>
           <div className="space-y-12">
             <LaunchpadShowcase board={board} launches={launches} />
             <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">

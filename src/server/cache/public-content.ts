@@ -13,7 +13,10 @@ import {
   listRelatedPublishedBlogArticles,
   listPublicBlogCategories,
 } from "@/server/services/blog-service";
-import { listLaunchBoard } from "@/server/services/launch-service";
+import {
+  getPreviousWeeklyTopWinner,
+  listLaunchBoard,
+} from "@/server/services/launch-service";
 import { getPublicCategoryPageBySlug } from "@/server/services/catalog-service";
 import {
   getAlternativesSeoPage,
@@ -223,24 +226,43 @@ const launchBoardLoaders: Record<PublicLaunchBoard, () => Promise<Awaited<Return
   ),
 };
 
+const getCachedPreviousWeeklyTopWinnerLoader = unstable_cache(
+  () => getPreviousWeeklyTopWinner(),
+  ["public-launch-board", "v1", "previous-weekly-top-winner"],
+  {
+    revalidate: PUBLIC_LAUNCH_BOARD_REVALIDATE,
+    tags: [
+      PUBLIC_CACHE_TAGS.home,
+      PUBLIC_CACHE_TAGS.launchBoards,
+      "public:launch-board:weekly",
+    ],
+  },
+);
+
 export const getCachedHomePageData = cache(
   async (board: PublicLaunchBoard, isPrelaunch: boolean) => {
-    const [launches, prelaunchTools] = await Promise.all([
+    const [launches, prelaunchTools, previousWeeklyTopWinner] = await Promise.all([
       getCachedLaunchBoard(board),
       isPrelaunch
         ? getCachedPrelaunchTools()
         : Promise.resolve([] as PrelaunchToolPreview[]),
+      isPrelaunch ? Promise.resolve(null) : getCachedPreviousWeeklyTopWinner(),
     ]);
 
     return {
       launches,
       prelaunchTools,
+      previousWeeklyTopWinner,
     };
   },
 );
 
 export const getCachedLaunchBoard = cache(
   async (board: PublicLaunchBoard) => launchBoardLoaders[board](),
+);
+
+export const getCachedPreviousWeeklyTopWinner = cache(
+  async () => getCachedPreviousWeeklyTopWinnerLoader(),
 );
 
 export const getCachedCategoryPage = cache(

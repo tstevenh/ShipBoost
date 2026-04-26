@@ -182,6 +182,7 @@ export function AuthForm({
           {getSubtitle(mode)}{" "}
           <Link
             href={mode === "sign-up" ? "/sign-in" : "/sign-up"}
+            prefetch={false}
             className="text-primary font-bold hover:underline"
           >
             {mode === "sign-up" ? "Login" : "Sign up"}
@@ -292,6 +293,7 @@ export function AuthForm({
               {mode === "sign-in" && (
                 <Link
                   href="/forgot-password"
+                  prefetch={false}
                   className="text-[10px] font-bold text-primary hover:underline"
                 >
                   Forgot password?
@@ -339,7 +341,7 @@ export function AuthForm({
 
         <p className="text-center text-[10px] font-medium text-muted-foreground">
           By signing in, you agree to our{" "}
-          <Link href="/terms" className="font-bold text-foreground hover:underline">
+          <Link href="/terms" prefetch={false} className="font-bold text-foreground hover:underline">
             Terms of Service
           </Link>.
         </p>

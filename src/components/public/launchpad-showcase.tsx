@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { LaunchpadOpeningCountdown } from "@/components/public/launchpad-opening-countdown";
 import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
 import type { PublicLaunchBoard } from "@/server/cache/public-content";
 import type { LaunchBoardEntry } from "@/server/services/launch-service";
@@ -13,9 +14,13 @@ const boardLabels: Record<PublicLaunchBoard, string> = {
 export function LaunchpadShowcase({
   board,
   launches,
+  emptyState = "default",
+  launchpadGoLiveAt,
 }: {
   board: PublicLaunchBoard;
   launches: LaunchBoardEntry[];
+  emptyState?: "default" | "prelaunch-countdown";
+  launchpadGoLiveAt?: string;
 }) {
   return (
     <section>
@@ -49,7 +54,13 @@ export function LaunchpadShowcase({
           />
         ))}
 
-        {launches.length === 0 ? (
+        {launches.length === 0 &&
+        emptyState === "prelaunch-countdown" &&
+        launchpadGoLiveAt ? (
+          <LaunchpadOpeningCountdown launchpadGoLiveAt={launchpadGoLiveAt} />
+        ) : null}
+
+        {launches.length === 0 && emptyState === "default" ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-32">
             <p className="text-xs font-black  tracking-widest text-muted-foreground">
               No launches found for this period.

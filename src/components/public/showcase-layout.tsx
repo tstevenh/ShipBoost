@@ -4,6 +4,11 @@ import { Rocket } from "lucide-react";
 import { DeferredHomeSearchModal } from "@/components/public/deferred-home-search-modal";
 import { FrogDrBadge } from "@/components/public/frog-dr-badge";
 import { SidebarLeadMagnetForm } from "@/components/public/sidebar-lead-magnet-form";
+import {
+  TopWinnerSidebarSpot,
+  type TopWinnerSidebarSpotWinner,
+} from "@/components/public/top-winner-sidebar-spot";
+import { getCachedPreviousWeeklyTopWinner } from "@/server/cache/public-content";
 
 export function SponsorSlot() {
   return null;
@@ -33,26 +38,36 @@ export function SidebarLeadMagnet() {
   return <SidebarLeadMagnetForm />;
 }
 
-export function ShowcaseLayout({
+export async function ShowcaseLayout({
   children,
   isHomePage,
   isPrelaunch,
+  topWinner,
 }: {
   children: React.ReactNode;
   isHomePage?: boolean;
   isPrelaunch?: boolean;
+  topWinner?: TopWinnerSidebarSpotWinner | null;
 }) {
+  const resolvedTopWinner =
+    topWinner === undefined && !isPrelaunch
+      ? await getCachedPreviousWeeklyTopWinner()
+      : topWinner;
+
   return (
-    <section className={cn("pb-20 bg-muted/20 min-h-screen", isHomePage ? "pt-8" : "pt-24")}>
+    <section className={cn("pb-20 bg-muted/20 min-h-screen", isHomePage ? "pt-0" : "pt-24")}>
       <div className="mx-auto max-w-[1600px] px-6">
         <div className={cn(
-          "grid grid-cols-1 gap-10 items-start",
-          !isPrelaunch && "xl:grid-cols-[300px_1fr_300px]"
+          "grid grid-cols-1 gap-8 items-start",
+          !isPrelaunch && "xl:grid-cols-[250px_minmax(0,1fr)_250px]"
         )}>
           
           {/* Left Column: Lead Magnet + Sponsors */}
           {!isPrelaunch && (
-            <aside className="hidden xl:flex flex-col gap-4 sticky top-[100px] h-fit self-start">
+            <aside className={cn(
+              "hidden xl:flex flex-col items-center gap-3 sticky top-[100px] h-fit self-start",
+              isHomePage && "pt-8",
+            )}>
               <SidebarLeadMagnet />
               <SponsorSlot />
               <SponsorSlot />
@@ -61,24 +76,33 @@ export function ShowcaseLayout({
           )}
 
           {/* Middle Column */}
-          <div className={cn("min-w-0", isPrelaunch && "max-w-5xl mx-auto w-full")}>
+          <div className={cn(
+            "min-w-0",
+            isHomePage && "pt-8",
+            isPrelaunch && "max-w-5xl mx-auto w-full",
+          )}>
             {children}
           </div>
 
           {/* Right Column: Search + Submit + Sponsors */}
           {!isPrelaunch && (
-            <aside className="hidden xl:flex flex-col gap-4 sticky top-[100px] h-fit self-start">
+            <aside className={cn(
+              "hidden xl:flex flex-col items-center gap-3 sticky top-[100px] h-fit self-start",
+              isHomePage && "pt-8",
+            )}>
               <DeferredHomeSearchModal />
               
               <Link 
                 href="/submit"
-                className="flex items-center justify-center gap-3 w-full py-4 bg-primary text-primary-foreground rounded-2xl font-black text-sm shadow-xl shadow-black/10 hover:opacity-90 transition-all active:scale-95 group"
+                className="flex w-full max-w-[250px] items-center justify-center gap-2 rounded-xl bg-primary py-3 text-xs font-black text-primary-foreground shadow-lg shadow-black/10 transition-all hover:opacity-90 active:scale-95 group"
               >
-                <Rocket size={18} className="group-hover:translate-y-[-2px] transition-transform" />
+                <Rocket size={15} className="group-hover:translate-y-[-2px] transition-transform" />
                 Submit your product
               </Link>
 
               <FrogDrBadge />
+
+              <TopWinnerSidebarSpot winner={resolvedTopWinner ?? null} />
 
               <SponsorSlot />
               <SponsorSlot />

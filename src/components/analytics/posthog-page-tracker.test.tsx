@@ -51,6 +51,14 @@ describe("posthog-page-tracker", () => {
       autocapture: false,
       capture_pageview: "history_change",
       capture_pageleave: false,
+      capture_performance: false,
+      capture_dead_clicks: false,
+      capture_heatmaps: false,
+      disable_session_recording: true,
+      advanced_disable_flags: true,
+      advanced_disable_feature_flags: true,
+      advanced_disable_feature_flags_on_first_load: true,
+      advanced_disable_toolbar_metrics: true,
     });
   });
 
