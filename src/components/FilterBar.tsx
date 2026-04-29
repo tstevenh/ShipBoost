@@ -73,16 +73,16 @@ export function FilterBar({ launchpadGoLiveAt }: { launchpadGoLiveAt: string }) 
   }, [launchpadGoLiveAt]);
 
   return (
-    <div className="w-full bg-background border-b border-border py-2">
-      <div className="container mx-auto max-w-7xl px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+    <div className="w-full border-b border-border bg-background py-3 md:py-2">
+      <div className="container mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 sm:px-6 md:flex-row md:gap-6">
         {/* Left: Period Tabs */}
-        <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border">
+        <div className="grid w-full max-w-sm grid-cols-3 items-center rounded-xl border border-border bg-muted/50 p-1 md:flex md:w-auto md:max-w-none">
           {periods.map((period) => (
             <Link
               key={period.value}
               href={`/launches/${period.value}`}
               className={cn(
-                "px-5 py-2 text-sm font-bold rounded-lg transition-all",
+                "rounded-lg px-3 py-2 text-center text-sm font-bold transition-all sm:px-5",
                 activePeriod === period.value
                   ? "bg-card text-foreground shadow-sm shadow-black/5"
                   : "text-muted-foreground hover:text-foreground"
@@ -94,12 +94,12 @@ export function FilterBar({ launchpadGoLiveAt }: { launchpadGoLiveAt: string }) 
         </div>
 
         {/* Right: Status Info */}
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+        <div className="flex w-full items-center justify-center gap-6 md:w-auto md:justify-end">
+          <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-muted-foreground">
             <Timer className="w-4 h-4 text-primary" />
-            Next cohort reset in{" "}
+            <span className="shrink-0">Next cohort reset in</span>
             <span
-              className="text-foreground font-bold tabular-nums"
+              className="font-bold tabular-nums text-foreground"
               suppressHydrationWarning
             >
               {timeLeft || "00:00:00"}

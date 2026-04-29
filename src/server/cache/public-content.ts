@@ -341,7 +341,7 @@ export const getCachedRelatedPublishedTools = cache(
         }),
       [
         "public-related-tools",
-        "v2",
+        "v3",
         toolId,
         categoryIds.join(","),
         tagIds.join(","),

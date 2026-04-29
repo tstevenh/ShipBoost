@@ -7,11 +7,12 @@ import { useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 
 import type { PublicToolSearchResult } from "@/server/services/tool-service";
+import { cn } from "@/lib/utils";
 
 const MIN_QUERY_LENGTH = 2;
 const SEARCH_DEBOUNCE_MS = 250;
 
-export function HomeSearchModal() {
+export function HomeSearchModal({ className }: { className?: string }) {
   const searchParams = useSearchParams();
   const normalizedInitialQuery = useMemo(
     () => (searchParams.get("q") ?? "").trim(),
@@ -269,7 +270,12 @@ export function HomeSearchModal() {
 
   return (
     <>
-      <div className="w-full max-w-[250px] rounded-xl border border-border bg-card p-1.5 shadow-sm">
+      <div
+        className={cn(
+          "w-full max-w-full rounded-xl border border-border bg-card p-1.5 shadow-sm xl:max-w-[250px]",
+          className,
+        )}
+      >
         <button
           type="button"
           onClick={() => setIsOpen(true)}

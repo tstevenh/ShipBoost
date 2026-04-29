@@ -168,4 +168,117 @@ describe("best-pages registry", () => {
       "social-media-scheduling-tools",
     );
   });
+
+  it("defines the Phase 1 cluster 11-20 best pages", () => {
+    for (const slug of [
+      "hr-software-for-small-business",
+      "payroll-software-for-small-business",
+      "hr-software-for-startups",
+      "employee-onboarding-software",
+      "applicant-tracking-system-for-small-business",
+      "keyword-research-tools",
+      "rank-tracking-software",
+      "ai-seo-tools",
+      "local-seo-tools",
+      "seo-tools-for-small-business",
+      "recurring-billing-software",
+      "subscription-billing-software",
+      "billing-software-for-small-business",
+      "payment-processor-for-small-business",
+    ]) {
+      expect(bestPagesRegistry[slug]).toBeDefined();
+      expect(bestPagesRegistry[slug]?.rankedTools.length).toBeGreaterThanOrEqual(6);
+    }
+  });
+
+  it("includes the Phase 1 cluster 11-20 sections in the best hub", () => {
+    expect(bestHubSections.some((section) => section.slug === "hr-payroll")).toBe(
+      true,
+    );
+    expect(
+      bestHubSections.some((section) => section.slug === "seo-content-optimization"),
+    ).toBe(true);
+    expect(
+      bestHubSections.some((section) => section.slug === "payments-billing"),
+    ).toBe(true);
+  });
+
+  it("defines the Phase 2 cluster 11-20 best pages", () => {
+    for (const slug of [
+      "project-management-software-for-small-business",
+      "project-management-software-for-startups",
+      "work-management-software",
+      "project-planning-software",
+      "task-management-software-for-small-business",
+      "website-analytics-tools",
+      "web-analytics-tools",
+      "product-analytics-tools",
+      "heatmap-software",
+      "session-replay-software",
+      "invoicing-software-for-small-business",
+      "invoice-software-for-freelancers",
+      "expense-management-software-for-small-business",
+      "accounts-payable-software-for-small-business",
+    ]) {
+      expect(bestPagesRegistry[slug]).toBeDefined();
+      expect(bestPagesRegistry[slug]?.rankedTools.length).toBeGreaterThanOrEqual(6);
+    }
+  });
+
+  it("includes the Phase 2 cluster 11-20 sections in the best hub", () => {
+    expect(
+      bestHubSections.some((section) => section.slug === "project-work-management"),
+    ).toBe(true);
+    expect(
+      bestHubSections.some(
+        (section) => section.slug === "analytics-product-intelligence",
+      ),
+    ).toBe(true);
+    expect(
+      bestHubSections.some(
+        (section) => section.slug === "accounting-invoicing-expenses",
+      ),
+    ).toBe(true);
+  });
+
+  it("defines the Phase 3 cluster 11-20 best pages", () => {
+    for (const slug of [
+      "ecommerce-website-builder",
+      "ecommerce-platform-for-small-business",
+      "ecommerce-platform-for-startups",
+      "ecommerce-software-for-small-business",
+      "webinar-platform",
+      "webinar-software-for-small-business",
+      "screen-recording-software",
+      "demo-software",
+      "product-demo-software",
+      "workflow-automation-software",
+      "business-process-automation-software",
+      "no-code-automation-tools",
+      "integration-platform-as-a-service",
+      "wireframing-tools",
+      "diagram-software",
+      "online-whiteboard",
+      "whiteboard-software",
+      "design-collaboration-tools",
+    ]) {
+      expect(bestPagesRegistry[slug]).toBeDefined();
+      expect(bestPagesRegistry[slug]?.rankedTools.length).toBeGreaterThanOrEqual(6);
+    }
+  });
+
+  it("includes the Phase 3 cluster 11-20 sections in the best hub", () => {
+    expect(
+      bestHubSections.some((section) => section.slug === "ecommerce-store-builders"),
+    ).toBe(true);
+    expect(
+      bestHubSections.some((section) => section.slug === "video-demo-webinar"),
+    ).toBe(true);
+    expect(
+      bestHubSections.some((section) => section.slug === "automation-integration"),
+    ).toBe(true);
+    expect(
+      bestHubSections.some((section) => section.slug === "design-whiteboarding"),
+    ).toBe(true);
+  });
 });

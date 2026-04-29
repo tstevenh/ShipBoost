@@ -3,6 +3,12 @@ import path from "node:path";
 
 import { PrismaClient } from "@prisma/client";
 
+import {
+  buildFaviconProviderUrl,
+  configureCloudinaryFromEnv,
+  isFaviconProviderUrl,
+  uploadFaviconLogoToCloudinary,
+} from "./favicon-logo-cloudinary.mjs";
 import { getTagDisplayName, slugify } from "./tag-display-name.mjs";
 
 const prisma = new PrismaClient();
@@ -105,24 +111,6 @@ function ensureAbsolutePath(inputPath) {
     : path.resolve(process.cwd(), inputPath);
 }
 
-function buildFaviconProviderUrl(websiteUrl) {
-  if (!websiteUrl) {
-    return null;
-  }
-
-  try {
-    const hostname = new URL(websiteUrl).hostname.replace(/^www\./, "");
-
-    if (!hostname) {
-      return null;
-    }
-
-    return `https://favicon.im/${hostname}`;
-  } catch {
-    return null;
-  }
-}
-
 async function createUniqueToolSlug(baseValue) {
   const baseSlug = slugify(baseValue) || "tool";
   let slug = baseSlug;
@@ -170,6 +158,7 @@ async function replaceToolTags(tx, toolId, tagIds) {
 
 async function main() {
   const csvPathArg = process.argv[2];
+  const skipLogoUpload = process.argv.includes("--skip-logo-upload");
 
   if (!csvPathArg) {
     throw new Error(
@@ -227,8 +216,16 @@ async function main() {
     ).map((tag) => [tag.slug, tag]),
   );
 
-  let createdCount = 0;
-  let updatedCount = 0;
+let createdCount = 0;
+let updatedCount = 0;
+let uploadedLogoCount = 0;
+const failedLogoUploads = [];
+let uploadFolder = null;
+
+  function getUploadFolder() {
+    uploadFolder ??= configureCloudinaryFromEnv();
+    return uploadFolder;
+  }
 
   for (const rawRow of dataRows) {
     const tagColumnValues = parseTagColumnValues(rawRow, headerMap);
@@ -257,7 +254,8 @@ async function main() {
         : tagColumnValues.length > 0
           ? tagColumnValues.join(",")
           : undefined;
-    const resolvedLogoUrl = row.logo_url || buildFaviconProviderUrl(row.url);
+    const resolvedLogoUrl =
+      row.logo_url || buildFaviconProviderUrl(row.url, { larger: true });
 
     const baseSlug = slugify(row.name);
     const existingTool = await prisma.tool.findFirst({
@@ -358,6 +356,41 @@ async function main() {
       ? existingTool.slug
       : await createUniqueToolSlug(row.name);
 
+    let uploadedLogo = null;
+
+    if (!skipLogoUpload && resolvedLogoUrl && isFaviconProviderUrl(resolvedLogoUrl)) {
+      try {
+        uploadedLogo = await uploadFaviconLogoToCloudinary({
+          sourceUrl: resolvedLogoUrl,
+          slug: nextSlug,
+          uploadFolder: getUploadFolder(),
+        });
+      } catch (error) {
+        failedLogoUploads.push({
+          name: row.name,
+          sourceUrl: resolvedLogoUrl,
+          error: error instanceof Error ? error.message : JSON.stringify(error),
+        });
+      }
+    }
+    const logoMediaData = uploadedLogo
+      ? {
+          url: uploadedLogo.url,
+          publicId: uploadedLogo.publicId,
+          format: uploadedLogo.format,
+          width: uploadedLogo.width,
+          height: uploadedLogo.height,
+        }
+      : !skipLogoUpload && resolvedLogoUrl
+        ? {
+            url: resolvedLogoUrl,
+            publicId: null,
+            format: null,
+            width: null,
+            height: null,
+          }
+        : null;
+
     await prisma.$transaction(async (tx) => {
       const updateData = {
         slug: nextSlug,
@@ -397,12 +430,12 @@ async function main() {
             },
           });
 
-      if (resolvedLogoUrl) {
+      if (logoMediaData) {
         if (tool.logoMediaId) {
           await tx.toolMedia.update({
             where: { id: tool.logoMediaId },
             data: {
-              url: resolvedLogoUrl,
+              ...logoMediaData,
               type: "LOGO",
               sortOrder: 0,
             },
@@ -412,7 +445,7 @@ async function main() {
             data: {
               toolId: tool.id,
               type: "LOGO",
-              url: resolvedLogoUrl,
+              ...logoMediaData,
               sortOrder: 0,
             },
             select: { id: true },
@@ -434,12 +467,18 @@ async function main() {
       if (normalizedTagsValue !== undefined) {
         await replaceToolTags(tx, tool.id, tagIds);
       }
+    }, {
+      timeout: 20000,
     });
 
     if (existingTool) {
       updatedCount += 1;
     } else {
       createdCount += 1;
+    }
+
+    if (uploadedLogo) {
+      uploadedLogoCount += 1;
     }
   }
 
@@ -450,6 +489,9 @@ async function main() {
         importedRows: dataRows.length,
         createdCount,
         updatedCount,
+        uploadedLogoCount,
+        failedLogoUploadCount: failedLogoUploads.length,
+        failedLogoUploads,
       },
       null,
       2,

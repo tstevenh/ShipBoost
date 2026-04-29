@@ -1,4 +1,9 @@
-import type { BestHubSection, BestPageEntry } from "@/server/seo/types";
+import type {
+  BestHubSection,
+  BestPageCustomSection,
+  BestPageEntry,
+  BestPageInternalLink,
+} from "@/server/seo/types";
 
 const SUPPORT_TOOLS = {
   zendesk: "zendesk",
@@ -2845,6 +2850,1769 @@ export const bestPagesRegistry: Record<string, BestPageEntry> = {
   },
 };
 
+const phaseOneToolLabels: Record<string, string> = {
+  gusto: "Gusto",
+  rippling: "Rippling",
+  bamboohr: "BambooHR",
+  deel: "Deel",
+  remote: "Remote",
+  justworks: "Justworks",
+  workable: "Workable",
+  lever: "Lever",
+  greenhouse: "Greenhouse",
+  paychex: "Paychex",
+  adp: "ADP",
+  hibob: "Hibob",
+  semrush: "Semrush",
+  ahrefs: "Ahrefs",
+  moz: "Moz",
+  "surfer-seo": "Surfer SEO",
+  clearscope: "Clearscope",
+  marketmuse: "MarketMuse",
+  "se-ranking": "SE Ranking",
+  mangools: "Mangools",
+  ubersuggest: "Ubersuggest",
+  lowfruits: "LowFruits",
+  "rank-math": "Rank Math",
+  yoast: "Yoast",
+  stripe: "Stripe",
+  paypal: "PayPal",
+  square: "Square",
+  paddle: "Paddle",
+  chargebee: "Chargebee",
+  recurly: "Recurly",
+  "lemon-squeezy": "Lemon Squeezy",
+  braintree: "Braintree",
+  adyen: "Adyen",
+  fastspring: "FastSpring",
+  maxio: "Maxio",
+  "zoho-billing": "Zoho Billing",
+  asana: "Asana",
+  "monday-com": "Monday.com",
+  trello: "Trello",
+  clickup: "ClickUp",
+  wrike: "Wrike",
+  basecamp: "Basecamp",
+  teamwork: "Teamwork",
+  smartsheet: "Smartsheet",
+  jira: "Jira",
+  linear: "Linear",
+  notion: "Notion",
+  airtable: "Airtable",
+  "google-analytics": "Google Analytics",
+  hotjar: "Hotjar",
+  amplitude: "Amplitude",
+  mixpanel: "Mixpanel",
+  fullstory: "FullStory",
+  heap: "Heap",
+  posthog: "PostHog",
+  plausible: "Plausible",
+  matomo: "Matomo",
+  "microsoft-clarity": "Microsoft Clarity",
+  "fathom-analytics": "Fathom Analytics",
+  pendo: "Pendo",
+  quickbooks: "QuickBooks",
+  xero: "Xero",
+  freshbooks: "FreshBooks",
+  wave: "Wave",
+  bill: "BILL",
+  expensify: "Expensify",
+  "zoho-books": "Zoho Books",
+  "sage-accounting": "Sage Accounting",
+  ramp: "Ramp",
+  brex: "Brex",
+  melio: "Melio",
+  shopify: "Shopify",
+  woocommerce: "WooCommerce",
+  bigcommerce: "BigCommerce",
+  "wix-ecommerce": "Wix Ecommerce",
+  "squarespace-commerce": "Squarespace Commerce",
+  ecwid: "Ecwid",
+  "adobe-commerce": "Adobe Commerce",
+  sellfy: "Sellfy",
+  gumroad: "Gumroad",
+  "square-online": "Square Online",
+  "webflow-ecommerce": "Webflow Ecommerce",
+  vimeo: "Vimeo",
+  vidyard: "Vidyard",
+  wistia: "Wistia",
+  zoom: "Zoom",
+  loom: "Loom",
+  descript: "Descript",
+  riverside: "Riverside",
+  demio: "Demio",
+  webinarjam: "WebinarJam",
+  "screen-studio": "Screen Studio",
+  sendspark: "Sendspark",
+  tella: "Tella",
+  zapier: "Zapier",
+  make: "Make",
+  n8n: "n8n",
+  ifttt: "IFTTT",
+  workato: "Workato",
+  "tray-io": "Tray.io",
+  "pabbly-connect": "Pabbly Connect",
+  parabola: "Parabola",
+  "relay-app": "Relay.app",
+  activepieces: "Activepieces",
+  albato: "Albato",
+  integrately: "Integrately",
+  canva: "Canva",
+  figma: "Figma",
+  miro: "Miro",
+  mural: "Mural",
+  lucidchart: "Lucidchart",
+  "microsoft-visio": "Microsoft Visio",
+  "adobe-express": "Adobe Express",
+  pitch: "Pitch",
+  whimsical: "Whimsical",
+  figjam: "FigJam",
+};
+
+type PhaseOneBestPageSpec = {
+  slug: string;
+  targetKeyword: string;
+  title: string;
+  metaTitle: string;
+  metaDescription: string;
+  intro: string;
+  whoItsFor: string;
+  primaryCategorySlug: string;
+  supportingTagSlugs: string[];
+  toolSlugs: string[];
+  buyingFocus: string;
+  internalLinks: BestPageInternalLink[];
+  customSection?: BestPageCustomSection;
+};
+
+function createPhaseOneBestPage(spec: PhaseOneBestPageSpec): BestPageEntry {
+  const rankedTools = spec.toolSlugs.map((toolSlug, index) => {
+    const toolName = phaseOneToolLabels[toolSlug] ?? toolSlug;
+    const primaryTag = spec.supportingTagSlugs[0]?.replaceAll("-", " ") ?? "workflow fit";
+    const secondaryTag =
+      spec.supportingTagSlugs[1]?.replaceAll("-", " ") ?? "day-to-day usability";
+
+    return {
+      toolSlug,
+      rank: index + 1,
+      verdict: `${toolName} earns its spot because it gives buyers a credible option for ${spec.buyingFocus}. Compare it on setup effort, pricing model, integrations, and how well the product fits the team's operating rhythm.`,
+      bestFor: `Teams that need ${spec.buyingFocus} with a practical balance of capability, usability, and room to grow.`,
+      notIdealFor:
+        "Teams that want the cheapest possible tool or a narrow point solution without broader workflow coverage.",
+      criteriaHighlights: [
+        primaryTag,
+        secondaryTag,
+        index < 3 ? "Strong shortlist fit" : "Useful comparison option",
+      ],
+    };
+  });
+
+  return {
+    slug: spec.slug,
+    targetKeyword: spec.targetKeyword,
+    title: spec.title,
+    metaTitle: spec.metaTitle,
+    metaDescription: spec.metaDescription,
+    intro: spec.intro,
+    whoItsFor: spec.whoItsFor,
+    howWeEvaluated: [
+      `Fit for buyers searching ${spec.targetKeyword}`,
+      "Ease of setup for lean teams and small businesses",
+      "Workflow depth, automation, and reporting quality",
+      "Pricing posture, scalability, and integration coverage",
+      "How clearly the product differs from adjacent alternatives",
+    ],
+    comparisonTable: [
+      {
+        label: "Best for",
+        valuesByToolSlug: Object.fromEntries(
+          rankedTools.slice(0, 4).map((item) => [
+            item.toolSlug,
+            item.bestFor.replace(/^Teams that need /, ""),
+          ]),
+        ),
+      },
+      {
+        label: "Evaluation focus",
+        valuesByToolSlug: Object.fromEntries(
+          rankedTools.slice(0, 4).map((item) => [
+            item.toolSlug,
+            item.criteriaHighlights?.slice(0, 2).join(" + ") ?? spec.buyingFocus,
+          ]),
+        ),
+      },
+    ],
+    rankedTools,
+    faq: [
+      {
+        question: `What is the best ${spec.targetKeyword.replace(/^best /, "")}?`,
+        answer:
+          "The best choice depends on company size, budget, workflow depth, integrations, and how much support the team needs after setup. Use the ranking as a shortlist, then compare the top products against the specific jobs your team needs to solve.",
+      },
+      {
+        question: "How should small teams compare these tools?",
+        answer:
+          "Small teams should prioritize time to value, clean onboarding, transparent pricing, and whether the product covers the daily workflow without forcing unnecessary process overhead.",
+      },
+      {
+        question: "Should buyers choose the broadest platform?",
+        answer:
+          "Not always. Broad platforms make sense when consolidation matters, but focused tools can be better when the team has a specific workflow, lower budget, or simpler implementation needs.",
+      },
+    ],
+    internalLinks: spec.internalLinks,
+    primaryCategorySlug: spec.primaryCategorySlug,
+    supportingTagSlugs: spec.supportingTagSlugs,
+    customSections: [
+      spec.customSection ?? {
+        heading: `How to choose from this ${spec.title.toLowerCase()} shortlist`,
+        body:
+          "Start with the tools that match your current workflow, not the biggest brand. Then compare pricing, integrations, implementation effort, and whether the product can still serve the team after the next stage of growth.",
+      },
+    ],
+  };
+}
+
+const phaseOneBestPages = Object.fromEntries(
+  [
+    {
+      slug: "hr-software-for-small-business",
+      targetKeyword: "best hr software for small business",
+      title: "Best HR Software for Small Business",
+      metaTitle: "Best HR Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare the best HR software for small business, including Gusto, BambooHR, Rippling, Justworks, Paychex, ADP, Hibob, and Deel.",
+      intro:
+        "The best HR software for small business should simplify payroll, employee records, onboarding, benefits, compliance, and people operations without requiring an enterprise HR team to run it.",
+      whoItsFor:
+        "This guide is for founders, operators, and small-business teams choosing HR software to replace spreadsheets, fragmented payroll tools, or manual employee workflows.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["hr-software", "payroll", "benefits"],
+      toolSlugs: ["gusto", "bamboohr", "rippling", "justworks", "paychex", "adp", "hibob", "deel"],
+      buyingFocus: "small-business HR, payroll, benefits, and employee operations",
+      internalLinks: [
+        {
+          href: "/categories/operations",
+          label: "Browse operations tools",
+          description: "Explore HR, payroll, project, and workflow tools on ShipBoost.",
+        },
+        {
+          href: "/alternatives/bamboohr",
+          label: "Compare BambooHR alternatives",
+          description: "See HR platforms that compete with BambooHR.",
+        },
+        {
+          href: "/tags/hr-software",
+          label: "Browse HR software",
+          description: "See tools grouped by HR software intent.",
+        },
+      ],
+    },
+    {
+      slug: "payroll-software-for-small-business",
+      targetKeyword: "best payroll software for small business",
+      title: "Best Payroll Software for Small Business",
+      metaTitle: "Best Payroll Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare payroll software for small business, including Gusto, Rippling, Justworks, Paychex, ADP, Deel, Remote, and BambooHR.",
+      intro:
+        "Payroll software for small business should make payroll runs, tax handling, benefits, compliance, and employee payments easier without adding unnecessary HR complexity.",
+      whoItsFor:
+        "This page is for teams choosing payroll software that can support current employees, contractors, benefits, and compliance needs as the business grows.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["payroll", "hr-software", "compliance"],
+      toolSlugs: ["gusto", "rippling", "justworks", "paychex", "adp", "deel", "remote", "bamboohr"],
+      buyingFocus: "small-business payroll, tax handling, benefits, and compliance workflows",
+      internalLinks: [
+        {
+          href: "/best/hr-software-for-small-business",
+          label: "Compare HR software",
+          description: "See the broader HR software shortlist for small businesses.",
+        },
+        {
+          href: "/alternatives/gusto",
+          label: "Compare Gusto alternatives",
+          description: "Review payroll and HR tools similar to Gusto.",
+        },
+        {
+          href: "/tags/payroll",
+          label: "Browse payroll tools",
+          description: "See products tagged for payroll workflows.",
+        },
+      ],
+    },
+    {
+      slug: "hr-software-for-startups",
+      targetKeyword: "best hr software for startups",
+      title: "Best HR Software for Startups",
+      metaTitle: "Best HR Software for Startups | ShipBoost",
+      metaDescription:
+        "Compare HR software for startups, including Rippling, Gusto, BambooHR, Deel, Remote, Hibob, Justworks, and Workable.",
+      intro:
+        "Startup HR software should help lean teams handle hiring, onboarding, payroll, contractors, employee data, and compliance before HR work becomes scattered across too many tools.",
+      whoItsFor:
+        "This guide is for startup founders and operators choosing people software that can support early hires, distributed teams, and fast-changing workflows.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["hr-software", "startup-hr", "global-payroll"],
+      toolSlugs: ["rippling", "gusto", "bamboohr", "deel", "remote", "hibob", "justworks", "workable"],
+      buyingFocus: "startup HR workflows, payroll, hiring, and distributed-team operations",
+      internalLinks: [
+        {
+          href: "/categories/operations",
+          label: "Browse operations tools",
+          description: "Explore tools for people operations and execution.",
+        },
+        {
+          href: "/alternatives/rippling",
+          label: "Compare Rippling alternatives",
+          description: "Review HR and workforce platforms similar to Rippling.",
+        },
+        {
+          href: "/tags/global-payroll",
+          label: "Browse global payroll tools",
+          description: "Find tools for distributed hiring and payroll.",
+        },
+      ],
+    },
+    {
+      slug: "employee-onboarding-software",
+      targetKeyword: "best employee onboarding software",
+      title: "Best Employee Onboarding Software",
+      metaTitle: "Best Employee Onboarding Software | ShipBoost",
+      metaDescription:
+        "Compare employee onboarding software, including BambooHR, Rippling, Gusto, Hibob, Workable, Greenhouse, Lever, and Deel.",
+      intro:
+        "Employee onboarding software helps teams turn a new hire into a productive teammate with cleaner paperwork, employee records, provisioning, tasks, and handoffs.",
+      whoItsFor:
+        "This page is for HR, people operations, and startup teams formalizing onboarding beyond ad hoc checklists and manual admin work.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["onboarding", "employee-records", "hr-software"],
+      toolSlugs: ["bamboohr", "rippling", "gusto", "hibob", "workable", "greenhouse", "lever", "deel"],
+      buyingFocus: "new-hire onboarding, employee records, HR workflows, and hiring handoffs",
+      internalLinks: [
+        {
+          href: "/best/hr-software-for-small-business",
+          label: "Compare HR software",
+          description: "See broader HR platforms that also support onboarding.",
+        },
+        {
+          href: "/alternatives/bamboohr",
+          label: "Compare BambooHR alternatives",
+          description: "Review people platforms with onboarding workflows.",
+        },
+        {
+          href: "/tags/onboarding",
+          label: "Browse onboarding tools",
+          description: "See products tagged for onboarding workflows.",
+        },
+      ],
+    },
+    {
+      slug: "applicant-tracking-system-for-small-business",
+      targetKeyword: "best applicant tracking system for small business",
+      title: "Best Applicant Tracking System for Small Business",
+      metaTitle: "Best Applicant Tracking System for Small Business | ShipBoost",
+      metaDescription:
+        "Compare applicant tracking systems for small business, including Workable, Greenhouse, Lever, BambooHR, Rippling, Hibob, and Gusto.",
+      intro:
+        "The best applicant tracking system for small business should make job posting, candidate tracking, interviews, hiring collaboration, and offer workflows easier without enterprise recruiting overhead.",
+      whoItsFor:
+        "This guide is for small teams and growing companies that need a structured hiring workflow before they have a large recruiting operations function.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["applicant-tracking", "recruiting", "hiring"],
+      toolSlugs: ["workable", "greenhouse", "lever", "bamboohr", "rippling", "hibob", "gusto"],
+      buyingFocus: "candidate tracking, recruiting collaboration, interviews, and small-team hiring workflows",
+      internalLinks: [
+        {
+          href: "/categories/operations",
+          label: "Browse operations tools",
+          description: "Explore HR, recruiting, and workflow tools.",
+        },
+        {
+          href: "/alternatives/workable",
+          label: "Compare Workable alternatives",
+          description: "Review recruiting tools similar to Workable.",
+        },
+        {
+          href: "/tags/applicant-tracking",
+          label: "Browse ATS tools",
+          description: "See tools tagged for applicant tracking.",
+        },
+      ],
+    },
+    {
+      slug: "keyword-research-tools",
+      targetKeyword: "best keyword research tools",
+      title: "Best Keyword Research Tools",
+      metaTitle: "Best Keyword Research Tools | ShipBoost",
+      metaDescription:
+        "Compare keyword research tools, including Semrush, Ahrefs, Moz, SE Ranking, Mangools, Ubersuggest, and LowFruits.",
+      intro:
+        "Keyword research tools help teams find search opportunities, evaluate competition, understand demand, and plan content that has a realistic chance to rank.",
+      whoItsFor:
+        "This guide is for founders, marketers, and SEO teams choosing keyword research software for content planning, competitor research, and low-competition opportunities.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["keyword-research", "seo", "rank-tracking"],
+      toolSlugs: ["semrush", "ahrefs", "moz", "se-ranking", "mangools", "ubersuggest", "lowfruits"],
+      buyingFocus: "keyword discovery, search demand analysis, SERP research, and content planning",
+      internalLinks: [
+        {
+          href: "/categories/marketing",
+          label: "Browse marketing tools",
+          description: "Explore SEO, analytics, email, and growth tools.",
+        },
+        {
+          href: "/alternatives/semrush",
+          label: "Compare Semrush alternatives",
+          description: "Review SEO tools that compete with Semrush.",
+        },
+        {
+          href: "/best/rank-tracking-software",
+          label: "Compare rank tracking software",
+          description: "See tools focused on monitoring search visibility.",
+        },
+      ],
+    },
+    {
+      slug: "rank-tracking-software",
+      targetKeyword: "best rank tracking software",
+      title: "Best Rank Tracking Software",
+      metaTitle: "Best Rank Tracking Software | ShipBoost",
+      metaDescription:
+        "Compare rank tracking software, including SE Ranking, Semrush, Ahrefs, Moz, Mangools, Rank Math, and Yoast.",
+      intro:
+        "Rank tracking software helps teams monitor keyword movement, spot search visibility changes, and understand whether SEO work is improving rankings over time.",
+      whoItsFor:
+        "This guide is for SEO teams, founders, and agencies that need practical rank monitoring without losing sight of keyword research and reporting workflows.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["rank-tracking", "seo", "keyword-research"],
+      toolSlugs: ["se-ranking", "semrush", "ahrefs", "moz", "mangools", "rank-math", "yoast"],
+      buyingFocus: "rank monitoring, keyword visibility, SEO reporting, and search performance tracking",
+      internalLinks: [
+        {
+          href: "/best/keyword-research-tools",
+          label: "Compare keyword tools",
+          description: "See tools for finding and validating SEO opportunities.",
+        },
+        {
+          href: "/alternatives/ahrefs",
+          label: "Compare Ahrefs alternatives",
+          description: "Review SEO platforms with rank and competitor data.",
+        },
+        {
+          href: "/tags/rank-tracking",
+          label: "Browse rank tracking tools",
+          description: "See products tagged for rank tracking.",
+        },
+      ],
+    },
+    {
+      slug: "ai-seo-tools",
+      targetKeyword: "best ai seo tools",
+      title: "Best AI SEO Tools",
+      metaTitle: "Best AI SEO Tools | ShipBoost",
+      metaDescription:
+        "Compare AI SEO tools, including Surfer SEO, Clearscope, MarketMuse, Semrush, Rank Math, Yoast, and LowFruits.",
+      intro:
+        "AI SEO tools help teams plan, brief, optimize, and improve content with search data, content scoring, topic coverage, and workflow automation.",
+      whoItsFor:
+        "This guide is for content teams and founders evaluating AI-assisted SEO tools for briefs, optimization, writing workflows, and topical planning.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["ai-seo", "content-optimization", "seo-writing"],
+      toolSlugs: ["surfer-seo", "clearscope", "marketmuse", "semrush", "rank-math", "yoast", "lowfruits"],
+      buyingFocus: "AI-assisted SEO planning, content briefs, optimization, and search workflow automation",
+      internalLinks: [
+        {
+          href: "/best/keyword-research-tools",
+          label: "Compare keyword tools",
+          description: "See the research layer behind SEO content planning.",
+        },
+        {
+          href: "/alternatives/surfer-seo",
+          label: "Compare Surfer SEO alternatives",
+          description: "Review content optimization tools similar to Surfer SEO.",
+        },
+        {
+          href: "/tags/content-optimization",
+          label: "Browse content optimization tools",
+          description: "See tools for optimizing SEO content.",
+        },
+      ],
+    },
+    {
+      slug: "local-seo-tools",
+      targetKeyword: "best local seo tools",
+      title: "Best Local SEO Tools",
+      metaTitle: "Best Local SEO Tools | ShipBoost",
+      metaDescription:
+        "Compare local SEO tools, including Moz, Semrush, SE Ranking, Ubersuggest, Rank Math, Yoast, and Mangools.",
+      intro:
+        "Local SEO tools help businesses manage search visibility around locations, keyword opportunities, rankings, site optimization, and local discovery workflows.",
+      whoItsFor:
+        "This guide is for small businesses, agencies, and local operators comparing SEO tools that can support location-aware search growth.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["local-seo", "seo", "keyword-research"],
+      toolSlugs: ["moz", "semrush", "se-ranking", "ubersuggest", "rank-math", "yoast", "mangools"],
+      buyingFocus: "local search visibility, rankings, keyword research, and small-business SEO workflows",
+      internalLinks: [
+        {
+          href: "/best/seo-tools-for-small-business",
+          label: "Compare small-business SEO tools",
+          description: "See broader SEO software options for small teams.",
+        },
+        {
+          href: "/alternatives/moz",
+          label: "Compare Moz alternatives",
+          description: "Review SEO platforms similar to Moz.",
+        },
+        {
+          href: "/tags/local-seo",
+          label: "Browse local SEO tools",
+          description: "See tools tagged for local SEO.",
+        },
+      ],
+    },
+    {
+      slug: "seo-tools-for-small-business",
+      targetKeyword: "best seo tools for small business",
+      title: "Best SEO Tools for Small Business",
+      metaTitle: "Best SEO Tools for Small Business | ShipBoost",
+      metaDescription:
+        "Compare SEO tools for small business, including Semrush, Ahrefs, Moz, SE Ranking, Mangools, Ubersuggest, Rank Math, and Yoast.",
+      intro:
+        "The best SEO tools for small business should help teams research keywords, monitor rankings, improve pages, and understand competitors without requiring a large SEO department.",
+      whoItsFor:
+        "This guide is for founders, small teams, and lean marketers choosing practical SEO software for organic growth.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["seo", "keyword-research", "small-business"],
+      toolSlugs: ["semrush", "ahrefs", "moz", "se-ranking", "mangools", "ubersuggest", "rank-math", "yoast"],
+      buyingFocus: "small-business SEO research, rankings, content optimization, and competitor visibility",
+      internalLinks: [
+        {
+          href: "/best/keyword-research-tools",
+          label: "Compare keyword research tools",
+          description: "See tools focused on search opportunity discovery.",
+        },
+        {
+          href: "/alternatives/semrush",
+          label: "Compare Semrush alternatives",
+          description: "Review broad SEO platforms for small teams.",
+        },
+        {
+          href: "/categories/marketing",
+          label: "Browse marketing tools",
+          description: "Explore SEO and growth tools on ShipBoost.",
+        },
+      ],
+    },
+    {
+      slug: "recurring-billing-software",
+      targetKeyword: "best recurring billing software",
+      title: "Best Recurring Billing Software",
+      metaTitle: "Best Recurring Billing Software | ShipBoost",
+      metaDescription:
+        "Compare recurring billing software, including Chargebee, Recurly, Paddle, Stripe, Maxio, Zoho Billing, and FastSpring.",
+      intro:
+        "Recurring billing software helps subscription businesses manage plans, invoices, renewals, dunning, payments, revenue operations, and customer billing lifecycles.",
+      whoItsFor:
+        "This guide is for SaaS, subscription, and membership businesses comparing billing systems that can support recurring revenue operations.",
+      primaryCategorySlug: "finance",
+      supportingTagSlugs: ["recurring-billing", "subscription-billing", "saas-billing"],
+      toolSlugs: ["chargebee", "recurly", "paddle", "stripe", "maxio", "zoho-billing", "fastspring"],
+      buyingFocus: "recurring billing, subscription operations, revenue recovery, and billing lifecycle management",
+      internalLinks: [
+        {
+          href: "/categories/finance",
+          label: "Browse finance tools",
+          description: "Explore billing, payments, accounting, and finance software.",
+        },
+        {
+          href: "/alternatives/chargebee",
+          label: "Compare Chargebee alternatives",
+          description: "Review billing platforms similar to Chargebee.",
+        },
+        {
+          href: "/best/subscription-billing-software",
+          label: "Compare subscription billing software",
+          description: "See adjacent subscription billing platforms.",
+        },
+      ],
+    },
+    {
+      slug: "subscription-billing-software",
+      targetKeyword: "best subscription billing software",
+      title: "Best Subscription Billing Software",
+      metaTitle: "Best Subscription Billing Software | ShipBoost",
+      metaDescription:
+        "Compare subscription billing software, including Chargebee, Paddle, Recurly, Stripe, Maxio, Zoho Billing, FastSpring, and Lemon Squeezy.",
+      intro:
+        "Subscription billing software should help teams manage plans, checkout, invoices, renewals, tax, revenue operations, and subscriber lifecycle changes.",
+      whoItsFor:
+        "This page is for SaaS and subscription teams deciding whether they need a billing platform, merchant of record, or broader revenue operations stack.",
+      primaryCategorySlug: "finance",
+      supportingTagSlugs: ["subscription-billing", "recurring-billing", "checkout"],
+      toolSlugs: ["chargebee", "paddle", "recurly", "stripe", "maxio", "zoho-billing", "fastspring", "lemon-squeezy"],
+      buyingFocus: "subscription billing, checkout, tax handling, invoicing, and revenue workflows",
+      internalLinks: [
+        {
+          href: "/best/recurring-billing-software",
+          label: "Compare recurring billing software",
+          description: "See tools focused on recurring billing operations.",
+        },
+        {
+          href: "/alternatives/paddle",
+          label: "Compare Paddle alternatives",
+          description: "Review merchant-of-record and SaaS billing options.",
+        },
+        {
+          href: "/tags/subscription-billing",
+          label: "Browse subscription billing tools",
+          description: "See products tagged for subscription billing.",
+        },
+      ],
+    },
+    {
+      slug: "billing-software-for-small-business",
+      targetKeyword: "best billing software for small business",
+      title: "Best Billing Software for Small Business",
+      metaTitle: "Best Billing Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare billing software for small business, including Stripe, Zoho Billing, Chargebee, Paddle, Recurly, Maxio, PayPal, and Square.",
+      intro:
+        "Billing software for small business should make payments, invoicing, subscriptions, customer billing, and revenue workflows easier to manage without unnecessary finance complexity.",
+      whoItsFor:
+        "This guide is for small businesses, SaaS teams, and digital operators comparing billing tools for payments, invoices, subscriptions, and finance workflows.",
+      primaryCategorySlug: "finance",
+      supportingTagSlugs: ["billing", "payments", "subscription-billing"],
+      toolSlugs: ["stripe", "zoho-billing", "chargebee", "paddle", "recurly", "maxio", "paypal", "square"],
+      buyingFocus: "small-business billing, invoicing, subscriptions, payments, and revenue operations",
+      internalLinks: [
+        {
+          href: "/categories/finance",
+          label: "Browse finance tools",
+          description: "Explore billing, payments, accounting, and finance products.",
+        },
+        {
+          href: "/alternatives/stripe",
+          label: "Compare Stripe alternatives",
+          description: "Review payment and billing platforms similar to Stripe.",
+        },
+        {
+          href: "/tags/payments",
+          label: "Browse payment tools",
+          description: "See tools tagged for payment workflows.",
+        },
+      ],
+    },
+    {
+      slug: "payment-processor-for-small-business",
+      targetKeyword: "best payment processor for small business",
+      title: "Best Payment Processor for Small Business",
+      metaTitle: "Best Payment Processor for Small Business | ShipBoost",
+      metaDescription:
+        "Compare payment processors for small business, including Stripe, PayPal, Square, Braintree, Adyen, Paddle, and Lemon Squeezy.",
+      intro:
+        "Payment processors for small business help teams accept online payments, cards, wallets, checkout flows, subscriptions, and in some cases broader commerce or billing operations.",
+      whoItsFor:
+        "This page is for businesses comparing payment processing options by checkout experience, fees, developer flexibility, global reach, and operational fit.",
+      primaryCategorySlug: "finance",
+      supportingTagSlugs: ["payments", "payment-processing", "checkout"],
+      toolSlugs: ["stripe", "paypal", "square", "braintree", "adyen", "paddle", "lemon-squeezy"],
+      buyingFocus: "payment processing, checkout, online selling, card acceptance, and transaction operations",
+      internalLinks: [
+        {
+          href: "/best/billing-software-for-small-business",
+          label: "Compare billing software",
+          description: "See broader billing systems for small businesses.",
+        },
+        {
+          href: "/alternatives/stripe",
+          label: "Compare Stripe alternatives",
+          description: "Review payment processors and checkout platforms.",
+        },
+        {
+          href: "/tags/payment-processing",
+          label: "Browse payment processing tools",
+          description: "See products tagged for payment processing.",
+        },
+      ],
+    },
+  ].map((entry) => [entry.slug, createPhaseOneBestPage(entry)]),
+) as Record<string, BestPageEntry>;
+
+const phaseTwoBestPages = Object.fromEntries(
+  [
+    {
+      slug: "project-management-software-for-small-business",
+      targetKeyword: "best project management software for small business",
+      title: "Best Project Management Software for Small Business",
+      metaTitle: "Best Project Management Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare project management software for small business, including Asana, Monday.com, Trello, ClickUp, Wrike, Basecamp, Teamwork, and Smartsheet.",
+      intro:
+        "Project management software for small business should make tasks, timelines, owners, collaboration, and reporting clearer without forcing a heavy operating system on a lean team.",
+      whoItsFor:
+        "This guide is for founders, operators, agencies, and small teams choosing a project workspace that can replace scattered spreadsheets, chats, and status meetings.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["project-management", "task-management", "team-collaboration"],
+      toolSlugs: ["asana", "monday-com", "trello", "clickup", "wrike", "basecamp", "teamwork", "smartsheet"],
+      buyingFocus: "small-business project planning, task ownership, collaboration, and delivery visibility",
+      internalLinks: [
+        {
+          href: "/categories/operations",
+          label: "Browse operations tools",
+          description: "Explore project, HR, workflow, and execution tools.",
+        },
+        {
+          href: "/alternatives/monday-com",
+          label: "Compare Monday.com alternatives",
+          description: "Review project and work management tools similar to Monday.com.",
+        },
+        {
+          href: "/tags/project-management",
+          label: "Browse project management tools",
+          description: "See products tagged for project management.",
+        },
+      ],
+    },
+    {
+      slug: "project-management-software-for-startups",
+      targetKeyword: "best project management software for startups",
+      title: "Best Project Management Software for Startups",
+      metaTitle: "Best Project Management Software for Startups | ShipBoost",
+      metaDescription:
+        "Compare project management software for startups, including Linear, Notion, Asana, ClickUp, Trello, Jira, Airtable, and Monday.com.",
+      intro:
+        "Startup project management software should help teams plan work, ship faster, document decisions, and keep product, marketing, operations, and engineering aligned as priorities change.",
+      whoItsFor:
+        "This page is for startup founders and early teams choosing a project system that supports speed without creating process overhead.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["project-management", "startup-operations", "team-collaboration"],
+      toolSlugs: ["linear", "notion", "asana", "clickup", "trello", "jira", "airtable", "monday-com"],
+      buyingFocus: "startup planning, product execution, documentation, and lightweight team coordination",
+      internalLinks: [
+        {
+          href: "/best/project-management-software-for-small-business",
+          label: "Compare small-business project tools",
+          description: "See broader project management options for lean teams.",
+        },
+        {
+          href: "/alternatives/linear",
+          label: "Compare Linear alternatives",
+          description: "Review project tools for product and engineering teams.",
+        },
+        {
+          href: "/tags/team-collaboration",
+          label: "Browse collaboration tools",
+          description: "See products tagged for team collaboration.",
+        },
+      ],
+    },
+    {
+      slug: "work-management-software",
+      targetKeyword: "best work management software",
+      title: "Best Work Management Software",
+      metaTitle: "Best Work Management Software | ShipBoost",
+      metaDescription:
+        "Compare work management software, including Monday.com, Asana, ClickUp, Wrike, Smartsheet, Airtable, Notion, and Teamwork.",
+      intro:
+        "Work management software helps teams coordinate cross-functional projects, recurring processes, dashboards, approvals, and operational workflows across departments.",
+      whoItsFor:
+        "This guide is for teams comparing broader work management platforms rather than simple task lists or engineering-only issue trackers.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["work-management", "project-management", "workflow"],
+      toolSlugs: ["monday-com", "asana", "clickup", "wrike", "smartsheet", "airtable", "notion", "teamwork"],
+      buyingFocus: "cross-functional work tracking, dashboards, automations, and operational workflow management",
+      internalLinks: [
+        {
+          href: "/categories/operations",
+          label: "Browse operations tools",
+          description: "Explore tools for project and workflow execution.",
+        },
+        {
+          href: "/alternatives/wrike",
+          label: "Compare Wrike alternatives",
+          description: "Review structured work management platforms.",
+        },
+        {
+          href: "/tags/work-management",
+          label: "Browse work management tools",
+          description: "See tools tagged for work management.",
+        },
+      ],
+    },
+    {
+      slug: "project-planning-software",
+      targetKeyword: "best project planning software",
+      title: "Best Project Planning Software",
+      metaTitle: "Best Project Planning Software | ShipBoost",
+      metaDescription:
+        "Compare project planning software, including Asana, Monday.com, ClickUp, Wrike, Smartsheet, Teamwork, Jira, and Linear.",
+      intro:
+        "Project planning software should help teams turn priorities into timelines, owners, milestones, dependencies, and visible progress without losing execution detail.",
+      whoItsFor:
+        "This guide is for teams that care about planning quality, roadmap clarity, resource visibility, and reliable handoffs between strategy and day-to-day work.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["project-management", "work-management", "resource-planning"],
+      toolSlugs: ["asana", "monday-com", "clickup", "wrike", "smartsheet", "teamwork", "jira", "linear"],
+      buyingFocus: "project planning, timelines, milestones, dependencies, and resource visibility",
+      internalLinks: [
+        {
+          href: "/best/project-management-software-for-small-business",
+          label: "Compare project management software",
+          description: "See broader project tools for small businesses.",
+        },
+        {
+          href: "/alternatives/asana",
+          label: "Compare Asana alternatives",
+          description: "Review planning tools similar to Asana.",
+        },
+        {
+          href: "/tags/resource-planning",
+          label: "Browse resource planning tools",
+          description: "See tools tagged for resource planning.",
+        },
+      ],
+    },
+    {
+      slug: "task-management-software-for-small-business",
+      targetKeyword: "best task management software for small business",
+      title: "Best Task Management Software for Small Business",
+      metaTitle: "Best Task Management Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare task management software for small business, including Trello, Asana, ClickUp, Monday.com, Basecamp, Notion, Teamwork, and Wrike.",
+      intro:
+        "Task management software for small business should make responsibilities, priorities, deadlines, and follow-through obvious without creating a complicated project management layer.",
+      whoItsFor:
+        "This page is for small teams choosing a practical way to organize tasks, projects, and daily execution.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["task-management", "project-management", "collaboration"],
+      toolSlugs: ["trello", "asana", "clickup", "monday-com", "basecamp", "notion", "teamwork", "wrike"],
+      buyingFocus: "task ownership, simple project tracking, team coordination, and everyday execution",
+      internalLinks: [
+        {
+          href: "/best/project-management-software-for-small-business",
+          label: "Compare project management tools",
+          description: "See broader project management options.",
+        },
+        {
+          href: "/alternatives/trello",
+          label: "Compare Trello alternatives",
+          description: "Review task and kanban tools similar to Trello.",
+        },
+        {
+          href: "/tags/task-management",
+          label: "Browse task management tools",
+          description: "See tools tagged for task management.",
+        },
+      ],
+    },
+    {
+      slug: "website-analytics-tools",
+      targetKeyword: "best website analytics tools",
+      title: "Best Website Analytics Tools",
+      metaTitle: "Best Website Analytics Tools | ShipBoost",
+      metaDescription:
+        "Compare website analytics tools, including Google Analytics, Plausible, Matomo, Fathom Analytics, Microsoft Clarity, Hotjar, and FullStory.",
+      intro:
+        "Website analytics tools help teams understand traffic, sources, behavior, conversion paths, privacy tradeoffs, and which pages are actually helping the business grow.",
+      whoItsFor:
+        "This guide is for founders, marketers, and website teams choosing analytics software for traffic reporting, funnel insight, and conversion improvement.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["website-analytics", "web-analytics", "reporting"],
+      toolSlugs: ["google-analytics", "plausible", "matomo", "fathom-analytics", "microsoft-clarity", "hotjar", "fullstory"],
+      buyingFocus: "website traffic reporting, conversion insight, privacy posture, and visitor behavior analysis",
+      internalLinks: [
+        {
+          href: "/categories/marketing",
+          label: "Browse marketing tools",
+          description: "Explore analytics, SEO, and growth tools.",
+        },
+        {
+          href: "/alternatives/google-analytics",
+          label: "Compare Google Analytics alternatives",
+          description: "Review website analytics tools beyond GA4.",
+        },
+        {
+          href: "/tags/web-analytics",
+          label: "Browse web analytics tools",
+          description: "See products tagged for web analytics.",
+        },
+      ],
+    },
+    {
+      slug: "web-analytics-tools",
+      targetKeyword: "best web analytics tools",
+      title: "Best Web Analytics Tools",
+      metaTitle: "Best Web Analytics Tools | ShipBoost",
+      metaDescription:
+        "Compare web analytics tools, including Google Analytics, Matomo, Plausible, Fathom Analytics, PostHog, Microsoft Clarity, and Hotjar.",
+      intro:
+        "Web analytics tools range from simple privacy-first dashboards to deeper behavioral platforms that help teams measure acquisition, engagement, conversion, and product usage.",
+      whoItsFor:
+        "This guide is for teams choosing a web analytics stack by reporting depth, privacy needs, implementation effort, and connection to product or marketing workflows.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["web-analytics", "privacy-analytics", "customer-insights"],
+      toolSlugs: ["google-analytics", "matomo", "plausible", "fathom-analytics", "posthog", "microsoft-clarity", "hotjar"],
+      buyingFocus: "web analytics reporting, privacy-friendly measurement, campaign insight, and behavior tracking",
+      internalLinks: [
+        {
+          href: "/best/website-analytics-tools",
+          label: "Compare website analytics tools",
+          description: "See analytics options for traffic and conversion reporting.",
+        },
+        {
+          href: "/alternatives/ga4",
+          label: "Compare GA4 alternatives",
+          description: "Review alternatives to Google Analytics 4.",
+        },
+        {
+          href: "/tags/privacy-analytics",
+          label: "Browse privacy analytics tools",
+          description: "See products tagged for privacy analytics.",
+        },
+      ],
+    },
+    {
+      slug: "product-analytics-tools",
+      targetKeyword: "best product analytics tools",
+      title: "Best Product Analytics Tools",
+      metaTitle: "Best Product Analytics Tools | ShipBoost",
+      metaDescription:
+        "Compare product analytics tools, including PostHog, Mixpanel, Amplitude, Heap, Pendo, FullStory, and Google Analytics.",
+      intro:
+        "Product analytics tools help teams understand activation, feature adoption, funnels, retention, user journeys, experiments, and where product experiences create friction.",
+      whoItsFor:
+        "This guide is for SaaS, product, growth, and engineering teams choosing analytics for product-led decision making.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["product-analytics", "event-analytics", "reporting"],
+      toolSlugs: ["posthog", "mixpanel", "amplitude", "heap", "pendo", "fullstory", "google-analytics"],
+      buyingFocus: "product usage analytics, event tracking, funnels, retention, and product growth insight",
+      internalLinks: [
+        {
+          href: "/categories/development",
+          label: "Browse development tools",
+          description: "Explore product, analytics, automation, and developer tools.",
+        },
+        {
+          href: "/alternatives/amplitude",
+          label: "Compare Amplitude alternatives",
+          description: "Review product analytics platforms similar to Amplitude.",
+        },
+        {
+          href: "/tags/product-analytics",
+          label: "Browse product analytics tools",
+          description: "See products tagged for product analytics.",
+        },
+      ],
+    },
+    {
+      slug: "heatmap-software",
+      targetKeyword: "best heatmap software",
+      title: "Best Heatmap Software",
+      metaTitle: "Best Heatmap Software | ShipBoost",
+      metaDescription:
+        "Compare heatmap software, including Hotjar, Microsoft Clarity, FullStory, PostHog, Matomo, Pendo, and Heap.",
+      intro:
+        "Heatmap software helps teams see how visitors click, scroll, move, and interact with pages so they can find UX friction that raw analytics often hides.",
+      whoItsFor:
+        "This guide is for marketers, product teams, UX teams, and founders choosing behavior analytics tools for website and product improvement.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["heatmaps", "session-replay", "conversion-optimization"],
+      toolSlugs: ["hotjar", "microsoft-clarity", "fullstory", "posthog", "matomo", "pendo", "heap"],
+      buyingFocus: "heatmaps, behavior analytics, UX friction discovery, and conversion improvement",
+      internalLinks: [
+        {
+          href: "/best/session-replay-software",
+          label: "Compare session replay software",
+          description: "See tools for replaying user behavior.",
+        },
+        {
+          href: "/alternatives/hotjar",
+          label: "Compare Hotjar alternatives",
+          description: "Review heatmap and behavior analytics tools.",
+        },
+        {
+          href: "/tags/heatmaps",
+          label: "Browse heatmap tools",
+          description: "See products tagged for heatmaps.",
+        },
+      ],
+    },
+    {
+      slug: "session-replay-software",
+      targetKeyword: "best session replay software",
+      title: "Best Session Replay Software",
+      metaTitle: "Best Session Replay Software | ShipBoost",
+      metaDescription:
+        "Compare session replay software, including FullStory, Hotjar, Microsoft Clarity, PostHog, Heap, Pendo, and Amplitude.",
+      intro:
+        "Session replay software helps teams watch real user journeys, diagnose confusing experiences, and connect behavioral evidence to product or website improvements.",
+      whoItsFor:
+        "This page is for UX, product, support, and marketing teams comparing tools for understanding user behavior beyond dashboards.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["session-replay", "heatmaps", "digital-experience"],
+      toolSlugs: ["fullstory", "hotjar", "microsoft-clarity", "posthog", "heap", "pendo", "amplitude"],
+      buyingFocus: "session recordings, digital experience analysis, user friction detection, and product improvement",
+      internalLinks: [
+        {
+          href: "/best/heatmap-software",
+          label: "Compare heatmap software",
+          description: "See adjacent behavior analytics tools.",
+        },
+        {
+          href: "/alternatives/fullstory",
+          label: "Compare FullStory alternatives",
+          description: "Review session replay and digital experience platforms.",
+        },
+        {
+          href: "/tags/session-replay",
+          label: "Browse session replay tools",
+          description: "See products tagged for session replay.",
+        },
+      ],
+    },
+    {
+      slug: "invoicing-software-for-small-business",
+      targetKeyword: "best invoicing software for small business",
+      title: "Best Invoicing Software for Small Business",
+      metaTitle: "Best Invoicing Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare invoicing software for small business, including FreshBooks, QuickBooks, Xero, Wave, Zoho Books, Sage Accounting, and Melio.",
+      intro:
+        "Invoicing software for small business should help teams send invoices, collect payments, track customers, manage taxes, and connect billing activity to accounting workflows.",
+      whoItsFor:
+        "This guide is for small businesses, service providers, freelancers, and operators choosing invoicing software that fits how they bill customers.",
+      primaryCategorySlug: "finance",
+      supportingTagSlugs: ["invoicing", "accounting", "payments"],
+      toolSlugs: ["freshbooks", "quickbooks", "xero", "wave", "zoho-books", "sage-accounting", "melio"],
+      buyingFocus: "small-business invoicing, payment collection, client billing, and finance workflow visibility",
+      internalLinks: [
+        {
+          href: "/categories/finance",
+          label: "Browse finance tools",
+          description: "Explore invoicing, accounting, billing, and payment tools.",
+        },
+        {
+          href: "/alternatives/freshbooks",
+          label: "Compare FreshBooks alternatives",
+          description: "Review invoicing and accounting tools similar to FreshBooks.",
+        },
+        {
+          href: "/tags/invoicing",
+          label: "Browse invoicing tools",
+          description: "See products tagged for invoicing.",
+        },
+      ],
+    },
+    {
+      slug: "invoice-software-for-freelancers",
+      targetKeyword: "best invoice software for freelancers",
+      title: "Best Invoice Software for Freelancers",
+      metaTitle: "Best Invoice Software for Freelancers | ShipBoost",
+      metaDescription:
+        "Compare invoice software for freelancers, including FreshBooks, Wave, QuickBooks, Xero, Zoho Books, Melio, and Sage Accounting.",
+      intro:
+        "Invoice software for freelancers should make it easy to create professional invoices, collect payments, track expenses, manage clients, and keep basic books clean.",
+      whoItsFor:
+        "This guide is for freelancers, consultants, solo service providers, and small studios choosing a billing workflow that does not require a full finance team.",
+      primaryCategorySlug: "finance",
+      supportingTagSlugs: ["invoicing", "freelancer-tools", "accounting"],
+      toolSlugs: ["freshbooks", "wave", "quickbooks", "xero", "zoho-books", "melio", "sage-accounting"],
+      buyingFocus: "freelancer invoicing, client billing, payment collection, expenses, and simple accounting",
+      internalLinks: [
+        {
+          href: "/best/invoicing-software-for-small-business",
+          label: "Compare invoicing software",
+          description: "See broader invoicing tools for small businesses.",
+        },
+        {
+          href: "/alternatives/wave-accounting",
+          label: "Compare Wave alternatives",
+          description: "Review simple invoicing and accounting platforms.",
+        },
+        {
+          href: "/tags/freelancer-tools",
+          label: "Browse freelancer tools",
+          description: "See products tagged for freelancer workflows.",
+        },
+      ],
+    },
+    {
+      slug: "expense-management-software-for-small-business",
+      targetKeyword: "best expense management software for small business",
+      title: "Best Expense Management Software for Small Business",
+      metaTitle: "Best Expense Management Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare expense management software for small business, including Expensify, Ramp, Brex, BILL, QuickBooks, Xero, and Zoho Books.",
+      intro:
+        "Expense management software for small business helps teams control spend, collect receipts, approve expenses, manage cards, reimburse employees, and sync activity into accounting.",
+      whoItsFor:
+        "This guide is for finance leads, founders, and operators replacing manual receipt tracking, spreadsheets, and slow reimbursement workflows.",
+      primaryCategorySlug: "finance",
+      supportingTagSlugs: ["expense-management", "corporate-cards", "finance-operations"],
+      toolSlugs: ["expensify", "ramp", "brex", "bill", "quickbooks", "xero", "zoho-books"],
+      buyingFocus: "expense reporting, receipt capture, corporate cards, spend controls, and finance automation",
+      internalLinks: [
+        {
+          href: "/categories/finance",
+          label: "Browse finance tools",
+          description: "Explore spend, accounting, billing, and payment software.",
+        },
+        {
+          href: "/alternatives/expensify",
+          label: "Compare Expensify alternatives",
+          description: "Review expense management and spend tools.",
+        },
+        {
+          href: "/tags/expense-management",
+          label: "Browse expense management tools",
+          description: "See products tagged for expense management.",
+        },
+      ],
+    },
+    {
+      slug: "accounts-payable-software-for-small-business",
+      targetKeyword: "best accounts payable software for small business",
+      title: "Best Accounts Payable Software for Small Business",
+      metaTitle: "Best Accounts Payable Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare accounts payable software for small business, including BILL, Melio, Ramp, Expensify, QuickBooks, Xero, and Zoho Books.",
+      intro:
+        "Accounts payable software for small business helps teams manage vendor bills, approvals, payment timing, accounting sync, spend controls, and cash-flow visibility.",
+      whoItsFor:
+        "This page is for small businesses and finance teams moving bill pay and approval workflows out of email, spreadsheets, and manual bank payments.",
+      primaryCategorySlug: "finance",
+      supportingTagSlugs: ["accounts-payable", "bill-pay", "finance-operations"],
+      toolSlugs: ["bill", "melio", "ramp", "expensify", "quickbooks", "xero", "zoho-books"],
+      buyingFocus: "accounts payable, bill pay, approval workflows, vendor payments, and accounting sync",
+      internalLinks: [
+        {
+          href: "/best/expense-management-software-for-small-business",
+          label: "Compare expense management software",
+          description: "See adjacent finance operations tools.",
+        },
+        {
+          href: "/alternatives/bill-com",
+          label: "Compare BILL alternatives",
+          description: "Review bill pay and accounts payable platforms.",
+        },
+        {
+          href: "/tags/accounts-payable",
+          label: "Browse accounts payable tools",
+          description: "See tools tagged for accounts payable.",
+        },
+      ],
+    },
+  ].map((entry) => [entry.slug, createPhaseOneBestPage(entry)]),
+) as Record<string, BestPageEntry>;
+
+const phaseThreeBestPages = Object.fromEntries(
+  [
+    {
+      slug: "ecommerce-website-builder",
+      targetKeyword: "best ecommerce website builder",
+      title: "Best Ecommerce Website Builder",
+      metaTitle: "Best Ecommerce Website Builder | ShipBoost",
+      metaDescription:
+        "Compare ecommerce website builders, including Shopify, Wix Ecommerce, Squarespace Commerce, Webflow Ecommerce, WooCommerce, BigCommerce, and Ecwid.",
+      intro:
+        "The best ecommerce website builder should help teams launch a store, manage products, design pages, accept payments, and grow online sales without rebuilding the whole commerce stack.",
+      whoItsFor:
+        "This guide is for founders, creators, and small businesses choosing a store builder that balances design control, checkout quality, payments, and day-to-day store management.",
+      primaryCategorySlug: "commerce",
+      supportingTagSlugs: ["ecommerce", "website-builder", "online-store"],
+      toolSlugs: ["shopify", "wix-ecommerce", "squarespace-commerce", "webflow-ecommerce", "woocommerce", "bigcommerce", "ecwid"],
+      buyingFocus: "online store building, checkout, product pages, payments, and small-business ecommerce workflows",
+      internalLinks: [
+        {
+          href: "/categories/commerce",
+          label: "Browse commerce tools",
+          description: "Explore ecommerce, checkout, and online selling tools.",
+        },
+        {
+          href: "/alternatives/shopify",
+          label: "Compare Shopify alternatives",
+          description: "Review ecommerce platforms similar to Shopify.",
+        },
+        {
+          href: "/tags/ecommerce",
+          label: "Browse ecommerce tools",
+          description: "See products tagged for ecommerce.",
+        },
+      ],
+    },
+    {
+      slug: "ecommerce-platform-for-small-business",
+      targetKeyword: "best ecommerce platform for small business",
+      title: "Best Ecommerce Platform for Small Business",
+      metaTitle: "Best Ecommerce Platform for Small Business | ShipBoost",
+      metaDescription:
+        "Compare ecommerce platforms for small business, including Shopify, WooCommerce, BigCommerce, Square Online, Wix Ecommerce, Squarespace Commerce, and Ecwid.",
+      intro:
+        "Ecommerce platforms for small business should make it easier to sell online, manage orders, accept payments, connect channels, and keep store operations under control.",
+      whoItsFor:
+        "This page is for small businesses comparing hosted stores, WordPress commerce, site builders, and lighter storefront options.",
+      primaryCategorySlug: "commerce",
+      supportingTagSlugs: ["ecommerce", "online-store", "small-business-commerce"],
+      toolSlugs: ["shopify", "woocommerce", "bigcommerce", "square-online", "wix-ecommerce", "squarespace-commerce", "ecwid"],
+      buyingFocus: "small-business online stores, payments, product management, checkout, and sales operations",
+      internalLinks: [
+        {
+          href: "/best/ecommerce-website-builder",
+          label: "Compare ecommerce website builders",
+          description: "See store builders for small teams and creators.",
+        },
+        {
+          href: "/alternatives/woocommerce",
+          label: "Compare WooCommerce alternatives",
+          description: "Review ecommerce platforms beyond WooCommerce.",
+        },
+        {
+          href: "/tags/online-store",
+          label: "Browse online store tools",
+          description: "See products tagged for online stores.",
+        },
+      ],
+    },
+    {
+      slug: "ecommerce-platform-for-startups",
+      targetKeyword: "best ecommerce platform for startups",
+      title: "Best Ecommerce Platform for Startups",
+      metaTitle: "Best Ecommerce Platform for Startups | ShipBoost",
+      metaDescription:
+        "Compare ecommerce platforms for startups, including Shopify, Webflow Ecommerce, WooCommerce, BigCommerce, Sellfy, Gumroad, and Square Online.",
+      intro:
+        "Startup ecommerce platforms should help teams test offers, launch storefronts, accept payments, and scale selling workflows without locking the business into the wrong commerce model.",
+      whoItsFor:
+        "This guide is for founders and early commerce teams choosing between fast hosted stores, custom design control, creator commerce, and more flexible ecommerce stacks.",
+      primaryCategorySlug: "commerce",
+      supportingTagSlugs: ["ecommerce", "startup-commerce", "checkout"],
+      toolSlugs: ["shopify", "webflow-ecommerce", "woocommerce", "bigcommerce", "sellfy", "gumroad", "square-online"],
+      buyingFocus: "startup ecommerce launches, checkout, product sales, online storefronts, and early growth workflows",
+      internalLinks: [
+        {
+          href: "/categories/commerce",
+          label: "Browse commerce tools",
+          description: "Explore ecommerce and online selling platforms.",
+        },
+        {
+          href: "/alternatives/bigcommerce",
+          label: "Compare BigCommerce alternatives",
+          description: "Review ecommerce platforms for growing teams.",
+        },
+        {
+          href: "/tags/checkout",
+          label: "Browse checkout tools",
+          description: "See tools tagged for checkout workflows.",
+        },
+      ],
+    },
+    {
+      slug: "ecommerce-software-for-small-business",
+      targetKeyword: "best ecommerce software for small business",
+      title: "Best Ecommerce Software for Small Business",
+      metaTitle: "Best Ecommerce Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare ecommerce software for small business, including Shopify, WooCommerce, BigCommerce, Ecwid, Square Online, Sellfy, and Gumroad.",
+      intro:
+        "Ecommerce software for small business covers storefronts, checkout, product management, payments, digital products, and lightweight selling workflows across channels.",
+      whoItsFor:
+        "This guide is for small teams choosing ecommerce software based on what they sell, how much control they need, and how quickly they want to launch.",
+      primaryCategorySlug: "commerce",
+      supportingTagSlugs: ["ecommerce", "online-selling", "small-business"],
+      toolSlugs: ["shopify", "woocommerce", "bigcommerce", "ecwid", "square-online", "sellfy", "gumroad"],
+      buyingFocus: "small-business ecommerce software, online selling, payments, product management, and storefront operations",
+      internalLinks: [
+        {
+          href: "/best/ecommerce-platform-for-small-business",
+          label: "Compare ecommerce platforms",
+          description: "See broader ecommerce platforms for small businesses.",
+        },
+        {
+          href: "/alternatives/ecwid",
+          label: "Compare Ecwid alternatives",
+          description: "Review lightweight ecommerce platforms.",
+        },
+        {
+          href: "/categories/commerce",
+          label: "Browse commerce tools",
+          description: "Explore commerce software on ShipBoost.",
+        },
+      ],
+    },
+    {
+      slug: "webinar-platform",
+      targetKeyword: "best webinar platform",
+      title: "Best Webinar Platform",
+      metaTitle: "Best Webinar Platform | ShipBoost",
+      metaDescription:
+        "Compare webinar platforms, including Zoom, WebinarJam, Demio, Riverside, Vimeo, Wistia, Vidyard, and Descript.",
+      intro:
+        "Webinar platforms help teams host live sessions, demos, virtual events, lead generation campaigns, recordings, and follow-up workflows.",
+      whoItsFor:
+        "This guide is for marketers, sales teams, founders, and educators comparing webinar platforms by audience experience, engagement, recording, and conversion workflows.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["webinar", "events", "lead-generation"],
+      toolSlugs: ["zoom", "webinarjam", "demio", "riverside", "vimeo", "wistia", "vidyard", "descript"],
+      buyingFocus: "webinars, virtual events, audience engagement, recordings, and lead generation workflows",
+      internalLinks: [
+        {
+          href: "/categories/marketing",
+          label: "Browse marketing tools",
+          description: "Explore webinar, video, SEO, and growth tools.",
+        },
+        {
+          href: "/alternatives/zoom",
+          label: "Compare Zoom alternatives",
+          description: "Review webinar and video platforms similar to Zoom.",
+        },
+        {
+          href: "/tags/webinar",
+          label: "Browse webinar tools",
+          description: "See products tagged for webinar workflows.",
+        },
+      ],
+    },
+    {
+      slug: "webinar-software-for-small-business",
+      targetKeyword: "best webinar software for small business",
+      title: "Best Webinar Software for Small Business",
+      metaTitle: "Best Webinar Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare webinar software for small business, including Demio, WebinarJam, Zoom, Riverside, Vimeo, Wistia, and Vidyard.",
+      intro:
+        "Webinar software for small business should make it practical to run events, educate buyers, collect leads, record sessions, and follow up without an enterprise event stack.",
+      whoItsFor:
+        "This page is for small businesses and lean marketing teams choosing webinar software for lead generation, education, demos, and community events.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["webinar", "small-business", "lead-generation"],
+      toolSlugs: ["demio", "webinarjam", "zoom", "riverside", "vimeo", "wistia", "vidyard"],
+      buyingFocus: "small-business webinars, lead generation, event hosting, recordings, and audience engagement",
+      internalLinks: [
+        {
+          href: "/best/webinar-platform",
+          label: "Compare webinar platforms",
+          description: "See the broader webinar platform shortlist.",
+        },
+        {
+          href: "/alternatives/webinarjam",
+          label: "Compare WebinarJam alternatives",
+          description: "Review webinar tools similar to WebinarJam.",
+        },
+        {
+          href: "/tags/events",
+          label: "Browse event tools",
+          description: "See tools tagged for event workflows.",
+        },
+      ],
+    },
+    {
+      slug: "screen-recording-software",
+      targetKeyword: "best screen recording software",
+      title: "Best Screen Recording Software",
+      metaTitle: "Best Screen Recording Software | ShipBoost",
+      metaDescription:
+        "Compare screen recording software, including Loom, Screen Studio, Tella, Descript, Riverside, Sendspark, and Vidyard.",
+      intro:
+        "Screen recording software helps teams create product walkthroughs, tutorials, async updates, sales videos, demos, and reusable training content.",
+      whoItsFor:
+        "This guide is for founders, marketers, product teams, educators, and sales teams comparing tools for recording and sharing polished videos quickly.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["screen-recording", "async-video", "product-demo"],
+      toolSlugs: ["loom", "screen-studio", "tella", "descript", "riverside", "sendspark", "vidyard"],
+      buyingFocus: "screen recordings, async video, tutorials, product demos, and lightweight video editing",
+      internalLinks: [
+        {
+          href: "/best/product-demo-software",
+          label: "Compare product demo software",
+          description: "See adjacent tools for demos and walkthroughs.",
+        },
+        {
+          href: "/alternatives/loom",
+          label: "Compare Loom alternatives",
+          description: "Review screen recording tools similar to Loom.",
+        },
+        {
+          href: "/tags/screen-recording",
+          label: "Browse screen recording tools",
+          description: "See products tagged for screen recording.",
+        },
+      ],
+    },
+    {
+      slug: "demo-software",
+      targetKeyword: "best demo software",
+      title: "Best Demo Software",
+      metaTitle: "Best Demo Software | ShipBoost",
+      metaDescription:
+        "Compare demo software, including Vidyard, Loom, Screen Studio, Sendspark, Tella, Descript, Wistia, and Vimeo.",
+      intro:
+        "Demo software helps teams create, record, host, personalize, and share product walkthroughs that support sales, onboarding, marketing, and customer education.",
+      whoItsFor:
+        "This guide is for sales, marketing, and product teams choosing demo tools by recording quality, hosting, personalization, analytics, and speed.",
+      primaryCategorySlug: "sales",
+      supportingTagSlugs: ["product-demo", "sales-video", "video-hosting"],
+      toolSlugs: ["vidyard", "loom", "screen-studio", "sendspark", "tella", "descript", "wistia", "vimeo"],
+      buyingFocus: "product demos, sales video, walkthroughs, hosting, and buyer education workflows",
+      internalLinks: [
+        {
+          href: "/best/product-demo-software",
+          label: "Compare product demo tools",
+          description: "See tools focused on product walkthroughs and demos.",
+        },
+        {
+          href: "/alternatives/vidyard",
+          label: "Compare Vidyard alternatives",
+          description: "Review video tools similar to Vidyard.",
+        },
+        {
+          href: "/tags/product-demo",
+          label: "Browse product demo tools",
+          description: "See products tagged for product demos.",
+        },
+      ],
+    },
+    {
+      slug: "product-demo-software",
+      targetKeyword: "best product demo software",
+      title: "Best Product Demo Software",
+      metaTitle: "Best Product Demo Software | ShipBoost",
+      metaDescription:
+        "Compare product demo software, including Vidyard, Loom, Screen Studio, Sendspark, Tella, Descript, Wistia, and Riverside.",
+      intro:
+        "Product demo software helps teams explain software clearly through recorded walkthroughs, personalized videos, hosted clips, tutorials, and reusable onboarding assets.",
+      whoItsFor:
+        "This page is for SaaS, product, sales, and marketing teams choosing demo software that can improve buyer education and customer onboarding.",
+      primaryCategorySlug: "sales",
+      supportingTagSlugs: ["product-demo", "sales-video", "async-video"],
+      toolSlugs: ["vidyard", "loom", "screen-studio", "sendspark", "tella", "descript", "wistia", "riverside"],
+      buyingFocus: "SaaS product demos, walkthroughs, personalized video, onboarding content, and sales enablement",
+      internalLinks: [
+        {
+          href: "/best/screen-recording-software",
+          label: "Compare screen recording tools",
+          description: "See tools for recording demos and tutorials.",
+        },
+        {
+          href: "/alternatives/descript",
+          label: "Compare Descript alternatives",
+          description: "Review video editing and demo creation tools.",
+        },
+        {
+          href: "/tags/sales-video",
+          label: "Browse sales video tools",
+          description: "See tools tagged for sales video workflows.",
+        },
+      ],
+    },
+    {
+      slug: "workflow-automation-software",
+      targetKeyword: "best workflow automation software",
+      title: "Best Workflow Automation Software",
+      metaTitle: "Best Workflow Automation Software | ShipBoost",
+      metaDescription:
+        "Compare workflow automation software, including Zapier, Make, n8n, Workato, Tray.io, Pabbly Connect, Relay.app, and Activepieces.",
+      intro:
+        "Workflow automation software connects apps, moves data, triggers actions, and helps teams reduce repetitive work across operations, marketing, sales, finance, and product workflows.",
+      whoItsFor:
+        "This guide is for operators, founders, and technical teams comparing automation platforms by app coverage, reliability, flexibility, AI support, and implementation depth.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["workflow-automation", "automation", "integrations"],
+      toolSlugs: ["zapier", "make", "n8n", "workato", "tray-io", "pabbly-connect", "relay-app", "activepieces"],
+      buyingFocus: "workflow automation, app integrations, data movement, triggers, and repeatable business processes",
+      internalLinks: [
+        {
+          href: "/categories/development",
+          label: "Browse development tools",
+          description: "Explore automation, integration, and developer tools.",
+        },
+        {
+          href: "/alternatives/zapier",
+          label: "Compare Zapier alternatives",
+          description: "Review workflow automation tools similar to Zapier.",
+        },
+        {
+          href: "/tags/workflow-automation",
+          label: "Browse workflow automation tools",
+          description: "See products tagged for workflow automation.",
+        },
+      ],
+    },
+    {
+      slug: "business-process-automation-software",
+      targetKeyword: "best business process automation software",
+      title: "Best Business Process Automation Software",
+      metaTitle: "Best Business Process Automation Software | ShipBoost",
+      metaDescription:
+        "Compare business process automation software, including Workato, Zapier, Make, Tray.io, n8n, Parabola, Pabbly Connect, and Relay.app.",
+      intro:
+        "Business process automation software helps teams standardize repeatable work, connect systems, reduce manual handoffs, and improve operational reliability across departments.",
+      whoItsFor:
+        "This guide is for operations, RevOps, finance, and technical teams choosing automation software for broader business workflows rather than one-off personal automations.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["automation", "workflow-automation", "enterprise-automation"],
+      toolSlugs: ["workato", "zapier", "make", "tray-io", "n8n", "parabola", "pabbly-connect", "relay-app"],
+      buyingFocus: "business process automation, operational workflows, integrations, approvals, and reliable handoffs",
+      internalLinks: [
+        {
+          href: "/best/workflow-automation-software",
+          label: "Compare workflow automation tools",
+          description: "See broader automation platforms.",
+        },
+        {
+          href: "/alternatives/workato",
+          label: "Compare Workato alternatives",
+          description: "Review enterprise automation and iPaaS platforms.",
+        },
+        {
+          href: "/tags/automation",
+          label: "Browse automation tools",
+          description: "See products tagged for automation.",
+        },
+      ],
+    },
+    {
+      slug: "no-code-automation-tools",
+      targetKeyword: "best no code automation tools",
+      title: "Best No Code Automation Tools",
+      metaTitle: "Best No Code Automation Tools | ShipBoost",
+      metaDescription:
+        "Compare no-code automation tools, including Zapier, Make, Pabbly Connect, IFTTT, Relay.app, Albato, Integrately, and Activepieces.",
+      intro:
+        "No-code automation tools help non-technical teams connect apps, automate recurring tasks, and create workflows without writing custom integration code.",
+      whoItsFor:
+        "This page is for founders, marketers, operators, and small teams choosing automation tools that are approachable without a dedicated engineering team.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["no-code", "automation", "integrations"],
+      toolSlugs: ["zapier", "make", "pabbly-connect", "ifttt", "relay-app", "albato", "integrately", "activepieces"],
+      buyingFocus: "no-code automation, app connections, simple workflow building, and non-technical operations",
+      internalLinks: [
+        {
+          href: "/best/workflow-automation-software",
+          label: "Compare workflow automation software",
+          description: "See broader automation tools for teams.",
+        },
+        {
+          href: "/alternatives/make",
+          label: "Compare Make alternatives",
+          description: "Review visual workflow automation tools.",
+        },
+        {
+          href: "/tags/no-code",
+          label: "Browse no-code tools",
+          description: "See products tagged for no-code workflows.",
+        },
+      ],
+    },
+    {
+      slug: "integration-platform-as-a-service",
+      targetKeyword: "best integration platform as a service",
+      title: "Best Integration Platform as a Service",
+      metaTitle: "Best Integration Platform as a Service | ShipBoost",
+      metaDescription:
+        "Compare iPaaS tools, including Workato, Tray.io, Albato, Zapier, Make, n8n, Pabbly Connect, and Activepieces.",
+      intro:
+        "Integration platform as a service tools help teams connect apps, orchestrate data movement, expose automations, and manage more complex business integrations.",
+      whoItsFor:
+        "This guide is for SaaS teams, operations teams, and technical buyers comparing integration platforms by flexibility, governance, embedded use cases, and workflow depth.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["ipaas", "integrations", "workflow-automation"],
+      toolSlugs: ["workato", "tray-io", "albato", "zapier", "make", "n8n", "pabbly-connect", "activepieces"],
+      buyingFocus: "iPaaS, app integrations, data orchestration, embedded automation, and technical workflow control",
+      internalLinks: [
+        {
+          href: "/best/business-process-automation-software",
+          label: "Compare process automation software",
+          description: "See automation tools for broader business workflows.",
+        },
+        {
+          href: "/alternatives/tray-io",
+          label: "Compare Tray.io alternatives",
+          description: "Review iPaaS and integration platforms.",
+        },
+        {
+          href: "/tags/ipaas",
+          label: "Browse iPaaS tools",
+          description: "See products tagged for iPaaS.",
+        },
+      ],
+    },
+    {
+      slug: "wireframing-tools",
+      targetKeyword: "best wireframing tools",
+      title: "Best Wireframing Tools",
+      metaTitle: "Best Wireframing Tools | ShipBoost",
+      metaDescription:
+        "Compare wireframing tools, including Figma, Whimsical, Miro, FigJam, Lucidchart, Canva, and Adobe Express.",
+      intro:
+        "Wireframing tools help teams map product ideas, page layouts, flows, and interface structure before investing in full design or development.",
+      whoItsFor:
+        "This guide is for founders, product managers, designers, and builders choosing tools for fast layout thinking, UX planning, and collaborative product definition.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["wireframing", "prototyping", "collaboration"],
+      toolSlugs: ["figma", "whimsical", "miro", "figjam", "lucidchart", "canva", "adobe-express"],
+      buyingFocus: "wireframes, product flows, early UX planning, collaboration, and prototype handoff",
+      internalLinks: [
+        {
+          href: "/best/design-collaboration-tools",
+          label: "Compare design collaboration tools",
+          description: "See adjacent design and visual collaboration platforms.",
+        },
+        {
+          href: "/alternatives/figma",
+          label: "Compare Figma alternatives",
+          description: "Review design and wireframing tools similar to Figma.",
+        },
+        {
+          href: "/tags/wireframing",
+          label: "Browse wireframing tools",
+          description: "See products tagged for wireframing.",
+        },
+      ],
+    },
+    {
+      slug: "diagram-software",
+      targetKeyword: "best diagram software",
+      title: "Best Diagram Software",
+      metaTitle: "Best Diagram Software | ShipBoost",
+      metaDescription:
+        "Compare diagram software, including Lucidchart, Miro, Whimsical, Microsoft Visio, FigJam, Mural, and Canva.",
+      intro:
+        "Diagram software helps teams map systems, processes, workflows, architecture, org charts, journeys, and visual explanations that are easier to understand than text alone.",
+      whoItsFor:
+        "This guide is for operations, product, engineering, and strategy teams choosing diagramming tools for clear visual communication.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["diagramming", "visual-collaboration", "flowcharts"],
+      toolSlugs: ["lucidchart", "miro", "whimsical", "microsoft-visio", "figjam", "mural", "canva"],
+      buyingFocus: "diagrams, flowcharts, system maps, process documentation, and visual communication",
+      internalLinks: [
+        {
+          href: "/best/online-whiteboard",
+          label: "Compare online whiteboards",
+          description: "See adjacent tools for visual collaboration.",
+        },
+        {
+          href: "/alternatives/lucidchart",
+          label: "Compare Lucidchart alternatives",
+          description: "Review diagramming tools similar to Lucidchart.",
+        },
+        {
+          href: "/tags/diagramming",
+          label: "Browse diagramming tools",
+          description: "See products tagged for diagramming.",
+        },
+      ],
+    },
+    {
+      slug: "online-whiteboard",
+      targetKeyword: "best online whiteboard",
+      title: "Best Online Whiteboard",
+      metaTitle: "Best Online Whiteboard | ShipBoost",
+      metaDescription:
+        "Compare online whiteboards, including Miro, Mural, FigJam, Whimsical, Lucidchart, Canva, and Figma.",
+      intro:
+        "Online whiteboards help distributed teams brainstorm, workshop, map ideas, plan projects, and collaborate visually in a shared canvas.",
+      whoItsFor:
+        "This guide is for product, design, operations, and remote teams choosing a visual collaboration tool for workshops and planning sessions.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["whiteboard", "visual-collaboration", "workshops"],
+      toolSlugs: ["miro", "mural", "figjam", "whimsical", "lucidchart", "canva", "figma"],
+      buyingFocus: "online whiteboarding, workshops, visual brainstorming, collaboration, and team planning",
+      internalLinks: [
+        {
+          href: "/best/whiteboard-software",
+          label: "Compare whiteboard software",
+          description: "See a broader whiteboard software shortlist.",
+        },
+        {
+          href: "/alternatives/miro",
+          label: "Compare Miro alternatives",
+          description: "Review visual collaboration tools similar to Miro.",
+        },
+        {
+          href: "/tags/whiteboard",
+          label: "Browse whiteboard tools",
+          description: "See products tagged for whiteboarding.",
+        },
+      ],
+    },
+    {
+      slug: "whiteboard-software",
+      targetKeyword: "best whiteboard software",
+      title: "Best Whiteboard Software",
+      metaTitle: "Best Whiteboard Software | ShipBoost",
+      metaDescription:
+        "Compare whiteboard software, including Miro, Mural, FigJam, Whimsical, Canva, Lucidchart, and Figma.",
+      intro:
+        "Whiteboard software gives teams a shared space for brainstorming, planning, workshops, strategy sessions, diagrams, and collaborative visual thinking.",
+      whoItsFor:
+        "This page is for teams choosing whiteboard software by workshop quality, template coverage, visual flexibility, and collaboration experience.",
+      primaryCategorySlug: "operations",
+      supportingTagSlugs: ["whiteboard", "workshops", "collaboration"],
+      toolSlugs: ["miro", "mural", "figjam", "whimsical", "canva", "lucidchart", "figma"],
+      buyingFocus: "whiteboarding, workshops, team collaboration, templates, and visual planning",
+      internalLinks: [
+        {
+          href: "/best/online-whiteboard",
+          label: "Compare online whiteboards",
+          description: "See tools for remote and distributed visual collaboration.",
+        },
+        {
+          href: "/alternatives/mural",
+          label: "Compare Mural alternatives",
+          description: "Review whiteboard tools similar to Mural.",
+        },
+        {
+          href: "/tags/workshops",
+          label: "Browse workshop tools",
+          description: "See products tagged for workshop workflows.",
+        },
+      ],
+    },
+    {
+      slug: "design-collaboration-tools",
+      targetKeyword: "best design collaboration tools",
+      title: "Best Design Collaboration Tools",
+      metaTitle: "Best Design Collaboration Tools | ShipBoost",
+      metaDescription:
+        "Compare design collaboration tools, including Figma, Canva, Miro, FigJam, Mural, Adobe Express, Pitch, and Whimsical.",
+      intro:
+        "Design collaboration tools help teams create, review, present, workshop, and align visually across product, marketing, brand, and content workflows.",
+      whoItsFor:
+        "This guide is for design, marketing, product, and startup teams choosing collaborative creative tools by role fit, review workflow, templates, and handoff needs.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["design", "collaboration", "creative-tools"],
+      toolSlugs: ["figma", "canva", "miro", "figjam", "mural", "adobe-express", "pitch", "whimsical"],
+      buyingFocus: "design collaboration, creative assets, visual review, presentations, and product or marketing handoff",
+      internalLinks: [
+        {
+          href: "/best/wireframing-tools",
+          label: "Compare wireframing tools",
+          description: "See tools for early product and layout planning.",
+        },
+        {
+          href: "/alternatives/canva",
+          label: "Compare Canva alternatives",
+          description: "Review creative tools similar to Canva.",
+        },
+        {
+          href: "/tags/design",
+          label: "Browse design tools",
+          description: "See products tagged for design workflows.",
+        },
+      ],
+    },
+  ].map((entry) => [entry.slug, createPhaseOneBestPage(entry)]),
+) as Record<string, BestPageEntry>;
+
+Object.assign(
+  bestPagesRegistry,
+  phaseOneBestPages,
+  phaseTwoBestPages,
+  phaseThreeBestPages,
+);
+
 export const bestHubSections: BestHubSection[] = [
   {
     slug: "support",
@@ -2999,6 +4767,252 @@ export const bestHubSections: BestHubSection[] = [
         href: "/alternatives",
         label: "Compare social alternatives",
         description: "See comparison pages for social scheduling products.",
+      },
+    ],
+  },
+  {
+    slug: "hr-payroll",
+    title: "HR and Payroll",
+    intro:
+      "These pages help small businesses and startups compare HR, payroll, onboarding, and recruiting tools by operational fit, compliance coverage, and day-to-day people workflows.",
+    pageSlugs: [
+      "hr-software-for-small-business",
+      "payroll-software-for-small-business",
+      "hr-software-for-startups",
+      "employee-onboarding-software",
+      "applicant-tracking-system-for-small-business",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/operations",
+        label: "Browse operations tools",
+        description: "Explore HR, payroll, recruiting, and workflow tools.",
+      },
+      {
+        href: "/alternatives/bamboohr",
+        label: "Compare HR alternatives",
+        description: "See alternatives pages for HR and payroll platforms.",
+      },
+    ],
+  },
+  {
+    slug: "seo-content-optimization",
+    title: "SEO and Content Optimization",
+    intro:
+      "These pages help buyers compare SEO tools by keyword research quality, rank tracking, content optimization depth, and fit for small teams building organic traffic.",
+    pageSlugs: [
+      "keyword-research-tools",
+      "rank-tracking-software",
+      "ai-seo-tools",
+      "local-seo-tools",
+      "seo-tools-for-small-business",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore SEO, analytics, email, and growth tools.",
+      },
+      {
+        href: "/alternatives/semrush",
+        label: "Compare SEO alternatives",
+        description: "See alternatives pages for major SEO platforms.",
+      },
+    ],
+  },
+  {
+    slug: "payments-billing",
+    title: "Payments and Billing",
+    intro:
+      "These pages help buyers compare payment processors, billing systems, subscription platforms, and recurring revenue tools by checkout fit, tax handling, and finance workflow depth.",
+    pageSlugs: [
+      "recurring-billing-software",
+      "subscription-billing-software",
+      "billing-software-for-small-business",
+      "payment-processor-for-small-business",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/finance",
+        label: "Browse finance tools",
+        description: "Explore billing, payments, accounting, and finance products.",
+      },
+      {
+        href: "/alternatives/stripe",
+        label: "Compare payment alternatives",
+        description: "See alternatives pages for payment and billing tools.",
+      },
+    ],
+  },
+  {
+    slug: "project-work-management",
+    title: "Project and Work Management",
+    intro:
+      "These pages help teams compare project management, work management, task tracking, and planning tools by collaboration fit, workflow depth, and execution quality.",
+    pageSlugs: [
+      "project-management-software-for-small-business",
+      "project-management-software-for-startups",
+      "work-management-software",
+      "project-planning-software",
+      "task-management-software-for-small-business",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/operations",
+        label: "Browse operations tools",
+        description: "Explore project, workflow, HR, and operations tools.",
+      },
+      {
+        href: "/alternatives/monday-com",
+        label: "Compare project management alternatives",
+        description: "See alternatives pages for project and work management tools.",
+      },
+    ],
+  },
+  {
+    slug: "analytics-product-intelligence",
+    title: "Analytics and Product Intelligence",
+    intro:
+      "These pages help buyers compare website analytics, product analytics, heatmap, and session replay tools by measurement depth, privacy posture, and behavior insight.",
+    pageSlugs: [
+      "website-analytics-tools",
+      "web-analytics-tools",
+      "product-analytics-tools",
+      "heatmap-software",
+      "session-replay-software",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore analytics, SEO, conversion, and growth tools.",
+      },
+      {
+        href: "/alternatives/google-analytics",
+        label: "Compare analytics alternatives",
+        description: "See alternatives pages for analytics and behavior tools.",
+      },
+    ],
+  },
+  {
+    slug: "accounting-invoicing-expenses",
+    title: "Accounting, Invoicing, and Expenses",
+    intro:
+      "These pages help small businesses compare invoicing, accounting, expense management, and accounts payable tools by finance workflow fit and operational complexity.",
+    pageSlugs: [
+      "invoicing-software-for-small-business",
+      "invoice-software-for-freelancers",
+      "expense-management-software-for-small-business",
+      "accounts-payable-software-for-small-business",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/finance",
+        label: "Browse finance tools",
+        description: "Explore accounting, invoicing, spend, and billing tools.",
+      },
+      {
+        href: "/alternatives/quickbooks",
+        label: "Compare accounting alternatives",
+        description: "See alternatives pages for accounting and finance tools.",
+      },
+    ],
+  },
+  {
+    slug: "ecommerce-store-builders",
+    title: "Ecommerce and Store Builders",
+    intro:
+      "These pages help small businesses and startups compare ecommerce website builders, commerce platforms, and online selling software by storefront fit, checkout depth, and operational complexity.",
+    pageSlugs: [
+      "ecommerce-website-builder",
+      "ecommerce-platform-for-small-business",
+      "ecommerce-platform-for-startups",
+      "ecommerce-software-for-small-business",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/commerce",
+        label: "Browse commerce tools",
+        description: "Explore ecommerce, checkout, storefront, and selling tools.",
+      },
+      {
+        href: "/alternatives/shopify",
+        label: "Compare ecommerce alternatives",
+        description: "See alternatives pages for commerce platforms.",
+      },
+    ],
+  },
+  {
+    slug: "video-demo-webinar",
+    title: "Video, Demo, and Webinar",
+    intro:
+      "These pages help buyers compare webinar platforms, screen recorders, demo tools, and sales video software by recording quality, hosting, sharing, and audience workflow fit.",
+    pageSlugs: [
+      "webinar-platform",
+      "webinar-software-for-small-business",
+      "screen-recording-software",
+      "demo-software",
+      "product-demo-software",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore video, webinar, demo, and growth tools.",
+      },
+      {
+        href: "/alternatives/loom",
+        label: "Compare video alternatives",
+        description: "See alternatives pages for video and recording tools.",
+      },
+    ],
+  },
+  {
+    slug: "automation-integration",
+    title: "Automation and Integration",
+    intro:
+      "These pages help teams compare workflow automation, business process automation, no-code automation, and iPaaS tools by app coverage, reliability, and implementation depth.",
+    pageSlugs: [
+      "workflow-automation-software",
+      "business-process-automation-software",
+      "no-code-automation-tools",
+      "integration-platform-as-a-service",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/development",
+        label: "Browse development tools",
+        description: "Explore automation, integration, no-code, and developer tools.",
+      },
+      {
+        href: "/alternatives/zapier",
+        label: "Compare automation alternatives",
+        description: "See alternatives pages for workflow automation tools.",
+      },
+    ],
+  },
+  {
+    slug: "design-whiteboarding",
+    title: "Design and Whiteboarding",
+    intro:
+      "These pages help teams compare wireframing, diagramming, whiteboarding, and design collaboration tools by visual workflow fit, workshop quality, and handoff needs.",
+    pageSlugs: [
+      "wireframing-tools",
+      "diagram-software",
+      "online-whiteboard",
+      "whiteboard-software",
+      "design-collaboration-tools",
+    ],
+    supportingLinks: [
+      {
+        href: "/categories/operations",
+        label: "Browse operations tools",
+        description: "Explore visual collaboration, planning, and workflow tools.",
+      },
+      {
+        href: "/alternatives/miro",
+        label: "Compare whiteboard alternatives",
+        description: "See alternatives pages for whiteboarding and design tools.",
       },
     ],
   },

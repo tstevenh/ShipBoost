@@ -5,9 +5,11 @@ import { FilterBar } from "@/components/FilterBar";
 import { Footer } from "@/components/ui/footer";
 import { Suspense } from "react";
 import { JsonLdScript } from "@/components/seo/json-ld";
-import { ShowcaseLayout } from "@/components/public/showcase-layout";
+import {
+  MobileSidebarFollowup,
+  ShowcaseLayout,
+} from "@/components/public/showcase-layout";
 import { LaunchpadShowcase } from "@/components/public/launchpad-showcase";
-import { FrogDrBadge } from "@/components/public/frog-dr-badge";
 import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { getEnv } from "@/server/env";
 import { getCachedHomePageData } from "@/server/cache/public-content";
@@ -58,6 +60,7 @@ export default async function Home() {
         <ShowcaseLayout
           isHomePage
           topWinner={previousWeeklyTopWinner}
+          showMobileFollowup={false}
         >
           <div className="space-y-10 min-h-[600px]">
             <LaunchpadShowcase
@@ -66,6 +69,7 @@ export default async function Home() {
               emptyState={isPrelaunch ? "prelaunch-countdown" : "default"}
               launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT}
             />
+            <MobileSidebarFollowup topWinner={previousWeeklyTopWinner} />
 
             <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
               <p className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/60">
@@ -234,7 +238,6 @@ export default async function Home() {
                 </Link>
               </div>
 
-              <FrogDrBadge className="mt-6 xl:hidden" />
             </div>
           </div>
         </ShowcaseLayout>

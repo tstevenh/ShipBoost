@@ -22,7 +22,10 @@ import {
 } from "@/server/repositories/tool-repository";
 import { createUniqueToolSlug } from "@/server/services/slug";
 import { assertCatalogAssignments } from "@/server/services/catalog";
-import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
+import {
+  combinePubliclyVisibleToolWhere,
+  getPubliclyVisibleToolWhere,
+} from "@/server/services/public-tool-visibility";
 import type {
   AdminToolCreateInput,
   AdminToolUpdateInput,
@@ -330,8 +333,7 @@ export async function searchPublishedTools(
   }
 
   const tools = await prisma.tool.findMany({
-    where: {
-      ...getPubliclyVisibleToolWhere(),
+    where: combinePubliclyVisibleToolWhere({
       OR: [
         { name: { contains: normalizedQuery, mode: "insensitive" } },
         { tagline: { contains: normalizedQuery, mode: "insensitive" } },
@@ -354,7 +356,7 @@ export async function searchPublishedTools(
           },
         },
       ],
-    },
+    }),
     include: {
       logoMedia: true,
       toolCategories: {
@@ -491,11 +493,10 @@ export async function listRelatedPublishedTools(
   }
 
   return prisma.tool.findMany({
-    where: {
+    where: combinePubliclyVisibleToolWhere({
       id: {
         not: toolId,
       },
-      ...getPubliclyVisibleToolWhere(),
       OR: [
         categoryIds.length > 0
           ? {
@@ -520,7 +521,7 @@ export async function listRelatedPublishedTools(
             }
           : undefined,
       ].filter(Boolean) as Prisma.ToolWhereInput[],
-    },
+    }),
     select: publicRelatedToolSelect,
     orderBy: [{ isFeatured: "desc" }, { updatedAt: "desc" }],
     take: options.take ?? 4,

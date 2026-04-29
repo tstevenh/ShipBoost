@@ -6,7 +6,10 @@ import { JsonLdScript } from "@/components/seo/json-ld";
 import { InternalLinkSection } from "@/components/seo/internal-link-section";
 import { FilterBar } from "@/components/FilterBar";
 import { LaunchpadShowcase } from "@/components/public/launchpad-showcase";
-import { ShowcaseLayout } from "@/components/public/showcase-layout";
+import {
+  MobileSidebarFollowup,
+  ShowcaseLayout,
+} from "@/components/public/showcase-layout";
 import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { Footer } from "@/components/ui/footer";
 import MinimalHero from "@/components/ui/hero-minimalism";
@@ -147,9 +150,14 @@ export default async function LaunchBoardPage(context: RouteContext) {
         <FilterBar launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT} />
       </Suspense>
       <ViewerVoteStateProvider toolIds={toolIds}>
-        <ShowcaseLayout isHomePage topWinner={previousWeeklyTopWinner}>
+        <ShowcaseLayout
+          isHomePage
+          topWinner={previousWeeklyTopWinner}
+          showMobileFollowup={false}
+        >
           <div className="space-y-12">
             <LaunchpadShowcase board={board} launches={launches} />
+            <MobileSidebarFollowup topWinner={previousWeeklyTopWinner} />
             <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
               <h2 className="text-3xl font-black tracking-tight text-foreground">
                 {boardTitle}

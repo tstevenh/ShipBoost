@@ -17,7 +17,12 @@ import {
 } from "@/server/repositories/tool-repository";
 import { capturePostHogEventSafely } from "@/server/posthog";
 import { assertCatalogAssignments } from "@/server/services/catalog";
+import {
+  scheduleNextFreeLaunchDate,
+  UTC_WEEK_IN_DAYS,
+} from "@/server/services/launch-scheduling";
 import { createUniqueToolSlug } from "@/server/services/slug";
+import { addUtcDays } from "@/server/services/time";
 import {
   buildDuplicateSubmissionDetails,
   findDuplicateToolByRootDomain,
@@ -35,21 +40,70 @@ import {
   formatLaunchDateForEmail,
   freeLaunchBadgePattern,
   getDashboardUrl,
+  resolveLaunchType,
 } from "@/server/services/submission-service-shared";
+
+type FounderLaunchSummary = {
+  id: string;
+  launchType: "FREE" | "FEATURED" | "RELAUNCH";
+  status: "PENDING" | "APPROVED" | "LIVE" | "ENDED" | "REJECTED";
+  launchDate: Date;
+};
 
 function buildSavedSubmissionDraft(input: {
   id: string;
+  toolId: string;
   submissionType: SubmissionCreateInput["submissionType"];
+  reviewStatus?: SavedSubmissionDraft["reviewStatus"];
   paymentStatus: SavedSubmissionDraft["paymentStatus"];
   badgeVerification: SavedSubmissionDraft["badgeVerification"];
 }): SavedSubmissionDraft {
   return {
     id: input.id,
+    toolId: input.toolId,
     submissionType: input.submissionType,
-    reviewStatus: "DRAFT",
+    reviewStatus: input.reviewStatus ?? "DRAFT",
     paymentStatus: input.paymentStatus,
     badgeVerification: input.badgeVerification,
   };
+}
+
+function isEditableFounderSubmissionStatus(status: string) {
+  return status === "DRAFT" || status === "PENDING" || status === "REJECTED";
+}
+
+function serializeFounderLaunch(launch: FounderLaunchSummary) {
+  return {
+    id: launch.id,
+    launchType: launch.launchType,
+    status: launch.status,
+    launchDate: launch.launchDate,
+  };
+}
+
+function getActiveLaunchForType(
+  launches: FounderLaunchSummary[],
+  launchType: FounderLaunchSummary["launchType"],
+) {
+  return launches.find(
+    (launch) =>
+      launch.launchType === launchType &&
+      launch.status !== "REJECTED" &&
+      launch.status !== "ENDED",
+  );
+}
+
+function getActiveLaunchForSubmission(
+  launches: FounderLaunchSummary[],
+  submissionType: SubmissionCreateInput["submissionType"],
+) {
+  if (submissionType === "LISTING_ONLY") {
+    return undefined;
+  }
+
+  const expectedLaunchType = resolveLaunchType(submissionType);
+
+  return getActiveLaunchForType(launches, expectedLaunchType);
 }
 
 function orderedIdsMatch(currentIds: string[], nextIds: string[]) {
@@ -182,13 +236,10 @@ export async function createSubmission(
       throw new AppError(404, "Draft not found.");
     }
 
-    if (
-      existingSubmission.reviewStatus !== "DRAFT" &&
-      existingSubmission.reviewStatus !== "REJECTED"
-    ) {
+    if (!isEditableFounderSubmissionStatus(existingSubmission.reviewStatus)) {
       throw new AppError(
         409,
-        "This launch is already in review or scheduled. Edit it from the dashboard instead.",
+        "This launch can no longer be edited from the submission form.",
       );
     }
 
@@ -210,6 +261,14 @@ export async function createSubmission(
                 existingSubmission.badgeVerification === "VERIFIED"
               ? "VERIFIED"
               : "PENDING";
+        const activeLaunch = getActiveLaunchForSubmission(
+          existingSubmission.tool.launches,
+          input.submissionType,
+        );
+        const nextReviewStatus =
+          activeLaunch && existingSubmission.reviewStatus === "PENDING"
+            ? "PENDING"
+            : "DRAFT";
         const existingScreenshots = existingSubmission.tool.media.filter(
           (media) => media.type === "SCREENSHOT",
         );
@@ -242,11 +301,17 @@ export async function createSubmission(
             affiliateUrl: input.affiliateUrl,
             affiliateSource: input.affiliateSource,
             hasAffiliateProgram: input.hasAffiliateProgram,
-            moderationStatus: "DRAFT",
-            publicationStatus: "UNPUBLISHED",
+            moderationStatus: activeLaunch
+              ? existingSubmission.tool.moderationStatus
+              : "DRAFT",
+            publicationStatus: activeLaunch
+              ? existingSubmission.tool.publicationStatus
+              : "UNPUBLISHED",
             launchBadgeRequired: false,
             badgeVerification: nextBadgeVerification,
-            currentLaunchType: null,
+            currentLaunchType: activeLaunch
+              ? activeLaunch.launchType
+              : null,
             isFeatured: input.submissionType === "FEATURED_LAUNCH",
             founderXUrl: input.founderXUrl,
             founderGithubUrl: input.founderGithubUrl,
@@ -254,6 +319,21 @@ export async function createSubmission(
             founderFacebookUrl: input.founderFacebookUrl,
           },
         });
+
+        if (input.submissionType === "FEATURED_LAUNCH") {
+          await tx.launch.deleteMany({
+            where: {
+              toolId: existingSubmission.toolId,
+              launchType: "FREE",
+              status: {
+                in: ["PENDING", "APPROVED"],
+              },
+              launchDate: {
+                gt: new Date(),
+              },
+            },
+          });
+        }
 
         if (existingSubmission.tool.logoMediaId && logoChanged) {
           await tx.toolMedia.update({
@@ -324,7 +404,7 @@ export async function createSubmission(
             badgeFooterUrl:
               input.submissionType === "FREE_LAUNCH" ? input.websiteUrl : null,
             badgeVerification: nextBadgeVerification,
-            reviewStatus: "DRAFT",
+            reviewStatus: nextReviewStatus,
             founderVisibleNote: null,
             internalReviewNote: null,
           },
@@ -333,7 +413,9 @@ export async function createSubmission(
         return {
           draft: buildSavedSubmissionDraft({
             id: existingSubmission.id,
+            toolId: existingSubmission.toolId,
             submissionType: input.submissionType,
+            reviewStatus: nextReviewStatus,
             paymentStatus:
               input.submissionType === "FEATURED_LAUNCH"
                 ? "PENDING"
@@ -470,6 +552,7 @@ export async function createSubmission(
 
           return {
             id: submission.id,
+            toolId: tool.id,
             submissionType: submission.submissionType,
             reviewStatus: submission.reviewStatus,
             paymentStatus: submission.paymentStatus,
@@ -521,7 +604,7 @@ export async function getFounderSubmissionDraft(
     throw new AppError(404, "Submission not found.");
   }
 
-  if (submission.reviewStatus !== "DRAFT") {
+  if (!isEditableFounderSubmissionStatus(submission.reviewStatus)) {
     throw new AppError(409, "This submission can no longer be resumed.");
   }
 
@@ -686,6 +769,248 @@ export async function submitSubmissionDraft(
   };
 }
 
+export async function scheduleFreeSubmissionLaunch(
+  submissionId: string,
+  founder: AuthenticatedFounder,
+) {
+  const submission = await getSubmissionByIdForFounder(
+    prisma,
+    submissionId,
+    founder.id,
+  );
+
+  if (!submission) {
+    throw new AppError(404, "Submission not found.");
+  }
+
+  if (!isEditableFounderSubmissionStatus(submission.reviewStatus)) {
+    throw new AppError(409, "This submission can no longer be scheduled.");
+  }
+
+  if (submission.submissionType === "FEATURED_LAUNCH") {
+    throw new AppError(400, "Premium launches must go through checkout.");
+  }
+
+  if (submission.paymentStatus === "PAID") {
+    throw new AppError(400, "Paid launches cannot join the free queue.");
+  }
+
+  const existingFreeLaunch = getActiveLaunchForType(
+    submission.tool.launches,
+    "FREE",
+  );
+
+  const launch =
+    existingFreeLaunch ??
+    (await prisma.$transaction(
+      async (tx) => {
+        const launchDate = await scheduleNextFreeLaunchDate(tx);
+        const launchEndAt = addUtcDays(launchDate, UTC_WEEK_IN_DAYS);
+        const nextBadgeVerification =
+          submission.badgeVerification === "VERIFIED" ? "VERIFIED" : "PENDING";
+
+        await tx.submission.update({
+          where: { id: submission.id },
+          data: {
+            submissionType: "FREE_LAUNCH",
+            reviewStatus: "PENDING",
+            paymentStatus: "NOT_REQUIRED",
+            preferredLaunchDate: launchDate,
+            badgeFooterUrl: submission.tool.websiteUrl,
+            badgeVerification: nextBadgeVerification,
+            founderVisibleNote: null,
+            internalReviewNote: null,
+          },
+        });
+
+        await tx.tool.update({
+          where: { id: submission.toolId },
+          data: {
+            moderationStatus: "APPROVED",
+            publicationStatus: "PUBLISHED",
+            currentLaunchType: "FREE",
+            isFeatured: false,
+            launchBadgeRequired: false,
+            badgeVerification: nextBadgeVerification,
+          },
+        });
+
+        return tx.launch.create({
+          data: {
+            toolId: submission.toolId,
+            createdById: founder.id,
+            launchType: "FREE",
+            status: "APPROVED",
+            launchDate,
+            startAt: launchDate,
+            endAt: launchEndAt,
+            priorityWeight: 0,
+          },
+          select: {
+            id: true,
+            launchType: true,
+            status: true,
+            launchDate: true,
+          },
+        });
+      },
+      {
+        maxWait: 15_000,
+        timeout: 15_000,
+      },
+    ));
+
+  if (existingFreeLaunch) {
+    await prisma.$transaction(async (tx) => {
+      await tx.submission.update({
+        where: { id: submission.id },
+        data: {
+          submissionType: "FREE_LAUNCH",
+          reviewStatus: "PENDING",
+          paymentStatus: "NOT_REQUIRED",
+          preferredLaunchDate: existingFreeLaunch.launchDate,
+          badgeFooterUrl: submission.tool.websiteUrl,
+          badgeVerification:
+            submission.badgeVerification === "VERIFIED" ? "VERIFIED" : "PENDING",
+        },
+      });
+
+      await tx.tool.update({
+        where: { id: submission.toolId },
+        data: {
+          moderationStatus: "APPROVED",
+          publicationStatus: "PUBLISHED",
+          currentLaunchType: "FREE",
+          isFeatured: false,
+          launchBadgeRequired: false,
+          badgeVerification:
+            submission.badgeVerification === "VERIFIED" ? "VERIFIED" : "PENDING",
+        },
+      });
+    });
+  }
+
+  const updated = await getSubmissionById(prisma, submission.id);
+
+  if (!updated) {
+    throw new AppError(500, "Launch was scheduled but could not be reloaded.");
+  }
+
+  const emailTask: DeferredEmailTask = () =>
+    sendSubmissionReceivedEmailMessage({
+      to: updated.user.email,
+      name: updated.user.name,
+      dashboardUrl: getDashboardUrl(),
+      toolName: updated.tool.name,
+      submissionType: updated.submissionType,
+      preferredLaunchDate: updated.preferredLaunchDate
+        ? formatLaunchDateForEmail(updated.preferredLaunchDate)
+        : null,
+    });
+
+  await capturePostHogEventSafely(
+    {
+      distinctId: updated.userId,
+      event: "free_launch_scheduled",
+      properties: {
+        submission_id: updated.id,
+        tool_id: updated.tool.id,
+        tool_slug: updated.tool.slug,
+        tool_name: updated.tool.name,
+        launch_id: launch.id,
+        launch_date: launch.launchDate.toISOString(),
+      },
+    },
+    "scheduleFreeSubmissionLaunch",
+  );
+
+  return {
+    submission: updated,
+    launch: serializeFounderLaunch(launch),
+    emailTask,
+  };
+}
+
+export async function unscheduleFreeSubmissionLaunch(
+  submissionId: string,
+  founder: AuthenticatedFounder,
+) {
+  const submission = await getSubmissionByIdForFounder(
+    prisma,
+    submissionId,
+    founder.id,
+  );
+
+  if (!submission) {
+    throw new AppError(404, "Submission not found.");
+  }
+
+  if (submission.submissionType === "FEATURED_LAUNCH") {
+    throw new AppError(400, "Premium launches cannot be unscheduled here.");
+  }
+
+  if (!isEditableFounderSubmissionStatus(submission.reviewStatus)) {
+    throw new AppError(409, "This launch can no longer be unscheduled.");
+  }
+
+  const now = new Date();
+
+  await prisma.$transaction(async (tx) => {
+    await tx.launch.deleteMany({
+      where: {
+        toolId: submission.toolId,
+        launchType: "FREE",
+        status: {
+          in: ["PENDING", "APPROVED"],
+        },
+        launchDate: {
+          gt: now,
+        },
+      },
+    });
+
+    await tx.submission.update({
+      where: { id: submission.id },
+      data: {
+        reviewStatus: "DRAFT",
+        preferredLaunchDate: null,
+      },
+    });
+
+    await tx.tool.update({
+      where: { id: submission.toolId },
+      data: {
+        moderationStatus: "DRAFT",
+        publicationStatus: "UNPUBLISHED",
+        currentLaunchType: null,
+        isFeatured: false,
+      },
+    });
+  });
+
+  const updated = await getSubmissionById(prisma, submission.id);
+
+  if (!updated) {
+    throw new AppError(500, "Launch was unscheduled but could not be reloaded.");
+  }
+
+  await capturePostHogEventSafely(
+    {
+      distinctId: updated.userId,
+      event: "free_launch_unscheduled",
+      properties: {
+        submission_id: updated.id,
+        tool_id: updated.tool.id,
+        tool_slug: updated.tool.slug,
+        tool_name: updated.tool.name,
+      },
+    },
+    "unscheduleFreeSubmissionLaunch",
+  );
+
+  return updated;
+}
+
 export async function verifyFreeLaunchBadge(
   submissionId: string,
   founder: AuthenticatedFounder,
@@ -704,7 +1029,7 @@ export async function verifyFreeLaunchBadge(
     throw new AppError(400, "Badge verification only applies to free launches.");
   }
 
-  if (submission.reviewStatus !== "DRAFT") {
+  if (!isEditableFounderSubmissionStatus(submission.reviewStatus)) {
     throw new AppError(409, "This submission is already in review.");
   }
 

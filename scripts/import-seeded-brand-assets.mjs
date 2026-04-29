@@ -4,6 +4,12 @@ import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { v2 as cloudinary } from "cloudinary";
 
+import {
+  buildFaviconProviderUrl,
+  configureCloudinaryFromEnv,
+  uploadFaviconLogoToCloudinary,
+} from "./favicon-logo-cloudinary.mjs";
+
 const prisma = new PrismaClient();
 
 const LOGO_SOURCE_DOMAINS = [
@@ -125,32 +131,13 @@ const slugsArg = process.argv
   .slice(2)
   .find((arg) => arg.startsWith("--slugs="));
 
-function getRequiredEnv(name) {
-  const value = process.env[name]?.trim();
-  if (!value) {
-    throw new Error(`Missing required env var: ${name}`);
-  }
-  return value;
-}
-
-function configureCloudinary() {
-  cloudinary.config({
-    cloud_name: getRequiredEnv("CLOUDINARY_CLOUD_NAME"),
-    api_key: getRequiredEnv("CLOUDINARY_API_KEY"),
-    api_secret: getRequiredEnv("CLOUDINARY_API_SECRET"),
-    secure: true,
-  });
-
-  return getRequiredEnv("CLOUDINARY_UPLOAD_FOLDER");
-}
-
 function normalizeHostname(rawUrl) {
   const url = new URL(rawUrl);
   return url.hostname.replace(/^www\./, "").toLowerCase();
 }
 
 function buildFaviconUrl(hostname) {
-  return `https://favicon.im/${hostname}?larger=true`;
+  return buildFaviconProviderUrl(`https://${hostname}`, { larger: true });
 }
 
 function buildHeroImagePath(filename) {
@@ -259,17 +246,13 @@ async function destroyCloudinaryImage(publicId) {
   });
 }
 
-async function ensureLogoMedia(tx, tool, faviconUrl) {
+async function ensureLogoMedia(tx, tool, logoMediaData) {
   if (tool.logoMediaId) {
     await tx.toolMedia.update({
       where: { id: tool.logoMediaId },
       data: {
-        url: faviconUrl,
+        ...logoMediaData,
         type: "LOGO",
-        publicId: null,
-        format: null,
-        width: null,
-        height: null,
         sortOrder: 0,
       },
     });
@@ -280,7 +263,7 @@ async function ensureLogoMedia(tx, tool, faviconUrl) {
     data: {
       toolId: tool.id,
       type: "LOGO",
-      url: faviconUrl,
+      ...logoMediaData,
       sortOrder: 0,
     },
     select: { id: true },
@@ -398,7 +381,7 @@ async function main() {
     return;
   }
 
-  const uploadFolder = configureCloudinary();
+  const uploadFolder = configureCloudinaryFromEnv();
   const results = [];
 
   for (const tool of matchedTools) {
@@ -410,7 +393,24 @@ async function main() {
     const hasHero = Boolean(heroPath && fs.existsSync(heroPath));
 
     let uploadedAsset = null;
+    let uploadedLogo = null;
+    let logoMediaData = null;
     let replacedScreenshotCount = 0;
+
+    if (faviconUrl) {
+      uploadedLogo = await uploadFaviconLogoToCloudinary({
+        sourceUrl: faviconUrl,
+        slug: tool.slug,
+        uploadFolder,
+      });
+      logoMediaData = {
+        url: uploadedLogo.url,
+        publicId: uploadedLogo.publicId,
+        format: uploadedLogo.format,
+        width: uploadedLogo.width,
+        height: uploadedLogo.height,
+      };
+    }
 
     if (hasHero) {
       uploadedAsset = await uploadHeroScreenshot(heroPath, tool.slug, uploadFolder);
@@ -418,8 +418,8 @@ async function main() {
 
     try {
       await prisma.$transaction(async (tx) => {
-        const logoAction = faviconUrl
-          ? await ensureLogoMedia(tx, tool, faviconUrl)
+        const logoAction = logoMediaData
+          ? await ensureLogoMedia(tx, tool, logoMediaData)
           : null;
 
         if (hasHero && uploadedAsset) {
@@ -457,7 +457,9 @@ async function main() {
 
         results.push({
           slug: tool.slug,
-          faviconUrl,
+          sourceLogoUrl: faviconUrl,
+          nextLogoUrl: uploadedLogo?.url ?? null,
+          logoPublicId: uploadedLogo?.publicId ?? null,
           logoAction,
           heroFilename,
           screenshotUploaded: Boolean(uploadedAsset),
@@ -473,6 +475,9 @@ async function main() {
         );
       }
     } catch (error) {
+      if (uploadedLogo?.publicId) {
+        await destroyCloudinaryImage(uploadedLogo.publicId);
+      }
       if (uploadedAsset?.publicId) {
         await destroyCloudinaryImage(uploadedAsset.publicId);
       }

@@ -24,9 +24,9 @@ export function LaunchpadShowcase({
 }) {
   return (
     <section>
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-3xl font-black tracking-tight">Launch Pad</h2>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-3xl font-black tracking-tight sm:text-3xl">Launch Pad</h2>
           <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[10px] font-black  tracking-wider text-foreground">
             {boardLabels[board]}
           </span>

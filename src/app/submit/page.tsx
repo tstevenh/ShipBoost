@@ -5,7 +5,10 @@ import { SubmitProductForm } from "@/components/founder/submit-product-form";
 import { getServerSession } from "@/server/auth/session";
 import { getCachedCatalogOptions } from "@/server/cache/catalog-options";
 import { getEnv } from "@/server/env";
-import { listSelectableLaunchWeeks } from "@/server/services/launch-scheduling";
+import {
+  listSelectableLaunchWeeks,
+  scheduleNextFreeLaunchDate,
+} from "@/server/services/launch-scheduling";
 import { getFounderSubmissionDraft } from "@/server/services/submission-service";
 import { Footer } from "@/components/ui/footer";
 import { ArrowRight } from "lucide-react";
@@ -170,6 +173,12 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
             (item) => item.categoryId,
           ),
           tagIds: submission.tool.toolTags.map((item) => item.tagId),
+          launches: submission.tool.launches.map((launch) => ({
+            id: launch.id,
+            launchType: launch.launchType,
+            status: launch.status,
+            launchDate: launch.launchDate.toISOString(),
+          })),
         },
       };
     } catch {
@@ -177,48 +186,44 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
     }
   }
 
-  const { categories, tags } = await getCachedCatalogOptions();
+  const [catalogOptions, estimatedFreeLaunchDate] = await Promise.all([
+    getCachedCatalogOptions(),
+    scheduleNextFreeLaunchDate(),
+  ]);
+  const { categories, tags } = catalogOptions;
 
   return (
     <main className="flex-1 flex flex-col bg-muted/20 pt-32">
-      <section className="mx-auto max-w-7xl px-6 mb-32">
-        <div className="mb-8 rounded-[2rem] border border-border bg-card p-6 shadow-sm">
-          <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40">
-            Before you submit
-          </p>
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <section className="mx-auto mb-32 w-full max-w-[1500px] px-4 sm:px-6">
+        <div className="mb-8 flex flex-col gap-4 rounded-xl border border-border bg-card px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 inline-flex rounded-lg border border-border bg-muted p-2 text-muted-foreground">
+              <ArrowRight size={16} />
+            </span>
             <div>
-              <h2 className="text-2xl font-black tracking-tight text-foreground">
-                What you get when you submit to ShipBoost
+              <h2 className="text-sm font-black text-foreground">
+                Submit your product to ShipBoost
               </h2>
-              <p className="mt-3 text-sm font-medium leading-relaxed text-muted-foreground">
-                Submit once, save your draft at any point, and build toward a
-                public listing, weekly launch placement, and discovery paths
-                that can keep working after launch day.
+              <p className="mt-1 text-sm font-medium text-muted-foreground">
+                Save your listing, schedule a free launch, or skip the waiting line with Premium Launch.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                "Weekly launch board placement",
-                "Founder-ready public listing",
-                "Category and alternatives discovery",
-                "You can update your listing later",
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-2xl border border-border bg-muted/20 px-4 py-4 text-sm font-bold text-foreground"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
           </div>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+          >
+            Compare launch options
+            <ArrowRight size={15} />
+          </Link>
         </div>
         <SubmitProductForm
           categories={categories}
           tags={tags}
+          appUrl={env.NEXT_PUBLIC_APP_URL}
           supportEmail={env.RESEND_REPLY_TO_TRANSACTIONAL ?? session.user.email}
           premiumLaunchWeeks={premiumLaunchWeeks}
+          estimatedFreeLaunchDate={estimatedFreeLaunchDate.toISOString()}
           initialDraft={initialDraft}
           isPrelaunch={isPrelaunch}
         />

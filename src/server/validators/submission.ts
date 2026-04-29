@@ -74,6 +74,7 @@ export const submissionReviewSchema = z.object({
 
 export const premiumLaunchCheckoutSchema = z.object({
   submissionId: cuidSchema,
+  preferredLaunchDate: z.coerce.date().optional(),
 });
 
 export const submissionActionSchema = z.object({

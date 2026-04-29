@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import posthog from "posthog-js";
-import { isAuthRoutePathname } from "@/lib/route-groups";
+import { isPrivateRoutePathname } from "@/lib/route-groups";
 
 let hasInitializedPostHog = false;
 
@@ -19,10 +19,10 @@ export function PostHogPageTracker({
   apiHost?: string;
 }) {
   const pathname = usePathname();
-  const isAuthRoute = isAuthRoutePathname(pathname);
+  const isPrivateRoute = isPrivateRoutePathname(pathname);
 
   useEffect(() => {
-    if (!apiKey || hasInitializedPostHog || isAuthRoute) {
+    if (!apiKey || hasInitializedPostHog || isPrivateRoute) {
       return;
     }
 
@@ -43,7 +43,7 @@ export function PostHogPageTracker({
     });
 
     hasInitializedPostHog = true;
-  }, [apiHost, apiKey, isAuthRoute]);
+  }, [apiHost, apiKey, isPrivateRoute]);
 
   return null;
 }

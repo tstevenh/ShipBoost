@@ -12,6 +12,7 @@ export type DraftSaveResult = {
 
 export type SavedSubmissionDraft = {
   id: string;
+  toolId: string;
   submissionType: "LISTING_ONLY" | "FREE_LAUNCH" | "FEATURED_LAUNCH" | "RELAUNCH";
   reviewStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
   paymentStatus: "NOT_REQUIRED" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";

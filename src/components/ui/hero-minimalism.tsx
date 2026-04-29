@@ -98,6 +98,7 @@ export default function MinimalHero() {
   position: relative;
   width: 100%;
   height: 60vh;
+  min-height: 520px;
   overflow: hidden;
   border-bottom: 1px solid var(--border);
 }
@@ -112,6 +113,7 @@ export default function MinimalHero() {
   pointer-events: none;
   z-index: 5;
   padding-top: 8vh;
+  padding-inline: 24px;
 }
 .hero-kicker {
   font-size: 12px;
@@ -124,10 +126,10 @@ export default function MinimalHero() {
 }
 .hero-title {
   font-weight: 900;
-  font-size: clamp(40px, 10vw, 100px);
-  line-height: 0.9;
+  font-size: clamp(40px, 9vw, 96px);
+  line-height: 0.92;
   margin: 0;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
 }
 .hero-subtitle {
   margin-top: 32px;
@@ -202,6 +204,37 @@ export default function MinimalHero() {
 .dark .particleCanvas {
   mix-blend-mode: screen;
   opacity: .6;
+}
+
+@media (max-width: 640px) {
+  .minimal-root {
+    height: auto;
+    min-height: 430px;
+  }
+
+  .hero-inner {
+    position: relative;
+    min-height: 430px;
+    padding: 88px 22px 48px;
+  }
+
+  .hero-kicker {
+    margin-bottom: 18px;
+    font-size: 9px;
+    letter-spacing: 0.32em;
+  }
+
+  .hero-title {
+    font-size: clamp(40px, 13.5vw, 54px);
+    line-height: 0.96;
+    letter-spacing: -0.035em;
+  }
+
+  .hero-subtitle {
+    margin-top: 24px;
+    font-size: 15px;
+    line-height: 1.55;
+  }
 }
       `}</style>
 

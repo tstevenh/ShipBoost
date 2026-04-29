@@ -39,6 +39,22 @@ function readSubmissionIdFromPayment(payment: PremiumLaunchPaymentLike) {
   return null;
 }
 
+function readPreferredLaunchDateFromPayment(payment: PremiumLaunchPaymentLike) {
+  const value = payment.metadata.shipboostPreferredLaunchDate;
+
+  if (typeof value !== "string" && typeof value !== "number") {
+    return null;
+  }
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed;
+}
+
 function assertValidPremiumLaunchWeekStart(date: Date) {
   const goLiveFloor = getLaunchpadGoLiveAtUtc();
   const launchWeekStart = startOfUtcDay(date);
@@ -57,24 +73,12 @@ function assertValidPremiumLaunchWeekStart(date: Date) {
 async function applyPremiumLaunchPaymentSucceeded(
   payment: PremiumLaunchPaymentLike,
 ) {
-  const updatedSubmissionId = await prisma.$transaction(async (tx) => {
-    const submissionId = readSubmissionIdFromPayment(payment);
-    const submission = submissionId
-      ? await tx.submission.findUnique({
-          where: { id: submissionId },
-          include: {
-            tool: {
-              include: {
-                launches: true,
-              },
-            },
-          },
-        })
-      : payment.checkoutSessionId
-        ? await tx.submission.findFirst({
-            where: {
-              polarCheckoutId: payment.checkoutSessionId,
-            },
+  const updatedSubmissionId = await prisma.$transaction(
+    async (tx) => {
+      const submissionId = readSubmissionIdFromPayment(payment);
+      const submission = submissionId
+        ? await tx.submission.findUnique({
+            where: { id: submissionId },
             include: {
               tool: {
                 include: {
@@ -83,78 +87,113 @@ async function applyPremiumLaunchPaymentSucceeded(
               },
             },
           })
-        : null;
+        : payment.checkoutSessionId
+          ? await tx.submission.findFirst({
+              where: {
+                polarCheckoutId: payment.checkoutSessionId,
+              },
+              include: {
+                tool: {
+                  include: {
+                    launches: true,
+                  },
+                },
+              },
+            })
+          : null;
 
-    if (!submission || submission.submissionType !== "FEATURED_LAUNCH") {
-      return null;
-    }
+      if (!submission) {
+        return null;
+      }
 
-    if (
-      submission.paymentStatus === "PAID" &&
-      submission.polarOrderId === payment.id
-    ) {
-      return null;
-    }
+      if (
+        submission.paymentStatus === "PAID" &&
+        submission.polarOrderId === payment.id
+      ) {
+        return null;
+      }
 
-    const preferredLaunchDate = submission.preferredLaunchDate
-      ? assertValidPremiumLaunchWeekStart(submission.preferredLaunchDate)
-      : getLaunchpadGoLiveAtUtc();
-    const launchDate = preferredLaunchDate;
-    const now = new Date();
-    const shouldGoLiveImmediately = launchDate <= now;
+      const preferredLaunchDate = assertValidPremiumLaunchWeekStart(
+        readPreferredLaunchDateFromPayment(payment) ??
+          submission.preferredLaunchDate ??
+          getLaunchpadGoLiveAtUtc(),
+      );
+      const launchDate = preferredLaunchDate;
+      const now = new Date();
+      const shouldGoLiveImmediately = launchDate <= now;
 
-    await tx.submission.update({
-      where: { id: submission.id },
-      data: {
-        paymentStatus: "PAID",
-        polarOrderId: payment.id,
-        polarCheckoutId:
-          payment.checkoutSessionId ?? submission.polarCheckoutId,
-        paidAt: now,
-        reviewStatus: "APPROVED",
-      },
-    });
-
-    await tx.tool.update({
-      where: { id: submission.toolId },
-      data: {
-        moderationStatus: "APPROVED",
-        publicationStatus: "PUBLISHED",
-        currentLaunchType: "FEATURED",
-      },
-    });
-
-    const existingPremiumLaunch = submission.tool.launches.find(
-      (launch) =>
-        launch.launchType === "FEATURED" &&
-        launch.launchDate.getTime() === launchDate.getTime(),
-    );
-
-    if (!existingPremiumLaunch) {
-      await tx.launch.create({
+      await tx.submission.update({
+        where: { id: submission.id },
         data: {
-          toolId: submission.toolId,
-          createdById: submission.userId,
-          launchType: "FEATURED",
-          status: shouldGoLiveImmediately ? "LIVE" : "APPROVED",
-          launchDate,
-          startAt: launchDate,
-          priorityWeight: 100,
+          paymentStatus: "PAID",
+          submissionType: "FEATURED_LAUNCH",
+          preferredLaunchDate,
+          polarOrderId: payment.id,
+          polarCheckoutId:
+            payment.checkoutSessionId ?? submission.polarCheckoutId,
+          paidAt: now,
+          reviewStatus: "APPROVED",
         },
       });
-    }
 
-    await tx.submissionSpotlightBrief.upsert({
-      where: { submissionId: submission.id },
-      update: {},
-      create: {
-        submissionId: submission.id,
-        status: "NOT_STARTED",
-      },
-    });
+      await tx.tool.update({
+        where: { id: submission.toolId },
+        data: {
+          moderationStatus: "APPROVED",
+          publicationStatus: "PUBLISHED",
+          currentLaunchType: "FEATURED",
+        },
+      });
 
-    return submission.id;
-  });
+      const existingPremiumLaunch = submission.tool.launches.find(
+        (launch) =>
+          launch.launchType === "FEATURED" &&
+          launch.launchDate.getTime() === launchDate.getTime(),
+      );
+
+      await tx.launch.deleteMany({
+        where: {
+          toolId: submission.toolId,
+          launchType: "FREE",
+          status: {
+            in: ["PENDING", "APPROVED"],
+          },
+          launchDate: {
+            gt: now,
+          },
+        },
+      });
+
+      if (!existingPremiumLaunch) {
+        await tx.launch.create({
+          data: {
+            toolId: submission.toolId,
+            createdById: submission.userId,
+            launchType: "FEATURED",
+            status: shouldGoLiveImmediately ? "LIVE" : "APPROVED",
+            launchDate,
+            startAt: launchDate,
+            priorityWeight: 100,
+          },
+        });
+      }
+
+      await tx.submissionSpotlightBrief.upsert({
+        where: { submissionId: submission.id },
+        update: {},
+        create: {
+          submissionId: submission.id,
+          status: "NOT_STARTED",
+        },
+      });
+
+      return submission.id;
+    },
+    {
+      maxWait: 15_000,
+      timeout: 15_000,
+    },
+  );
 
   if (!updatedSubmissionId) {
     return null;
@@ -211,7 +250,12 @@ async function applyPremiumLaunchPaymentSucceeded(
 
 export async function createPremiumLaunchCheckout(
   submissionId: string,
-  founder: { id: string; email: string; name?: string | null },
+  founder: {
+    id: string;
+    email: string;
+    name?: string | null;
+    preferredLaunchDate?: Date;
+  },
 ) {
   const submission = await getSubmissionByIdForFounder(
     prisma,
@@ -223,11 +267,10 @@ export async function createPremiumLaunchCheckout(
     throw new AppError(404, "Submission not found.");
   }
 
-  if (submission.submissionType !== "FEATURED_LAUNCH") {
-    throw new AppError(400, "Only premium launch submissions can be paid.");
-  }
+  const preferredLaunchInput =
+    founder.preferredLaunchDate ?? submission.preferredLaunchDate;
 
-  if (!submission.preferredLaunchDate) {
+  if (!preferredLaunchInput) {
     throw new AppError(400, "Premium launch week is missing.");
   }
 
@@ -235,7 +278,10 @@ export async function createPremiumLaunchCheckout(
     throw new AppError(409, "This premium launch has already been paid.");
   }
 
-  if (submission.reviewStatus !== "DRAFT") {
+  if (
+    submission.submissionType === "FEATURED_LAUNCH" &&
+    submission.reviewStatus !== "DRAFT"
+  ) {
     throw new AppError(
       409,
       "This premium launch is already processing. Check your dashboard instead.",
@@ -243,7 +289,7 @@ export async function createPremiumLaunchCheckout(
   }
 
   const preferredLaunchWeek = assertValidPremiumLaunchWeekStart(
-    submission.preferredLaunchDate,
+    preferredLaunchInput,
   );
 
   if (preferredLaunchWeek <= new Date()) {
@@ -272,7 +318,7 @@ export async function createPremiumLaunchCheckout(
     metadata: {
       shipboostSubmissionId: String(submission.id),
       shipboostToolId: String(submission.toolId),
-      shipboostSubmissionType: String(submission.submissionType),
+      shipboostSubmissionType: "FEATURED_LAUNCH",
       shipboostPreferredLaunchDate: preferredLaunchWeek.toISOString(),
     },
   });
@@ -445,10 +491,7 @@ export async function reconcilePremiumLaunchPayment(input: {
     },
   });
 
-  if (
-    !existingSubmission ||
-    existingSubmission.submissionType !== "FEATURED_LAUNCH"
-  ) {
+  if (!existingSubmission) {
     return null;
   }
 

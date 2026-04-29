@@ -30,6 +30,12 @@ export function TrackedExternalLink({
     <a
       {...props}
       href={href}
+      data-shipboost-outbound-source={sourceSurface}
+      data-shipboost-outbound-context={linkContext}
+      data-shipboost-outbound-text={
+        linkText ?? (typeof children === "string" ? children : undefined)
+      }
+      data-shipboost-outbound-manual="true"
       onClick={(event) => {
         onClick?.(event);
 

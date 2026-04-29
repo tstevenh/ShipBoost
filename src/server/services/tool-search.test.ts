@@ -9,7 +9,10 @@ vi.mock("@/server/db/client", () => ({
 }));
 
 import { prisma } from "@/server/db/client";
-import { searchPublishedTools } from "@/server/services/tool-service";
+import {
+  listRelatedPublishedTools,
+  searchPublishedTools,
+} from "@/server/services/tool-service";
 
 describe("searchPublishedTools", () => {
   it("returns only published approved tools", async () => {
@@ -30,10 +33,17 @@ describe("searchPublishedTools", () => {
 
     expect(prisma.tool.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
-          publicationStatus: "PUBLISHED",
-          moderationStatus: "APPROVED",
-        }),
+        where: {
+          AND: [
+            expect.objectContaining({
+              publicationStatus: "PUBLISHED",
+              moderationStatus: "APPROVED",
+            }),
+            expect.objectContaining({
+              OR: expect.any(Array),
+            }),
+          ],
+        },
       }),
     );
     expect(results).toHaveLength(1);
@@ -69,5 +79,54 @@ describe("searchPublishedTools", () => {
       "sea-notes",
       "ocean-mail",
     ]);
+  });
+
+  it("keeps related product matching separate from public launch visibility", async () => {
+    vi.mocked(prisma.tool.findMany).mockResolvedValueOnce([] as never);
+
+    await listRelatedPublishedTools("tool_current", {
+      categoryIds: ["category_1"],
+      tagIds: ["tag_1"],
+    });
+
+    expect(prisma.tool.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [
+            expect.objectContaining({
+              publicationStatus: "PUBLISHED",
+              moderationStatus: "APPROVED",
+              OR: [
+                { launches: { none: {} } },
+                { launches: { some: expect.any(Object) } },
+              ],
+            }),
+            expect.objectContaining({
+              id: { not: "tool_current" },
+              OR: [
+                {
+                  toolCategories: {
+                    some: {
+                      categoryId: {
+                        in: ["category_1"],
+                      },
+                    },
+                  },
+                },
+                {
+                  toolTags: {
+                    some: {
+                      tagId: {
+                        in: ["tag_1"],
+                      },
+                    },
+                  },
+                },
+              ],
+            }),
+          ],
+        },
+      }),
+    );
   });
 });

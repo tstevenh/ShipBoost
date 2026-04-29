@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppHeader } from "@/components/app/app-header";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { PostHogOutboundClickTracker } from "@/components/analytics/posthog-outbound-click-tracker";
 import { PostHogPageTracker } from "@/components/analytics/posthog-page-tracker";
 import { UmamiAnalytics } from "@/components/analytics/umami-analytics";
 import { getCachedPublicHeaderCategories } from "@/server/cache/public-content";
@@ -95,6 +96,7 @@ export default async function RootLayout({
           <GoogleAnalytics />
         </Suspense>
         <PostHogPageTracker apiKey={env.POSTHOG_KEY} apiHost={env.POSTHOG_HOST} />
+        <PostHogOutboundClickTracker apiKey={env.POSTHOG_KEY} />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

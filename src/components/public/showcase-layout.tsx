@@ -38,16 +38,56 @@ export function SidebarLeadMagnet() {
   return <SidebarLeadMagnetForm />;
 }
 
+function SidebarSubmitButton({ className }: { className?: string }) {
+  return (
+    <Link
+      href="/submit"
+      className={cn(
+        "group flex w-full max-w-[250px] items-center justify-center gap-2 rounded-xl bg-primary py-3 text-xs font-black text-primary-foreground shadow-lg shadow-black/10 transition-all hover:opacity-90 active:scale-95",
+        className,
+      )}
+    >
+      <Rocket size={15} className="transition-transform group-hover:-translate-y-0.5" />
+      Submit your product
+    </Link>
+  );
+}
+
+function MobileSidebarTopStack() {
+  return (
+    <div className="mb-6 grid gap-3 xl:hidden">
+      <DeferredHomeSearchModal className="max-w-none" />
+      <SidebarSubmitButton className="max-w-none" />
+      <FrogDrBadge fullWidth />
+    </div>
+  );
+}
+
+export function MobileSidebarFollowup({
+  topWinner,
+}: {
+  topWinner?: TopWinnerSidebarSpotWinner | null;
+}) {
+  return (
+    <div className="mt-6 grid gap-4 xl:hidden">
+      <TopWinnerSidebarSpot winner={topWinner ?? null} className="max-w-none" />
+      <SidebarLeadMagnetForm />
+    </div>
+  );
+}
+
 export async function ShowcaseLayout({
   children,
   isHomePage,
   isPrelaunch,
   topWinner,
+  showMobileFollowup = true,
 }: {
   children: React.ReactNode;
   isHomePage?: boolean;
   isPrelaunch?: boolean;
   topWinner?: TopWinnerSidebarSpotWinner | null;
+  showMobileFollowup?: boolean;
 }) {
   const resolvedTopWinner =
     topWinner === undefined && !isPrelaunch
@@ -65,8 +105,7 @@ export async function ShowcaseLayout({
           {/* Left Column: Lead Magnet + Sponsors */}
           {!isPrelaunch && (
             <aside className={cn(
-              "hidden xl:flex flex-col items-center gap-3 sticky top-[100px] h-fit self-start",
-              isHomePage && "pt-8",
+              "hidden xl:flex flex-col items-center gap-3 sticky top-[100px] h-fit self-start pt-4",
             )}>
               <SidebarLeadMagnet />
               <SponsorSlot />
@@ -81,24 +120,20 @@ export async function ShowcaseLayout({
             isHomePage && "pt-8",
             isPrelaunch && "max-w-5xl mx-auto w-full",
           )}>
+            {!isPrelaunch ? <MobileSidebarTopStack /> : null}
             {children}
+            {!isPrelaunch && showMobileFollowup ? (
+              <MobileSidebarFollowup topWinner={resolvedTopWinner ?? null} />
+            ) : null}
           </div>
 
           {/* Right Column: Search + Submit + Sponsors */}
           {!isPrelaunch && (
             <aside className={cn(
-              "hidden xl:flex flex-col items-center gap-3 sticky top-[100px] h-fit self-start",
-              isHomePage && "pt-8",
+              "hidden xl:flex flex-col items-center gap-3 sticky top-[100px] h-fit self-start pt-4",
             )}>
               <DeferredHomeSearchModal />
-              
-              <Link 
-                href="/submit"
-                className="flex w-full max-w-[250px] items-center justify-center gap-2 rounded-xl bg-primary py-3 text-xs font-black text-primary-foreground shadow-lg shadow-black/10 transition-all hover:opacity-90 active:scale-95 group"
-              >
-                <Rocket size={15} className="group-hover:translate-y-[-2px] transition-transform" />
-                Submit your product
-              </Link>
+              <SidebarSubmitButton />
 
               <FrogDrBadge />
 

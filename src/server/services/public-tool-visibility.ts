@@ -76,3 +76,12 @@ export function getPubliclyVisibleToolWhere(now = new Date()): Prisma.ToolWhereI
     ],
   };
 }
+
+export function combinePubliclyVisibleToolWhere(
+  where: Prisma.ToolWhereInput,
+  now = new Date(),
+): Prisma.ToolWhereInput {
+  return {
+    AND: [getPubliclyVisibleToolWhere(now), where],
+  };
+}

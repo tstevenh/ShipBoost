@@ -64,6 +64,20 @@ const canonicalCategories = [
     seoIntro: "Finance tools for founders managing revenue, cash, and operational clarity.",
     sortOrder: 8,
   },
+  {
+    slug: "operations",
+    name: "Operations",
+    description: "Software for HR, payroll, project management, workflows, and business operations.",
+    seoIntro: "Operations tools for teams that need cleaner workflows, people systems, and execution.",
+    sortOrder: 9,
+  },
+  {
+    slug: "commerce",
+    name: "Commerce",
+    description: "Software for ecommerce, online stores, checkout, and digital selling.",
+    seoIntro: "Commerce tools for teams selling products, services, and digital goods online.",
+    sortOrder: 10,
+  },
 ];
 
 function loadDotenvLocal() {

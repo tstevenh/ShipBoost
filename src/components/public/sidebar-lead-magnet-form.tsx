@@ -5,11 +5,12 @@ import { AlertCircle, Check } from "lucide-react";
 
 import { startupDirectoriesMarketingCountLabel } from "@/content/resources/startup-directories-meta";
 import { requestStartupDirectoriesAccess } from "@/lib/startup-directories-access";
+import { cn } from "@/lib/utils";
 
 const source = "homepage_sidebar_directory_list";
 const leadMagnet = "startup-directories-800";
 
-export function SidebarLeadMagnetForm() {
+export function SidebarLeadMagnetForm({ className }: { className?: string }) {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -57,7 +58,12 @@ export function SidebarLeadMagnetForm() {
   }
 
   return (
-    <div className="relative w-full max-w-[250px] overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm">
+    <div
+      className={cn(
+        "relative w-full max-w-full overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm xl:max-w-[250px]",
+        className,
+      )}
+    >
       <h3 className="relative mb-3 text-[9px] font-bold tracking-[0.18em] text-foreground/40">
         Founder resource
       </h3>

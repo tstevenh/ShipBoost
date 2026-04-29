@@ -2,9 +2,11 @@ export type OutboundLinkSurface =
   | "startup_directories"
   | "pricing_page"
   | "blog_author_card"
+  | "blog_content"
   | "about_page"
   | "footer"
   | "frogdr_badge"
+  | "public_page"
   | "tool_page"
   | "tool_listing"
   | "tool_page_related"
@@ -20,6 +22,7 @@ export type OutboundLinkContext =
   | "blog"
   | "about"
   | "footer"
+  | "public_page"
   | "tool_page"
   | "tool_listing";
 

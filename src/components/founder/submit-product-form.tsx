@@ -2,11 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { 
-  Rocket, ShieldCheck, Star, Zap, Loader2, Check,
-  ChevronDown, Layout, Image as ImageIcon, Share2, ExternalLink,
-  Search, X, ArrowRight, Trash2, Copy
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Check,
+  Copy,
+  Image as ImageIcon,
+  Layout,
+  Loader2,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+  X,
 } from "lucide-react";
 
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
@@ -39,15 +48,19 @@ type SubmissionType =
 type PricingModel = "FREE" | "FREEMIUM" | "PAID" | "CUSTOM" | "CONTACT_SALES";
 type PricingModelSelection = PricingModel | "";
 type BadgeTheme = "light" | "dark";
+type LaunchType = "FREE" | "FEATURED" | "RELAUNCH";
+type LaunchStatus = "PENDING" | "APPROVED" | "LIVE" | "ENDED" | "REJECTED";
 
 type SubmitProductFormProps = {
   categories: CategoryOption[];
   tags: TagOption[];
+  appUrl: string;
   supportEmail: string;
   premiumLaunchWeeks: Array<{
     value: string;
     label: string;
   }>;
+  estimatedFreeLaunchDate?: string | null;
   initialDraft?: {
     id: string;
     submissionType: SubmissionType;
@@ -74,6 +87,7 @@ type SubmitProductFormProps = {
       screenshots: UploadedMediaAsset[];
       categoryIds: string[];
       tagIds: string[];
+      launches?: ScheduledLaunch[];
     };
   } | null;
   isPrelaunch?: boolean;
@@ -116,6 +130,7 @@ type DraftImage = {
 
 type SavedSubmission = {
   id: string;
+  toolId?: string;
   submissionType: SubmissionType;
   reviewStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
   paymentStatus: "NOT_REQUIRED" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
@@ -127,10 +142,17 @@ type UploadedDraftMediaPayload = {
   screenshots: UploadedMediaAsset[];
 };
 
+type ScheduledLaunch = {
+  id: string;
+  launchType: LaunchType;
+  status: LaunchStatus;
+  launchDate: string;
+};
+
 const foundingPremiumPrice = {
   original: "$19",
   discounted: "$9",
-  label: "Founding price for the first 100 premium launches",
+  label: "Founding price for the first 100 founders",
 };
 
 const pricingModels: PricingModel[] = [
@@ -280,16 +302,77 @@ function createFormFromDraft(
   };
 }
 
+function findActiveScheduledLaunch(
+  draft: SubmitProductFormProps["initialDraft"],
+) {
+  const launches = draft?.tool.launches ?? [];
+  const activeLaunch = launches.find(
+    (launch) => launch.status !== "REJECTED" && launch.status !== "ENDED",
+  );
+
+  if (activeLaunch) {
+    return activeLaunch;
+  }
+
+  if (draft?.preferredLaunchDate && draft.submissionType !== "LISTING_ONLY") {
+    return {
+      id: draft.id,
+      launchType:
+        draft.submissionType === "FEATURED_LAUNCH" ? "FEATURED" : "FREE",
+      status: draft.reviewStatus === "REJECTED" ? "REJECTED" : "APPROVED",
+      launchDate: draft.preferredLaunchDate,
+    } satisfies ScheduledLaunch;
+  }
+
+  return null;
+}
+
+function formatLaunchDate(value: string | null | undefined) {
+  if (!value) {
+    return "your scheduled launch week";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
+}
+
+function formatLaunchWait(value: string | null | undefined) {
+  if (!value) {
+    return "~100 days";
+  }
+
+  const launchTime = new Date(value).getTime();
+
+  if (Number.isNaN(launchTime)) {
+    return "~100 days";
+  }
+
+  const days = Math.max(
+    0,
+    Math.ceil((launchTime - Date.now()) / (24 * 60 * 60 * 1000)),
+  );
+
+  if (days === 0) {
+    return "less than 1 day";
+  }
+
+  return `~${days} ${days === 1 ? "day" : "days"}`;
+}
+
 export function SubmitProductForm({
   categories,
   tags,
+  appUrl,
   supportEmail,
   premiumLaunchWeeks,
+  estimatedFreeLaunchDate = null,
   initialDraft = null,
-  isPrelaunch = false,
 }: SubmitProductFormProps) {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(initialDraft ? 2 : 1);
   const [activeTab, setActiveTab] = useState<"general" | "media" | "socials">("general");
   const [form, setForm] = useState<FormState>(
     initialDraft ? createFormFromDraft(initialDraft) : emptyForm(),
@@ -306,20 +389,29 @@ export function SubmitProductForm({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
   const [isVerifyingBadge, setIsVerifyingBadge] = useState(false);
   const [isBadgePromptOpen, setIsBadgePromptOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [scheduleModalView, setScheduleModalView] = useState<"plans" | "premium-date">("plans");
   const [badgePromptSubmissionId, setBadgePromptSubmissionId] = useState<string | null>(null);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [slugStatus, setSlugStatus] = useState<string>("");
   const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(
     initialDraft?.id ?? null,
   );
-  const [draftBadgeVerification, setDraftBadgeVerification] = useState<SavedSubmission["badgeVerification"]>(
+  const [toolId, setToolId] = useState<string | null>(
+    initialDraft?.tool.id ?? null,
+  );
+  const [, setDraftBadgeVerification] = useState<SavedSubmission["badgeVerification"]>(
     initialDraft?.badgeVerification ?? "PENDING",
   );
   const [lastSavedDraft, setLastSavedDraft] = useState<SavedSubmission | null>(
     initialDraft
       ? {
           id: initialDraft.id,
+          toolId: initialDraft.tool.id,
           submissionType: initialDraft.submissionType,
           reviewStatus: initialDraft.reviewStatus,
           paymentStatus: initialDraft.paymentStatus,
@@ -327,28 +419,45 @@ export function SubmitProductForm({
         }
       : null,
   );
+  const [currentScheduledLaunch, setCurrentScheduledLaunch] =
+    useState<ScheduledLaunch | null>(() => findActiveScheduledLaunch(initialDraft));
   const [lastSavedPayloadSignature, setLastSavedPayloadSignature] = useState<string | null>(null);
   const [badgeTheme, setBadgeTheme] = useState<BadgeTheme>("light");
   const [copiedBadgeTheme, setCopiedBadgeTheme] = useState<BadgeTheme | null>(null);
-  
   const [catSearch, setCatSearch] = useState("");
   const [tagSearch, setTagSearch] = useState("");
   const [isCatOpen, setIsCatOpen] = useState(false);
   const [isTagOpen, setIsTagOpen] = useState(false);
 
-  const isBusy = isSavingDraft || isSubmittingDraft || isVerifyingBadge;
-  const shipboostUrl = "https://shipboost.io";
+  const isBusy =
+    isSavingDraft || isSubmittingDraft || isVerifyingBadge || isDeletingProduct;
+  const isPremiumScheduled =
+    currentScheduledLaunch?.launchType === "FEATURED" ||
+    lastSavedDraft?.paymentStatus === "PAID";
+  const isFreeScheduled =
+    currentScheduledLaunch?.launchType === "FREE" && !isPremiumScheduled;
+  const scheduledLaunchDate =
+    currentScheduledLaunch?.launchDate ??
+    (lastSavedDraft?.reviewStatus === "PENDING" ? form.preferredLaunchDate : null);
+  const freeLaunchEstimateDate =
+    currentScheduledLaunch?.launchType === "FREE"
+      ? currentScheduledLaunch.launchDate
+      : estimatedFreeLaunchDate;
+  const selectedCategory = categories.find((category) => category.id === form.categoryIds[0]);
+  const selectedTags = form.tagIds.flatMap((tagId) => {
+    const tag = tags.find((item) => item.id === tagId);
+    return tag ? [tag] : [];
+  });
+  const shipboostUrl = appUrl.replace(/\/$/, "");
+  const shipboostHost = shipboostUrl.replace(/^https?:\/\//, "");
   const getBadgeAssetPath = (theme: BadgeTheme) =>
     theme === "light"
       ? "/ShipBoost-Badge/ShipBoost-Light-Badge.svg"
       : "/ShipBoost-Badge/ShipBoost-Dark-Badge.svg";
   const getBadgePreviewSrc = (theme: BadgeTheme) => `${shipboostUrl}${getBadgeAssetPath(theme)}`;
   const getFreeLaunchBadgeSnippet = (theme: BadgeTheme) => `<a href="${shipboostUrl}" data-shipboost-badge="free-launch" target="_blank" rel="noopener">
-  <img src="${getBadgePreviewSrc(theme)}" alt="Launching soon on ShipBoost" style="height: 54px; width: auto;" />
+  <img src="${getBadgePreviewSrc(theme)}" alt="Featured on ShipBoost" style="height: 54px; width: auto;" />
 </a>`;
-  const badgeAssetPath = getBadgeAssetPath(badgeTheme);
-  const badgePreviewSrc = `${shipboostUrl}${badgeAssetPath}`;
-  const freeLaunchBadgeSnippet = getFreeLaunchBadgeSnippet(badgeTheme);
   const submissionChecklist = [
     { label: "Name", complete: form.name.trim().length >= 2 },
     { label: "Slug", complete: form.requestedSlug.trim().length > 0 },
@@ -363,6 +472,23 @@ export function SubmitProductForm({
   const incompleteChecklistItems = submissionChecklist
     .filter((item) => !item.complete)
     .map((item) => item.label);
+  const requiredFieldsComplete = incompleteChecklistItems.length === 0;
+
+  const filteredCategories = useMemo(
+    () =>
+      categories.filter((category) =>
+        category.name.toLowerCase().includes(catSearch.toLowerCase()),
+      ),
+    [catSearch, categories],
+  );
+  const filteredTags = useMemo(
+    () =>
+      tags.filter((tag) =>
+        tag.name.toLowerCase().includes(tagSearch.toLowerCase()),
+      ),
+    [tagSearch, tags],
+  );
+
   useEffect(() => {
     if (!form.name.trim() || draftSubmissionId) return;
     const controller = new AbortController();
@@ -371,12 +497,15 @@ export function SubmitProductForm({
         const response = await fetch(`/api/tools/slug-suggestion?value=${encodeURIComponent(form.name)}`, { signal: controller.signal });
         const payload = await response.json();
         if (response.ok && payload.data?.slug) {
-          setForm(prev => ({ ...prev, requestedSlug: payload.data.slug }));
+          setForm((prev) => ({ ...prev, requestedSlug: payload.data.slug }));
           setSlugStatus(`Suggested: ${payload.data.slug}`);
         }
       } catch {}
     }, 250);
-    return () => { controller.abort(); clearTimeout(timer); };
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
   }, [draftSubmissionId, form.name]);
 
   async function handleCopyBadgeSnippet(theme: BadgeTheme = badgeTheme) {
@@ -502,7 +631,11 @@ export function SubmitProductForm({
       );
       const payloadSignature = JSON.stringify(payloadBody);
 
-      if (draftSubmissionId && payloadSignature === lastSavedPayloadSignature && lastSavedDraft) {
+      if (
+        draftSubmissionId &&
+        payloadSignature === lastSavedPayloadSignature &&
+        lastSavedDraft
+      ) {
         setForm(nextForm);
         setDraftBadgeVerification(lastSavedDraft.badgeVerification);
         return lastSavedDraft;
@@ -521,6 +654,9 @@ export function SubmitProductForm({
 
       setForm(nextForm);
       setDraftSubmissionId(savedDraft.id);
+      if (savedDraft.toolId) {
+        setToolId(savedDraft.toolId);
+      }
       setDraftBadgeVerification(savedDraft.badgeVerification);
       setLastSavedDraft(savedDraft);
       setLastSavedPayloadSignature(
@@ -535,152 +671,543 @@ export function SubmitProductForm({
     }
   }
 
-  async function handleProceedToPlan() {
+  async function handleSaveProduct() {
     setErrorMessage(null);
+    setSuccessMessage(null);
+
     try {
-      if (incompleteChecklistItems.length > 0) {
-        throw new Error(
-          `Please complete: ${incompleteChecklistItems.join(", ")}.`,
-        );
+      await saveDraft();
+      setSuccessMessage("Product saved.");
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, "Unable to save your product."));
+    }
+  }
+
+  async function handleDeleteProduct() {
+    if (!toolId || isBusy) {
+      return;
+    }
+
+    setDeleteConfirmationText("");
+    setIsDeleteModalOpen(true);
+  }
+
+  async function confirmDeleteProduct() {
+    if (!toolId || isBusy || deleteConfirmationText.trim() !== form.name) {
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsDeletingProduct(true);
+
+    try {
+      const response = await fetch(`/api/founder/tools/${toolId}`, {
+        method: "DELETE",
+      });
+      const payload = await response.json().catch(() => null) as
+        | { error?: string }
+        | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Unable to delete your product.");
       }
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, "Unable to delete your product."));
+      setIsDeletingProduct(false);
+    }
+  }
+
+  async function handleOpenScheduleModal(view: "plans" | "premium-date" = "plans") {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    if (incompleteChecklistItems.length > 0) {
+      setErrorMessage(`Please complete: ${incompleteChecklistItems.join(", ")}.`);
+      return;
+    }
+
+    if (
+      view === "premium-date" &&
+      currentScheduledLaunch &&
+      draftSubmissionId
+    ) {
+      setScheduleModalView(view);
+      setIsScheduleModalOpen(true);
+      return;
+    }
+
+    try {
       await saveDraft({
+        submissionType: isPremiumScheduled ? "FEATURED_LAUNCH" : form.submissionType,
+      });
+      setScheduleModalView(view);
+      setIsScheduleModalOpen(true);
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, "Unable to save before scheduling."));
+    }
+  }
+
+  async function handleJoinFreeQueue() {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSubmittingDraft(true);
+
+    try {
+      const savedDraft = await saveDraft({
         submissionType: "FREE_LAUNCH",
         preferredLaunchDate: "",
       });
-      setStep(2);
+      const response = await fetch(`/api/submissions/${savedDraft.id}/schedule-free`, {
+        method: "POST",
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to schedule your free launch.");
+      }
+
+      const data = payload.data as {
+        submission: SavedSubmission & {
+          preferredLaunchDate: string | null;
+          tool?: { launches?: ScheduledLaunch[] };
+        };
+        launch: ScheduledLaunch;
+      };
+
+      setLastSavedDraft({
+        id: data.submission.id,
+        submissionType: data.submission.submissionType,
+        reviewStatus: data.submission.reviewStatus,
+        paymentStatus: data.submission.paymentStatus,
+        badgeVerification: data.submission.badgeVerification,
+      });
+      setDraftSubmissionId(data.submission.id);
+      setDraftBadgeVerification(data.submission.badgeVerification);
+      setCurrentScheduledLaunch(data.launch);
+      setForm((current) => ({
+        ...current,
+        submissionType: "FREE_LAUNCH",
+        preferredLaunchDate:
+          data.submission.preferredLaunchDate?.slice(0, 10) ??
+          data.launch.launchDate.slice(0, 10),
+      }));
+      setBadgePromptSubmissionId(data.submission.id);
+      setIsScheduleModalOpen(false);
+      setIsBadgePromptOpen(true);
     } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Unable to save your draft."));
+      setErrorMessage(getErrorMessage(error, "Unable to schedule your launch."));
+    } finally {
+      setIsSubmittingDraft(false);
+    }
+  }
+
+  async function handleUnscheduleFreeLaunch() {
+    if (!draftSubmissionId) return;
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSubmittingDraft(true);
+
+    try {
+      const response = await fetch(`/api/submissions/${draftSubmissionId}/unschedule-free`, {
+        method: "POST",
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to unschedule your launch.");
+      }
+
+      const submission = payload.data as SavedSubmission & {
+        preferredLaunchDate: string | null;
+      };
+      setLastSavedDraft({
+        id: submission.id,
+        submissionType: submission.submissionType,
+        reviewStatus: submission.reviewStatus,
+        paymentStatus: submission.paymentStatus,
+        badgeVerification: submission.badgeVerification,
+      });
+      setCurrentScheduledLaunch(null);
+      setForm((current) => ({ ...current, preferredLaunchDate: "" }));
+      setSuccessMessage("Launch unscheduled.");
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, "Unable to unschedule your launch."));
+    } finally {
+      setIsSubmittingDraft(false);
     }
   }
 
   async function handleVerifyBadge() {
-    if (!draftSubmissionId) return;
+    if (!badgePromptSubmissionId && !draftSubmissionId) return;
     setIsVerifyingBadge(true);
+    setErrorMessage(null);
+
     try {
-      const res = await fetch(`/api/submissions/${draftSubmissionId}/verify-badge`, { method: "POST" });
-      const payload = await res.json();
-      setDraftBadgeVerification(payload.data.submission.badgeVerification);
+      const submissionId = badgePromptSubmissionId ?? draftSubmissionId;
+      const response = await fetch(`/api/submissions/${submissionId}/verify-badge`, {
+        method: "POST",
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Verification failed.");
+      }
+
+      const nextBadgeVerification = payload.data.submission.badgeVerification;
+      setDraftBadgeVerification(nextBadgeVerification);
       setLastSavedDraft((current) =>
-        current && current.id === draftSubmissionId
+        current
           ? {
               ...current,
-              badgeVerification: payload.data.submission.badgeVerification,
+              badgeVerification: nextBadgeVerification,
             }
           : current,
       );
       if (payload.data.verified) {
         setSuccessMessage(payload.data.message);
         setIsBadgePromptOpen(false);
-      } else setErrorMessage(payload.data.message || "Badge not found. Make sure it's in your footer.");
-    } catch { setErrorMessage("Verification failed."); }
-    finally { setIsVerifyingBadge(false); }
-  }
-
-  async function submitDraftForReview(submissionId: string) {
-    const response = await fetch(`/api/submissions/${submissionId}/submit`, {
-      method: "POST",
-    });
-    const payload = await response.json();
-
-    if (!response.ok) {
-      throw new Error(payload.error || "Unable to submit your launch.");
+      } else {
+        setErrorMessage(payload.data.message || "Badge not found. Make sure it is in your footer.");
+      }
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, "Verification failed."));
+    } finally {
+      setIsVerifyingBadge(false);
     }
-
-    setSuccessMessage("Launch submitted for review.");
-    router.push("/dashboard");
   }
 
-  async function handleSubmitWithoutBadge() {
-    if (!badgePromptSubmissionId) return;
+  async function handleContinueWithoutBadge() {
+    setIsBadgePromptOpen(false);
+    setBadgePromptSubmissionId(null);
+    setSuccessMessage("Launch scheduled.");
+  }
+
+  async function handlePremiumLaunch() {
     setErrorMessage(null);
     setSuccessMessage(null);
     setIsSubmittingDraft(true);
 
     try {
-      await submitDraftForReview(badgePromptSubmissionId);
+      if (!premiumLaunchAvailable) {
+        throw new Error(premiumLaunchUnavailableMessage);
+      }
+
+      if (!form.preferredLaunchDate) {
+        throw new Error("Please choose your preferred launch week first.");
+      }
+
+      if (lastSavedDraft?.paymentStatus === "PAID" && draftSubmissionId) {
+        const response = await fetch(`/api/submissions/${draftSubmissionId}/reschedule`, {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ preferredLaunchDate: form.preferredLaunchDate }),
+        });
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Unable to change launch date.");
+        }
+
+        setCurrentScheduledLaunch({
+          id: currentScheduledLaunch?.id ?? draftSubmissionId,
+          launchType: "FEATURED",
+          status: "APPROVED",
+          launchDate: form.preferredLaunchDate,
+        });
+        setIsScheduleModalOpen(false);
+        setSuccessMessage("Premium launch date updated.");
+        return;
+      }
+
+      const savedDraft =
+        currentScheduledLaunch && draftSubmissionId
+          ? { id: draftSubmissionId }
+          : await saveDraft({
+              submissionType: "FEATURED_LAUNCH",
+              preferredLaunchDate: form.preferredLaunchDate,
+            });
+      const response = await fetch("/api/dodo/checkout/premium-launch", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          submissionId: savedDraft.id,
+          preferredLaunchDate: form.preferredLaunchDate,
+        }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to start checkout.");
+      }
+
+      captureBrowserPostHogEvent("premium_launch_checkout_started", {
+        submission_id: savedDraft.id,
+        source_surface: "submit_product_form",
+      });
+      window.location.href = payload.data.checkoutUrl;
     } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Unable to submit your launch."));
+      setErrorMessage(getErrorMessage(error, "Unable to continue with premium launch."));
     } finally {
       setIsSubmittingDraft(false);
     }
   }
 
-  async function handleFinalSubmit(type: SubmissionType) {
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    setIsSubmittingDraft(true);
-
-    try {
-      if (type === "FEATURED_LAUNCH") {
-        if (!premiumLaunchAvailable) {
-          throw new Error(premiumLaunchUnavailableMessage);
-        }
-
-        if (!form.preferredLaunchDate) {
-          throw new Error("Please choose your preferred launch week first.");
-        }
-
-        const savedDraft = await saveDraft({
-          submissionType: type,
-          preferredLaunchDate: form.preferredLaunchDate,
-        });
-        const response = await fetch("/api/dodo/checkout/premium-launch", {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({ submissionId: savedDraft.id }),
-        });
-        const payload = await response.json();
-
-        if (!response.ok) {
-          throw new Error(payload.error || "Unable to start checkout.");
-        }
-
-        captureBrowserPostHogEvent("premium_launch_checkout_started", {
-          submission_id: savedDraft.id,
-          source_surface: "submit_product_form",
-        });
-        window.location.href = payload.data.checkoutUrl;
-        return;
-      }
-
-      const savedDraft = await saveDraft({
-        submissionType: "FREE_LAUNCH",
-        preferredLaunchDate: "",
-      });
-
-      if (savedDraft.badgeVerification !== "VERIFIED") {
-        setBadgePromptSubmissionId(savedDraft.id);
-        setIsBadgePromptOpen(true);
-        return;
-      }
-
-      await submitDraftForReview(savedDraft.id);
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Unable to continue with this launch option."));
-    }
-    finally { setIsSubmittingDraft(false); }
+  function choosePremiumDate(value: string) {
+    setForm((current) => ({
+      ...current,
+      submissionType: "FEATURED_LAUNCH",
+      preferredLaunchDate: value,
+    }));
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-10">
+    <div className="w-full max-w-7xl mx-auto space-y-6">
+      {isDeleteModalOpen ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 px-4 py-8 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-product-title"
+            className="w-full max-w-lg rounded-2xl border border-border bg-background shadow-2xl"
+          >
+            <div className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
+              <h3 id="delete-product-title" className="text-lg font-black tracking-tight text-foreground">
+                Delete your product
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isDeletingProduct) return;
+                  setIsDeleteModalOpen(false);
+                  setDeleteConfirmationText("");
+                }}
+                disabled={isDeletingProduct}
+                className="rounded-xl border border-border bg-card p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+                aria-label="Close delete confirmation"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm font-medium leading-relaxed text-muted-foreground">
+                This permanently removes your listing, launch schedule, and submission data.
+                Type <span className="font-black text-foreground">{form.name}</span> to confirm.
+              </p>
+              <input
+                value={deleteConfirmationText}
+                onChange={(event) => setDeleteConfirmationText(event.target.value)}
+                className={cn(inputClassName(), "mt-5")}
+                placeholder="Type product name"
+                autoFocus
+              />
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isDeletingProduct) return;
+                    setIsDeleteModalOpen(false);
+                    setDeleteConfirmationText("");
+                  }}
+                  disabled={isDeletingProduct}
+                  className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-5 py-3 text-sm font-black text-foreground transition hover:bg-muted disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void confirmDeleteProduct()}
+                  disabled={
+                    isDeletingProduct ||
+                    deleteConfirmationText.trim() !== form.name
+                  }
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-destructive px-5 py-3 text-sm font-black text-destructive-foreground transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {isDeletingProduct ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={14} />
+                  )}
+                  Confirm delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isScheduleModalOpen ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 px-4 py-8 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="schedule-launch-title"
+            className="w-full max-w-2xl rounded-2xl border border-border bg-background shadow-2xl"
+          >
+            <div className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
+              <h3 id="schedule-launch-title" className="text-lg font-black tracking-tight text-foreground">
+                {scheduleModalView === "plans"
+                  ? "Schedule your launch"
+                  : "Skip the line and launch your product"}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsScheduleModalOpen(false)}
+                className="rounded-xl border border-border bg-card p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                aria-label="Close schedule modal"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {scheduleModalView === "plans" ? (
+              <div className="space-y-4 p-6">
+                <button
+                  type="button"
+                  onClick={() => void handleJoinFreeQueue()}
+                  disabled={isSubmittingDraft}
+                  className="w-full rounded-2xl border border-border bg-card p-5 text-left transition hover:border-foreground/40 disabled:opacity-50"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="rounded-xl border border-border bg-background p-2 text-muted-foreground">
+                      <CalendarDays size={18} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <h4 className="text-base font-black text-foreground">
+                          Join the waiting line (Free)
+                        </h4>
+                        <span className="text-sm font-black text-foreground">$0</span>
+                      </div>
+                      <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                        Get the next free launch slot. Free launches are capped at 10 per week.
+                      </p>
+                      <p className="mt-2 text-xs font-bold text-muted-foreground">
+                        Estimated launch: in {formatLaunchWait(freeLaunchEstimateDate)}.
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setScheduleModalView("premium-date")}
+                  disabled={!premiumLaunchAvailable}
+                  className="w-full rounded-2xl border border-primary/30 bg-primary/5 p-5 text-left transition hover:border-primary disabled:opacity-50"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="rounded-xl bg-primary p-2 text-primary-foreground">
+                      <Sparkles size={18} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <h4 className="text-base font-black text-foreground">
+                          Premium Launch
+                        </h4>
+                        <span className="text-sm font-black text-foreground">
+                          <span className="mr-2 text-muted-foreground line-through">
+                            {foundingPremiumPrice.original}
+                          </span>
+                          {foundingPremiumPrice.discounted}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[10px] font-black tracking-widest text-primary">
+                        {foundingPremiumPrice.label}
+                      </p>
+                      <ul className="mt-3 space-y-2 text-sm font-bold text-foreground/80">
+                        {[
+                          "Reserve a specific launch week",
+                          "Get stronger baseline board placement",
+                          "Includes one editorial launch spotlight during launch period",
+                        ].map((item) => (
+                          <li key={item} className="flex gap-2">
+                            <Check size={15} className="mt-0.5 text-primary" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                      {!premiumLaunchAvailable ? (
+                        <p className="mt-3 text-xs font-bold text-amber-700">
+                          {premiumLaunchUnavailableMessage}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </button>
+              </div>
+            ) : (
+              <div className="p-6">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {premiumLaunchWeeks.map((week) => (
+                    <button
+                      key={week.value}
+                      type="button"
+                      onClick={() => choosePremiumDate(week.value)}
+                      className={cn(
+                        "rounded-xl border px-4 py-3 text-left text-sm font-black transition",
+                        form.preferredLaunchDate === week.value
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card text-foreground hover:border-foreground/40",
+                      )}
+                    >
+                      {week.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setScheduleModalView("plans")}
+                    className="text-sm font-bold text-muted-foreground transition hover:text-foreground"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handlePremiumLaunch()}
+                    disabled={isSubmittingDraft || !form.preferredLaunchDate}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {isSubmittingDraft ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <ArrowRight size={16} />
+                    )}
+                    {lastSavedDraft?.paymentStatus === "PAID"
+                      ? "Change launch date"
+                      : `Launch for ${foundingPremiumPrice.discounted}`}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
       {isBadgePromptOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 px-4 py-8 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 px-4 py-8 backdrop-blur-sm">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="badge-priority-title"
-            className="w-full max-w-lg rounded-[2rem] border border-border bg-background p-6 shadow-2xl"
+            className="w-full max-w-lg rounded-2xl border border-border bg-background shadow-2xl"
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black tracking-[0.18em] text-emerald-700">
+            <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">
+              <div>
+                <p className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.18em] text-primary">
                   <ShieldCheck size={13} />
-                  Optional trust badge
-                </div>
-                <h3 id="badge-priority-title" className="text-2xl font-black tracking-tight text-foreground">
-                  Get reviewed within 24-48 hours
+                  Optional badge verification
+                </p>
+                <h3 id="badge-priority-title" className="mt-2 text-xl font-black tracking-tight text-foreground">
+                  Be approved faster with badge verification
                 </h3>
               </div>
               <button
@@ -693,809 +1220,628 @@ export function SubmitProductForm({
               </button>
             </div>
 
-            <p className="mt-5 text-sm font-medium leading-relaxed text-muted-foreground">
-              Add a small ShipBoost badge to your homepage or footer to unlock
-              priority review. It helps visitors see where you launched, adds a
-              simple trust signal to your site, and helps more founders
-              discover ShipBoost.
-            </p>
-            <p className="mt-3 text-sm font-medium leading-relaxed text-muted-foreground">
-              Your badge is optional. You can still submit without it, but
-              standard free launches are reviewed after priority submissions.
-            </p>
-
-            {errorMessage ? (
-              <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-                {errorMessage}
+            <div className="p-6">
+              <p className="text-sm font-medium leading-relaxed text-muted-foreground">
+                Your free launch is scheduled. Add a small ShipBoost badge to
+                your homepage or footer if you want priority review within
+                24-48 hours.
               </p>
-            ) : null}
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {(["light", "dark"] as const).map((theme) => {
-                const isDarkBadge = theme === "dark";
-                return (
+              {errorMessage ? (
+                <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+                  {errorMessage}
+                </p>
+              ) : null}
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {(["light", "dark"] as const).map((theme) => (
                   <div
                     key={theme}
                     className={cn(
-                      "relative rounded-2xl border border-border p-5",
-                      isDarkBadge ? "bg-white" : "bg-muted/20",
+                      "relative rounded-xl border border-border p-3 pt-9",
+                      theme === "dark" ? "bg-white" : "bg-muted/20",
                     )}
                   >
                     <button
                       type="button"
                       onClick={() => void handleCopyBadgeSnippet(theme)}
                       className={cn(
-                        "absolute right-3 top-3 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-black tracking-[0.12em] transition",
-                        isDarkBadge
-                          ? "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
-                          : "border-border bg-card text-foreground hover:bg-muted",
+                        "absolute right-2 top-2 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-black transition",
+                        theme === "dark"
+                          ? "border-slate-200 bg-slate-50 text-slate-700"
+                          : "border-border bg-card text-foreground",
                       )}
                     >
                       <Copy size={12} />
                       {copiedBadgeTheme === theme ? "Copied" : "Copy"}
                     </button>
-                    <div className="pt-8">
-                      <p
-                        className={cn(
-                          "mb-4 text-[10px] font-black tracking-[0.18em]",
-                          isDarkBadge ? "text-slate-500" : "text-muted-foreground",
-                        )}
-                      >
-                        {isDarkBadge ? "Dark badge" : "Light badge"}
-                      </p>
-                      <a href={shipboostUrl} target="_blank" rel="noopener">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={getBadgePreviewSrc(theme)}
-                          alt={`${theme} ShipBoost badge preview`}
-                          className="h-auto max-h-16 w-auto"
-                        />
-                      </a>
-                    </div>
+                    <a href={shipboostUrl} target="_blank" rel="noopener">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={getBadgePreviewSrc(theme)}
+                        alt={`${theme} ShipBoost badge preview`}
+                        className="h-auto w-44 max-w-full"
+                      />
+                    </a>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => void handleVerifyBadge()}
-                disabled={isVerifyingBadge || !draftSubmissionId || !isValidUrl(form.websiteUrl)}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-black/10 transition hover:opacity-90 disabled:opacity-50"
-              >
-                {isVerifyingBadge ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
-                {isVerifyingBadge ? "Verifying..." : "I added it, verify now"}
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleSubmitWithoutBadge()}
-                disabled={isSubmittingDraft}
-                className="rounded-2xl border border-border bg-background px-4 py-3 text-sm font-black text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
-              >
-                {isSubmittingDraft ? "Submitting..." : "Submit without badge"}
-              </button>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => void handleVerifyBadge()}
+                  disabled={isVerifyingBadge || !isValidUrl(form.websiteUrl)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {isVerifyingBadge ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                  {isVerifyingBadge ? "Verifying..." : "I added it, verify now"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleContinueWithoutBadge()}
+                  className="rounded-xl border border-border bg-background px-4 py-3 text-sm font-black text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                >
+                  Continue without badge
+                </button>
+              </div>
             </div>
           </div>
         </div>
       ) : null}
 
-      {/* Multi-step Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-10">
-          <div className="flex items-center gap-3">
-            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-colors", step >= 1 ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>1</div>
-            <span className={cn("text-sm font-black  tracking-widest", step >= 1 ? "text-foreground" : "text-muted-foreground")}>Details</span>
-          </div>
-          <div className="h-px w-12 bg-border" />
-          <div className="flex items-center gap-3">
-            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-colors", step >= 2 ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>2</div>
-            <span className={cn("text-sm font-black  tracking-widest", step >= 2 ? "text-foreground" : "text-muted-foreground")}>Choose Plan</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 text-[10px] font-black  tracking-[0.2em] text-muted-foreground/40">
-          <Rocket size={12} /> Step {step} of 2
-        </div>
-      </div>
-
-      {step === 1 ? (
-        <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
-          <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-xl shadow-black/5">
-            {/* Tabs */}
-            <div className="flex border-b border-border bg-muted/30">
-              {([
-                { id: "general", label: "General", icon: Layout },
-                { id: "media", label: "Media", icon: ImageIcon },
-                { id: "socials", label: "Socials", icon: Share2 },
-              ] as const).map((t) => (
+      <div className="grid w-full items-start gap-8 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1120px)_320px]">
+        <aside className="order-2 space-y-4 xl:sticky xl:top-28 xl:self-start">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            {currentScheduledLaunch ? (
+              <>
+                <h3 className="text-lg font-black text-foreground">
+                  Launch Scheduled
+                </h3>
+                <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                  {isPremiumScheduled
+                    ? `You skipped the waiting line. Your product is scheduled to launch on ${formatLaunchDate(scheduledLaunchDate)}.`
+                    : `Your product is estimated to launch in ${formatLaunchWait(scheduledLaunchDate)}.`}
+                </p>
+                <div className="mt-5 space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => void handleOpenScheduleModal("premium-date")}
+                    disabled={isBusy}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {isPremiumScheduled ? "Change launch date" : "Skip the waiting line"}
+                  </button>
+                  {isFreeScheduled ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleUnscheduleFreeLaunch()}
+                      disabled={isBusy}
+                      className="inline-flex w-full items-center justify-center rounded-xl border border-destructive/50 bg-background px-4 py-3 text-sm font-black text-destructive transition hover:bg-destructive/5 disabled:opacity-50"
+                    >
+                      Unschedule your launch
+                    </button>
+                  ) : null}
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-black text-foreground">
+                  Schedule your launch
+                </h3>
+                <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                  When you are ready, choose your free launch slot or skip the
+                  waiting line with Premium Launch.
+                </p>
                 <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-4 text-xs font-black  tracking-widest transition-all border-b-2",
-                    activeTab === t.id ? "bg-card border-foreground text-foreground" : "border-transparent text-muted-foreground hover:bg-muted/50"
-                  )}
+                  type="button"
+                  onClick={() => void handleOpenScheduleModal()}
+                  disabled={isBusy || !requiredFieldsComplete}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
                 >
-                  <t.icon size={14} />
-                  <span className="hidden sm:inline">{t.label}</span>
+                  {isBusy ? <Loader2 size={14} className="animate-spin" /> : <CalendarDays size={14} />}
+                  Schedule your launch
                 </button>
-              ))}
+              </>
+            )}
+          </div>
+
+          {currentScheduledLaunch ? (
+            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+              <h3 className="text-lg font-black text-foreground">
+                Add a badge to your website
+              </h3>
+              <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                Build anticipation by displaying a badge on your website.
+              </p>
+              <div className="mt-5 space-y-3">
+                {(["light", "dark"] as const).map((theme) => (
+                  <div
+                    key={theme}
+                    className={cn(
+                      "relative rounded-lg border p-3 pt-9 transition",
+                      theme === "dark" ? "bg-white" : "bg-background",
+                      badgeTheme === theme ? "border-primary" : "border-border",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => void handleCopyBadgeSnippet(theme)}
+                      className={cn(
+                        "absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-black transition",
+                        theme === "dark"
+                          ? "border-slate-200 bg-slate-50 text-slate-700"
+                          : "border-border bg-card text-foreground",
+                      )}
+                    >
+                      <Copy size={11} />
+                      {copiedBadgeTheme === theme ? "Copied" : "Copy"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBadgeTheme(theme)}
+                      className="block w-full"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={getBadgePreviewSrc(theme)}
+                        alt={`${theme} ShipBoost badge`}
+                        className="h-auto w-40 max-w-full"
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
+          ) : null}
 
-            <div className="p-8 sm:p-10 space-y-8">
-              {activeTab === "general" && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Product Name *</label>
-                      <input required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className={inputClassName()} placeholder="Acme SaaS" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Slug *</label>
-                      <input value={form.requestedSlug} onChange={e => setForm({...form, requestedSlug: slugify(e.target.value)})} className={inputClassName()} />
-                      <p className="text-[10px] font-bold text-muted-foreground/60">{slugStatus}</p>
-                    </div>
-                  </div>
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Website URL *</label>
-                      <input required value={form.websiteUrl} onChange={e => setForm({...form, websiteUrl: e.target.value})} className={inputClassName()} placeholder="https://acme.com" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Pricing Model *</label>
-                      <select value={form.pricingModel} onChange={e => setForm({...form, pricingModel: e.target.value as PricingModelSelection})} className={inputClassName()}>
-                        <option value="">Select pricing model</option>
-                        {pricingModels.map(m => <option key={m} value={m}>{m}</option>)}
-                      </select>
-                    </div>
+          {!requiredFieldsComplete ? (
+            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-lg font-black text-foreground">
+                  Incomplete
+                </h3>
+                <span className="text-xs font-black text-muted-foreground">
+                  {submissionChecklist.filter((item) => item.complete).length}/{submissionChecklist.length}
+                </span>
+              </div>
+              <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                Complete your product before scheduling it.
+              </p>
+              <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2">
+                {submissionChecklist.map((item) => (
+                  <li
+                    key={item.label}
+                    className="flex items-center gap-2 text-sm font-medium text-foreground"
+                  >
+                    <span
+                      className={cn(
+                        "inline-flex h-5 w-5 items-center justify-center rounded-md text-[10px]",
+                        item.complete
+                          ? "bg-emerald-500 text-white"
+                          : "bg-destructive text-destructive-foreground",
+                      )}
+                    >
+                      {item.complete ? <Check size={12} /> : <X size={12} />}
+                    </span>
+                    {item.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => void handleSaveProduct()}
+              disabled={isBusy}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+            >
+              {isSavingDraft ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+              {isSavingDraft ? "Saving..." : successMessage === "Product saved." ? "Saved" : "Save your product"}
+            </button>
+            {toolId ? (
+              <button
+                type="button"
+                onClick={() => void handleDeleteProduct()}
+                disabled={isBusy}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/50 bg-background px-4 py-3 text-sm font-black text-destructive transition hover:bg-destructive/5 disabled:opacity-50"
+              >
+                {isDeletingProduct ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Trash2 size={14} />
+                )}
+                {isDeletingProduct ? "Deleting..." : "Delete your product"}
+              </button>
+            ) : null}
+          </div>
+        </aside>
+
+        <div className="order-1 min-w-0 rounded-xl border border-border bg-card shadow-sm">
+          <div className="grid min-h-[58px] grid-cols-3 gap-2 rounded-t-xl border-b border-border bg-muted/30 p-2">
+            {([
+              { id: "general", label: "General", icon: Layout },
+              { id: "media", label: "Media", icon: ImageIcon },
+              { id: "socials", label: "Socials", icon: ShieldCheck },
+            ] as const).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "inline-flex min-w-0 items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm font-bold transition",
+                  tab.id === activeTab
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                )}
+              >
+                <tab.icon size={15} />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-[720px] p-6 sm:p-8">
+            {errorMessage ? (
+              <p className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+                {errorMessage}
+              </p>
+            ) : null}
+            {successMessage ? (
+              <p className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
+                {successMessage}
+              </p>
+            ) : null}
+
+            {activeTab === "general" ? (
+              <div className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">Name *</label>
+                    <input
+                      required
+                      value={form.name}
+                      onChange={(event) => setForm({ ...form, name: event.target.value })}
+                      className={inputClassName()}
+                      placeholder="Acme SaaS"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black  tracking-widest text-muted-foreground">Tagline * (10-60 chars)</label>
-                    <input required maxLength={60} value={form.tagline} onChange={e => setForm({...form, tagline: e.target.value})} className={inputClassName()} placeholder="Short, punchy description of what you do" />
-                  </div>
-                  
-                  {/* Category Dropdown */}
-                  <div className="space-y-2 relative">
-                    <label className="text-xs font-black  tracking-widest text-muted-foreground">Category * (Pick 1)</label>
-                    <button 
-                      type="button"
-                      onClick={() => setIsCatOpen(!isCatOpen)}
-                      className={cn(inputClassName(), "flex items-center justify-between text-left")}
-                    >
-                      <span className={cn(!form.categoryIds[0] && "text-muted-foreground/40")}>
-                        {categories.find(c => c.id === form.categoryIds[0])?.name || "Select a category"}
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="text-sm font-bold text-foreground">Slug *</label>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {shipboostHost}/tools/{form.requestedSlug || "your-product"}
                       </span>
-                      <ChevronDown size={16} />
-                    </button>
-                    {isCatOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 p-2 space-y-2 max-h-60 overflow-y-auto">
-                        <div className="relative">
-                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                          <input 
-                            value={catSearch} 
-                            onChange={e => setCatSearch(e.target.value)} 
-                            className="w-full bg-muted/50 rounded-lg pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-foreground/10" 
-                            placeholder="Search categories..."
-                          />
-                        </div>
-                        <div className="grid gap-1">
-                          {categories.filter(c => c.name.toLowerCase().includes(catSearch.toLowerCase())).map(c => (
-                            <button 
-                              key={c.id} 
-                              onClick={() => { setForm({...form, categoryIds: [c.id]}); setIsCatOpen(false); }}
-                              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors flex items-center justify-between group"
-                            >
-                              {c.name}
-                              {form.categoryIds.includes(c.id) && <Check size={14} className="text-foreground" />}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Tags Dropdown */}
-                  <div className="space-y-2 relative">
-                    <label className="text-xs font-black  tracking-widest text-muted-foreground">Tags (Pick up to 5)</label>
-                    <button 
-                      type="button"
-                      onClick={() => setIsTagOpen(!isTagOpen)}
-                      className={cn(inputClassName(), "flex items-center justify-between text-left min-h-[46px] h-auto flex-wrap gap-2 py-2")}
-                    >
-                      <div className="flex flex-wrap gap-1.5 flex-1">
-                        {form.tagIds.length > 0 ? (
-                          form.tagIds.map(tid => (
-                            <span key={tid} className="bg-muted text-foreground text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 border border-border">
-                              {tags.find(t => t.id === tid)?.name}
-                              <X size={10} className="cursor-pointer hover:text-destructive" onClick={(e) => { e.stopPropagation(); setForm({...form, tagIds: form.tagIds.filter(id => id !== tid)}); }} />
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-muted-foreground/40">Select up to 5 tags</span>
-                        )}
-                      </div>
-                      <ChevronDown size={16} className="shrink-0" />
-                    </button>
-                    {isTagOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 p-2 space-y-2 max-h-60 overflow-y-auto">
-                        <div className="relative">
-                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                          <input 
-                            value={tagSearch} 
-                            onChange={e => setTagSearch(e.target.value)} 
-                            className="w-full bg-muted/50 rounded-lg pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-foreground/10" 
-                            placeholder="Search tags..."
-                          />
-                        </div>
-                        <div className="grid gap-1">
-                          {tags.filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase())).map(t => (
-                            <button 
-                              key={t.id} 
-                              disabled={form.tagIds.length >= 5 && !form.tagIds.includes(t.id)}
-                              onClick={() => {
-                                const nextTags = form.tagIds.includes(t.id) 
-                                  ? form.tagIds.filter(id => id !== t.id)
-                                  : [...form.tagIds, t.id];
-                                setForm({...form, tagIds: nextTags});
-                              }}
-                              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors flex items-center justify-between group disabled:opacity-30"
-                            >
-                              {t.name}
-                              {form.tagIds.includes(t.id) && <Check size={14} className="text-foreground" />}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-black  tracking-widest text-muted-foreground">Product Description * (40-5000 chars)</label>
-                    <MarkdownTextarea value={form.richDescription} onChange={v => setForm({...form, richDescription: v})} rows={6} placeholder="Describe your product outcomes..." />
+                    </div>
+                    <input
+                      value={form.requestedSlug}
+                      onChange={(event) =>
+                        setForm({ ...form, requestedSlug: slugify(event.target.value) })
+                      }
+                      className={inputClassName()}
+                    />
+                    {slugStatus ? (
+                      <p className="text-xs font-medium text-muted-foreground">{slugStatus}</p>
+                    ) : null}
                   </div>
                 </div>
-              )}
 
-              {activeTab === "media" && (
-                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  {/* Logo Section */}
-                  <div className="space-y-4">
-                    <label className="text-xs font-black  tracking-widest text-muted-foreground">Logo *</label>
-                    <div className="flex items-start gap-6">
-                      {logo && (
-                        <div className="relative group">
-                          <div className="w-32 h-32 rounded-2xl overflow-hidden border border-border bg-background shadow-sm">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">URL *</label>
+                    <input
+                      required
+                      value={form.websiteUrl}
+                      onChange={(event) =>
+                        setForm({ ...form, websiteUrl: event.target.value })
+                      }
+                      className={inputClassName()}
+                      placeholder="https://acme.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">Pricing *</label>
+                    <select
+                      value={form.pricingModel}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          pricingModel: event.target.value as PricingModelSelection,
+                        })
+                      }
+                      className={inputClassName()}
+                    >
+                      <option value="">Select pricing model</option>
+                      {pricingModels.map((model) => (
+                        <option key={model} value={model}>
+                          {model}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="relative space-y-2">
+                    <label className="text-sm font-bold text-foreground">Category *</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCatOpen((value) => !value)}
+                      className={cn(inputClassName(), "flex items-center justify-between text-left")}
+                    >
+                      <span className={cn(!selectedCategory && "text-muted-foreground")}>
+                        {selectedCategory?.name ?? "Select a category"}
+                      </span>
+                      <Search size={15} />
+                    </button>
+                    {isCatOpen ? (
+                      <div className="absolute left-0 right-0 top-full z-40 mt-2 max-h-72 overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-2xl">
+                        <input
+                          value={catSearch}
+                          onChange={(event) => setCatSearch(event.target.value)}
+                          className="mb-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none"
+                          placeholder="Search categories"
+                        />
+                        {filteredCategories.map((category) => (
+                          <button
+                            key={category.id}
+                            type="button"
+                            onClick={() => {
+                              setForm({ ...form, categoryIds: [category.id] });
+                              setIsCatOpen(false);
+                            }}
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-muted"
+                          >
+                            {category.name}
+                            {form.categoryIds.includes(category.id) ? <Check size={14} /> : null}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="relative space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="text-sm font-bold text-foreground">Tags *</label>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {selectedTags.map((tagItem) => tagItem.name).join(", ")}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsTagOpen((value) => !value)}
+                      className={cn(inputClassName(), "flex min-h-[46px] items-center justify-between gap-2 text-left")}
+                    >
+                      <span className={cn(selectedTags.length === 0 && "text-muted-foreground")}>
+                        {selectedTags.length > 0
+                          ? selectedTags.map((tagItem) => tagItem.name).join(", ")
+                          : "Select up to 5 tags"}
+                      </span>
+                      <Search size={15} />
+                    </button>
+                    {isTagOpen ? (
+                      <div className="absolute left-0 right-0 top-full z-40 mt-2 max-h-72 overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-2xl">
+                        <input
+                          value={tagSearch}
+                          onChange={(event) => setTagSearch(event.target.value)}
+                          className="mb-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none"
+                          placeholder="Search tags"
+                        />
+                        {filteredTags.map((tagItem) => {
+                          const selected = form.tagIds.includes(tagItem.id);
+                          return (
+                            <button
+                              key={tagItem.id}
+                              type="button"
+                              disabled={form.tagIds.length >= 5 && !selected}
+                              onClick={() => {
+                                const nextTags = selected
+                                  ? form.tagIds.filter((id) => id !== tagItem.id)
+                                  : [...form.tagIds, tagItem.id];
+                                setForm({ ...form, tagIds: nextTags });
+                              }}
+                              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-muted disabled:opacity-40"
+                            >
+                              {tagItem.name}
+                              {selected ? <Check size={14} /> : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <label className="text-sm font-bold text-foreground">Tagline *</label>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {form.tagline.length}/60
+                    </span>
+                  </div>
+                  <textarea
+                    required
+                    maxLength={60}
+                    rows={2}
+                    value={form.tagline}
+                    onChange={(event) => setForm({ ...form, tagline: event.target.value })}
+                    className={inputClassName()}
+                    placeholder="Short, punchy description of what you do"
+                  />
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Used on your product card.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">Rich Description *</label>
+                  <MarkdownTextarea
+                    value={form.richDescription}
+                    onChange={(value) => setForm({ ...form, richDescription: value })}
+                    rows={9}
+                    placeholder="Describe your product outcomes..."
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {activeTab === "media" ? (
+              <div className="space-y-10">
+                <div className="space-y-4">
+                  <label className="text-sm font-bold text-foreground">Logo *</label>
+                  <div className="flex flex-wrap items-start gap-6">
+                    {logo ? (
+                      <div className="relative">
+                        <div className="h-32 w-32 overflow-hidden rounded-xl border border-border bg-background">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={logo.previewUrl} alt="Logo preview" className="h-full w-full object-cover" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            maybeRevokeObjectUrl(logo.previewUrl);
+                            setLogo(null);
+                          }}
+                          className="absolute -right-2 -top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+                          aria-label="Remove logo"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ) : null}
+                    <label className="flex h-32 w-56 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 text-center transition hover:bg-muted/50">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) => {
+                          if (event.target.files?.[0]) {
+                            if (logo) {
+                              maybeRevokeObjectUrl(logo.previewUrl);
+                            }
+                            setLogo(createDraftImage(event.target.files[0]));
+                          }
+                        }}
+                      />
+                      <ImageIcon size={24} className="text-muted-foreground" />
+                      <span className="text-sm font-black text-foreground">
+                        Upload logo
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="text-sm font-bold text-foreground">Images</label>
+                  {screenshots.length > 0 ? (
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      {screenshots.map((screenshot) => (
+                        <div key={screenshot.id} className="relative">
+                          <div className="aspect-video overflow-hidden rounded-xl border border-border bg-background">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={logo.previewUrl} alt="Logo preview" className="w-full h-full object-cover" />
+                            <img
+                              src={screenshot.previewUrl}
+                              alt="Screenshot preview"
+                              className="h-full w-full object-cover"
+                            />
                           </div>
                           <button
                             type="button"
-                            onClick={() => {
-                              maybeRevokeObjectUrl(logo.previewUrl);
-                              setLogo(null);
-                            }}
-                            className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-10"
+                            onClick={() =>
+                              setScreenshots((current) => {
+                                maybeRevokeObjectUrl(screenshot.previewUrl);
+                                return current.filter((item) => item.id !== screenshot.id);
+                              })
+                            }
+                            className="absolute -right-2 -top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+                            aria-label="Remove screenshot"
                           >
                             <Trash2 size={14} />
                           </button>
                         </div>
-                      )}
-                      <label className={cn(
-                        "flex-1 max-w-[320px] aspect-square rounded-2xl border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 hover:border-foreground/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center p-6",
-                        logo && "hidden sm:flex"
-                      )}>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={e => {
-                            if (e.target.files?.[0]) {
-                              if (logo) {
-                                maybeRevokeObjectUrl(logo.previewUrl);
-                              }
-
-                              setLogo(createDraftImage(e.target.files[0]));
-                            }
-                          }}
-                        />
-                        <div className="w-12 h-12 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground group-hover:text-foreground transition-colors">
-                          <ImageIcon size={24} />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm font-black text-foreground">Drop image or click to upload</p>
-                        </div>
-                      </label>
+                      ))}
                     </div>
-                    <p className="text-[10px] font-bold text-muted-foreground  tracking-widest">
-                      Use a square format, at least 128x128px.
-                    </p>
-                  </div>
-
-                  {/* Screenshots Section */}
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Images</label>
-                      <p className="text-[10px] font-bold text-muted-foreground leading-relaxed  tracking-widest">
-                        Showcase your product with 1 to 3 images. Any dimensions work, but we recommend keeping the same aspect ratio for consistency. Click the preview button on the left to see how they&apos;ll look!
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col gap-6">
-                      {screenshots.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          {screenshots.map(s => (
-                            <div key={s.id} className="relative group">
-                              <div className="aspect-video rounded-2xl overflow-hidden border border-border bg-background shadow-sm">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={s.previewUrl} alt="Screenshot preview" className="w-full h-full object-cover" />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setScreenshots((prev) => {
-                                    maybeRevokeObjectUrl(s.previewUrl);
-                                    return prev.filter((x) => x.id !== s.id);
-                                  })
-                                }
-                                className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-10"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {screenshots.length < 3 && (
-                        <label className="w-full aspect-video rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 hover:border-foreground/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center p-8">
-                          <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            className="hidden"
-                            onChange={e => {
-                              if (e.target.files) {
-                                const newFiles = Array.from(e.target.files).map(createDraftImage);
-                                setScreenshots(prev => [...prev, ...newFiles].slice(0, 3));
-                              }
-                            }}
-                          />
-                          <div className="w-16 h-16 rounded-2xl bg-background border border-border flex items-center justify-center text-muted-foreground group-hover:text-foreground transition-colors">
-                            <ImageIcon size={32} />
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-lg font-black text-foreground">Drop images or click to upload</p>
-                            <p className="text-xs font-bold text-muted-foreground  tracking-widest">{3 - screenshots.length} left</p>
-                          </div>
-                        </label>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "socials" && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <label className="text-xs font-black  tracking-widest text-muted-foreground">X (Twitter)</label>
-                      <input value={form.founderXUrl} onChange={e => setForm({...form, founderXUrl: e.target.value})} className={inputClassName()} placeholder="https://x.com/..." />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-black  tracking-widest text-muted-foreground">LinkedIn</label>
-                      <input value={form.founderLinkedinUrl} onChange={e => setForm({...form, founderLinkedinUrl: e.target.value})} className={inputClassName()} placeholder="https://linkedin.com/..." />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-black  tracking-widest text-muted-foreground">GitHub</label>
-                      <input value={form.founderGithubUrl} onChange={e => setForm({...form, founderGithubUrl: e.target.value})} className={inputClassName()} placeholder="https://github.com/..." />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-black  tracking-widest text-muted-foreground">Facebook</label>
-                      <input value={form.founderFacebookUrl} onChange={e => setForm({...form, founderFacebookUrl: e.target.value})} className={inputClassName()} placeholder="https://facebook.com/..." />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="pt-10 border-t border-border flex justify-between items-center">
-                <p className="text-[10px] font-bold text-muted-foreground  tracking-widest">
-                  * Required fields
-                </p>
-                <button
-                  onClick={handleProceedToPlan}
-                  disabled={isBusy}
-                  className="flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-black text-sm shadow-xl shadow-black/10 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {isBusy ? <Loader2 size={18} className="animate-spin" /> : "Save & Choose Plan"}
-                  {!isBusy && <ArrowRight size={18} />}
-                </button>
-              </div>
-              {errorMessage && <p className="mt-4 text-xs font-bold text-destructive text-center">{errorMessage}</p>}
-            </div>
-          </div>
-
-          <aside className="space-y-6">
-            <div className="bg-primary p-8 rounded-[2rem] text-primary-foreground shadow-2xl shadow-black/10">
-              <h3 className="text-[10px] font-black  tracking-widest opacity-60 mb-6">Preview</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden">
-                    {logo ? (
-                      <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={logo.previewUrl} alt="Product logo preview" className="w-full h-full object-cover" />
-                      </>
-                    ) : <Rocket size={20} />}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-black text-sm truncate">{form.name || "Product Name"}</p>
-                    <p className="text-[10px] font-bold opacity-60 ">{form.pricingModel || "Pricing"}</p>
-                  </div>
-                </div>
-                <p className="text-xs font-medium opacity-80 leading-relaxed line-clamp-2">
-                  {form.tagline || "Your product tagline will appear here."}
-                </p>
-              </div>
-            </div>
-            
-            <div className="bg-card border border-border p-6 rounded-2xl">
-              <h4 className="text-[10px] font-black  tracking-widest text-muted-foreground/60 mb-4">Submission Guide</h4>
-              <ul className="space-y-4">
-                {[
-                  "Use high-quality PNG for logo",
-                  "Pick the most relevant category",
-                  "Describe outcomes, not features"
-                ].map((txt, i) => (
-                  <li key={i} className="flex gap-2 text-xs font-bold text-muted-foreground leading-relaxed">
-                    <span className="text-foreground font-black">•</span> {txt}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="bg-card border border-border p-6 rounded-2xl">
-              <div className="flex items-center justify-between gap-3 mb-4">
-                <h4 className="text-[10px] font-black  tracking-widest text-muted-foreground/60">
-                  Completion Checklist
-                </h4>
-                <span className="text-[10px] font-black  tracking-widest text-muted-foreground">
-                  {submissionChecklist.filter((item) => item.complete).length}/{submissionChecklist.length}
-                </span>
-              </div>
-              <ul className="space-y-3">
-                {submissionChecklist.map((item) => (
-                  <li
-                    key={item.label}
-                    className="flex items-center justify-between gap-3 text-xs font-bold"
-                  >
-                    <span className={cn(item.complete ? "text-foreground" : "text-muted-foreground")}>
-                      {item.label}
-                    </span>
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black  tracking-widest",
-                        item.complete
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-rose-100 text-rose-700",
-                      )}
-                    >
-                      {item.complete ? <Check size={12} /> : <X size={12} />}
-                      {item.complete ? "Done" : "Missing"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </aside>
-        </div>
-      ) : (
-        /* STEP 2: CHOOSE PLAN */
-        <div className="space-y-12 animate-in fade-in zoom-in-95 duration-500">
-          <div className="text-center space-y-4">
-            <h2 className="text-4xl font-black tracking-tight ">Choose your launch path</h2>
-            <p className="text-muted-foreground font-medium max-w-xl mx-auto">
-              Choose the path that fits your product stage. Free Launch goes
-              through manual review, with an optional ShipBoost badge for
-              priority review within 24-48 hours. Premium Launch is best if
-              timing, lower friction, and stronger baseline placement matter
-              more.
-            </p>
-          </div>
-
-          {isPrelaunch ? (
-            <div className="max-w-4xl mx-auto rounded-[2rem] border border-primary/20 bg-primary/5 px-6 py-5 text-center">
-              <p className="text-[10px] font-black  tracking-[0.3em] text-primary">
-                Prelaunch Mode
-              </p>
-              <p className="mt-3 text-sm font-bold leading-relaxed text-foreground">
-                ShipBoost opens on May 4, 2026 UTC. Free launches are queued
-                into weekly cohorts, and premium launches can reserve a launch
-                week ahead of the opening.
-              </p>
-            </div>
-          ) : null}
-
-          {errorMessage ? (
-            <div className="max-w-4xl mx-auto rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-              {errorMessage}
-            </div>
-          ) : null}
-
-          {successMessage ? (
-            <div className="max-w-4xl mx-auto rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
-              {successMessage}
-            </div>
-          ) : null}
-
-          <div className="grid gap-8 md:grid-cols-2 md:items-start max-w-4xl mx-auto">
-            {/* FREE PLAN */}
-            <div className={cn(
-              "p-8 rounded-[2.5rem] border transition-all flex flex-col",
-              form.submissionType === "FREE_LAUNCH" ? "border-foreground bg-card ring-4 ring-foreground/5 shadow-2xl" : "border-border bg-card hover:border-foreground/30"
-            )}
-            onClick={() => setForm({ ...form, submissionType: "FREE_LAUNCH" })}
-            >
-              <div className="flex items-center justify-between mb-8">
-                <div className="bg-muted text-foreground p-3 rounded-2xl border border-border"><Zap size={24} /></div>
-                <span className="text-4xl font-black">$0</span>
-              </div>
-              <h3 className="text-2xl font-black mb-2">Free Launch</h3>
-              <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
-                {isPrelaunch
-                  ? "Best for founders who want a credible public listing and weekly launch visibility before the May opening cohort. Add the badge if you want priority review."
-                  : "Best for founders who want a credible public listing and weekly launch visibility. Add the badge if you want priority review."}
-              </p>
-              <ul className="space-y-4 mb-10">
-                {[
-                  "Weekly launchpad placement",
-                  "Public listing on ShipBoost",
-                  "Manual review for every submission",
-                  "Optional badge unlocks 24-48 hour review",
-                ].map(p => (
-                  <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
-                    <Check size={16} className="text-emerald-500 mt-0.5" /> {p}
-                  </li>
-                ))}
-              </ul>
-              
-              <button 
-                onClick={() => handleFinalSubmit("FREE_LAUNCH")}
-                disabled={isBusy}
-                className={cn(
-                  "w-full py-4 rounded-2xl font-black text-sm transition-all",
-                  !isBusy
-                    ? "bg-primary text-primary-foreground shadow-xl shadow-black/10 hover:opacity-90 active:scale-95" 
-                    : "bg-muted text-muted-foreground/50 cursor-not-allowed border border-border"
-                )}
-              >
-                {isSubmittingDraft
-                  ? "Submitting..."
-                  : "Submit Free Launch"}
-              </button>
-            </div>
-
-            {/* PREMIUM PLAN */}
-            <div className={cn(
-              "p-8 rounded-[2.5rem] border transition-all flex flex-col relative",
-              form.submissionType === "FEATURED_LAUNCH"
-                ? "border-foreground bg-card ring-4 ring-foreground/5 shadow-2xl"
-                : premiumLaunchAvailable
-                  ? "border-border bg-card hover:border-foreground/30"
-                  : "border-border bg-card opacity-80"
-            )}
-            onClick={() => {
-              if (!premiumLaunchAvailable) {
-                return;
-              }
-
-              setForm({ ...form, submissionType: "FEATURED_LAUNCH" });
-            }}
-            >
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-black  tracking-widest px-4 py-1 rounded-full shadow-lg">Most Popular</div>
-              <div className="flex items-center justify-between mb-8">
-                <div className="bg-primary text-primary-foreground p-3 rounded-2xl shadow-xl shadow-black/10"><Star size={24} /></div>
-                <div className="text-right">
-                  <div className="text-sm font-black text-muted-foreground line-through">
-                    {foundingPremiumPrice.original}
-                  </div>
-                  <span className="text-4xl font-black">{foundingPremiumPrice.discounted}</span>
-                </div>
-              </div>
-              <h3 className="text-2xl font-black mb-2">Premium Launch</h3>
-              <p className="text-[10px] font-black  tracking-widest text-primary mb-3">
-                {foundingPremiumPrice.label}
-              </p>
-              <p className="text-sm text-muted-foreground font-medium mb-8 flex-1">
-                Best for founders who care about timing, lower friction,
-                stronger placement, and an editorial launch spotlight during
-                launch week.
-              </p>
-              {!premiumLaunchAvailable ? (
-                <p className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-relaxed text-amber-700">
-                  {premiumLaunchUnavailableMessage}
-                </p>
-              ) : null}
-              <ul className="space-y-4 mb-10">
-                {[
-                  "Reserve a specific launch week",
-                  "No badge step required",
-                  "Stronger baseline board placement",
-                  "Keep a permanent public listing",
-                  "Includes one editorial launch spotlight during launch week",
-                ].map((p) => (
-                  <li key={p} className="flex gap-3 text-sm font-bold text-foreground/80">
-                    <Check size={16} className="text-foreground mt-0.5" /> {p}
-                  </li>
-                ))}
-              </ul>
-              <div className="mb-6 space-y-2">
-                <label className="text-xs font-black  tracking-widest text-muted-foreground">
-                  Preferred launch week *
-                </label>
-                <select
-                  value={form.preferredLaunchDate}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      submissionType: "FEATURED_LAUNCH",
-                      preferredLaunchDate: event.target.value,
-                    })
-                  }
-                  disabled={!premiumLaunchAvailable}
-                  className={inputClassName()}
-                >
-                  <option value="">Select a launch week</option>
-                  {premiumLaunchWeeks.map((week) => (
-                    <option key={week.value} value={week.value}>
-                      {week.label}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[10px] font-bold  tracking-widest text-muted-foreground">
-                  {isPrelaunch
-                    ? "Choose one of the available weekly launch windows starting May 4, 2026 UTC."
-                    : "Premium launches are reserved by week, not by day."}
-                </p>
-              </div>
-              <button 
-                onClick={() => handleFinalSubmit("FEATURED_LAUNCH")}
-                disabled={isBusy || !premiumLaunchAvailable}
-                className={cn(
-                  "w-full py-4 rounded-2xl font-black text-sm transition-all",
-                  premiumLaunchAvailable
-                    ? "bg-foreground text-background shadow-xl shadow-black/10 hover:opacity-90 active:scale-95 disabled:opacity-50"
-                    : "bg-muted text-muted-foreground/50 cursor-not-allowed border border-border"
-                )}
-              >
-                {premiumLaunchAvailable
-                  ? isSubmittingDraft
-                    ? "Starting checkout..."
-                    : "Reserve Premium Launch"
-                  : "Temporarily unavailable"}
-              </button>
-              <p className="mt-3 text-[10px] font-bold tracking-widest text-muted-foreground">
-                After checkout, ShipBoost reserves your week, opens your
-                spotlight brief in the dashboard, and publishes the editorial
-                launch spotlight during launch week.
-              </p>
-            </div>
-          </div>
-
-          {/* Badge Verification Section */}
-          <div className="max-w-4xl mx-auto bg-muted/20 border border-border rounded-[2.5rem] p-10 space-y-8">
-            <div className="flex flex-col md:flex-row gap-10 items-center">
-              <div className="flex-1 space-y-4 text-center md:text-left">
-                <h3 className="text-xl font-black">Add the ShipBoost badge for priority review</h3>
-                <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                  Place the badge on your homepage or footer to show visitors
-                  where you launched. Verified badge submissions get priority
-                  review within 24-48 hours.
-                </p>
-                <p className="text-xs font-bold leading-relaxed text-muted-foreground/80">
-                  The badge is optional. You can submit without it for standard
-                  review, or add it later if you want the extra trust signal.
-                </p>
-                <div className="rounded-2xl border border-border bg-background p-4">
-                  <p className="text-[10px] font-black  tracking-widest text-muted-foreground mb-2">
-                    Website URL being checked
-                  </p>
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm font-medium text-foreground">
-                    <span className="truncate">{ensureHttps(form.websiteUrl) || "Add your website URL in step 1"}</span>
-                    {isValidUrl(form.websiteUrl) ? (
-                      <a
-                        href={ensureHttps(form.websiteUrl)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-muted-foreground transition hover:text-foreground"
-                      >
-                        <ExternalLink size={16} />
-                      </a>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <p className="text-[10px] font-black  tracking-widest text-muted-foreground">
-                    Badge theme
-                  </p>
-                  <div className="flex flex-wrap gap-5 text-sm font-bold text-foreground">
-                    <label className="inline-flex items-center gap-2">
+                  ) : null}
+                  {screenshots.length < 3 ? (
+                    <label className="flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 text-center transition hover:bg-muted/50">
                       <input
-                        type="radio"
-                        name="badge-theme"
-                        checked={badgeTheme === "light"}
-                        onChange={() => setBadgeTheme("light")}
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) => {
+                          if (event.target.files) {
+                            const nextFiles = Array.from(event.target.files).map(createDraftImage);
+                            setScreenshots((current) => [...current, ...nextFiles].slice(0, 3));
+                          }
+                        }}
                       />
-                      Light badge
+                      <ImageIcon size={28} className="text-muted-foreground" />
+                      <span className="text-sm font-black text-foreground">
+                        Upload product images
+                      </span>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {3 - screenshots.length} left
+                      </span>
                     </label>
-                    <label className="inline-flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="badge-theme"
-                        checked={badgeTheme === "dark"}
-                        onChange={() => setBadgeTheme("dark")}
-                      />
-                      Dark badge
-                    </label>
-                  </div>
+                  ) : null}
                 </div>
-                <div className="pt-4 flex flex-wrap gap-4 justify-center md:justify-start">
-                  <button 
-                    onClick={handleVerifyBadge}
-                    disabled={isVerifyingBadge || !draftSubmissionId || !isValidUrl(form.websiteUrl)}
-                    className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-black text-xs shadow-lg shadow-black/10 hover:opacity-90 disabled:opacity-50 transition-all"
+              </div>
+            ) : null}
+
+            {activeTab === "socials" ? (
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">X (Twitter)</label>
+                  <input
+                    value={form.founderXUrl}
+                    onChange={(event) => setForm({ ...form, founderXUrl: event.target.value })}
+                    className={inputClassName()}
+                    placeholder="https://x.com/..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">LinkedIn</label>
+                  <input
+                    value={form.founderLinkedinUrl}
+                    onChange={(event) => setForm({ ...form, founderLinkedinUrl: event.target.value })}
+                    className={inputClassName()}
+                    placeholder="https://linkedin.com/..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">GitHub</label>
+                  <input
+                    value={form.founderGithubUrl}
+                    onChange={(event) => setForm({ ...form, founderGithubUrl: event.target.value })}
+                    className={inputClassName()}
+                    placeholder="https://github.com/..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">Facebook</label>
+                  <input
+                    value={form.founderFacebookUrl}
+                    onChange={(event) => setForm({ ...form, founderFacebookUrl: event.target.value })}
+                    className={inputClassName()}
+                    placeholder="https://facebook.com/..."
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Link
+                    href={`mailto:${supportEmail}`}
+                    className="text-sm font-bold text-muted-foreground underline underline-offset-4 transition hover:text-foreground"
                   >
-                    {isVerifyingBadge ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
-                    {isVerifyingBadge ? "Verifying..." : "Verify Badge Now"}
-                  </button>
-                  <Link href={`mailto:${supportEmail}`} className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">
-                    Need help? Contact support →
+                    Need help? Contact support
                   </Link>
                 </div>
               </div>
-                <div className="shrink-0 space-y-4 text-center">
-                  <p className="text-[10px] font-black  tracking-widest text-muted-foreground">Badge Preview</p>
-                <div className={cn("w-72 rounded-2xl border border-border p-6", badgeTheme === "dark" ? "bg-white" : "bg-background")}>
-                  <a href={shipboostUrl} target="_blank" rel="noopener">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={badgePreviewSrc} alt={`${badgeTheme} ShipBoost badge preview`} className="mx-auto h-auto max-h-16 w-auto" />
-                  </a>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[10px] font-black  tracking-widest text-muted-foreground">Badge Snippet</p>
-                  <button
-                    type="button"
-                    onClick={() => void handleCopyBadgeSnippet()}
-                    className="text-[10px] font-black  tracking-widest text-foreground underline decoration-border underline-offset-4"
-                  >
-                    {copiedBadgeTheme === badgeTheme ? "Copied" : "Copy"}
-                  </button>
-                </div>
-                <textarea 
-                  readOnly 
-                  value={freeLaunchBadgeSnippet} 
-                  className="w-72 h-32 rounded-xl bg-background border border-border p-4 text-[10px] font-mono text-muted-foreground/60 leading-relaxed outline-none focus:border-foreground"
-                />
-              </div>
-            </div>
-            
-            <div className="pt-8 border-t border-border flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-black  tracking-widest">
-                <span className="text-muted-foreground/60">Status:</span>
-                <span className={cn(draftBadgeVerification === "VERIFIED" ? "text-emerald-500" : "text-foreground")}>
-                  {draftBadgeVerification === "VERIFIED"
-                    ? "Priority review active"
-                    : draftBadgeVerification === "FAILED"
-                      ? "Not verified yet"
-                      : "Optional"}
-                </span>
-              </div>
-              <button onClick={() => setStep(1)} className="text-xs font-bold text-muted-foreground hover:text-foreground underline decoration-border underline-offset-4">
-                Back to Details
-              </button>
-            </div>
+            ) : null}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

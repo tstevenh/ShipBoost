@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  combinePubliclyVisibleToolWhere,
   getPublicLaunchBoardWhere,
   getPubliclyVisibleToolWhere,
   isLaunchPubliclyVisible,
@@ -145,5 +146,19 @@ describe("getPubliclyVisibleToolWhere", () => {
         launches: [],
       }),
     ).toBe(true);
+  });
+
+  it("combines public visibility with caller OR filters without overwriting launch visibility", () => {
+    const now = new Date("2026-04-08T10:00:00.000Z");
+    const callerWhere = {
+      OR: [
+        { name: { contains: "analytics", mode: "insensitive" as const } },
+        { tagline: { contains: "analytics", mode: "insensitive" as const } },
+      ],
+    };
+
+    expect(combinePubliclyVisibleToolWhere(callerWhere, now)).toEqual({
+      AND: [getPubliclyVisibleToolWhere(now), callerWhere],
+    });
   });
 });

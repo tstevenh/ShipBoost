@@ -3,9 +3,10 @@ import { cn } from "@/lib/utils";
 
 type FrogDrBadgeProps = {
   className?: string;
+  fullWidth?: boolean;
 };
 
-export function FrogDrBadge({ className }: FrogDrBadgeProps) {
+export function FrogDrBadge({ className, fullWidth }: FrogDrBadgeProps) {
   return (
     <TrackedExternalLink
       href="https://frogdr.com/shipboost.io?via=Shipboost&utm_source=shipboost.io"
@@ -14,7 +15,11 @@ export function FrogDrBadge({ className }: FrogDrBadgeProps) {
       sourceSurface="frogdr_badge"
       linkContext="footer"
       linkText="Monitor your Domain Rating with FrogDR"
-      className={cn("mx-auto block w-fit", className)}
+      className={cn(
+        "mx-auto block w-full",
+        fullWidth ? "max-w-none" : "max-w-[250px]",
+        className,
+      )}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -22,7 +27,10 @@ export function FrogDrBadge({ className }: FrogDrBadgeProps) {
         alt="Monitor your Domain Rating with FrogDR"
         width="250"
         height="54"
-        className="block h-auto w-full max-w-[250px] dark:hidden"
+        className={cn(
+          "block h-auto w-full dark:hidden",
+          fullWidth ? "max-w-none" : "max-w-[250px]",
+        )}
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -30,7 +38,10 @@ export function FrogDrBadge({ className }: FrogDrBadgeProps) {
         alt="Monitor your Domain Rating with FrogDR"
         width="250"
         height="54"
-        className="hidden h-auto w-full max-w-[250px] dark:block"
+        className={cn(
+          "hidden h-auto w-full dark:block",
+          fullWidth ? "max-w-none" : "max-w-[250px]",
+        )}
       />
     </TrackedExternalLink>
   );

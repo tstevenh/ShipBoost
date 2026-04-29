@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
       id: session.user.id,
       email: session.user.email,
       name: session.user.name,
+      preferredLaunchDate: body.preferredLaunchDate,
     });
 
     return ok(checkout);
