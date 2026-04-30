@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { 
   Rocket, Mail, Shield, Activity, CreditCard,
   ExternalLink, Edit, RefreshCw, Check, AlertCircle, Star,
-  Layout, Package, Fingerprint,
+  Layout, Package, Fingerprint, Megaphone,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -60,6 +60,22 @@ type FounderListingClaim = {
     id: string;
     slug: string;
     name: string;
+    logoMedia: { url: string } | null;
+  };
+};
+
+type FounderSponsorPlacement = {
+  id: string;
+  status: "PENDING_PAYMENT" | "ACTIVE" | "PAID_WAITLISTED" | "EXPIRED" | "DISABLED";
+  startsAt: string | null;
+  endsAt: string | null;
+  paidAt: string | null;
+  createdAt: string;
+  tool: {
+    id: string;
+    slug: string;
+    name: string;
+    websiteUrl: string;
     logoMedia: { url: string } | null;
   };
 };
@@ -144,6 +160,21 @@ function spotlightStatusLabel(status: NonNullable<FounderSubmission["spotlightBr
   return "Published";
 }
 
+function sponsorStatusLabel(status: FounderSponsorPlacement["status"]) {
+  if (status === "ACTIVE") return "Active";
+  if (status === "PAID_WAITLISTED") return "Reserved";
+  if (status === "PENDING_PAYMENT") return "Awaiting payment";
+  if (status === "EXPIRED") return "Expired";
+  return "Disabled";
+}
+
+function sponsorStatusTone(status: FounderSponsorPlacement["status"]) {
+  if (status === "ACTIVE") return "green";
+  if (status === "PAID_WAITLISTED" || status === "PENDING_PAYMENT") return "amber";
+  if (status === "EXPIRED") return "slate";
+  return "rose";
+}
+
 function getSubmissionTypeLabel(submissionType: FounderSubmission["submissionType"]) {
   if (submissionType === "FEATURED_LAUNCH") {
     return "Premium Launch";
@@ -198,6 +229,7 @@ export function FounderDashboard({
   initialSubmissions,
   initialTools,
   initialClaims,
+  initialSponsorPlacements = [],
   founderEmail,
   founderRole,
   initialSuccessMessage,
@@ -206,6 +238,7 @@ export function FounderDashboard({
   initialSubmissions: FounderSubmission[];
   initialTools: FounderToolSummary[];
   initialClaims: FounderListingClaim[];
+  initialSponsorPlacements?: FounderSponsorPlacement[];
   founderEmail: string;
   founderRole: string;
   initialSuccessMessage?: string | null;
@@ -218,6 +251,7 @@ export function FounderDashboard({
   const [submissions, setSubmissions] = useState(initialSubmissions);
   const [tools, setTools] = useState(initialTools);
   const [claims, setClaims] = useState(initialClaims);
+  const [sponsorPlacements, setSponsorPlacements] = useState(initialSponsorPlacements);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(initialSuccessMessage ?? null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -226,6 +260,7 @@ export function FounderDashboard({
   const pendingCount = submissions.filter(s => getSubmissionState(s).label === "Pending review").length;
   const awaitingPaymentCount = submissions.filter(s => getSubmissionState(s).label === "Awaiting payment").length;
   const pendingClaimCount = claims.filter(c => c.status === "PENDING").length;
+  const activeSponsorCount = sponsorPlacements.filter((placement) => placement.status === "ACTIVE").length;
   const ownershipClaims = claims.filter(isVisibleOwnershipClaim);
   const showOwnershipTab = ownershipClaims.length > 0;
   const toolsById = new Map(tools.map((tool) => [tool.id, tool]));
@@ -253,6 +288,14 @@ export function FounderDashboard({
         })),
     ];
   })();
+  const sponsorPlacementsByToolId = new Map<string, FounderSponsorPlacement[]>();
+
+  sponsorPlacements.forEach((placement) => {
+    sponsorPlacementsByToolId.set(placement.tool.id, [
+      ...(sponsorPlacementsByToolId.get(placement.tool.id) ?? []),
+      placement,
+    ]);
+  });
 
   useEffect(() => {
     if (activeNav === "claims" && !showOwnershipTab) {
@@ -267,14 +310,16 @@ export function FounderDashboard({
       try {
         setErrorMessage(null);
         setSuccessMessage(null);
-        const [nextSub, nextTools, nextClaims] = await Promise.all([
+        const [nextSub, nextTools, nextClaims, nextSponsorPlacements] = await Promise.all([
           apiRequest<FounderSubmission[]>("/api/submissions"),
           apiRequest<FounderToolSummary[]>("/api/founder/tools"),
           apiRequest<FounderListingClaim[]>("/api/listing-claims"),
+          apiRequest<FounderSponsorPlacement[]>("/api/founder/sponsor-placements"),
         ]);
         setSubmissions(nextSub);
         setTools(nextTools);
         setClaims(nextClaims.filter(isVisibleOwnershipClaim));
+        setSponsorPlacements(nextSponsorPlacements);
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : "Unable to refresh status.");
       } finally {
@@ -414,7 +459,7 @@ export function FounderDashboard({
               </div>
             </section>
 
-            <div className="grid gap-6 sm:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                 <div className="flex items-center gap-3 text-muted-foreground mb-3">
                   <Activity size={16} />
@@ -431,12 +476,94 @@ export function FounderDashboard({
               </div>
               <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                 <div className="flex items-center gap-3 text-muted-foreground mb-3">
+                  <Megaphone size={16} />
+                  <p className="text-[10px] font-black  tracking-widest">Sponsors</p>
+                </div>
+                <p className="text-3xl font-black text-foreground">{activeSponsorCount}</p>
+              </div>
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+                <div className="flex items-center gap-3 text-muted-foreground mb-3">
                   <Fingerprint size={16} />
                   <p className="text-[10px] font-black  tracking-widest">Open Claims</p>
                 </div>
                 <p className="text-3xl font-black text-foreground">{pendingClaimCount}</p>
               </div>
             </div>
+
+            <section className="rounded-[2rem] border border-border bg-card p-5 shadow-sm sm:p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-black tracking-[0.24em] text-primary">
+                    SPONSORSHIPS
+                  </p>
+                  <h2 className="mt-2 text-xl font-black tracking-tight text-foreground">
+                    Sidebar sponsor placements
+                  </h2>
+                </div>
+                <Link
+                  href="/advertise"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-black text-primary-foreground shadow-lg shadow-black/10 hover:opacity-90"
+                >
+                  <Megaphone size={14} />
+                  Advertise
+                </Link>
+              </div>
+              <div className="mt-5 grid gap-3">
+                {sponsorPlacements.length > 0 ? (
+                  sponsorPlacements.slice(0, 3).map((placement) => (
+                    <div
+                      key={placement.id}
+                      className="flex flex-col gap-4 rounded-2xl border border-border bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-border bg-muted">
+                          {placement.tool.logoMedia ? (
+                            <>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={placement.tool.logoMedia.url}
+                                alt={`${placement.tool.name} logo`}
+                                className="h-full w-full object-cover"
+                              />
+                            </>
+                          ) : (
+                            <Megaphone size={16} className="m-3 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-foreground">
+                            {placement.tool.name}
+                          </p>
+                          <p className="truncate text-xs font-bold text-muted-foreground">
+                            {placement.endsAt
+                              ? `Ends ${formatDate(placement.endsAt)}`
+                              : `Created ${formatDate(placement.createdAt)}`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusChip
+                          label={sponsorStatusLabel(placement.status)}
+                          tone={sponsorStatusTone(placement.status)}
+                        />
+                        <Link
+                          href={placement.tool.websiteUrl}
+                          target="_blank"
+                          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-black hover:bg-muted"
+                        >
+                          <ExternalLink size={13} />
+                          Website
+                        </Link>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-5 text-sm font-bold text-muted-foreground">
+                    No sponsor placements yet.
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         )}
 
@@ -454,6 +581,7 @@ export function FounderDashboard({
                 const tool = item.tool;
                 const state = sub ? getSubmissionState(sub) : null;
                 const latestLaunch = sub?.tool.launches[0] ?? null;
+                const sponsorPlacement = sponsorPlacementsByToolId.get(item.key)?.[0] ?? null;
                 const name = sub?.tool.name ?? tool?.name ?? "Untitled product";
                 const slug = sub?.tool.slug ?? tool?.slug ?? "";
                 const logoMedia = sub?.tool.logoMedia ?? tool?.logoMedia ?? null;
@@ -481,6 +609,12 @@ export function FounderDashboard({
                                 {formatDate(latestLaunch.launchDate)}
                               </span>
                             </span>
+                          ) : null}
+                          {sponsorPlacement ? (
+                            <StatusChip
+                              label={`Sponsor: ${sponsorStatusLabel(sponsorPlacement.status)}`}
+                              tone={sponsorStatusTone(sponsorPlacement.status)}
+                            />
                           ) : null}
                         </div>
                         <div className="flex min-w-0 items-center gap-4">

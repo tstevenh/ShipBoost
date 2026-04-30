@@ -22,13 +22,40 @@ export type TopWinnerSidebarSpotWinner = {
 type TopWinnerSidebarSpotProps = {
   winner: TopWinnerSidebarSpotWinner | null;
   className?: string;
+  compactSlot?: boolean;
 };
 
 export function TopWinnerSidebarSpot({
   winner,
   className,
+  compactSlot = false,
 }: TopWinnerSidebarSpotProps) {
   if (!winner) {
+    if (compactSlot) {
+      return (
+        <section className={cn("w-full max-w-[250px]", className)}>
+          <div className="min-h-[118px] overflow-hidden rounded-xl border border-amber-500/20 bg-card p-[18px] shadow-sm">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10 text-amber-700">
+                <Trophy size={18} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-black tracking-[0.18em] text-muted-foreground">
+                  TOP 1 WINNER
+                </p>
+                <h4 className="mt-2 line-clamp-1 text-sm font-black tracking-tight text-foreground">
+                  Coming soon
+                </h4>
+                <p className="mt-1 line-clamp-2 text-[11px] font-medium leading-relaxed text-muted-foreground">
+                  Last week&apos;s top product will be featured here.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
     return (
       <section className={cn("w-full max-w-[250px] space-y-2", className)}>
         <div className="flex items-center justify-between">
@@ -64,6 +91,49 @@ export function TopWinnerSidebarSpot({
   }
 
   const primaryCategory = winner.tool.toolCategories[0]?.category ?? null;
+
+  if (compactSlot) {
+    return (
+      <section className={cn("w-full max-w-[250px]", className)}>
+        <Link
+          href={`/tools/${winner.tool.slug}`}
+          className="group block min-h-[118px] overflow-hidden rounded-xl border border-amber-500/20 bg-card p-[18px] shadow-sm transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-xl hover:shadow-amber-500/10"
+        >
+          <div className="flex items-start gap-3.5">
+            <LogoFallback
+              name={winner.tool.name}
+              src={winner.tool.logoMedia?.url}
+              websiteUrl={winner.tool.websiteUrl}
+              sizes="48px"
+              className="h-12 w-12 rounded-lg border border-border"
+              textClassName="text-xs"
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[9px] font-black tracking-[0.18em] text-muted-foreground">
+                  TOP 1 WINNER
+                </p>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[9px] font-black tracking-widest text-amber-700">
+                  #1
+                </span>
+              </div>
+              <h4 className="mt-2 line-clamp-1 text-sm font-black tracking-tight text-foreground">
+                {winner.tool.name}
+              </h4>
+              <p className="mt-1 line-clamp-2 text-[11px] font-medium leading-relaxed text-muted-foreground">
+                {winner.tool.tagline}
+              </p>
+              {primaryCategory ? (
+                <p className="mt-2 truncate text-[9px] font-black tracking-widest text-muted-foreground/50">
+                  {primaryCategory.name}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </Link>
+      </section>
+    );
+  }
 
   return (
     <section className={cn("w-full max-w-[250px] space-y-2", className)}>

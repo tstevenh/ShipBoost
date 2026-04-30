@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { NativeSelect } from "@/components/forms/native-select";
 import {
   StatusChip,
   textInputClassName,
@@ -76,7 +77,7 @@ export function BlogArticleList({
             placeholder="Search title or slug"
             className={textInputClassName()}
           />
-          <select
+          <NativeSelect
             value={statusFilter}
             onChange={(event) =>
               onStatusFilterChange(event.target.value as "" | BlogArticle["status"])
@@ -87,8 +88,8 @@ export function BlogArticleList({
             <option value="DRAFT">Draft</option>
             <option value="PUBLISHED">Published</option>
             <option value="ARCHIVED">Archived</option>
-          </select>
-          <select
+          </NativeSelect>
+          <NativeSelect
             value={categoryFilter}
             onChange={(event) => onCategoryFilterChange(event.target.value)}
             className={textInputClassName()}
@@ -99,7 +100,7 @@ export function BlogArticleList({
                 {category.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       ) : null}
 

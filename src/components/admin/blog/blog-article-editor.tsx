@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ImagePlus, Upload } from "lucide-react";
 
+import { NativeSelect } from "@/components/forms/native-select";
 import {
   Field,
   textInputClassName,
@@ -226,7 +227,7 @@ export function BlogArticleEditor({
           </p>
           <div className="mt-4 space-y-4">
             <Field label="Status">
-              <select
+              <NativeSelect
                 value={draft.status}
                 onChange={(event) =>
                   setDraft((current) => ({
@@ -239,7 +240,7 @@ export function BlogArticleEditor({
                 <option value="DRAFT">Draft</option>
                 <option value="PUBLISHED">Published</option>
                 <option value="ARCHIVED">Archived</option>
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Slug">
               <input
@@ -263,7 +264,7 @@ export function BlogArticleEditor({
           </p>
           <div className="mt-4 space-y-4">
             <Field label="Author">
-              <select
+              <NativeSelect
                 value={draft.authorId}
                 onChange={(event) =>
                   setDraft((current) => ({
@@ -278,10 +279,10 @@ export function BlogArticleEditor({
                     {author.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Primary category">
-              <select
+              <NativeSelect
                 value={draft.primaryCategoryId}
                 onChange={(event) =>
                   setDraft((current) => ({
@@ -296,7 +297,7 @@ export function BlogArticleEditor({
                     {category.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Tags">
               <div className="flex flex-wrap gap-2">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ExternalLink, Check, X, RefreshCw, Clock, Rocket } from "lucide-react";
+import { NativeSelect } from "@/components/forms/native-select";
 import { cn } from "@/lib/utils";
 import {
   Field,
@@ -90,7 +91,7 @@ export function SubmissionReviewPanel({
             />
           </Field>
           <Field label="Filter">
-            <select
+            <NativeSelect
               value={submissionFilter}
               onChange={(event) =>
                 onSubmissionFilterChange(
@@ -103,7 +104,7 @@ export function SubmissionReviewPanel({
               <option value="APPROVED">Approved only</option>
               <option value="REJECTED">Rejected only</option>
               <option value="">All</option>
-            </select>
+            </NativeSelect>
           </Field>
         </div>
 

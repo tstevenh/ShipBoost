@@ -45,6 +45,7 @@ const envSchema = z.object({
   DODO_PAYMENTS_WEBHOOK_SECRET: optionalEnvString,
   DODO_PAYMENTS_MODE: z.enum(["test", "live"]).default("test"),
   DODO_PREMIUM_LAUNCH_PRODUCT_ID: optionalEnvString,
+  DODO_SPONSOR_PLACEMENT_PRODUCT_ID: optionalEnvString,
   DODO_PAYMENTS_RETURN_URL: optionalEnvString,
   CRON_SECRET: optionalEnvString,
   ADMIN_EMAIL: z.email().optional(),
@@ -86,6 +87,8 @@ export function getEnv() {
       DODO_PAYMENTS_MODE: process.env.DODO_PAYMENTS_MODE,
       DODO_PREMIUM_LAUNCH_PRODUCT_ID:
         process.env.DODO_PREMIUM_LAUNCH_PRODUCT_ID,
+      DODO_SPONSOR_PLACEMENT_PRODUCT_ID:
+        process.env.DODO_SPONSOR_PLACEMENT_PRODUCT_ID,
       DODO_PAYMENTS_RETURN_URL: process.env.DODO_PAYMENTS_RETURN_URL,
       CRON_SECRET: process.env.CRON_SECRET,
       ADMIN_EMAIL: process.env.ADMIN_EMAIL,

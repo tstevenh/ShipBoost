@@ -6,6 +6,7 @@ import {
   Activity, Layers, Rocket, ClipboardList,
   Shield, AlertCircle, RefreshCw,
   Layout, Package, FileText, CalendarDays,
+  Megaphone,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ import {
   type CategoryDraft,
   type Submission,
   type SubmissionReviewResult,
+  type SponsorPlacement,
   type AdminLaunchWeek,
   type Tag as TagType,
   type TagDraft,
@@ -28,6 +30,7 @@ import { CatalogPanel } from "@/components/admin/catalog-panel";
 import { BlogPanel } from "@/components/admin/blog-panel";
 import { LaunchSchedulePanel } from "@/components/admin/launch-schedule-panel";
 import { ListingClaimPanel } from "@/components/admin/listing-claim-panel";
+import { SponsorPlacementPanel } from "@/components/admin/sponsor-placement-panel";
 import { SubmissionReviewPanel } from "@/components/admin/submission-review-panel";
 import { ToolOpsPanel } from "@/components/admin/tool-ops-panel";
 
@@ -75,7 +78,7 @@ function emptyTagDraft(): TagDraft {
   };
 }
 
-type AdminNavSection = "overview" | "moderate" | "launches" | "inventory" | "taxonomy" | "blog";
+type AdminNavSection = "overview" | "moderate" | "launches" | "inventory" | "sponsors" | "taxonomy" | "blog";
 type AdminNavItem = {
   id: AdminNavSection;
   label: string;
@@ -90,12 +93,14 @@ export function AdminConsole() {
   const [tools, setTools] = useState<Tool[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [claims, setClaims] = useState<ListingClaim[]>([]);
+  const [sponsorPlacements, setSponsorPlacements] = useState<SponsorPlacement[]>([]);
   const [launchWeeks, setLaunchWeeks] = useState<AdminLaunchWeek[]>([]);
 
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [toolError, setToolError] = useState<string | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
+  const [sponsorError, setSponsorError] = useState<string | null>(null);
 
   const [toolSearch, setToolSearch] = useState("");
   const [submissionSearch, setSubmissionSearch] = useState("");
@@ -265,6 +270,14 @@ export function AdminConsole() {
     setClaims(nextClaims);
   }
 
+  async function refreshSponsorPlacements() {
+    const nextSponsorPlacements = await apiRequest<SponsorPlacement[]>(
+      "/api/admin/sponsor-placements",
+    );
+
+    setSponsorPlacements(nextSponsorPlacements);
+  }
+
   const syncToolsSearch = useEffectEvent(async (search: string) => {
     await refreshTools(search);
   });
@@ -291,6 +304,7 @@ export function AdminConsole() {
           nextTools,
           nextSubmissions,
           nextClaims,
+          nextSponsorPlacements,
           nextLaunchWeeks,
         ] =
           await Promise.all([
@@ -299,6 +313,7 @@ export function AdminConsole() {
             apiRequest<Tool[]>("/api/admin/tools"),
             apiRequest<Submission[]>("/api/admin/submissions?reviewStatus=PENDING"),
             apiRequest<ListingClaim[]>("/api/admin/listing-claims?status=PENDING"),
+            apiRequest<SponsorPlacement[]>("/api/admin/sponsor-placements"),
             apiRequest<AdminLaunchWeek[]>("/api/admin/launches"),
           ]);
 
@@ -311,6 +326,7 @@ export function AdminConsole() {
         setTools(nextTools);
         setSubmissions(nextSubmissions);
         setClaims(nextClaims);
+        setSponsorPlacements(nextSponsorPlacements);
         setLaunchWeeks(nextLaunchWeeks);
       } catch (error) {
         if (!cancelled) {
@@ -786,6 +802,26 @@ export function AdminConsole() {
     }
   }
 
+  async function handleSponsorPlacementDisable(placementId: string) {
+    if (hasPendingAction) {
+      return;
+    }
+
+    setSponsorError(null);
+    setPendingAction(`sponsor-disable:${placementId}`);
+
+    try {
+      await apiRequest(`/api/admin/sponsor-placements/${placementId}/disable`, {
+        method: "POST",
+      });
+      await refreshSponsorPlacements();
+    } catch (error) {
+      setSponsorError(toErrorMessage(error));
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
   if (bootError) {
     return (
       <div className="rounded-[2rem] border border-destructive/20 bg-destructive/10 p-8 text-destructive  tracking-widest text-xs font-bold">
@@ -802,6 +838,7 @@ export function AdminConsole() {
     { id: "moderate", label: "Moderate", icon: Shield, count: totalPending + pendingClaimCount },
     { id: "launches", label: "Launches", icon: CalendarDays, count: launchWeeks.reduce((total, week) => total + week.launchCount, 0) },
     { id: "inventory", label: "Inventory", icon: Package, count: tools.length },
+    { id: "sponsors", label: "Sponsors", icon: Megaphone, count: sponsorPlacements.length },
     { id: "taxonomy", label: "Taxonomy", icon: Layers, count: categories.length + tags.length },
     { id: "blog", label: "Blog", icon: FileText },
   ];
@@ -963,6 +1000,17 @@ export function AdminConsole() {
               handleToolStatusUpdate={handleToolStatusUpdate}
               getToolNote={getToolNote}
               hasPendingAction={hasPendingAction}
+              isActionPending={isActionPending}
+            />
+          </div>
+        )}
+
+        {activeNav === "sponsors" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <SponsorPlacementPanel
+              placements={sponsorPlacements}
+              error={sponsorError}
+              onDisable={handleSponsorPlacementDisable}
               isActionPending={isActionPending}
             />
           </div>

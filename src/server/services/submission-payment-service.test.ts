@@ -112,6 +112,7 @@ type PaymentTx = {
   };
   launch: {
     create: ReturnType<typeof vi.fn>;
+    deleteMany: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
 };
@@ -240,6 +241,7 @@ describe("submission-payment-service", () => {
           },
           launch: {
             create: vi.fn(),
+            deleteMany: vi.fn(),
             update: vi.fn(),
           },
         };
@@ -368,6 +370,7 @@ describe("submission-payment-service", () => {
           },
           launch: {
             create: vi.fn(),
+            deleteMany: vi.fn(),
             update: vi.fn(),
           },
         };

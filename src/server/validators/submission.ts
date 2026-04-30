@@ -5,6 +5,7 @@ import {
   mediaInputSchema,
   optionalTrimmedString,
   pricingModelSchema,
+  websiteUrlSchema,
 } from "@/server/validators/shared";
 
 export const submissionCreateBaseSchema = z.object({
@@ -23,7 +24,7 @@ export const submissionCreateBaseSchema = z.object({
   preferredLaunchDate: z.coerce.date().optional(),
   name: z.string().trim().min(2).max(80),
   tagline: z.string().trim().min(10).max(60),
-  websiteUrl: z.url(),
+  websiteUrl: websiteUrlSchema,
   richDescription: z.string().trim().min(40).max(5000),
   pricingModel: pricingModelSchema,
   categoryIds: z.array(cuidSchema).min(1).max(3),

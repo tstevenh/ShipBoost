@@ -130,6 +130,28 @@ export type ListingClaim = {
   };
 };
 
+export type SponsorPlacement = {
+  id: string;
+  status:
+    | "PENDING_PAYMENT"
+    | "ACTIVE"
+    | "EXPIRED"
+    | "DISABLED"
+    | "PAID_WAITLISTED";
+  startsAt: string | null;
+  endsAt: string | null;
+  paidAt: string | null;
+  disabledAt: string | null;
+  checkoutSessionId: string | null;
+  paymentId: string | null;
+  tool: {
+    id: string;
+    slug: string;
+    name: string;
+    owner: { email: string } | null;
+  };
+};
+
 export type AdminLaunchEntry = {
   id: string;
   toolId: string;

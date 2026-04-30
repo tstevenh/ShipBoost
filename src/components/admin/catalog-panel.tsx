@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { useMemo, useState } from "react";
 import { Plus, RefreshCw, Save, Search, Trash2, X } from "lucide-react";
 
+import { NativeSelect } from "@/components/forms/native-select";
 import { cn } from "@/lib/utils";
 import {
   Field,
@@ -267,7 +268,7 @@ export function CatalogPanel({
               />
             </div>
 
-            <select
+            <NativeSelect
               value={typeFilter}
               onChange={(event) =>
                 setTypeFilter(event.target.value as "ALL" | "CATEGORY" | "TAG")
@@ -277,9 +278,9 @@ export function CatalogPanel({
               <option value="ALL">All types</option>
               <option value="CATEGORY">Categories</option>
               <option value="TAG">Tags</option>
-            </select>
+            </NativeSelect>
 
-            <select
+            <NativeSelect
               value={activeFilter}
               onChange={(event) =>
                 setActiveFilter(
@@ -291,7 +292,7 @@ export function CatalogPanel({
               <option value="ALL">All states</option>
               <option value="ACTIVE">Active</option>
               <option value="INACTIVE">Inactive</option>
-            </select>
+            </NativeSelect>
           </div>
 
           <div className="flex flex-wrap gap-3">

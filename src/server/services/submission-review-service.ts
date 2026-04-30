@@ -9,9 +9,10 @@ import {
   getLaunchpadGoLiveAtUtc,
   isAnchoredLaunchWeekStart,
   scheduleNextFreeLaunchDate,
+  UTC_WEEK_IN_DAYS,
 } from "@/server/services/launch-scheduling";
 import { getEnv } from "@/server/env";
-import { startOfUtcDay } from "@/server/services/time";
+import { addUtcDays, startOfUtcDay } from "@/server/services/time";
 import type { SubmissionReviewInput } from "@/server/validators/submission";
 
 import {
@@ -20,6 +21,26 @@ import {
   getDashboardUrl,
   resolveLaunchType,
 } from "@/server/services/submission-service-shared";
+
+type ReviewLaunchSummary = {
+  id: string;
+  launchType: "FREE" | "FEATURED" | "RELAUNCH";
+  status: "PENDING" | "APPROVED" | "LIVE" | "ENDED" | "REJECTED";
+  launchDate: Date;
+};
+
+function getActiveLaunchForType(
+  launches: ReviewLaunchSummary[],
+  launchType: ReviewLaunchSummary["launchType"],
+) {
+  return launches.find(
+    (launch) =>
+      launch.launchType === launchType &&
+      (launch.status === "PENDING" ||
+        launch.status === "APPROVED" ||
+        launch.status === "LIVE"),
+  );
+}
 
 export async function reviewSubmission(
   submissionId: string,
@@ -113,6 +134,16 @@ export async function reviewSubmission(
         const isFeaturedLaunch =
           submission.submissionType === "FEATURED_LAUNCH";
         const launchType = resolveLaunchType(submission.submissionType);
+        const existingLaunch = getActiveLaunchForType(
+          submission.tool.launches,
+          launchType,
+        );
+
+        if (existingLaunch) {
+          createdLaunch = existingLaunch;
+          return;
+        }
+
         const goLiveFloor = getLaunchpadGoLiveAtUtc();
         const preferredLaunchDate = submission.preferredLaunchDate
           ? startOfUtcDay(submission.preferredLaunchDate)
@@ -147,6 +178,9 @@ export async function reviewSubmission(
               isFreeLaunch || !shouldGoLiveImmediately ? "APPROVED" : "LIVE",
             launchDate,
             startAt: launchDate,
+            ...(isFreeLaunch
+              ? { endAt: addUtcDays(launchDate, UTC_WEEK_IN_DAYS) }
+              : {}),
             priorityWeight: isFeaturedLaunch ? 100 : 0,
           },
           select: {
@@ -178,20 +212,26 @@ export async function reviewSubmission(
         : input.publishTool
           ? "PUBLISHED"
           : "UNPUBLISHED";
-  const reviewedLaunches: Array<{
+  const reviewedLaunchMap = new Map<string, {
     id: string;
     launchType: string;
     status: string;
     launchDate: Date;
-  }> = [
+  }>();
+
+  for (const launch of [
     ...(createdLaunch ? [createdLaunch] : []),
-    ...submission.tool.launches.map((launch) => ({
+    ...submission.tool.launches,
+  ]) {
+    reviewedLaunchMap.set(launch.id, {
       id: launch.id,
       launchType: launch.launchType,
       status: launch.status,
       launchDate: launch.launchDate,
-    })),
-  ];
+    });
+  }
+
+  const reviewedLaunches = Array.from(reviewedLaunchMap.values());
   const responseUpdatedAt = new Date();
   const reviewedSubmission = {
     id: submission.id,

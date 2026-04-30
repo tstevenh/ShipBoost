@@ -24,6 +24,55 @@ export type DeferredEmailTask = () => Promise<void>;
 export const freeLaunchBadgePattern =
   /data-shipboost-badge\s*=\s*["']free-launch["']/i;
 
+const scriptSrcPattern =
+  /<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
+
+export function getSameOriginScriptUrls(html: string, pageUrl: string) {
+  const baseUrl = new URL(pageUrl);
+  const urls: string[] = [];
+
+  for (const match of html.matchAll(scriptSrcPattern)) {
+    const src = match[1];
+
+    if (!src) {
+      continue;
+    }
+
+    const scriptUrl = new URL(src, baseUrl);
+
+    if (
+      scriptUrl.origin === baseUrl.origin &&
+      scriptUrl.pathname.endsWith(".js")
+    ) {
+      urls.push(scriptUrl.toString());
+    }
+  }
+
+  return Array.from(new Set(urls));
+}
+
+export async function hasFreeLaunchBadgeInHtmlOrScripts(
+  html: string,
+  pageUrl: string,
+  fetchScriptText: (url: string) => Promise<string>,
+) {
+  if (freeLaunchBadgePattern.test(html)) {
+    return true;
+  }
+
+  const scriptUrls = getSameOriginScriptUrls(html, pageUrl).slice(0, 8);
+
+  for (const scriptUrl of scriptUrls) {
+    const scriptText = await fetchScriptText(scriptUrl);
+
+    if (freeLaunchBadgePattern.test(scriptText)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function formatLaunchDateForEmail(value: Date) {
   return new Intl.DateTimeFormat("en", {
     dateStyle: "medium",

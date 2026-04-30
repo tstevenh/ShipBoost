@@ -31,6 +31,7 @@ import type {
   AdminSubmissionListQueryInput,
   SubmissionCreateInput,
 } from "@/server/validators/submission";
+import { normalizeHttpUrl } from "@/server/validators/shared";
 
 import {
   type AuthenticatedFounder,
@@ -38,8 +39,8 @@ import {
   type DraftSaveResult,
   type SavedSubmissionDraft,
   formatLaunchDateForEmail,
-  freeLaunchBadgePattern,
   getDashboardUrl,
+  hasFreeLaunchBadgeInHtmlOrScripts,
   resolveLaunchType,
 } from "@/server/services/submission-service-shared";
 
@@ -82,10 +83,10 @@ function serializeFounderLaunch(launch: FounderLaunchSummary) {
 }
 
 function getActiveLaunchForType(
-  launches: FounderLaunchSummary[],
+  launches: FounderLaunchSummary[] | undefined,
   launchType: FounderLaunchSummary["launchType"],
 ) {
-  return launches.find(
+  return launches?.find(
     (launch) =>
       launch.launchType === launchType &&
       launch.status !== "REJECTED" &&
@@ -94,7 +95,7 @@ function getActiveLaunchForType(
 }
 
 function getActiveLaunchForSubmission(
-  launches: FounderLaunchSummary[],
+  launches: FounderLaunchSummary[] | undefined,
   submissionType: SubmissionCreateInput["submissionType"],
 ) {
   if (submissionType === "LISTING_ONLY") {
@@ -1036,8 +1037,16 @@ export async function verifyFreeLaunchBadge(
   let verified = false;
   let message = "Badge not found on your homepage yet. Add it and try again.";
 
+  let websiteUrl: string;
+
   try {
-    const response = await fetch(submission.tool.websiteUrl, {
+    websiteUrl = normalizeHttpUrl(submission.tool.websiteUrl);
+  } catch {
+    websiteUrl = submission.tool.websiteUrl;
+  }
+
+  try {
+    const response = await fetch(websiteUrl, {
       headers: {
         "user-agent": "ShipBoostBadgeVerifier/1.0 (+https://shipboost.io)",
       },
@@ -1046,7 +1055,21 @@ export async function verifyFreeLaunchBadge(
     });
 
     const html = await response.text();
-    verified = freeLaunchBadgePattern.test(html);
+    verified = await hasFreeLaunchBadgeInHtmlOrScripts(
+      html,
+      response.url || websiteUrl,
+      async (scriptUrl) => {
+        const scriptResponse = await fetch(scriptUrl, {
+          headers: {
+            "user-agent": "ShipBoostBadgeVerifier/1.0 (+https://shipboost.io)",
+          },
+          redirect: "follow",
+          signal: AbortSignal.timeout(10_000),
+        });
+
+        return scriptResponse.text();
+      },
+    );
   } catch (error) {
     message =
       error instanceof Error
@@ -1058,7 +1081,7 @@ export async function verifyFreeLaunchBadge(
     await tx.submission.update({
       where: { id: submission.id },
       data: {
-        badgeFooterUrl: submission.tool.websiteUrl,
+        badgeFooterUrl: websiteUrl,
         badgeVerification: verified ? "VERIFIED" : "FAILED",
       },
     });
@@ -1066,6 +1089,7 @@ export async function verifyFreeLaunchBadge(
     await tx.tool.update({
       where: { id: submission.toolId },
       data: {
+        websiteUrl,
         badgeVerification: verified ? "VERIFIED" : "FAILED",
       },
     });

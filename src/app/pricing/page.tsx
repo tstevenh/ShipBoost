@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check, ArrowRight, Star, ShieldCheck, Zap } from "lucide-react";
+import {
+  Check,
+  ArrowRight,
+  Megaphone,
+  MousePointerClick,
+  Star,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
 import {
   premiumLaunchAvailable,
   premiumLaunchUnavailableMessage,
@@ -246,6 +254,77 @@ export default async function PricingPage() {
             </article>
           ))}
         </div>
+
+        <section className="mt-10 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
+            <div>
+              <p className="text-[10px] font-black tracking-[0.2em] text-primary">
+                Visibility add-on
+              </p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+                Need more visibility after listing?
+              </h2>
+              <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-muted-foreground">
+                Sponsor your approved ShipBoost tool in the sidebar for 30
+                days. Your card appears across discovery pages and links
+                directly to your website.
+              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {[
+                  {
+                    icon: Megaphone,
+                    text: "One of 3 active sponsor slots",
+                  },
+                  {
+                    icon: MousePointerClick,
+                    text: "Direct website clicks",
+                  },
+                  {
+                    icon: ShieldCheck,
+                    text: "Approved tools only",
+                  },
+                  {
+                    icon: Zap,
+                    text: "Starts after payment confirmation",
+                  },
+                ].map((item) => (
+                  <div key={item.text} className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <item.icon size={14} />
+                    </div>
+                    <p className="text-sm font-bold text-foreground/80">
+                      {item.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-background p-5">
+              <p className="text-[10px] font-black tracking-[0.2em] text-muted-foreground">
+                Sponsor Placement
+              </p>
+              <div className="mt-4 flex items-end gap-2">
+                <span className="text-5xl font-black tracking-tighter text-foreground">
+                  $59
+                </span>
+                <span className="pb-2 text-sm font-black text-muted-foreground">
+                  / 30 days
+                </span>
+              </div>
+              <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
+                One-time checkout. No subscription, no surprise renewal.
+              </p>
+              <Link
+                href="/advertise"
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-6 py-4 text-sm font-black text-background shadow-xl shadow-black/10 transition-all hover:opacity-90 active:scale-95"
+              >
+                Advertise your tool
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </section>
 
         <section className="mt-10 rounded-3xl border border-border bg-card p-8 shadow-sm">
           <p className="text-[10px] font-black tracking-[0.2em] text-primary">

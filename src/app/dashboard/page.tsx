@@ -6,6 +6,9 @@ import { getServerSession } from "@/server/auth/session";
 import { getEnv } from "@/server/env";
 import { listFounderListingClaims } from "@/server/services/listing-claim-service";
 import {
+  listFounderSponsorPlacements,
+} from "@/server/services/sponsor-placement-service";
+import {
   listFounderSubmissions,
   reconcilePremiumLaunchPayment,
 } from "@/server/services/submission-service";
@@ -53,10 +56,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         })
       : null;
 
-  const [submissions, tools, claims] = await Promise.all([
+  const [submissions, tools, claims, sponsorPlacements] = await Promise.all([
     listFounderSubmissions(session.user.id),
     listFounderTools(session.user.id),
     listFounderListingClaims(session.user.id),
+    listFounderSponsorPlacements(session.user.id),
   ]);
   const initialSuccessMessage =
     resolvedSearchParams?.checkout === "success"
@@ -128,6 +132,25 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       : null,
     },
   }));
+  const serializedSponsorPlacements = sponsorPlacements.map((placement) => ({
+    id: placement.id,
+    status: placement.status,
+    startsAt: placement.startsAt?.toISOString() ?? null,
+    endsAt: placement.endsAt?.toISOString() ?? null,
+    paidAt: placement.paidAt?.toISOString() ?? null,
+    createdAt: placement.createdAt.toISOString(),
+    tool: {
+      id: placement.tool.id,
+      slug: placement.tool.slug,
+      name: placement.tool.name,
+      websiteUrl: placement.tool.websiteUrl,
+      logoMedia: placement.tool.logoMedia
+        ? {
+            url: placement.tool.logoMedia.url,
+          }
+        : null,
+    },
+  }));
   const visibleOwnershipClaims = serializedClaims.filter(
     (claim) => claim.status === "PENDING" || claim.status === "APPROVED",
   );
@@ -158,6 +181,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           initialSubmissions={serializedSubmissions}
           initialTools={serializedTools}
           initialClaims={visibleOwnershipClaims}
+          initialSponsorPlacements={serializedSponsorPlacements}
           founderEmail={session.user.email}
           founderRole={session.user.role ?? "FOUNDER"}
           initialSuccessMessage={initialSuccessMessage}

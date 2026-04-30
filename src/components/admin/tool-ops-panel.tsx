@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { NativeSelect } from "@/components/forms/native-select";
 import {
   Field,
   SectionCard,
@@ -629,7 +630,7 @@ export function ToolOpsPanel({
                 />
               </div>
 
-              <select
+              <NativeSelect
                 value={moderationFilter}
                 onChange={(event) =>
                   setModerationFilter(
@@ -644,9 +645,9 @@ export function ToolOpsPanel({
                     {status}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
 
-              <select
+              <NativeSelect
                 value={publicationFilter}
                 onChange={(event) =>
                   setPublicationFilter(
@@ -661,9 +662,9 @@ export function ToolOpsPanel({
                     {status}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
 
-              <select
+              <NativeSelect
                 value={featuredFilter}
                 onChange={(event) =>
                   setFeaturedFilter(
@@ -675,7 +676,7 @@ export function ToolOpsPanel({
                 <option value="ALL">All premium states</option>
                 <option value="FEATURED">Premium only</option>
                 <option value="STANDARD">Standard only</option>
-              </select>
+              </NativeSelect>
             </div>
           </div>
 
@@ -820,7 +821,7 @@ export function ToolOpsPanel({
 
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Pricing">
-                <select
+                <NativeSelect
                   value={toolDraft.pricingModel}
                   onChange={(event) =>
                     setToolDraft((current) => ({
@@ -835,7 +836,7 @@ export function ToolOpsPanel({
                       {pricingModel}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <Field label="Screenshots" hint="One per line">
                 <textarea
@@ -980,7 +981,7 @@ export function ToolOpsPanel({
 
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Moderation">
-                <select
+                <NativeSelect
                   value={selectedTool.moderationStatus}
                   onChange={(event) =>
                     void handleToolStatusUpdate(
@@ -1000,11 +1001,11 @@ export function ToolOpsPanel({
                       {status}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
 
               <Field label="Publication">
-                <select
+                <NativeSelect
                   value={selectedTool.publicationStatus}
                   onChange={(event) =>
                     void handleToolStatusUpdate(
@@ -1024,7 +1025,7 @@ export function ToolOpsPanel({
                       {status}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
             </div>
 

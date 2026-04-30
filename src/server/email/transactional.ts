@@ -672,3 +672,40 @@ export async function sendLaunchLiveEmailMessage(input: {
     ].join("\n"),
   });
 }
+
+export async function sendSponsorPlacementRenewalReminderEmailMessage(input: {
+  to: string;
+  toolName: string;
+  endsAt: string;
+  advertiseUrl: string;
+}) {
+  const subject = `${input.toolName} sponsor placement ends soon`;
+  const preview = `Renew your ShipBoost sponsor placement before it ends on ${input.endsAt}.`;
+  const html = renderEmailDocument({
+    title: subject,
+    preview,
+    content: [
+      eyebrow("Sponsor placement"),
+      h1("Your sponsor placement ends soon"),
+      paragraph(
+        `<strong>${escapeHtml(
+          input.toolName,
+        )}</strong> is sponsored on ShipBoost until <strong>${escapeHtml(
+          input.endsAt,
+        )}</strong>.`,
+      ),
+      paragraph(
+        "Renew with another one-time 30-day placement if you want to keep the sidebar spot.",
+      ),
+      ctaButton(input.advertiseUrl, "Renew placement"),
+      linkParagraph(input.advertiseUrl),
+    ].join(""),
+  });
+
+  await sendTransactionalEmail({
+    to: input.to,
+    subject,
+    html,
+    text: `${preview}\n\nRenew: ${input.advertiseUrl}`,
+  });
+}

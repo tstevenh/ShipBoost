@@ -162,6 +162,7 @@ describe("submission-draft-service update path", () => {
 
     expect(result).toEqual({
       id: "submission_1",
+      toolId: "tool_1",
       submissionType: "FREE_LAUNCH",
       reviewStatus: "DRAFT",
       paymentStatus: "NOT_REQUIRED",

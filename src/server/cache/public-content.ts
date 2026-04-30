@@ -27,6 +27,7 @@ import {
   getPublishedToolBySlug,
   listRelatedPublishedTools,
 } from "@/server/services/tool-service";
+import { listActiveSponsorPlacements } from "@/server/services/sponsor-placement-service";
 import { alternativesSeoRegistry } from "@/server/seo/registry";
 import { bestPagesRegistry } from "@/server/seo/best-pages";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
@@ -66,10 +67,19 @@ export const PUBLIC_CACHE_TAGS = {
   blogArticles: "public:blog:articles",
   blogCategories: "public:blog:categories",
   blogTags: "public:blog:tags",
+  sponsorPlacements: "public:sponsor-placements",
 } as const;
 
 export function revalidatePublicToolContent() {
   revalidateTag(PUBLIC_CACHE_TAGS.tools, "max");
+}
+
+export function revalidatePublicSponsorPlacements() {
+  revalidateTag(PUBLIC_CACHE_TAGS.sponsorPlacements, "max");
+  revalidatePath("/");
+  revalidatePath("/launches/[board]", "page");
+  revalidatePath("/categories/[slug]", "page");
+  revalidatePath("/tags/[slug]", "page");
 }
 
 export function revalidatePublicBlogContent(input?: {
@@ -103,6 +113,7 @@ export function revalidateAllPublicContent() {
   revalidateTag(PUBLIC_CACHE_TAGS.bestTags, "max");
   revalidateTag(PUBLIC_CACHE_TAGS.bestPages, "max");
   revalidateTag(PUBLIC_CACHE_TAGS.alternatives, "max");
+  revalidatePublicSponsorPlacements();
   revalidatePublicToolContent();
   revalidatePublicBlogContent();
   revalidatePath("/");
@@ -351,6 +362,10 @@ export const getCachedRelatedPublishedTools = cache(
         tags: [PUBLIC_CACHE_TAGS.tools, `public:tool-related:${toolId}`],
       },
     )(),
+);
+
+export const getCachedActiveSponsorPlacements = cache(() =>
+  listActiveSponsorPlacements(),
 );
 
 export const getCachedBlogIndexPage = cache(async () =>

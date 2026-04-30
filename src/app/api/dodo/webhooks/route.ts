@@ -7,6 +7,7 @@ import {
   handlePremiumLaunchPaymentSucceeded,
   handlePremiumLaunchRefundSucceeded,
 } from "@/server/services/submission-service";
+import { handleSponsorPlacementPaymentSucceeded } from "@/server/services/sponsor-placement-service";
 
 type DodoWebhookPayload = {
   type: string;
@@ -41,11 +42,20 @@ export async function POST(request: Request) {
 
   try {
     if (payload.type === "payment.succeeded" && payload.data.payment_id) {
-      await handlePremiumLaunchPaymentSucceeded({
-        paymentId: payload.data.payment_id,
-        checkoutSessionId: payload.data.checkout_session_id ?? null,
-        metadata: payload.data.metadata ?? {},
-      });
+      if (payload.data.metadata?.shipboostProduct === "sponsor_placement") {
+        await handleSponsorPlacementPaymentSucceeded({
+          paymentId: payload.data.payment_id,
+          checkoutSessionId: payload.data.checkout_session_id ?? null,
+          metadata: payload.data.metadata ?? {},
+        });
+      } else {
+        await handlePremiumLaunchPaymentSucceeded({
+          paymentId: payload.data.payment_id,
+          checkoutSessionId: payload.data.checkout_session_id ?? null,
+          metadata: payload.data.metadata ?? {},
+        });
+      }
+
       revalidateAllPublicContent();
     }
 

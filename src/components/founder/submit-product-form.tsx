@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
+import { NativeSelect } from "@/components/forms/native-select";
 import {
   premiumLaunchAvailable,
   premiumLaunchUnavailableMessage,
@@ -173,10 +174,15 @@ function slugify(value: string) {
 }
 
 function ensureHttps(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://${trimmed}`;
+  let normalized = value.trim();
+  if (!normalized) return "";
+
+  while (/^https?:\/\/https?:\/\//i.test(normalized)) {
+    normalized = normalized.replace(/^https?:\/\//i, "");
+  }
+
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  return `https://${normalized}`;
 }
 
 function isValidUrl(value: string) {
@@ -187,7 +193,10 @@ function isValidUrl(value: string) {
   }
 
   try {
-    new URL(normalized);
+    const url = new URL(normalized);
+    if (url.hostname === "http" || url.hostname === "https") {
+      return false;
+    }
     return true;
   } catch {
     return false;
@@ -1543,7 +1552,7 @@ export function SubmitProductForm({
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-foreground">Pricing *</label>
-                    <select
+                    <NativeSelect
                       value={form.pricingModel}
                       onChange={(event) =>
                         setForm({
@@ -1559,7 +1568,7 @@ export function SubmitProductForm({
                           {model}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </div>
                 </div>
 

@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
+import { NativeSelect } from "@/components/forms/native-select";
 
 type CategoryOption = {
   id: string;
@@ -678,7 +679,7 @@ export function FounderToolEditor({
 
                   <div className="grid gap-6 md:grid-cols-2">
                     <Field label="Pricing model" error={getFieldError("pricingModel")}>
-                      <select
+                      <NativeSelect
                         value={form.pricingModel}
                         onChange={(event) =>
                           setForm((current) => ({
@@ -693,7 +694,7 @@ export function FounderToolEditor({
                             {pricingModel}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     </Field>
                   </div>
 

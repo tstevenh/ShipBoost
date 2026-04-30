@@ -108,6 +108,14 @@ enum SubmissionSpotlightStatus {
   PUBLISHED
 }
 
+enum SponsorPlacementStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  EXPIRED
+  DISABLED
+  PAID_WAITLISTED
+}
+
 model User {
   id            String   @id @default(cuid())
   name          String?
@@ -172,13 +180,14 @@ model Tool {
   logoMediaId String?    @unique
   logoMedia   ToolMedia? @relation("ToolLogo", fields: [logoMediaId], references: [id])
 
-  media          ToolMedia[]    @relation("ToolMediaItems")
-  toolCategories ToolCategory[]
-  toolTags       ToolTag[]
-  submissions    Submission[]
-  launches       Launch[]
-  toolVotes      ToolVote[]
-  listingClaims  ListingClaim[]
+  media             ToolMedia[]        @relation("ToolMediaItems")
+  toolCategories    ToolCategory[]
+  toolTags          ToolTag[]
+  submissions       Submission[]
+  launches          Launch[]
+  toolVotes         ToolVote[]
+  listingClaims     ListingClaim[]
+  sponsorPlacements SponsorPlacement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -375,6 +384,25 @@ model ListingClaim {
   @@index([reviewedByUserId])
 }
 
+model SponsorPlacement {
+  id                    String                 @id @default(cuid())
+  toolId                String
+  tool                  Tool                   @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  status                SponsorPlacementStatus @default(PENDING_PAYMENT)
+  startsAt              DateTime?
+  endsAt                DateTime?
+  paidAt                DateTime?
+  disabledAt            DateTime?
+  checkoutSessionId     String?                @unique
+  paymentId             String?
+  renewalReminderSentAt DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@index([status, startsAt, endsAt])
+  @@index([toolId, status])
+}
+
 model ToolVote {
   id        String   @id @default(cuid())
   toolId    String
@@ -483,8 +511,8 @@ model BlogArticle {
   publishedAt        DateTime?
   lastUpdatedAt      DateTime?
 
-  author          BlogAuthor      @relation(fields: [authorId], references: [id], onDelete: Restrict)
-  primaryCategory BlogCategory    @relation(fields: [primaryCategoryId], references: [id], onDelete: Restrict)
+  author          BlogAuthor                @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  primaryCategory BlogCategory              @relation(fields: [primaryCategoryId], references: [id], onDelete: Restrict)
   articleTags     BlogArticleTag[]
   spotlightBrief  SubmissionSpotlightBrief?
 

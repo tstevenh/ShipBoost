@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import Link from "next/link";
 import { ExternalLink, Check, X, RefreshCw } from "lucide-react";
+import { NativeSelect } from "@/components/forms/native-select";
 import { cn } from "@/lib/utils";
 
 import {
@@ -70,7 +71,7 @@ export function ListingClaimPanel({
             />
           </Field>
           <Field label="Status">
-            <select
+            <NativeSelect
               value={claimFilter}
               onChange={(event) =>
                 onClaimFilterChange(event.target.value as "" | ListingClaim["status"])
@@ -81,7 +82,7 @@ export function ListingClaimPanel({
               <option value="PENDING">Pending</option>
               <option value="APPROVED">Approved</option>
               <option value="REJECTED">Rejected</option>
-            </select>
+            </NativeSelect>
           </Field>
         </div>
 

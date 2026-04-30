@@ -59,6 +59,7 @@ vi.mock("@/server/services/submission-service-shared", async () => {
 });
 
 vi.mock("@/server/services/launch-scheduling", () => ({
+  UTC_WEEK_IN_DAYS: 7,
   getLaunchpadGoLiveAtUtc: () => new Date("2026-05-04T00:00:00.000Z"),
   scheduleNextFreeLaunchDate: scheduleNextFreeLaunchDateMock,
 }));
@@ -324,5 +325,86 @@ describe("submission-review-service", () => {
         fromDate: expect.any(Date),
       }),
     );
+  });
+
+  it("reuses an existing scheduled free launch when approving a founder-scheduled submission", async () => {
+    const existingLaunch = {
+      id: "launch_existing_free",
+      launchType: "FREE",
+      status: "APPROVED",
+      launchDate: new Date("2026-05-11T00:00:00.000Z"),
+    };
+    const submission = {
+      id: "submission_4",
+      toolId: "tool_4",
+      submissionType: "FREE_LAUNCH",
+      reviewStatus: "PENDING",
+      preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
+      user: {
+        id: "user_4",
+        email: "founder@acme.com",
+        name: "Founder",
+      },
+      paymentStatus: "NOT_REQUIRED",
+      badgeFooterUrl: null,
+      badgeVerification: "VERIFIED",
+      createdAt: new Date("2026-04-01T00:00:00.000Z"),
+      tool: {
+        id: "tool_4",
+        slug: "acme-scheduled",
+        name: "Acme Scheduled",
+        tagline: "Ship faster",
+        websiteUrl: "https://acme.test",
+        logoMedia: null,
+        publicationStatus: "PUBLISHED",
+        moderationStatus: "APPROVED",
+        launches: [existingLaunch],
+      },
+    };
+
+    getSubmissionByIdMock.mockResolvedValueOnce(submission);
+    prismaMock.$transaction.mockImplementation(
+      async (
+        callback: (tx: {
+          submission: typeof prismaMock.submission;
+          tool: typeof prismaMock.tool;
+          launch: typeof prismaMock.launch;
+        }) => Promise<unknown>,
+      ) =>
+        callback({
+          submission: {
+            update: prismaMock.submission.update,
+          },
+          tool: {
+            update: prismaMock.tool.update,
+          },
+          launch: {
+            create: prismaMock.launch.create,
+          },
+        }),
+    );
+
+    const result = await reviewSubmission(
+      "submission_4",
+      {
+        action: "APPROVE",
+        founderVisibleNote: undefined,
+        internalReviewNote: undefined,
+        publishTool: true,
+        goLiveNow: true,
+      },
+      "admin_1",
+    );
+
+    expect(scheduleNextFreeLaunchDateMock).not.toHaveBeenCalled();
+    expect(prismaMock.launch.create).not.toHaveBeenCalled();
+    expect(result.submission.tool.launches).toEqual([
+      expect.objectContaining({
+        id: "launch_existing_free",
+        launchType: "FREE",
+        status: "APPROVED",
+        launchDate: new Date("2026-05-11T00:00:00.000Z"),
+      }),
+    ]);
   });
 });
