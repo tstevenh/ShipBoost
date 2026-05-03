@@ -19,7 +19,7 @@ const steps = [
   {
     title: "1. Submit your product",
     body:
-      "Founders submit their product, listing details, and launch preference. Free launches can add an optional ShipBoost badge for priority review within 24-48 hours.",
+      "Founders submit their product, listing details, and launch preference. Free launches use a nofollow website link by default and can add an optional ShipBoost badge to unlock a dofollow backlink.",
   },
   {
     title: "2. Enter the right launch flow",
@@ -38,7 +38,8 @@ const rules = [
     title: "Free Launch",
     points: [
       "Reviewed before approval",
-      "Optional badge for priority review within 24-48 hours",
+      "Nofollow website link by default",
+      "Verified badge unlocks a dofollow backlink",
       "Queued into the next available weekly cohort",
     ],
   },
@@ -46,6 +47,7 @@ const rules = [
     title: "Premium Launch",
     points: [
       "Choose a launch week",
+      "Dofollow backlink included by default",
       "No badge step required",
       "Starts ahead of free launches outside the top vote slots",
     ],
@@ -184,11 +186,11 @@ export default function HowItWorksPage() {
           {[
             {
               title: "Choose Free Launch if…",
-              body: "You want a credible public listing and weekly board visibility, with the option to add a badge for priority review.",
+              body: "You want a credible public listing and weekly board visibility, with a nofollow website link by default and the option to add a badge for a dofollow backlink.",
             },
             {
               title: "Choose Premium Launch if…",
-              body: "Timing matters, you want less submission friction, and you want stronger baseline placement in the weekly board.",
+              body: "Timing matters, you want less submission friction, you want stronger baseline placement, and you want a dofollow backlink by default.",
             },
             {
               title: "Use partner submissions if…",

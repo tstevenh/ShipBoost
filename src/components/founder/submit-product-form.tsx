@@ -61,6 +61,8 @@ type SubmitProductFormProps = {
     value: string;
     label: string;
   }>;
+  foundingPremiumLaunchSpotsLeft?: number;
+  foundingPremiumLaunchLimit?: number;
   estimatedFreeLaunchDate?: string | null;
   initialDraft?: {
     id: string;
@@ -153,8 +155,13 @@ type ScheduledLaunch = {
 const foundingPremiumPrice = {
   original: "$19",
   discounted: "$9",
-  label: "Founding price for the first 100 founders",
 };
+
+const BADGE_SUPPORT_EMAIL = "support@shipboost.io";
+
+function formatFoundingPremiumSpotsLabel(spotsLeft: number, limit: number) {
+  return `${spotsLeft} of ${limit} founding spots left`;
+}
 
 const pricingModels: PricingModel[] = [
   "FREE",
@@ -378,6 +385,8 @@ export function SubmitProductForm({
   appUrl,
   supportEmail,
   premiumLaunchWeeks,
+  foundingPremiumLaunchSpotsLeft = 0,
+  foundingPremiumLaunchLimit = 100,
   estimatedFreeLaunchDate = null,
   initialDraft = null,
 }: SubmitProductFormProps) {
@@ -452,6 +461,10 @@ export function SubmitProductForm({
     currentScheduledLaunch?.launchType === "FREE"
       ? currentScheduledLaunch.launchDate
       : estimatedFreeLaunchDate;
+  const foundingPremiumSpotsLabel = formatFoundingPremiumSpotsLabel(
+    foundingPremiumLaunchSpotsLeft,
+    foundingPremiumLaunchLimit,
+  );
   const selectedCategory = categories.find((category) => category.id === form.categoryIds[0]);
   const selectedTags = form.tagIds.flatMap((tagId) => {
     const tag = tags.find((item) => item.id === tagId);
@@ -1096,7 +1109,7 @@ export function SubmitProductForm({
                         <span className="text-sm font-black text-foreground">$0</span>
                       </div>
                       <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
-                        Get the next free launch slot. Free launches are capped at 10 per week.
+                        Get the next free launch slot. Free launches include a nofollow website link by default.
                       </p>
                       <p className="mt-2 text-xs font-bold text-muted-foreground">
                         Estimated launch: in {formatLaunchWait(freeLaunchEstimateDate)}.
@@ -1128,11 +1141,12 @@ export function SubmitProductForm({
                         </span>
                       </div>
                       <p className="mt-1 text-[10px] font-black tracking-widest text-primary">
-                        {foundingPremiumPrice.label}
+                        {foundingPremiumSpotsLabel}
                       </p>
                       <ul className="mt-3 space-y-2 text-sm font-bold text-foreground/80">
                         {[
                           "Reserve a specific launch week",
+                          "Dofollow backlink included by default",
                           "Get stronger baseline board placement",
                           "Includes one editorial launch spotlight during launch period",
                         ].map((item) => (
@@ -1213,10 +1227,10 @@ export function SubmitProductForm({
               <div>
                 <p className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.18em] text-primary">
                   <ShieldCheck size={13} />
-                  Optional badge verification
+                  Badge backlink verification
                 </p>
                 <h3 id="badge-priority-title" className="mt-2 text-xl font-black tracking-tight text-foreground">
-                  Be approved faster with badge verification
+                  Unlock your dofollow backlink
                 </h3>
               </div>
               <button
@@ -1231,15 +1245,25 @@ export function SubmitProductForm({
 
             <div className="p-6">
               <p className="text-sm font-medium leading-relaxed text-muted-foreground">
-                Your free launch is scheduled. Add a small ShipBoost badge to
-                your homepage or footer if you want priority review within
-                24-48 hours.
+                Your free launch is scheduled with a nofollow website link by
+                default. Add a small ShipBoost badge to your homepage or footer,
+                then verify it to unlock a dofollow backlink.
               </p>
 
               {errorMessage ? (
-                <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-                  {errorMessage}
-                </p>
+                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+                  <p>{errorMessage}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-rose-700/80">
+                    Already added the badge? Email{" "}
+                    <a
+                      href={`mailto:${BADGE_SUPPORT_EMAIL}`}
+                      className="underline underline-offset-2"
+                    >
+                      {BADGE_SUPPORT_EMAIL}
+                    </a>{" "}
+                    and we can help verify it manually.
+                  </p>
+                </div>
               ) : null}
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">

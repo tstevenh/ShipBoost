@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { requireSession } from "@/server/auth/session";
+import { revalidatePublicVoteContent } from "@/server/cache/public-content";
 import { errorResponse, ok } from "@/server/http/response";
 import { toggleToolUpvote } from "@/server/services/upvote-service";
 import { toolVoteRouteParamsSchema } from "@/server/validators/upvote";
@@ -14,6 +15,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const session = await requireSession(request);
     const { toolId } = toolVoteRouteParamsSchema.parse(await context.params);
     const result = await toggleToolUpvote(toolId, session.user.id);
+
+    revalidatePublicVoteContent();
 
     return ok(result);
   } catch (error) {

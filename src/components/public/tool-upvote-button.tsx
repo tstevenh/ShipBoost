@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { ChevronUp, Loader2 } from "lucide-react";
 
 import { useViewerVoteState } from "@/components/public/viewer-vote-state-provider";
@@ -33,7 +33,7 @@ export function ToolUpvoteButton({
     initialDailyVotesRemaining,
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isMutating, setIsMutating] = useState(false);
 
   useEffect(() => {
     setCount(initialCount);
@@ -75,51 +75,78 @@ export function ToolUpvoteButton({
       return;
     }
 
-    startTransition(() => {
-      void (async () => {
-        setErrorMessage(null);
+    if (isMutating) {
+      return;
+    }
 
-        try {
-          const response = await fetch(`/api/tools/${toolId}/vote`, {
-            method: "POST",
-          });
-          const payload = (await response.json().catch(() => null)) as
-            | {
-                data?: {
-                  hasUpvoted: boolean;
-                  upvoteCount: number;
-                  dailyVotesRemaining: number;
-                };
-                error?: string;
-              }
-            | null;
+    const previousState = {
+      count,
+      hasUpvoted,
+      dailyVotesRemaining,
+    };
+    const optimisticHasUpvoted = !hasUpvoted;
+    const optimisticCount = Math.max(0, count + (optimisticHasUpvoted ? 1 : -1));
+    const optimisticDailyVotesRemaining =
+      dailyVotesRemaining === null
+        ? null
+        : Math.max(
+            0,
+            dailyVotesRemaining + (optimisticHasUpvoted ? -1 : 1),
+          );
 
-          if (!response.ok || !payload?.data) {
-            throw new Error(payload?.error ?? "Unable to update upvote.");
-          }
+    setErrorMessage(null);
+    setIsMutating(true);
+    setHasUpvoted(optimisticHasUpvoted);
+    setCount(optimisticCount);
+    setDailyVotesRemaining(optimisticDailyVotesRemaining);
 
-          setHasUpvoted(payload.data.hasUpvoted);
-          setCount(payload.data.upvoteCount);
-          setDailyVotesRemaining(payload.data.dailyVotesRemaining);
-          viewerVoteState.applyVoteResult?.(toolId, payload.data);
-        } catch (error) {
-          const message =
-            error instanceof Error ? error.message : "Unable to update upvote.";
+    void (async () => {
+      try {
+        const response = await fetch(`/api/tools/${toolId}/vote`, {
+          method: "POST",
+        });
+        const payload = (await response.json().catch(() => null)) as
+          | {
+              data?: {
+                hasUpvoted: boolean;
+                upvoteCount: number;
+                dailyVotesRemaining: number;
+              };
+              error?: string;
+            }
+          | null;
 
-          if (message === "Daily upvote limit reached.") {
-            setDailyVotesRemaining(0);
-            setErrorMessage(null);
-            return;
-          }
-
-          setErrorMessage(message);
+        if (!response.ok || !payload?.data) {
+          throw new Error(payload?.error ?? "Unable to update upvote.");
         }
-      })();
-    });
+
+        setHasUpvoted(payload.data.hasUpvoted);
+        setCount(payload.data.upvoteCount);
+        setDailyVotesRemaining(payload.data.dailyVotesRemaining);
+        viewerVoteState.applyVoteResult?.(toolId, payload.data);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unable to update upvote.";
+
+        setHasUpvoted(previousState.hasUpvoted);
+        setCount(previousState.count);
+        setDailyVotesRemaining(previousState.dailyVotesRemaining);
+
+        if (message === "Daily upvote limit reached.") {
+          setDailyVotesRemaining(0);
+          setErrorMessage(null);
+          return;
+        }
+
+        setErrorMessage(message);
+      } finally {
+        setIsMutating(false);
+      }
+    })();
   }
 
   const isDisabled =
-    isPending || (session?.user.id ? !hasUpvoted && dailyVotesRemaining === 0 : false);
+    isMutating || (session?.user.id ? !hasUpvoted && dailyVotesRemaining === 0 : false);
 
   if (variant === "large") {
     return (
@@ -135,15 +162,13 @@ export function ToolUpvoteButton({
               : "bg-primary text-primary-foreground border-primary hover:opacity-90 shadow-xl shadow-black/10"
           )}
         >
-          {isPending ? (
+          {isMutating ? (
             <Loader2 size={24} className="animate-spin" />
           ) : (
-            <>
-              <ChevronUp className={cn("size-6 transition-transform", hasUpvoted && "scale-110")} />
-              <span>{hasUpvoted ? "Upvoted" : "Upvote"}</span>
-              <span className="ml-auto px-3 border-l border-current/20">{count}</span>
-            </>
+            <ChevronUp className={cn("size-6 transition-transform", hasUpvoted && "scale-110")} />
           )}
+          <span>{hasUpvoted ? "Upvoted" : "Upvote"}</span>
+          <span className="ml-auto px-3 border-l border-current/20">{count}</span>
         </button>
         {errorMessage && <p className="mt-3 text-xs font-bold text-destructive text-center">{errorMessage}</p>}
       </div>
@@ -164,7 +189,7 @@ export function ToolUpvoteButton({
               : "border-border bg-background text-muted-foreground hover:border-foreground hover:text-foreground",
           )}
         >
-          {isPending ? (
+          {isMutating ? (
             <Loader2 size={18} className="mb-0.5 animate-spin" />
           ) : (
             <ChevronUp
@@ -201,15 +226,13 @@ export function ToolUpvoteButton({
           variant === "compact" ? "rounded-full border px-3 py-1 text-[10px]" : "rounded-xl border px-5 py-2.5 text-sm"
         )}
       >
-        {isPending ? (
+        {isMutating ? (
           <Loader2 size={14} className="animate-spin" />
         ) : (
-          <>
-            <ChevronUp size={14} className={cn(hasUpvoted && "scale-110")} />
-            <span className="tracking-tight">{hasUpvoted ? "Upvoted" : "Upvote"}</span>
-            <span className="ml-1 font-extrabold">{count}</span>
-          </>
+          <ChevronUp size={14} className={cn(hasUpvoted && "scale-110")} />
         )}
+        <span className="tracking-tight">{hasUpvoted ? "Upvoted" : "Upvote"}</span>
+        <span className="ml-1 font-extrabold">{count}</span>
       </button>
 
       {errorMessage ? (

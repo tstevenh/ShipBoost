@@ -74,11 +74,12 @@ describe("AdminConsole", () => {
       expect(apiRequestMock).toHaveBeenCalledWith(
         "/api/admin/listing-claims?status=PENDING",
       );
+      expect(apiRequestMock).toHaveBeenCalledWith("/api/admin/sponsor-placements");
       expect(apiRequestMock).toHaveBeenCalledWith("/api/admin/launches");
     });
 
     await waitFor(() => {
-      expect(apiRequestMock).toHaveBeenCalledTimes(6);
+      expect(apiRequestMock).toHaveBeenCalledTimes(7);
     });
   });
 });

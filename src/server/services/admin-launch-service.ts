@@ -1,30 +1,35 @@
 import { prisma } from "@/server/db/client";
 import { getLaunchWeekStart, UTC_WEEK_IN_DAYS } from "@/server/services/launch-scheduling";
-import { addUtcDays, startOfUtcDay, startOfUtcWeek } from "@/server/services/time";
+import { addUtcDays, startOfUtcDay } from "@/server/services/time";
 
-type LaunchStatus = "PENDING" | "APPROVED" | "LIVE";
+type LaunchStatus = "PENDING" | "APPROVED" | "LIVE" | "ENDED";
 
 function compareLaunchStatus(left: LaunchStatus, right: LaunchStatus) {
   const statusOrder: Record<LaunchStatus, number> = {
     LIVE: 0,
     APPROVED: 1,
     PENDING: 2,
+    ENDED: 3,
   };
 
   return statusOrder[left] - statusOrder[right];
 }
 
-export async function listAdminUpcomingLaunchWeeks() {
-  const today = startOfUtcDay(new Date());
-  const weekFloor = startOfUtcWeek(today);
+function getUtcMonthStart(value: Date) {
+  return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), 1));
+}
 
+function addUtcMonths(value: Date, amount: number) {
+  return new Date(
+    Date.UTC(value.getUTCFullYear(), value.getUTCMonth() + amount, 1),
+  );
+}
+
+export async function listAdminLaunchMonths() {
   const launches = await prisma.launch.findMany({
     where: {
-      launchDate: {
-        gte: weekFloor,
-      },
       status: {
-        in: ["PENDING", "APPROVED", "LIVE"],
+        in: ["PENDING", "APPROVED", "LIVE", "ENDED"],
       },
     },
     include: {
@@ -61,36 +66,50 @@ export async function listAdminUpcomingLaunchWeeks() {
     orderBy: [{ launchDate: "asc" }, { priorityWeight: "desc" }, { createdAt: "asc" }],
   });
 
-  const groupedWeeks = new Map<
+  const groupedMonths = new Map<
     string,
     {
-      weekStart: string;
-      weekEnd: string;
-      entries: Array<{
-        id: string;
-        toolId: string;
-        toolSlug: string;
-        toolName: string;
-        toolLogoUrl: string | null;
-        launchType: "FREE" | "FEATURED" | "RELAUNCH";
-        status: LaunchStatus;
-        launchDate: string;
-        priorityWeight: number;
-        latestSubmission: {
-          id: string;
-          submissionType: "LISTING_ONLY" | "FREE_LAUNCH" | "FEATURED_LAUNCH" | "RELAUNCH";
-          reviewStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
-          founderName: string | null;
-          founderEmail: string;
-        } | null;
-      }>;
+      monthStart: string;
+      monthEnd: string;
+      weeks: Map<
+        string,
+        {
+          weekStart: string;
+          weekEnd: string;
+          entries: Array<{
+            id: string;
+            toolId: string;
+            toolSlug: string;
+            toolName: string;
+            toolLogoUrl: string | null;
+            launchType: "FREE" | "FEATURED" | "RELAUNCH";
+            status: LaunchStatus;
+            launchDate: string;
+            priorityWeight: number;
+            latestSubmission: {
+              id: string;
+              submissionType: "LISTING_ONLY" | "FREE_LAUNCH" | "FEATURED_LAUNCH" | "RELAUNCH";
+              reviewStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+              founderName: string | null;
+              founderEmail: string;
+            } | null;
+          }>;
+        }
+      >;
     }
   >();
 
   for (const launch of launches) {
+    const monthStart = getUtcMonthStart(launch.launchDate);
+    const monthStartKey = monthStart.toISOString();
+    const existingMonth = groupedMonths.get(monthStartKey) ?? {
+      monthStart: monthStartKey,
+      monthEnd: addUtcMonths(monthStart, 1).toISOString(),
+      weeks: new Map(),
+    };
     const weekStart = getLaunchWeekStart(launch.launchDate);
     const weekStartKey = weekStart.toISOString();
-    const existingWeek = groupedWeeks.get(weekStartKey) ?? {
+    const existingWeek = existingMonth.weeks.get(weekStartKey) ?? {
       weekStart: weekStartKey,
       weekEnd: addUtcDays(weekStart, UTC_WEEK_IN_DAYS).toISOString(),
       entries: [],
@@ -118,59 +137,71 @@ export async function listAdminUpcomingLaunchWeeks() {
         : null,
     });
 
-    groupedWeeks.set(weekStartKey, existingWeek);
+    existingMonth.weeks.set(weekStartKey, existingWeek);
+    groupedMonths.set(monthStartKey, existingMonth);
   }
 
-  return [...groupedWeeks.values()]
-    .sort((left, right) => left.weekStart.localeCompare(right.weekStart))
-    .map((week) => {
-      const groupedDays = new Map<
-        string,
-        {
-          date: string;
-          entries: typeof week.entries;
-        }
-      >();
+  return [...groupedMonths.values()]
+    .sort((left, right) => right.monthStart.localeCompare(left.monthStart))
+    .map((month) => {
+      const weeks = [...month.weeks.values()]
+        .sort((left, right) => left.weekStart.localeCompare(right.weekStart))
+        .map((week) => {
+          const groupedDays = new Map<
+            string,
+            {
+              date: string;
+              entries: typeof week.entries;
+            }
+          >();
 
-      const sortedEntries = [...week.entries].sort((left, right) => {
-        const dateDifference =
-          new Date(left.launchDate).getTime() - new Date(right.launchDate).getTime();
+          const sortedEntries = [...week.entries].sort((left, right) => {
+            const dateDifference =
+              new Date(left.launchDate).getTime() - new Date(right.launchDate).getTime();
 
-        if (dateDifference !== 0) {
-          return dateDifference;
-        }
+            if (dateDifference !== 0) {
+              return dateDifference;
+            }
 
-        const statusDifference = compareLaunchStatus(left.status, right.status);
+            const statusDifference = compareLaunchStatus(left.status, right.status);
 
-        if (statusDifference !== 0) {
-          return statusDifference;
-        }
+            if (statusDifference !== 0) {
+              return statusDifference;
+            }
 
-        if (left.priorityWeight !== right.priorityWeight) {
-          return right.priorityWeight - left.priorityWeight;
-        }
+            if (left.priorityWeight !== right.priorityWeight) {
+              return right.priorityWeight - left.priorityWeight;
+            }
 
-        return left.toolName.localeCompare(right.toolName);
-      });
+            return left.toolName.localeCompare(right.toolName);
+          });
 
-      for (const entry of sortedEntries) {
-        const dayKey = startOfUtcDay(new Date(entry.launchDate)).toISOString();
-        const existingDay = groupedDays.get(dayKey) ?? {
-          date: dayKey,
-          entries: [],
-        };
+          for (const entry of sortedEntries) {
+            const dayKey = startOfUtcDay(new Date(entry.launchDate)).toISOString();
+            const existingDay = groupedDays.get(dayKey) ?? {
+              date: dayKey,
+              entries: [],
+            };
 
-        existingDay.entries.push(entry);
-        groupedDays.set(dayKey, existingDay);
-      }
+            existingDay.entries.push(entry);
+            groupedDays.set(dayKey, existingDay);
+          }
+
+          return {
+            weekStart: week.weekStart,
+            weekEnd: week.weekEnd,
+            launchCount: sortedEntries.length,
+            days: [...groupedDays.values()].sort((left, right) =>
+              left.date.localeCompare(right.date),
+            ),
+          };
+        });
 
       return {
-        weekStart: week.weekStart,
-        weekEnd: week.weekEnd,
-        launchCount: sortedEntries.length,
-        days: [...groupedDays.values()].sort((left, right) =>
-          left.date.localeCompare(right.date),
-        ),
+        monthStart: month.monthStart,
+        monthEnd: month.monthEnd,
+        launchCount: weeks.reduce((total, week) => total + week.launchCount, 0),
+        weeks,
       };
     });
 }

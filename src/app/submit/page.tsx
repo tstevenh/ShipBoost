@@ -9,6 +9,7 @@ import {
   listSelectableLaunchWeeks,
   scheduleNextFreeLaunchDate,
 } from "@/server/services/launch-scheduling";
+import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
 import { getFounderSubmissionDraft } from "@/server/services/submission-service";
 import { Footer } from "@/components/ui/footer";
 import { ArrowRight } from "lucide-react";
@@ -186,9 +187,14 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
     }
   }
 
-  const [catalogOptions, estimatedFreeLaunchDate] = await Promise.all([
+  const [
+    catalogOptions,
+    estimatedFreeLaunchDate,
+    foundingPremiumLaunchSpotsLeft,
+  ] = await Promise.all([
     getCachedCatalogOptions(),
     scheduleNextFreeLaunchDate(),
+    getRemainingFoundingPremiumLaunchSpots(),
   ]);
   const { categories, tags } = catalogOptions;
 
@@ -223,6 +229,8 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
           appUrl={env.NEXT_PUBLIC_APP_URL}
           supportEmail={env.RESEND_REPLY_TO_TRANSACTIONAL ?? session.user.email}
           premiumLaunchWeeks={premiumLaunchWeeks}
+          foundingPremiumLaunchSpotsLeft={foundingPremiumLaunchSpotsLeft}
+          foundingPremiumLaunchLimit={env.FOUNDING_PREMIUM_LAUNCH_LIMIT}
           estimatedFreeLaunchDate={estimatedFreeLaunchDate.toISOString()}
           initialDraft={initialDraft}
           isPrelaunch={isPrelaunch}

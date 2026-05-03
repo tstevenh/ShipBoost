@@ -2,6 +2,7 @@ import { prisma } from "@/server/db/client";
 import { publicToolCardSelect } from "@/server/db/public-selects";
 import { AppError } from "@/server/http/app-error";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
+import { applyWeightedUpvoteCounts } from "@/server/services/upvote-service";
 import { slugify } from "@/server/services/slug";
 import type {
   CategoryCreateInput,
@@ -236,10 +237,33 @@ export async function getPublicCategoryPageBySlug(
     return null;
   }
 
-  const toolIds = category.toolCategories.map((item) => item.tool.id);
+  const weightedTools = await applyWeightedUpvoteCounts(
+    category.toolCategories.map((item) => item.tool),
+  );
+  const weightedToolById = new Map(
+    weightedTools.map((tool) => [tool.id, tool]),
+  );
+  const toolCategories = category.toolCategories
+    .map((item) => ({
+      ...item,
+      tool: weightedToolById.get(item.tool.id) ?? item.tool,
+    }))
+    .sort((left, right) => {
+      if (sort !== "top") {
+        return 0;
+      }
+
+      return (
+        (right.tool._count?.toolVotes ?? 0) -
+          (left.tool._count?.toolVotes ?? 0) ||
+        Number(right.tool.isFeatured) - Number(left.tool.isFeatured) ||
+        left.tool.name.localeCompare(right.tool.name)
+      );
+    });
+  const toolIds = toolCategories.map((item) => item.tool.id);
   
   // Featured tools always at the top of their section, regardless of sort
-  const featuredTools = category.toolCategories
+  const featuredTools = toolCategories
     .map((item) => item.tool)
     .filter((tool) => tool.isFeatured)
     .slice(0, 3);
@@ -249,7 +273,7 @@ export async function getPublicCategoryPageBySlug(
     { id: string; name: string; slug: string; isActive: boolean; count: number }
   >();
 
-  for (const item of category.toolCategories) {
+  for (const item of toolCategories) {
     for (const tag of item.tool.toolTags) {
       const current = topTagsMap.get(tag.tag.id);
       topTagsMap.set(tag.tag.id, {
@@ -289,6 +313,7 @@ export async function getPublicCategoryPageBySlug(
 
   return {
     ...category,
+    toolCategories,
     featuredTools,
     relatedCategories,
     topTags: [...topTagsMap.values()]

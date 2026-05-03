@@ -26,6 +26,7 @@ import {
   combinePubliclyVisibleToolWhere,
   getPubliclyVisibleToolWhere,
 } from "@/server/services/public-tool-visibility";
+import { getToolUpvoteCount } from "@/server/services/upvote-service";
 import type {
   AdminToolCreateInput,
   AdminToolUpdateInput,
@@ -414,7 +415,7 @@ export async function getPublishedToolBySlug(slug: string) {
 
   return {
     ...tool,
-    upvoteCount: tool._count.toolVotes,
+    upvoteCount: await getToolUpvoteCount(tool.id),
   };
 }
 
@@ -436,6 +437,9 @@ export async function getFounderToolPreviewById(
     richDescription: tool.richDescription,
     pricingModel: tool.pricingModel,
     websiteUrl: tool.websiteUrl,
+    badgeVerification: tool.badgeVerification,
+    currentLaunchType: tool.currentLaunchType,
+    isFeatured: tool.isFeatured,
     metaTitle: tool.metaTitle,
     metaDescription: tool.metaDescription,
     canonicalUrl: tool.canonicalUrl,
@@ -473,7 +477,7 @@ export async function getFounderToolPreviewById(
       status: launch.status,
       launchDate: launch.launchDate,
     })),
-    upvoteCount: tool._count.toolVotes,
+    upvoteCount: await getToolUpvoteCount(tool.id),
   };
 }
 

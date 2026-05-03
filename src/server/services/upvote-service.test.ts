@@ -2,14 +2,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
+    user: {
+      findUnique: vi.fn(),
+    },
     tool: {
       findFirst: vi.fn(),
     },
     toolVote: {
+      aggregate: vi.fn(),
       findUnique: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
       delete: vi.fn(),
+      findMany: vi.fn(),
+      groupBy: vi.fn(),
     },
   },
 }));
@@ -20,13 +26,16 @@ vi.mock("@/server/db/client", () => ({
 
 import {
   getDailyVotesRemaining,
+  getToolUpvoteCount,
   hasUserUpvotedTool,
+  listToolUpvoteCounts,
   toggleToolUpvote,
 } from "@/server/services/upvote-service";
 
 describe("upvote-service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    prismaMock.user.findUnique.mockResolvedValue({ role: "FOUNDER" });
   });
 
   it("creates a vote for a public tool", async () => {
@@ -36,7 +45,11 @@ describe("upvote-service", () => {
     prismaMock.toolVote.create.mockResolvedValueOnce({
       id: "vote_1",
     });
-    prismaMock.toolVote.count.mockResolvedValueOnce(1);
+    prismaMock.toolVote.aggregate.mockResolvedValueOnce({
+      _sum: {
+        weight: 1,
+      },
+    });
     prismaMock.toolVote.findUnique.mockResolvedValueOnce({ id: "vote_1" });
     prismaMock.toolVote.count.mockResolvedValueOnce(1);
 
@@ -50,6 +63,7 @@ describe("upvote-service", () => {
       data: {
         toolId: "tool_1",
         userId: "user_1",
+        weight: 1,
       },
     });
     expect(result).toEqual({
@@ -62,7 +76,11 @@ describe("upvote-service", () => {
   it("removes an existing vote and refunds a slot", async () => {
     prismaMock.toolVote.findUnique.mockResolvedValueOnce({ id: "vote_1" });
     prismaMock.toolVote.delete.mockResolvedValueOnce({ id: "vote_1" });
-    prismaMock.toolVote.count.mockResolvedValueOnce(0);
+    prismaMock.toolVote.aggregate.mockResolvedValueOnce({
+      _sum: {
+        weight: 0,
+      },
+    });
     prismaMock.toolVote.findUnique.mockResolvedValueOnce(null);
     prismaMock.toolVote.count.mockResolvedValueOnce(0);
 
@@ -128,9 +146,86 @@ describe("upvote-service", () => {
     ).resolves.toBe(1);
   });
 
+  it("lets admin users vote with triple weight and no daily limit", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({ role: "ADMIN" });
+    prismaMock.toolVote.findUnique.mockResolvedValueOnce(null);
+    prismaMock.tool.findFirst.mockResolvedValueOnce({ id: "tool_1" });
+    prismaMock.toolVote.create.mockResolvedValueOnce({
+      id: "vote_1",
+    });
+    prismaMock.toolVote.aggregate.mockResolvedValueOnce({
+      _sum: {
+        weight: 3,
+      },
+    });
+    prismaMock.toolVote.findUnique.mockResolvedValueOnce({ id: "vote_1" });
+
+    const result = await toggleToolUpvote(
+      "tool_1",
+      "admin_1",
+      new Date("2026-04-07T10:00:00.000Z"),
+    );
+
+    expect(prismaMock.toolVote.create).toHaveBeenCalledWith({
+      data: {
+        toolId: "tool_1",
+        userId: "admin_1",
+        weight: 3,
+      },
+    });
+    expect(result).toEqual({
+      hasUpvoted: true,
+      upvoteCount: 3,
+      dailyVotesRemaining: Number.MAX_SAFE_INTEGER,
+    });
+  });
+
+  it("reports unlimited remaining daily votes for admin users", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ role: "ADMIN" });
+
+    await expect(
+      getDailyVotesRemaining("admin_1", new Date("2026-04-07T10:00:00.000Z")),
+    ).resolves.toBe(Number.MAX_SAFE_INTEGER);
+    expect(prismaMock.toolVote.count).not.toHaveBeenCalled();
+  });
+
   it("detects whether a user has upvoted a tool", async () => {
     prismaMock.toolVote.findUnique.mockResolvedValueOnce({ id: "vote_1" });
 
     await expect(hasUserUpvotedTool("tool_1", "user_1")).resolves.toBe(true);
+  });
+
+  it("sums weighted vote counts for a single tool", async () => {
+    prismaMock.toolVote.aggregate.mockResolvedValueOnce({
+      _sum: {
+        weight: 4,
+      },
+    });
+
+    await expect(getToolUpvoteCount("tool_1")).resolves.toBe(4);
+  });
+
+  it("lists weighted vote counts by tool", async () => {
+    prismaMock.toolVote.groupBy.mockResolvedValueOnce([
+      {
+        toolId: "tool_1",
+        _sum: {
+          weight: 4,
+        },
+      },
+      {
+        toolId: "tool_2",
+        _sum: {
+          weight: 1,
+        },
+      },
+    ]);
+
+    await expect(listToolUpvoteCounts(["tool_1", "tool_2"])).resolves.toEqual(
+      new Map([
+        ["tool_1", 4],
+        ["tool_2", 1],
+      ]),
+    );
   });
 });

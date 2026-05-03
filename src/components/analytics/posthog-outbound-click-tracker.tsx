@@ -3,7 +3,10 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-import { captureBrowserOutboundLinkClicked } from "@/lib/posthog-browser";
+import {
+  captureBrowserOutboundLinkClicked,
+  captureBrowserToolOutboundClick,
+} from "@/lib/posthog-browser";
 import {
   type OutboundLinkContext,
   type OutboundLinkSurface,
@@ -69,6 +72,25 @@ function getAnchorLinkText(anchor: HTMLAnchorElement) {
   );
 }
 
+function getToolOutboundMetadata(anchor: HTMLAnchorElement) {
+  const toolId = anchor.dataset.shipboostToolId?.trim();
+
+  if (!toolId) {
+    return null;
+  }
+
+  return {
+    toolId,
+    toolSlug: anchor.dataset.shipboostToolSlug?.trim() || undefined,
+    toolName: anchor.dataset.shipboostToolName?.trim() || undefined,
+    destinationType:
+      anchor.dataset.shipboostToolDestinationType?.trim() || "website",
+    currentLaunchType:
+      anchor.dataset.shipboostToolCurrentLaunchType?.trim() || undefined,
+    isFeatured: anchor.dataset.shipboostToolIsFeatured === "true",
+  };
+}
+
 export function PostHogOutboundClickTracker({ apiKey }: { apiKey?: string }) {
   const pathname = usePathname();
 
@@ -108,22 +130,39 @@ export function PostHogOutboundClickTracker({ apiKey }: { apiKey?: string }) {
       }
 
       const metadata = inferOutboundMetadata(window.location.pathname);
+      const toolMetadata = getToolOutboundMetadata(anchor);
+      const sourceSurface =
+        (anchor.dataset
+          .shipboostOutboundSource as OutboundLinkSurface | undefined) ??
+        metadata.sourceSurface;
+      const linkContext =
+        (anchor.dataset
+          .shipboostOutboundContext as OutboundLinkContext | undefined) ??
+        metadata.linkContext;
+      const sourcePath = `${window.location.pathname}${window.location.search}`;
+      const linkText = getAnchorLinkText(anchor);
 
       captureBrowserOutboundLinkClicked({
         href: anchor.href,
-        sourcePath: `${window.location.pathname}${window.location.search}`,
-        sourceSurface:
-          (anchor.dataset
-            .shipboostOutboundSource as OutboundLinkSurface | undefined) ??
-          metadata.sourceSurface,
-        linkContext:
-          (anchor.dataset
-            .shipboostOutboundContext as OutboundLinkContext | undefined) ??
-          metadata.linkContext,
-        linkText: getAnchorLinkText(anchor),
+        sourcePath,
+        sourceSurface,
+        linkContext,
+        linkText,
         trackingMethod: "browser",
-        isToolLink: false,
+        isToolLink: Boolean(toolMetadata),
+        toolId: toolMetadata?.toolId,
+        toolSlug: toolMetadata?.toolSlug,
+        toolName: toolMetadata?.toolName,
       });
+
+      if (toolMetadata) {
+        captureBrowserToolOutboundClick({
+          href: anchor.href,
+          sourcePath,
+          sourceSurface,
+          ...toolMetadata,
+        });
+      }
     }
 
     document.addEventListener("click", handleClick, { capture: true });

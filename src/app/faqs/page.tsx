@@ -44,7 +44,7 @@ const groups: FaqGroup[] = [
       {
         question: "What is the difference between Free Launch and Premium Launch?",
         answer:
-          "Free Launch goes through manual review and is queued into the next available weekly cohort. Founders can add the ShipBoost badge for priority review within 24-48 hours. Premium Launch lets you reserve a launch week and gets stronger baseline placement.",
+          "Free Launch goes through manual review and is queued into the next available weekly cohort with a nofollow website link by default. Founders can add and verify the ShipBoost badge to unlock a dofollow backlink. Premium Launch lets you reserve a launch week, gets stronger baseline placement, and includes a dofollow backlink by default.",
       },
       {
         question: "Do I need badge verification for Premium Launch?",
@@ -59,7 +59,7 @@ const groups: FaqGroup[] = [
       {
         question: "Why add the ShipBoost badge?",
         answer:
-          "The badge helps visitors see where you launched, adds a simple trust signal to your site, and makes your free launch eligible for priority review within 24-48 hours.",
+          "The badge helps visitors see where you launched, adds a simple trust signal to your site, and lets ShipBoost verify your free launch for a dofollow backlink.",
       },
     ],
   },

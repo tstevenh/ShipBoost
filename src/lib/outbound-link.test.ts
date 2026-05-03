@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildOutboundLinkClickedProperties,
   isTrackableOutboundHttpUrl,
+  resolveToolWebsiteRel,
 } from "@/lib/outbound-link";
 
 describe("outbound-link", () => {
@@ -66,5 +67,47 @@ describe("outbound-link", () => {
         is_tool_link: false,
       }),
     );
+  });
+});
+
+describe("resolveToolWebsiteRel", () => {
+  it("nofollow links for unverified free launches", () => {
+    expect(
+      resolveToolWebsiteRel({
+        badgeVerification: "PENDING",
+        currentLaunchType: "FREE",
+        isFeatured: false,
+      }),
+    ).toBe("nofollow noopener");
+  });
+
+  it("follows links for badge-verified free launches", () => {
+    expect(
+      resolveToolWebsiteRel({
+        badgeVerification: "VERIFIED",
+        currentLaunchType: "FREE",
+        isFeatured: false,
+      }),
+    ).toBe("noopener");
+  });
+
+  it("follows links for premium launches by default", () => {
+    expect(
+      resolveToolWebsiteRel({
+        badgeVerification: "NOT_REQUIRED",
+        currentLaunchType: "FEATURED",
+        isFeatured: true,
+      }),
+    ).toBe("noopener");
+  });
+
+  it("nofollow links for listing-only tools", () => {
+    expect(
+      resolveToolWebsiteRel({
+        badgeVerification: "NOT_REQUIRED",
+        currentLaunchType: null,
+        isFeatured: false,
+      }),
+    ).toBe("nofollow noopener");
   });
 });

@@ -62,14 +62,25 @@ async function main() {
     process.exit(1);
   }
 
-  await prisma.user.update({
-    where: { email },
-    data: {
-      role: "ADMIN",
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { email },
+      data: {
+        role: "ADMIN",
+      },
+    });
+
+    await tx.toolVote.updateMany({
+      where: {
+        userId: user.id,
+      },
+      data: {
+        weight: 3,
+      },
+    });
   });
 
-  console.log(`Promoted ${email} to ADMIN.`);
+  console.log(`Promoted ${email} to ADMIN and upgraded existing vote weights.`);
 }
 
 main()

@@ -46,6 +46,8 @@ export const publicToolCardSelect = Prisma.validator<Prisma.ToolSelect>()({
   createdAt: true,
   pricingModel: true,
   affiliateUrl: true,
+  badgeVerification: true,
+  currentLaunchType: true,
   isFeatured: true,
   logoMedia: {
     select: {
@@ -65,6 +67,9 @@ export const publicToolDetailSelect = Prisma.validator<Prisma.ToolSelect>()({
   richDescription: true,
   pricingModel: true,
   websiteUrl: true,
+  badgeVerification: true,
+  currentLaunchType: true,
+  isFeatured: true,
   metaTitle: true,
   metaDescription: true,
   canonicalUrl: true,
@@ -119,6 +124,9 @@ const publicLaunchToolSelect = {
   name: true,
   tagline: true,
   websiteUrl: true,
+  badgeVerification: true,
+  currentLaunchType: true,
+  isFeatured: true,
   logoMedia: {
     select: {
       url: true,

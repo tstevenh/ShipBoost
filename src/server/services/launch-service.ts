@@ -13,6 +13,7 @@ import {
   getPublicLaunchBoardWhere,
 } from "@/server/services/public-tool-visibility";
 import { addUtcDays, subDays } from "@/server/services/time";
+import { listToolUpvoteCounts } from "@/server/services/upvote-service";
 
 type PublicLaunchRecord = Prisma.LaunchGetPayload<{
   select: typeof publicLaunchCardSelect;
@@ -101,25 +102,32 @@ async function listRankedLaunchesForWindow(input: {
     return [];
   }
 
-  const boardVoteCounts = await prisma.toolVote.groupBy({
-    by: ["toolId"],
-    where: {
-      toolId: {
-        in: launches.map((launch) => launch.toolId),
+  const launchToolIds = launches.map((launch) => launch.toolId);
+  const [boardVoteCounts, totalVoteCountByToolId] = await Promise.all([
+    prisma.toolVote.groupBy({
+      by: ["toolId"],
+      where: {
+        toolId: {
+          in: launchToolIds,
+        },
+        createdAt: {
+          gte: input.windowStart,
+          ...(input.includeWindowEnd === false
+            ? { lt: input.windowEnd }
+            : { lte: input.windowEnd }),
+        },
       },
-      createdAt: {
-        gte: input.windowStart,
-        ...(input.includeWindowEnd === false
-          ? { lt: input.windowEnd }
-          : { lte: input.windowEnd }),
+      _sum: {
+        weight: true,
       },
-    },
-    _count: {
-      _all: true,
-    },
-  });
+    }),
+    listToolUpvoteCounts(launchToolIds),
+  ]);
   const boardVoteCountByToolId = new Map(
-    boardVoteCounts.map((voteCount) => [voteCount.toolId, voteCount._count._all]),
+    boardVoteCounts.map((voteCount) => [
+      voteCount.toolId,
+      voteCount._sum.weight ?? 0,
+    ]),
   );
   const rankedLaunches = rankLaunchBoardLaunches(
     launches.map((launch) => ({
@@ -136,7 +144,7 @@ async function listRankedLaunchesForWindow(input: {
       ...launchWithoutBoardVoteCount,
       tool: {
         ...launchWithoutBoardVoteCount.tool,
-        upvoteCount: launchWithoutBoardVoteCount.tool._count.toolVotes,
+        upvoteCount: totalVoteCountByToolId.get(launch.toolId) ?? 0,
         hasUpvoted: false,
       },
     };
@@ -187,11 +195,15 @@ export async function listPastLaunches(options?: { limit?: number }) {
     take: options?.limit ?? 10,
   });
 
+  const voteCountByToolId = await listToolUpvoteCounts(
+    launches.map((launch) => launch.toolId),
+  );
+
   return launches.map((launch) => ({
     ...launch,
     tool: {
       ...launch.tool,
-      upvoteCount: launch.tool._count.toolVotes,
+      upvoteCount: voteCountByToolId.get(launch.toolId) ?? 0,
       hasUpvoted: false,
     },
   }));

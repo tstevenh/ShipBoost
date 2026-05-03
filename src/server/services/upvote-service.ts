@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, type UserRole } from "@prisma/client";
 
 import { prisma } from "@/server/db/client";
 import { AppError } from "@/server/http/app-error";
@@ -6,6 +6,9 @@ import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visib
 import { startOfDay } from "@/server/services/time";
 
 const DAILY_UPVOTE_LIMIT = 3;
+const STANDARD_VOTE_WEIGHT = 1;
+const ADMIN_VOTE_WEIGHT = 3;
+const ADMIN_DAILY_VOTES_REMAINING = Number.MAX_SAFE_INTEGER;
 
 function isUniqueConstraintError(error: unknown) {
   return (
@@ -32,12 +35,79 @@ async function ensurePublicTool(toolId: string) {
   return tool;
 }
 
+function getVoteWeightForRole(role: UserRole) {
+  return role === "ADMIN" ? ADMIN_VOTE_WEIGHT : STANDARD_VOTE_WEIGHT;
+}
+
+async function getUserVoteRole(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      role: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(404, "User not found.");
+  }
+
+  return user.role;
+}
+
 export async function getToolUpvoteCount(toolId: string) {
-  return prisma.toolVote.count({
+  const result = await prisma.toolVote.aggregate({
     where: {
       toolId,
     },
+    _sum: {
+      weight: true,
+    },
   });
+
+  return result._sum.weight ?? 0;
+}
+
+export async function listToolUpvoteCounts(toolIds: string[]) {
+  if (toolIds.length === 0) {
+    return new Map<string, number>();
+  }
+
+  const voteCounts = await prisma.toolVote.groupBy({
+    by: ["toolId"],
+    where: {
+      toolId: {
+        in: toolIds,
+      },
+    },
+    _sum: {
+      weight: true,
+    },
+  });
+
+  return new Map(
+    voteCounts.map((voteCount) => [
+      voteCount.toolId,
+      voteCount._sum.weight ?? 0,
+    ]),
+  );
+}
+
+export async function applyWeightedUpvoteCounts<
+  T extends { id: string; _count?: { toolVotes?: number } },
+>(tools: T[]) {
+  const voteCountByToolId = await listToolUpvoteCounts(
+    tools.map((tool) => tool.id),
+  );
+
+  return tools.map((tool) => ({
+    ...tool,
+    _count: {
+      ...tool._count,
+      toolVotes: voteCountByToolId.get(tool.id) ?? 0,
+    },
+  }));
 }
 
 export async function hasUserUpvotedTool(
@@ -90,6 +160,12 @@ export async function getDailyVotesRemaining(
   userId: string,
   now = new Date(),
 ) {
+  const role = await getUserVoteRole(userId);
+
+  if (role === "ADMIN") {
+    return ADMIN_DAILY_VOTES_REMAINING;
+  }
+
   const activeVotesToday = await prisma.toolVote.count({
     where: {
       userId,
@@ -121,6 +197,7 @@ export async function toggleToolUpvote(
   userId: string,
   now = new Date(),
 ) {
+  const role = await getUserVoteRole(userId);
   const existingVote = await prisma.toolVote.findUnique({
     where: {
       toolId_userId: {
@@ -148,7 +225,10 @@ export async function toggleToolUpvote(
 
   await ensurePublicTool(toolId);
 
-  const dailyVotesRemaining = await getDailyVotesRemaining(userId, now);
+  const dailyVotesRemaining =
+    role === "ADMIN"
+      ? ADMIN_DAILY_VOTES_REMAINING
+      : await getDailyVotesRemaining(userId, now);
 
   if (dailyVotesRemaining <= 0) {
     throw new AppError(409, "Daily upvote limit reached.");
@@ -159,6 +239,7 @@ export async function toggleToolUpvote(
       data: {
         toolId,
         userId,
+        weight: getVoteWeightForRole(role),
       },
     });
   } catch (error) {

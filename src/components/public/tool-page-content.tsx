@@ -12,7 +12,7 @@ import { ToolUpvoteButton } from "@/components/public/tool-upvote-button";
 import { ViewerClaimState } from "@/components/public/viewer-claim-state";
 import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { Footer } from "@/components/ui/footer";
-import { buildTrackedToolOutboundUrl } from "@/lib/tool-outbound";
+import { resolveToolWebsiteRel } from "@/lib/outbound-link";
 import { buildToolPageSchema } from "@/server/seo/page-schema";
 import {
   buildToolPageDescription,
@@ -27,6 +27,9 @@ type ToolPageData = {
   richDescription: string;
   pricingModel: string;
   websiteUrl: string;
+  badgeVerification: "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "FAILED";
+  currentLaunchType: "FREE" | "FEATURED" | "RELAUNCH" | null;
+  isFeatured: boolean;
   metaTitle: string | null;
   metaDescription: string | null;
   createdAt: Date | string;
@@ -94,9 +97,8 @@ export function ToolPageContent({
     image: tool.logoMedia?.url,
     categoryName: primaryCategory?.name ?? null,
   });
-  const websiteHref = isPreview
-    ? tool.websiteUrl
-    : buildTrackedToolOutboundUrl(tool.id, "website", "tool_page");
+  const websiteHref = tool.websiteUrl;
+  const websiteRel = isPreview ? "noreferrer" : resolveToolWebsiteRel(tool);
   const timeline = getToolTimelineDisplay({
     createdAt: tool.createdAt,
     launches: tool.launches,
@@ -231,7 +233,20 @@ export function ToolPageContent({
                 <a
                   href={websiteHref}
                   target="_blank"
-                  rel="noreferrer"
+                  rel={websiteRel}
+                  data-shipboost-outbound-source="tool_page"
+                  data-shipboost-outbound-context="tool_page"
+                  data-shipboost-outbound-text={tool.name}
+                  data-shipboost-tool-id={tool.id}
+                  data-shipboost-tool-slug={tool.slug}
+                  data-shipboost-tool-name={tool.name}
+                  data-shipboost-tool-destination-type="website"
+                  data-shipboost-tool-current-launch-type={
+                    tool.currentLaunchType ?? undefined
+                  }
+                  data-shipboost-tool-is-featured={
+                    tool.isFeatured ? "true" : undefined
+                  }
                   className="group flex w-full items-center justify-center gap-2 rounded-xl border-2 border-border bg-card px-6 py-4 text-sm font-black text-foreground shadow-sm transition-all hover:bg-muted active:scale-95"
                 >
                   <Globe size={18} />

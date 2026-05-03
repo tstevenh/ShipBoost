@@ -20,7 +20,7 @@ import {
   type Submission,
   type SubmissionReviewResult,
   type SponsorPlacement,
-  type AdminLaunchWeek,
+  type AdminLaunchMonth,
   type Tag as TagType,
   type TagDraft,
   type Tool,
@@ -94,7 +94,7 @@ export function AdminConsole() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [claims, setClaims] = useState<ListingClaim[]>([]);
   const [sponsorPlacements, setSponsorPlacements] = useState<SponsorPlacement[]>([]);
-  const [launchWeeks, setLaunchWeeks] = useState<AdminLaunchWeek[]>([]);
+  const [launchMonths, setLaunchMonths] = useState<AdminLaunchMonth[]>([]);
 
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [toolError, setToolError] = useState<string | null>(null);
@@ -305,7 +305,7 @@ export function AdminConsole() {
           nextSubmissions,
           nextClaims,
           nextSponsorPlacements,
-          nextLaunchWeeks,
+          nextLaunchMonths,
         ] =
           await Promise.all([
             apiRequest<Category[]>("/api/admin/categories"),
@@ -314,7 +314,7 @@ export function AdminConsole() {
             apiRequest<Submission[]>("/api/admin/submissions?reviewStatus=PENDING"),
             apiRequest<ListingClaim[]>("/api/admin/listing-claims?status=PENDING"),
             apiRequest<SponsorPlacement[]>("/api/admin/sponsor-placements"),
-            apiRequest<AdminLaunchWeek[]>("/api/admin/launches"),
+            apiRequest<AdminLaunchMonth[]>("/api/admin/launches"),
           ]);
 
         if (cancelled) {
@@ -327,7 +327,7 @@ export function AdminConsole() {
         setSubmissions(nextSubmissions);
         setClaims(nextClaims);
         setSponsorPlacements(nextSponsorPlacements);
-        setLaunchWeeks(nextLaunchWeeks);
+        setLaunchMonths(nextLaunchMonths);
       } catch (error) {
         if (!cancelled) {
           setBootError(toErrorMessage(error));
@@ -836,7 +836,7 @@ export function AdminConsole() {
   const navItems: AdminNavItem[] = [
     { id: "overview", label: "Dashboard", icon: Layout },
     { id: "moderate", label: "Moderate", icon: Shield, count: totalPending + pendingClaimCount },
-    { id: "launches", label: "Launches", icon: CalendarDays, count: launchWeeks.reduce((total, week) => total + week.launchCount, 0) },
+    { id: "launches", label: "Launches", icon: CalendarDays, count: launchMonths.reduce((total, month) => total + month.launchCount, 0) },
     { id: "inventory", label: "Inventory", icon: Package, count: tools.length },
     { id: "sponsors", label: "Sponsors", icon: Megaphone, count: sponsorPlacements.length },
     { id: "taxonomy", label: "Taxonomy", icon: Layers, count: categories.length + tags.length },
@@ -1018,7 +1018,7 @@ export function AdminConsole() {
 
         {activeNav === "launches" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <LaunchSchedulePanel weeks={launchWeeks} />
+            <LaunchSchedulePanel months={launchMonths} />
           </div>
         )}
 

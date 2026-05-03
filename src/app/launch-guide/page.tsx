@@ -162,12 +162,12 @@ export default function LaunchGuidePage() {
           {
             title: "When free launch is enough",
             body:
-              "Use the free option when you want visibility, can complete badge verification, and are comfortable joining the next available weekly cohort.",
+              "Use the free option when you want visibility, are comfortable with a nofollow website link by default, and can add the ShipBoost badge if you want to unlock a dofollow backlink.",
           },
           {
             title: "When Premium Launch makes sense",
             body:
-              "Use Premium Launch when timing matters, you want to reserve a specific week, or you want stronger baseline placement in the board.",
+              "Use Premium Launch when timing matters, you want to reserve a specific week, you want stronger baseline placement in the board, or you want a dofollow backlink included by default.",
           },
         ].map((item) => (
           <article

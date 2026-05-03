@@ -159,7 +159,7 @@ export type AdminLaunchEntry = {
   toolName: string;
   toolLogoUrl: string | null;
   launchType: "FREE" | "FEATURED" | "RELAUNCH";
-  status: "PENDING" | "APPROVED" | "LIVE";
+  status: "PENDING" | "APPROVED" | "LIVE" | "ENDED";
   launchDate: string;
   priorityWeight: number;
   latestSubmission: {
@@ -179,6 +179,13 @@ export type AdminLaunchWeek = {
     date: string;
     entries: AdminLaunchEntry[];
   }>;
+};
+
+export type AdminLaunchMonth = {
+  monthStart: string;
+  monthEnd: string;
+  launchCount: number;
+  weeks: AdminLaunchWeek[];
 };
 
 export type SubmissionReviewResult = {

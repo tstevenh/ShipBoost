@@ -407,6 +407,7 @@ model ToolVote {
   id        String   @id @default(cuid())
   toolId    String
   userId    String
+  weight    Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

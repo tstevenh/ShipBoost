@@ -47,6 +47,26 @@ describe("hasFreeLaunchBadgeInHtmlOrScripts", () => {
     ).resolves.toBe(true);
   });
 
+  it("finds official ShipBoost badge assets in same-origin JavaScript bundles", async () => {
+    const html =
+      '<html><head><script type="module" src="/assets/index.js"></script></head></html>';
+
+    await expect(
+      hasFreeLaunchBadgeInHtmlOrScripts(
+        html,
+        "https://interview-prep.io/",
+        async (url) => {
+          expect(url).toBe("https://interview-prep.io/assets/index.js");
+          return JSON.stringify({
+            href: "https://shipboost.io",
+            src: "https://shipboost.io/ShipBoost-Badge/ShipBoost-Dark-Badge.svg",
+            alt: "Featured on ShipBoost",
+          });
+        },
+      ),
+    ).resolves.toBe(true);
+  });
+
   it("ignores third-party scripts during badge verification", () => {
     expect(
       getSameOriginScriptUrls(

@@ -44,6 +44,24 @@ export type OutboundLinkClickedPropertiesInput = {
   toolName?: string;
 };
 
+export type ToolWebsiteRelPolicyInput = {
+  badgeVerification?: "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "FAILED" | null;
+  currentLaunchType?: "FREE" | "FEATURED" | "RELAUNCH" | null;
+  isFeatured?: boolean | null;
+};
+
+export function resolveToolWebsiteRel(input: ToolWebsiteRelPolicyInput) {
+  if (input.isFeatured || input.currentLaunchType === "FEATURED") {
+    return "noopener";
+  }
+
+  if (input.badgeVerification === "VERIFIED") {
+    return "noopener";
+  }
+
+  return "nofollow noopener";
+}
+
 export function isTrackableOutboundHttpUrl({
   href,
   siteOrigin,

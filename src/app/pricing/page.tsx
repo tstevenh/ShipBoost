@@ -48,6 +48,7 @@ export const revalidate = 900;
 export default async function PricingPage() {
   const env = getEnv();
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
+  const foundingPremiumLaunchLimit = env.FOUNDING_PREMIUM_LAUNCH_LIMIT;
   const [foundingSpotsLeft, foundingPremiumPrice] = await Promise.all([
     getRemainingFoundingPremiumLaunchSpots(),
     getPremiumLaunchPriceCard(),
@@ -57,7 +58,7 @@ export default async function PricingPage() {
       name: "Free Launch",
       price: "$0",
       description:
-        "Best for founders who want a founder-ready public listing and weekly launch visibility. Add the ShipBoost badge if you want priority review within 24-48 hours.",
+        "Best for founders who want a founder-ready public listing and weekly launch visibility. Free launches use a nofollow website link by default; verified ShipBoost badges unlock a dofollow backlink.",
       eyebrow: "Weekly launchpad",
       ctaLabel: "Reserve free launch",
       ctaHref: "/submit",
@@ -66,8 +67,8 @@ export default async function PricingPage() {
       points: [
         "Weekly launchpad placement",
         "Public listing on ShipBoost",
-        "Founder-managed profile after approval",
-        "Optional badge for 24-48 hour review",
+        "Nofollow backlink by default",
+        "Verified badge unlocks a dofollow backlink",
       ],
     },
     {
@@ -75,9 +76,9 @@ export default async function PricingPage() {
       price: foundingPremiumPrice.currentPrice,
       originalPrice: foundingPremiumPrice.compareAtPrice,
       description:
-        "Reserve your launch week, get stronger baseline placement, and receive a ShipBoost editorial launch spotlight during your launch period.",
+        "Reserve your launch week, get stronger baseline placement, receive a ShipBoost editorial launch spotlight, and get a dofollow backlink by default.",
       eyebrow: "Founding offer",
-      foundingSpotsLabel: "First 100 Premium Launches",
+      foundingSpotsLabel: `First ${foundingPremiumLaunchLimit} Premium Launches`,
       ctaLabel: premiumLaunchAvailable
         ? "Reserve premium launch"
         : "Temporarily unavailable",
@@ -89,9 +90,9 @@ export default async function PricingPage() {
       icon: Star,
       points: [
         "Reserve a specific launch week",
+        "Dofollow backlink included by default",
         "No badge step required",
         "Get stronger baseline board placement",
-        "Keep a public listing that stays useful after launch",
         "Includes one editorial launch spotlight during launch period",
       ],
     },
@@ -183,7 +184,8 @@ export default async function PricingPage() {
               </div>
               {"foundingSpotsLabel" in tier && tier.foundingSpotsLabel ? (
                 <p className="mt-2 text-[10px] font-black  tracking-widest text-primary">
-                  {foundingSpotsLeft} of 100 founding spots left
+                  {foundingSpotsLeft} of {foundingPremiumLaunchLimit} founding
+                  spots left
                 </p>
               ) : null}
               <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
@@ -334,10 +336,10 @@ export default async function PricingPage() {
             What is the editorial launch spotlight?
           </h2>
           <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-muted-foreground">
-            For the first 100 Premium Launches, ShipBoost includes one editorial
-            launch spotlight published during launch week. It gives your launch
-            one extra public discovery asset linked back to your listing and
-            product site.
+            For the first {foundingPremiumLaunchLimit} Premium Launches,
+            ShipBoost includes one editorial launch spotlight published during
+            launch week. It gives your launch one extra public discovery asset
+            linked back to your listing and product site.
           </p>
           <p className="mt-3 max-w-3xl text-xs font-bold leading-relaxed text-muted-foreground">
             The editorial launch spotlight is a standardized ShipBoost founder

@@ -24,8 +24,18 @@ export type DeferredEmailTask = () => Promise<void>;
 export const freeLaunchBadgePattern =
   /data-shipboost-badge\s*=\s*["']free-launch["']/i;
 
+export const officialShipBoostBadgeAssetPattern =
+  /https:\/\/shipboost\.io\/ShipBoost-Badge\/[^"'\s)]+/i;
+
 const scriptSrcPattern =
   /<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
+
+function hasRecognizedFreeLaunchBadge(value: string) {
+  return (
+    freeLaunchBadgePattern.test(value) ||
+    officialShipBoostBadgeAssetPattern.test(value)
+  );
+}
 
 export function getSameOriginScriptUrls(html: string, pageUrl: string) {
   const baseUrl = new URL(pageUrl);
@@ -56,7 +66,7 @@ export async function hasFreeLaunchBadgeInHtmlOrScripts(
   pageUrl: string,
   fetchScriptText: (url: string) => Promise<string>,
 ) {
-  if (freeLaunchBadgePattern.test(html)) {
+  if (hasRecognizedFreeLaunchBadge(html)) {
     return true;
   }
 
@@ -65,7 +75,7 @@ export async function hasFreeLaunchBadgeInHtmlOrScripts(
   for (const scriptUrl of scriptUrls) {
     const scriptText = await fetchScriptText(scriptUrl);
 
-    if (freeLaunchBadgePattern.test(scriptText)) {
+    if (hasRecognizedFreeLaunchBadge(scriptText)) {
       return true;
     }
   }

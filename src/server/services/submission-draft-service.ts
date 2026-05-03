@@ -1104,7 +1104,7 @@ export async function verifyFreeLaunchBadge(
   return {
     verified,
     message: verified
-      ? "Badge verified. Your free launch is now eligible for priority review within 24-48 hours."
+      ? "Badge verified. Your free launch now unlocks a dofollow backlink."
       : message,
     submission: updated,
   };

@@ -12,6 +12,7 @@ import {
   listSelectableLaunchWeeks,
   scheduleNextFreeLaunchDate,
 } from "@/server/services/launch-scheduling";
+import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
 import { getFounderToolById } from "@/server/services/tool-service";
 import { Footer } from "@/components/ui/footer";
 
@@ -47,10 +48,16 @@ export default async function FounderToolEditorPage(context: RouteContext) {
       timeZone: "UTC",
     }).format(weekStart)}`,
   }));
-  const [tool, catalogOptions, estimatedFreeLaunchDate] = await Promise.all([
+  const [
+    tool,
+    catalogOptions,
+    estimatedFreeLaunchDate,
+    foundingPremiumLaunchSpotsLeft,
+  ] = await Promise.all([
     getFounderToolById(session.user.id, toolId),
     getCachedCatalogOptions(),
     scheduleNextFreeLaunchDate(),
+    getRemainingFoundingPremiumLaunchSpots(),
   ]);
   const { categories, tags } = catalogOptions;
 
@@ -183,6 +190,8 @@ export default async function FounderToolEditorPage(context: RouteContext) {
             appUrl={env.NEXT_PUBLIC_APP_URL}
             supportEmail={env.RESEND_REPLY_TO_TRANSACTIONAL ?? session.user.email}
             premiumLaunchWeeks={premiumLaunchWeeks}
+            foundingPremiumLaunchSpotsLeft={foundingPremiumLaunchSpotsLeft}
+            foundingPremiumLaunchLimit={env.FOUNDING_PREMIUM_LAUNCH_LIMIT}
             estimatedFreeLaunchDate={estimatedFreeLaunchDate.toISOString()}
             initialDraft={initialDraft}
             isPrelaunch={isPrelaunch}

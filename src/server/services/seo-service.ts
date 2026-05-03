@@ -6,6 +6,7 @@ import {
   bestTagSeoRegistry,
 } from "@/server/seo/registry";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
+import { applyWeightedUpvoteCounts } from "@/server/services/upvote-service";
 import type {
   AlternativesSeoEntry,
   BestPageEntry,
@@ -27,7 +28,8 @@ async function getPublishedToolsBySlugs(slugs: string[]) {
     select: publicToolCardSelect,
   });
 
-  const toolsBySlug = new Map(tools.map((tool) => [tool.slug, tool]));
+  const weightedTools = await applyWeightedUpvoteCounts(tools);
+  const toolsBySlug = new Map(weightedTools.map((tool) => [tool.slug, tool]));
 
   return slugs
     .map((slug) => toolsBySlug.get(slug))
@@ -169,6 +171,16 @@ export async function getBestTagSeoPage(
     return null;
   }
 
+  const weightedTools = await applyWeightedUpvoteCounts(tools);
+  const sortedTools =
+    sort === "top"
+      ? [...weightedTools].sort(
+          (left, right) =>
+            (right._count?.toolVotes ?? 0) - (left._count?.toolVotes ?? 0) ||
+            Number(right.isFeatured) - Number(left.isFeatured) ||
+            left.name.localeCompare(right.name),
+        )
+      : weightedTools;
   const override: BestTagSeoEntry | undefined = bestTagSeoRegistry[slug];
   const resolvedTitle = override?.title?.trim() || buildBestTagTitle(tag.name);
   const resolvedIntro =
@@ -189,6 +201,6 @@ export async function getBestTagSeoPage(
       faq: override?.faq,
     },
     tag,
-    tools,
+    tools: sortedTools,
   };
 }

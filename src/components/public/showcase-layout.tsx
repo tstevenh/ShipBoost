@@ -38,7 +38,6 @@ function MobileSidebarTopStack() {
     <div className="mb-6 grid gap-3 xl:hidden">
       <DeferredHomeSearchModal className="max-w-none" />
       <SidebarSubmitButton className="max-w-none" />
-      <FrogDrBadge fullWidth />
     </div>
   );
 }
