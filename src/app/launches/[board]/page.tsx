@@ -83,6 +83,8 @@ export default async function LaunchBoardPage(context: RouteContext) {
     notFound();
   }
 
+  const showLaunchpadCountdown =
+    Date.now() < new Date(env.LAUNCHPAD_GO_LIVE_AT).getTime();
   const [launches, previousWeeklyTopWinner] = await Promise.all([
     getCachedLaunchBoard(board),
     getCachedPreviousWeeklyTopWinner(),
@@ -156,7 +158,12 @@ export default async function LaunchBoardPage(context: RouteContext) {
           showMobileFollowup={false}
         >
           <div className="space-y-12">
-            <LaunchpadShowcase board={board} launches={launches} />
+            <LaunchpadShowcase
+              board={board}
+              launches={launches}
+              emptyState={showLaunchpadCountdown ? "prelaunch-countdown" : "default"}
+              launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT}
+            />
             <MobileSidebarFollowup topWinner={previousWeeklyTopWinner} />
             <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
               <h2 className="text-3xl font-black tracking-tight text-foreground">

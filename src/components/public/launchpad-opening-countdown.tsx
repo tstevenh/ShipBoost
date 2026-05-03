@@ -1,14 +1,38 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Rocket, Timer } from "lucide-react";
+
+import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
+
+type PublicLaunchBoard = "weekly" | "monthly" | "yearly";
 
 type CountdownParts = {
   days: number;
   hours: number;
   minutes: number;
   seconds: number;
+};
+
+type LaunchpadApiLaunch = {
+  id: string;
+  launchType: "FREE" | "FEATURED" | "RELAUNCH";
+  tool: {
+    id: string;
+    name: string;
+    tagline: string;
+    slug: string;
+    websiteUrl: string | null;
+    upvoteCount: number;
+    logoMedia: { url: string } | null;
+    toolCategories: Array<{
+      category: {
+        name: string;
+        slug: string;
+      };
+    }>;
+  };
 };
 
 function getCountdownParts(targetTime: number): CountdownParts {
@@ -36,8 +60,10 @@ function CountdownBlock({ label, value }: { label: string; value: number }) {
 }
 
 export function LaunchpadOpeningCountdown({
+  board = "weekly",
   launchpadGoLiveAt,
 }: {
+  board?: PublicLaunchBoard;
   launchpadGoLiveAt: string;
 }) {
   const targetTime = useMemo(
@@ -45,15 +71,103 @@ export function LaunchpadOpeningCountdown({
     [launchpadGoLiveAt],
   );
   const [parts, setParts] = useState<CountdownParts | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [launches, setLaunches] = useState<LaunchpadApiLaunch[] | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const hasRequestedLaunches = useRef(false);
 
   useEffect(() => {
-    const update = () => setParts(getCountdownParts(targetTime));
+    const update = () => {
+      const nextParts = getCountdownParts(targetTime);
+      setParts(nextParts);
+      setIsOpen(
+        nextParts.days === 0 &&
+          nextParts.hours === 0 &&
+          nextParts.minutes === 0 &&
+          nextParts.seconds === 0,
+      );
+    };
 
     update();
     const timer = window.setInterval(update, 1000);
 
     return () => window.clearInterval(timer);
   }, [targetTime]);
+
+  useEffect(() => {
+    if (!isOpen || hasRequestedLaunches.current) {
+      return;
+    }
+
+    hasRequestedLaunches.current = true;
+    const controller = new AbortController();
+
+    void (async () => {
+      try {
+        const response = await fetch(`/api/launches?board=${board}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const payload = (await response.json().catch(() => null)) as
+          | { data?: LaunchpadApiLaunch[] }
+          | null;
+
+        if (!response.ok || !payload?.data) {
+          throw new Error("Unable to load launch board.");
+        }
+
+        setLaunches(payload.data);
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        console.error("Unable to load launch board after countdown", error);
+        setLoadError(true);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [board, isOpen]);
+
+  if (launches && launches.length > 0) {
+    return (
+      <>
+        {launches.map((launch, index) => (
+          <PublicDirectoryToolCard
+            key={launch.id}
+            toolId={launch.tool.id}
+            name={launch.tool.name}
+            tagline={launch.tool.tagline}
+            logoUrl={launch.tool.logoMedia?.url}
+            websiteUrl={launch.tool.websiteUrl}
+            slug={launch.tool.slug}
+            votes={launch.tool.upvoteCount}
+            primaryCategory={launch.tool.toolCategories[0]?.category ?? null}
+            rank={index + 1}
+            imagePriority={index < 3}
+            isPremiumLaunch={launch.launchType === "FEATURED"}
+          />
+        ))}
+      </>
+    );
+  }
+
+  if (isOpen && launches?.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-32">
+        <p className="text-xs font-black  tracking-widest text-muted-foreground">
+          No launches found for this period.
+        </p>
+        <Link
+          href="/submit"
+          className="mt-4 text-sm font-black text-foreground transition-all hover:opacity-70"
+        >
+          Submit a product →
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card px-5 py-14 text-center sm:px-8 sm:py-20">
@@ -67,8 +181,8 @@ export function LaunchpadOpeningCountdown({
         First launch week starts soon.
       </h3>
       <p className="mx-auto mt-3 max-w-xl text-sm font-medium leading-relaxed text-muted-foreground">
-        Submissions are open now. Approved products will appear here when the
-        first weekly launch board begins.
+        Submissions are open now. Approved products will appear here when this
+        launch board begins.
       </p>
 
       <div
@@ -88,6 +202,13 @@ export function LaunchpadOpeningCountdown({
         <Rocket size={15} />
         Submit before opening week
       </Link>
+
+      {loadError ? (
+        <p className="mx-auto mt-4 max-w-md text-xs font-medium text-muted-foreground">
+          The board is opening. Refresh this page if launches do not appear
+          automatically.
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -51,13 +51,17 @@ export function LaunchpadShowcase({
             primaryCategory={launch.tool.toolCategories[0]?.category ?? null}
             rank={index + 1}
             imagePriority={index < 3}
+            isPremiumLaunch={launch.launchType === "FEATURED"}
           />
         ))}
 
         {launches.length === 0 &&
         emptyState === "prelaunch-countdown" &&
         launchpadGoLiveAt ? (
-          <LaunchpadOpeningCountdown launchpadGoLiveAt={launchpadGoLiveAt} />
+          <LaunchpadOpeningCountdown
+            board={board}
+            launchpadGoLiveAt={launchpadGoLiveAt}
+          />
         ) : null}
 
         {launches.length === 0 && emptyState === "default" ? (

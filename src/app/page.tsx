@@ -28,7 +28,8 @@ export const metadata: Metadata = buildPublicPageMetadata({
 
 export default async function Home() {
   const env = getEnv();
-  const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
+  const showLaunchpadCountdown =
+    Date.now() < new Date(env.LAUNCHPAD_GO_LIVE_AT).getTime();
   const currentPeriod = "weekly";
   const { launches, previousWeeklyTopWinner } =
     await getCachedHomePageData(currentPeriod, false);
@@ -66,7 +67,7 @@ export default async function Home() {
             <LaunchpadShowcase
               board={currentPeriod}
               launches={launches}
-              emptyState={isPrelaunch ? "prelaunch-countdown" : "default"}
+              emptyState={showLaunchpadCountdown ? "prelaunch-countdown" : "default"}
               launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT}
             />
             <MobileSidebarFollowup topWinner={previousWeeklyTopWinner} />

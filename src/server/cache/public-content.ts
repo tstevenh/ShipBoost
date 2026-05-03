@@ -17,6 +17,7 @@ import {
   getPreviousWeeklyTopWinner,
   listLaunchBoard,
 } from "@/server/services/launch-service";
+import { getLaunchpadGoLiveAtUtc } from "@/server/services/launch-scheduling";
 import { getPublicCategoryPageBySlug } from "@/server/services/catalog-service";
 import {
   getAlternativesSeoPage,
@@ -72,6 +73,17 @@ export const PUBLIC_CACHE_TAGS = {
 
 export function revalidatePublicToolContent() {
   revalidateTag(PUBLIC_CACHE_TAGS.tools, "max");
+}
+
+export function revalidatePublicVoteContent() {
+  const expireImmediately = { expire: 0 };
+
+  revalidateTag(PUBLIC_CACHE_TAGS.home, expireImmediately);
+  revalidateTag(PUBLIC_CACHE_TAGS.launchBoards, expireImmediately);
+  revalidateTag(PUBLIC_CACHE_TAGS.tools, expireImmediately);
+  revalidatePath("/");
+  revalidatePath("/launches/[board]", "page");
+  revalidatePath("/tools/[slug]", "page");
 }
 
 export function revalidatePublicSponsorPlacements() {
@@ -269,7 +281,13 @@ export const getCachedHomePageData = cache(
 );
 
 export const getCachedLaunchBoard = cache(
-  async (board: PublicLaunchBoard) => launchBoardLoaders[board](),
+  async (board: PublicLaunchBoard) => {
+    if (Date.now() < getLaunchpadGoLiveAtUtc().getTime()) {
+      return listLaunchBoard(board);
+    }
+
+    return launchBoardLoaders[board]();
+  },
 );
 
 export const getCachedPreviousWeeklyTopWinner = cache(

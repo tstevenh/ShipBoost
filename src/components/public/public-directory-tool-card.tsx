@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 
 import { ToolUpvoteButton } from "@/components/public/tool-upvote-button";
+import { PremiumLaunchIndicator } from "@/components/public/premium-launch-indicator";
 import { LogoFallback } from "@/components/ui/logo-fallback";
+import { cn } from "@/lib/utils";
 
 type PublicDirectoryToolCardProps = {
   toolId: string;
@@ -22,6 +26,7 @@ type PublicDirectoryToolCardProps = {
     slug: string;
   } | null;
   imagePriority?: boolean;
+  isPremiumLaunch?: boolean;
 };
 
 export function PublicDirectoryToolCard({
@@ -37,13 +42,20 @@ export function PublicDirectoryToolCard({
   linkedTags = [],
   primaryCategory = null,
   imagePriority = false,
+  isPremiumLaunch = false,
 }: PublicDirectoryToolCardProps) {
   const visibleLinkedTags = linkedTags.slice(0, 3);
   const fallbackTags =
     visibleLinkedTags.length === 0 ? tags.slice(0, 3) : [];
 
   return (
-    <article className="group relative flex items-center gap-5 rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20">
+    <article
+      className={cn(
+        "group relative flex items-center gap-5 rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20",
+        isPremiumLaunch &&
+          "border-amber-500/30 bg-amber-50/40 shadow-sm shadow-amber-950/5 ring-1 ring-amber-500/10 dark:border-amber-400/25 dark:bg-amber-400/10 dark:shadow-black/20 dark:ring-amber-400/10",
+      )}
+    >
       <div className="shrink-0">
         <LogoFallback
           name={name}
@@ -69,6 +81,7 @@ export function PublicDirectoryToolCard({
               </span>
             ) : null}
           </Link>
+          {isPremiumLaunch ? <PremiumLaunchIndicator /> : null}
         </div>
 
         <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
