@@ -40,7 +40,7 @@ function makeLaunch(input: {
 }
 
 describe("launch-service", () => {
-  it("ranks every position by board votes, with premium-first as tiebreaker", () => {
+  it("uses board votes for the top three, then premium-first with votes within each tier", () => {
     const ranked = rankLaunchBoardLaunches([
       makeLaunch({
         id: "free-a",
@@ -88,8 +88,61 @@ describe("launch-service", () => {
       "premium-a",
       "premium-b",
       "free-a",
-      "free-b",
       "premium-c",
+      "free-b",
+    ]);
+  });
+
+  it("ranks an all-free board purely by vote count", () => {
+    const ranked = rankLaunchBoardLaunches([
+      makeLaunch({
+        id: "free-a",
+        toolId: "free-a",
+        launchType: "FREE",
+        launchDate: "2026-05-04T00:00:00.000Z",
+        createdAt: "2026-04-21T00:00:00.000Z",
+        boardVoteCount: 3,
+      }),
+      makeLaunch({
+        id: "free-b",
+        toolId: "free-b",
+        launchType: "FREE",
+        launchDate: "2026-05-04T00:00:00.000Z",
+        createdAt: "2026-04-22T00:00:00.000Z",
+        boardVoteCount: 5,
+      }),
+      makeLaunch({
+        id: "free-c",
+        toolId: "free-c",
+        launchType: "FREE",
+        launchDate: "2026-05-04T00:00:00.000Z",
+        createdAt: "2026-04-23T00:00:00.000Z",
+        boardVoteCount: 7,
+      }),
+      makeLaunch({
+        id: "free-d",
+        toolId: "free-d",
+        launchType: "FREE",
+        launchDate: "2026-05-04T00:00:00.000Z",
+        createdAt: "2026-04-24T00:00:00.000Z",
+        boardVoteCount: 0,
+      }),
+      makeLaunch({
+        id: "free-e",
+        toolId: "free-e",
+        launchType: "FREE",
+        launchDate: "2026-05-04T00:00:00.000Z",
+        createdAt: "2026-04-25T00:00:00.000Z",
+        boardVoteCount: 1,
+      }),
+    ]);
+
+    expect(ranked.map((launch) => launch.id)).toEqual([
+      "free-c",
+      "free-b",
+      "free-a",
+      "free-e",
+      "free-d",
     ]);
   });
 

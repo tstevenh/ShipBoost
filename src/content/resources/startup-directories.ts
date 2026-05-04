@@ -2150,9 +2150,8 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "name": "ShipBoost",
     "url": "https://shipboost.io",
     "domain": "shipboost.io",
-    "dr": 25,
-    "searchText": "shipboost shipboost.io https://shipboost.io",
-    "recommended": true
+    "dr": 36,
+    "searchText": "shipboost shipboost.io https://shipboost.io"
   },
   {
     "id": "madewithbolt-269",
@@ -2343,7 +2342,7 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "name": "Indie Launch",
     "url": "https://indielaunch.site/",
     "domain": "indielaunch.site",
-    "dr": 15,
+    "dr": 26,
     "searchText": "indie launch indielaunch.site https://indielaunch.site/"
   },
   {
@@ -2697,5 +2696,77 @@ export const startupDirectories: StartupDirectoryResourceItem[] = [
     "domain": "webprojectlist.com",
     "dr": 11,
     "searchText": "webprojectlist webprojectlist.com https://www.webprojectlist.com/"
+  },
+  {
+    "id": "batchlisted-337",
+    "name": "BatchListed",
+    "url": "https://batchlisted.com/",
+    "domain": "batchlisted.com",
+    "dr": 0,
+    "searchText": "batchlisted batchlisted.com https://batchlisted.com/"
+  },
+  {
+    "id": "startuplibrary-338",
+    "name": "StartupLibrary",
+    "url": "https://startuplibrary.net/",
+    "domain": "startuplibrary.net",
+    "dr": 3,
+    "searchText": "startuplibrary startuplibrary.net https://startuplibrary.net/"
+  },
+  {
+    "id": "myviralbucket-339",
+    "name": "MyViralBucket",
+    "url": "https://myviralbucket.com/",
+    "domain": "myviralbucket.com",
+    "dr": 7,
+    "searchText": "myviralbucket myviralbucket.com https://myviralbucket.com/"
+  },
+  {
+    "id": "startupfound-340",
+    "name": "StartupFound",
+    "url": "https://startupfound.com/",
+    "domain": "startupfound.com",
+    "dr": 40,
+    "searchText": "startupfound startupfound.com https://startupfound.com/"
+  },
+  {
+    "id": "weekhack-341",
+    "name": "WeekHack",
+    "url": "https://www.weekhack.com/",
+    "domain": "weekhack.com",
+    "dr": 46,
+    "searchText": "weekhack weekhack.com https://www.weekhack.com/"
+  },
+  {
+    "id": "launchllama-342",
+    "name": "LaunchLlama",
+    "url": "https://tools.launchllama.co/",
+    "domain": "tools.launchllama.co",
+    "dr": 47,
+    "searchText": "launchllama tools.launchllama.co https://tools.launchllama.co/"
+  },
+  {
+    "id": "earlyhunt-343",
+    "name": "EarlyHunt",
+    "url": "https://earlyhunt.com/",
+    "domain": "earlyhunt.com",
+    "dr": 52,
+    "searchText": "earlyhunt earlyhunt.com https://earlyhunt.com/"
+  },
+  {
+    "id": "builtbyindies-344",
+    "name": "BuiltbyIndies",
+    "url": "https://builtbyindies.com/",
+    "domain": "builtbyindies.com",
+    "dr": 29,
+    "searchText": "builtbyindies builtbyindies.com https://builtbyindies.com/"
+  },
+  {
+    "id": "launchdirectories-345",
+    "name": "LaunchDirectories",
+    "url": "https://launchdirectories.com/",
+    "domain": "launchdirectories.com",
+    "dr": 43,
+    "searchText": "launchdirectories launchdirectories.com https://launchdirectories.com/"
   }
 ];
