@@ -14,17 +14,21 @@ import { authClient } from "@/lib/auth-client";
 type ViewerVotePayload = {
   dailyVotesRemaining: number;
   upvotedToolIds: string[];
+  upvoteCountByToolId?: Record<string, number>;
 };
 
 type VoteMutationResult = {
   hasUpvoted: boolean;
+  upvoteCount: number;
   dailyVotesRemaining: number;
 };
 
 type ViewerVoteStateContextValue = {
   isAuthenticated: boolean;
   isLoading: boolean;
+  hasLoaded: boolean;
   upvotedToolIds: ReadonlySet<string>;
+  upvoteCountByToolId: ReadonlyMap<string, number>;
   dailyVotesRemaining: number | null;
   applyVoteResult: (toolId: string, result: VoteMutationResult) => void;
 };
@@ -41,10 +45,14 @@ export function ViewerVoteStateProvider({
 }) {
   const { data: session, isPending } = authClient.useSession();
   const [upvotedToolIds, setUpvotedToolIds] = useState<Set<string>>(new Set());
+  const [upvoteCountByToolId, setUpvoteCountByToolId] = useState<
+    Map<string, number>
+  >(new Map());
   const [dailyVotesRemaining, setDailyVotesRemaining] = useState<number | null>(
     null,
   );
   const [isLoadingVotes, setIsLoadingVotes] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const uniqueToolIds = useMemo(() => Array.from(new Set(toolIds)), [toolIds]);
   const toolIdsKey = useMemo(() => uniqueToolIds.join(","), [uniqueToolIds]);
 
@@ -55,15 +63,19 @@ export function ViewerVoteStateProvider({
 
     if (!session?.user.id) {
       setUpvotedToolIds(new Set());
+      setUpvoteCountByToolId(new Map());
       setDailyVotesRemaining(null);
       setIsLoadingVotes(false);
+      setHasLoaded(true);
       return;
     }
 
     if (uniqueToolIds.length === 0) {
       setUpvotedToolIds(new Set());
+      setUpvoteCountByToolId(new Map());
       setDailyVotesRemaining(null);
       setIsLoadingVotes(false);
+      setHasLoaded(true);
       return;
     }
 
@@ -84,6 +96,7 @@ export function ViewerVoteStateProvider({
 
         if (response.status === 401) {
           setUpvotedToolIds(new Set());
+          setUpvoteCountByToolId(new Map());
           setDailyVotesRemaining(null);
           return;
         }
@@ -97,6 +110,9 @@ export function ViewerVoteStateProvider({
         }
 
         setUpvotedToolIds(new Set(payload.data.upvotedToolIds));
+        setUpvoteCountByToolId(
+          new Map(Object.entries(payload.data.upvoteCountByToolId ?? {})),
+        );
         setDailyVotesRemaining(payload.data.dailyVotesRemaining);
       } catch (error) {
         if (controller.signal.aborted) {
@@ -105,10 +121,12 @@ export function ViewerVoteStateProvider({
 
         console.error("Unable to load viewer vote state", error);
         setUpvotedToolIds(new Set());
+        setUpvoteCountByToolId(new Map());
         setDailyVotesRemaining(null);
       } finally {
         if (!controller.signal.aborted) {
           setIsLoadingVotes(false);
+          setHasLoaded(true);
         }
       }
     })();
@@ -130,6 +148,11 @@ export function ViewerVoteStateProvider({
 
       return nextToolIds;
     });
+    setUpvoteCountByToolId((current) => {
+      const next = new Map(current);
+      next.set(toolId, result.upvoteCount);
+      return next;
+    });
     setDailyVotesRemaining(result.dailyVotesRemaining);
   }
 
@@ -138,7 +161,9 @@ export function ViewerVoteStateProvider({
       value={{
         isAuthenticated: Boolean(session?.user.id),
         isLoading: isPending || isLoadingVotes,
+        hasLoaded,
         upvotedToolIds,
+        upvoteCountByToolId,
         dailyVotesRemaining,
         applyVoteResult,
       }}
@@ -154,7 +179,9 @@ export function useViewerVoteState(toolId: string) {
   return {
     isAuthenticated: context?.isAuthenticated ?? false,
     isLoading: context?.isLoading ?? false,
+    hasLoaded: context?.hasLoaded ?? false,
     hasUpvoted: context?.upvotedToolIds.has(toolId) ?? false,
+    upvoteCount: context?.upvoteCountByToolId.get(toolId) ?? null,
     dailyVotesRemaining: context?.dailyVotesRemaining ?? null,
     applyVoteResult: context?.applyVoteResult,
   };

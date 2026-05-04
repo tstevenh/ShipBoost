@@ -37,7 +37,9 @@ describe("ToolUpvoteButton", () => {
     useViewerVoteStateMock.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
+      hasLoaded: true,
       hasUpvoted: false,
+      upvoteCount: null,
       dailyVotesRemaining: 3,
       applyVoteResult: vi.fn(),
     });

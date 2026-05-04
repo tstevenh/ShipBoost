@@ -61,7 +61,7 @@ export function rankLaunchBoardLaunches(launches: RankedLaunchRecord[]) {
     return launches;
   }
 
-  const leaderboard = [...launches].sort((left, right) => {
+  return [...launches].sort((left, right) => {
     const voteDifference = right.boardVoteCount - left.boardVoteCount;
 
     if (voteDifference !== 0) {
@@ -70,12 +70,6 @@ export function rankLaunchBoardLaunches(launches: RankedLaunchRecord[]) {
 
     return compareLaunchPriority(left, right);
   });
-  const topLaunchIds = new Set(leaderboard.slice(0, 3).map((launch) => launch.id));
-  const remainingLaunches = launches
-    .filter((launch) => !topLaunchIds.has(launch.id))
-    .sort(compareLaunchPriority);
-
-  return [...leaderboard.slice(0, 3), ...remainingLaunches];
 }
 
 async function listRankedLaunchesForWindow(input: {

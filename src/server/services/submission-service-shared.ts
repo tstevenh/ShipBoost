@@ -21,20 +21,14 @@ export type SavedSubmissionDraft = {
 
 export type DeferredEmailTask = () => Promise<void>;
 
-export const freeLaunchBadgePattern =
-  /data-shipboost-badge\s*=\s*["']free-launch["']/i;
-
-export const officialShipBoostBadgeAssetPattern =
-  /https:\/\/shipboost\.io\/ShipBoost-Badge\/[^"'\s)]+/i;
+export const shipBoostBacklinkPattern =
+  /href\s*[:=]\s*["']https?:\/\/(?:www\.)?shipboost\.io(?:\/[^"']*)?["']/i;
 
 const scriptSrcPattern =
   /<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
 
 function hasRecognizedFreeLaunchBadge(value: string) {
-  return (
-    freeLaunchBadgePattern.test(value) ||
-    officialShipBoostBadgeAssetPattern.test(value)
-  );
+  return shipBoostBacklinkPattern.test(value);
 }
 
 export function getSameOriginScriptUrls(html: string, pageUrl: string) {

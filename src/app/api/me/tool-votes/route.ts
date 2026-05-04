@@ -4,6 +4,7 @@ import { requireSession } from "@/server/auth/session";
 import { errorResponse, ok } from "@/server/http/response";
 import {
   getDailyVotesRemaining,
+  listToolUpvoteCounts,
   listUserUpvotedToolIds,
 } from "@/server/services/upvote-service";
 
@@ -26,14 +27,17 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireSession(request);
     const toolIds = getRequestedToolIds(request);
-    const [dailyVotesRemaining, upvotedToolIds] = await Promise.all([
-      getDailyVotesRemaining(session.user.id),
-      listUserUpvotedToolIds(toolIds, session.user.id),
-    ]);
+    const [dailyVotesRemaining, upvotedToolIds, upvoteCountByToolId] =
+      await Promise.all([
+        getDailyVotesRemaining(session.user.id),
+        listUserUpvotedToolIds(toolIds, session.user.id),
+        listToolUpvoteCounts(toolIds),
+      ]);
 
     return ok({
       dailyVotesRemaining,
       upvotedToolIds: Array.from(upvotedToolIds),
+      upvoteCountByToolId: Object.fromEntries(upvoteCountByToolId),
     });
   } catch (error) {
     return errorResponse(error);

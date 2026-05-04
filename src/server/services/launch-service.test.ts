@@ -40,7 +40,7 @@ function makeLaunch(input: {
 }
 
 describe("launch-service", () => {
-  it("uses board votes for the top three, then keeps premium launches ahead of free launches", () => {
+  it("ranks every position by board votes, with premium-first as tiebreaker", () => {
     const ranked = rankLaunchBoardLaunches([
       makeLaunch({
         id: "free-a",
@@ -88,8 +88,8 @@ describe("launch-service", () => {
       "premium-a",
       "premium-b",
       "free-a",
-      "premium-c",
       "free-b",
+      "premium-c",
     ]);
   });
 

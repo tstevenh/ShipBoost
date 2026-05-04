@@ -31,7 +31,19 @@ describe("normalizeHttpUrl", () => {
 });
 
 describe("hasFreeLaunchBadgeInHtmlOrScripts", () => {
-  it("finds the badge marker in same-origin JavaScript bundles", async () => {
+  it("finds a shipboost.io backlink directly in HTML", async () => {
+    const html = '<a href="https://shipboost.io">Featured on ShipBoost</a>';
+
+    await expect(
+      hasFreeLaunchBadgeInHtmlOrScripts(
+        html,
+        "https://interview-prep.io/",
+        async () => "",
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it("finds a shipboost.io backlink inside a JSX-compiled JS bundle", async () => {
     const html =
       '<html><head><script type="module" src="/assets/index.js"></script></head></html>';
 
@@ -41,30 +53,23 @@ describe("hasFreeLaunchBadgeInHtmlOrScripts", () => {
         "https://interview-prep.io/",
         async (url) => {
           expect(url).toBe("https://interview-prep.io/assets/index.js");
-          return '<a href="https://shipboost.io" data-shipboost-badge="free-launch"></a>';
+          return 'l.jsx("a",{href:"https://shipboost.io","data-shipboost-badge":"free-launch"})';
         },
       ),
     ).resolves.toBe(true);
   });
 
-  it("finds official ShipBoost badge assets in same-origin JavaScript bundles", async () => {
+  it("returns false when there is no shipboost.io backlink anywhere", async () => {
     const html =
-      '<html><head><script type="module" src="/assets/index.js"></script></head></html>';
+      '<html><head><script type="module" src="/assets/index.js"></script></head><body><a href="https://example.com">x</a></body></html>';
 
     await expect(
       hasFreeLaunchBadgeInHtmlOrScripts(
         html,
         "https://interview-prep.io/",
-        async (url) => {
-          expect(url).toBe("https://interview-prep.io/assets/index.js");
-          return JSON.stringify({
-            href: "https://shipboost.io",
-            src: "https://shipboost.io/ShipBoost-Badge/ShipBoost-Dark-Badge.svg",
-            alt: "Featured on ShipBoost",
-          });
-        },
+        async () => "no backlink here",
       ),
-    ).resolves.toBe(true);
+    ).resolves.toBe(false);
   });
 
   it("ignores third-party scripts during badge verification", () => {

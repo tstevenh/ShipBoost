@@ -60,6 +60,10 @@ export function ToolUpvoteButton({
 
     setHasUpvoted(viewerVoteState.hasUpvoted);
     setDailyVotesRemaining(viewerVoteState.dailyVotesRemaining);
+
+    if (viewerVoteState.upvoteCount !== null) {
+      setCount(viewerVoteState.upvoteCount);
+    }
   }, [
     initialDailyVotesRemaining,
     initialHasUpvoted,
@@ -67,6 +71,7 @@ export function ToolUpvoteButton({
     viewerVoteState.hasUpvoted,
     viewerVoteState.isAuthenticated,
     viewerVoteState.isLoading,
+    viewerVoteState.upvoteCount,
   ]);
 
   function handleVote() {
