@@ -52,6 +52,16 @@ describe("launch-scheduling", () => {
     ]);
   });
 
+  it("offers two years of premium launch weeks by default", () => {
+    const result = listSelectableLaunchWeeks({
+      fromDate: new Date("2026-05-04T00:00:00.000Z"),
+      goLiveAt: new Date("2026-05-04T00:00:00.000Z"),
+    });
+
+    expect(result).toHaveLength(104);
+    expect(result.at(-1)?.toISOString()).toBe("2028-04-24T00:00:00.000Z");
+  });
+
   it("recognizes only anchored launch week starts as valid premium weeks", () => {
     expect(
       isAnchoredLaunchWeekStart(new Date("2026-05-11T00:00:00.000Z"), {

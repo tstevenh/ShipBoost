@@ -115,4 +115,71 @@ describe("alternatives SEO registry", () => {
       );
     }
   });
+
+  it("defines the cluster 21-30 alternatives pages", () => {
+    for (const slug of [
+      "vanta",
+      "drata",
+      "1password",
+      "bitwarden",
+      "keeper",
+      "rewardful",
+      "partnerstack",
+      "impact",
+      "firstpromoter",
+      "pendo",
+      "canny",
+      "productboard",
+      "uservoice",
+      "grammarly",
+      "jasper",
+      "copy-ai",
+      "writesonic",
+      "quillbot",
+      "microsoft-teams",
+      "slack",
+      "discord-business",
+      "mattermost",
+      "rocket-chat",
+      "docusign",
+      "pandadoc",
+      "hellosign",
+      "signnow",
+      "proposify",
+      "confluence",
+      "gitbook",
+      "slab",
+      "readme",
+      "scribe",
+      "gainsight",
+      "churnzero",
+      "planhat",
+      "totango",
+      "vitally",
+      "tableau",
+      "power-bi",
+      "looker",
+      "metabase",
+      "databox",
+      "dropbox",
+      "box",
+      "google-drive",
+      "onedrive",
+      "backblaze",
+    ]) {
+      expect(alternativesSeoRegistry[slug]).toBeDefined();
+      expect(alternativesSeoRegistry[slug]?.toolSlugs.length).toBeGreaterThanOrEqual(
+        6,
+      );
+      expect(alternativesSeoRegistry[slug]?.faq?.length ?? 0).toBeGreaterThanOrEqual(
+        5,
+      );
+    }
+  });
+
+  it("keeps every alternatives page above the FAQ depth floor", () => {
+    for (const entry of Object.values(alternativesSeoRegistry)) {
+      expect(entry.faq?.length ?? 0).toBeGreaterThanOrEqual(5);
+    }
+  });
 });

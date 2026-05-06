@@ -152,6 +152,27 @@ POST https://shipboost.io/api/cron/launches/publish-due
 Authorization: Bearer <CRON_SECRET>
 ```
 
+### Premium spotlight reminder cron
+
+Call:
+
+```text
+POST https://shipboost.io/api/cron/premium-launch-spotlights/remind-due
+Authorization: Bearer <CRON_SECRET>
+```
+
+This sends spotlight brief reminders only for paid Premium Launches whose
+brief status is `NOT_STARTED` or `IN_PROGRESS`.
+
+### Launch traction reminder cron
+
+Call:
+
+```text
+POST https://shipboost.io/api/cron/launches/send-prelaunch-reminders
+Authorization: Bearer <CRON_SECRET>
+```
+
 ### Public content revalidation cron
 
 Call:
@@ -161,7 +182,7 @@ POST https://shipboost.io/api/cron/public-content/revalidate
 Authorization: Bearer <CRON_SECRET>
 ```
 
-If you do not schedule these, launches and cache refreshes will rely only on normal user traffic and webhooks.
+If you do not schedule these, launches, reminder emails, and cache refreshes will rely only on normal user traffic and webhooks.
 
 ## First Launch Sequence
 

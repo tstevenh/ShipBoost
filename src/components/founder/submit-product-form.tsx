@@ -7,6 +7,8 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Image as ImageIcon,
   Layout,
@@ -356,27 +358,64 @@ function formatLaunchDate(value: string | null | undefined) {
   }).format(new Date(value));
 }
 
-function formatLaunchWait(value: string | null | undefined) {
-  if (!value) {
-    return "~100 days";
+function getLaunchWeekCopyDate(value: string | null | undefined) {
+  return value ? formatLaunchDate(value) : "your scheduled launch week";
+}
+
+type PremiumLaunchWeekOption = SubmitProductFormProps["premiumLaunchWeeks"][number];
+
+export function groupPremiumLaunchWeeksByMonth(weeks: PremiumLaunchWeekOption[]) {
+  const monthFormatter = new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  const grouped = new Map<
+    string,
+    {
+      key: string;
+      label: string;
+      weeks: PremiumLaunchWeekOption[];
+    }
+  >();
+
+  for (const week of weeks) {
+    const date = new Date(`${week.value}T00:00:00.000Z`);
+
+    if (Number.isNaN(date.getTime())) {
+      continue;
+    }
+
+    const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+    const existing = grouped.get(key);
+
+    if (existing) {
+      existing.weeks.push(week);
+    } else {
+      grouped.set(key, {
+        key,
+        label: monthFormatter.format(date),
+        weeks: [week],
+      });
+    }
   }
 
-  const launchTime = new Date(value).getTime();
+  return [...grouped.values()];
+}
 
-  if (Number.isNaN(launchTime)) {
-    return "~100 days";
+export function getPremiumLaunchMonthIndexForDate(
+  months: ReturnType<typeof groupPremiumLaunchWeeksByMonth>,
+  selectedWeek: string | null | undefined,
+) {
+  if (!selectedWeek) {
+    return 0;
   }
 
-  const days = Math.max(
-    0,
-    Math.ceil((launchTime - Date.now()) / (24 * 60 * 60 * 1000)),
+  const index = months.findIndex((month) =>
+    month.weeks.some((week) => week.value === selectedWeek),
   );
 
-  if (days === 0) {
-    return "less than 1 day";
-  }
-
-  return `~${days} ${days === 1 ? "day" : "days"}`;
+  return index >= 0 ? index : 0;
 }
 
 export function SubmitProductForm({
@@ -413,6 +452,7 @@ export function SubmitProductForm({
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [scheduleModalView, setScheduleModalView] = useState<"plans" | "premium-date">("plans");
+  const [premiumLaunchMonthIndex, setPremiumLaunchMonthIndex] = useState(0);
   const [badgePromptSubmissionId, setBadgePromptSubmissionId] = useState<string | null>(null);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [slugStatus, setSlugStatus] = useState<string>("");
@@ -465,6 +505,14 @@ export function SubmitProductForm({
     foundingPremiumLaunchSpotsLeft,
     foundingPremiumLaunchLimit,
   );
+  const premiumLaunchMonths = useMemo(
+    () => groupPremiumLaunchWeeksByMonth(premiumLaunchWeeks),
+    [premiumLaunchWeeks],
+  );
+  const visiblePremiumLaunchMonth =
+    premiumLaunchMonths[
+      Math.min(premiumLaunchMonthIndex, Math.max(premiumLaunchMonths.length - 1, 0))
+    ] ?? null;
   const selectedCategory = categories.find((category) => category.id === form.categoryIds[0]);
   const selectedTags = form.tagIds.flatMap((tagId) => {
     const tag = tags.find((item) => item.id === tagId);
@@ -746,6 +794,14 @@ export function SubmitProductForm({
   async function handleOpenScheduleModal(view: "plans" | "premium-date" = "plans") {
     setErrorMessage(null);
     setSuccessMessage(null);
+    if (view === "premium-date") {
+      setPremiumLaunchMonthIndex(
+        getPremiumLaunchMonthIndexForDate(
+          premiumLaunchMonths,
+          form.preferredLaunchDate || scheduledLaunchDate,
+        ),
+      );
+    }
 
     if (incompleteChecklistItems.length > 0) {
       setErrorMessage(`Please complete: ${incompleteChecklistItems.join(", ")}.`);
@@ -1112,7 +1168,7 @@ export function SubmitProductForm({
                         Get the next free launch slot. Free launches include a nofollow website link by default.
                       </p>
                       <p className="mt-2 text-xs font-bold text-muted-foreground">
-                        Estimated launch: in {formatLaunchWait(freeLaunchEstimateDate)}.
+                        Estimated launch week: {getLaunchWeekCopyDate(freeLaunchEstimateDate)}.
                       </p>
                     </div>
                   </div>
@@ -1167,22 +1223,64 @@ export function SubmitProductForm({
               </div>
             ) : (
               <div className="p-6">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {premiumLaunchWeeks.map((week) => (
+                <div className="rounded-2xl border border-border bg-card p-4">
+                  <div className="flex items-center justify-between gap-3">
                     <button
-                      key={week.value}
                       type="button"
-                      onClick={() => choosePremiumDate(week.value)}
-                      className={cn(
-                        "rounded-xl border px-4 py-3 text-left text-sm font-black transition",
-                        form.preferredLaunchDate === week.value
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card text-foreground hover:border-foreground/40",
-                      )}
+                      onClick={() =>
+                        setPremiumLaunchMonthIndex((current) => Math.max(current - 1, 0))
+                      }
+                      disabled={premiumLaunchMonthIndex === 0}
+                      className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
+                      aria-label="Previous launch month"
                     >
-                      {week.label}
+                      <ChevronLeft size={17} />
                     </button>
-                  ))}
+                    <div className="text-center">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">
+                        Choose launch week
+                      </p>
+                      <h4 className="mt-1 text-lg font-black text-foreground">
+                        {visiblePremiumLaunchMonth?.label ?? "No weeks available"}
+                      </h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPremiumLaunchMonthIndex((current) =>
+                          Math.min(current + 1, Math.max(premiumLaunchMonths.length - 1, 0)),
+                        )
+                      }
+                      disabled={premiumLaunchMonthIndex >= premiumLaunchMonths.length - 1}
+                      className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
+                      aria-label="Next launch month"
+                    >
+                      <ChevronRight size={17} />
+                    </button>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    {visiblePremiumLaunchMonth?.weeks.map((week) => (
+                      <button
+                        key={week.value}
+                        type="button"
+                        onClick={() => choosePremiumDate(week.value)}
+                        className={cn(
+                          "rounded-xl border px-4 py-3 text-left text-sm font-black transition",
+                          form.preferredLaunchDate === week.value
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:border-foreground/40",
+                        )}
+                      >
+                        {week.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <p className="mt-4 text-xs font-bold leading-relaxed text-muted-foreground">
+                    Premium Launch can be scheduled into any available future
+                    ShipBoost launch week in the next two years.
+                  </p>
                 </div>
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1333,8 +1431,8 @@ export function SubmitProductForm({
                 </h3>
                 <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
                   {isPremiumScheduled
-                    ? `You skipped the waiting line. Your product is scheduled to launch on ${formatLaunchDate(scheduledLaunchDate)}.`
-                    : `Your product is estimated to launch in ${formatLaunchWait(scheduledLaunchDate)}.`}
+                    ? `You skipped the waiting line. Your product is scheduled for the week of ${getLaunchWeekCopyDate(scheduledLaunchDate)}.`
+                    : `Your product is scheduled for the week of ${getLaunchWeekCopyDate(scheduledLaunchDate)}. You can skip the waiting line with Premium Launch and choose a launch week that works better for you.`}
                 </p>
                 <div className="mt-5 space-y-3">
                   <button

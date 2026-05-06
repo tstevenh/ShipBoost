@@ -37,6 +37,7 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
   const env = getEnv();
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
   const premiumLaunchWeeks = listSelectableLaunchWeeks({
+    count: 104,
     goLiveAt: new Date(env.LAUNCHPAD_GO_LIVE_AT),
   }).map((weekStart) => ({
     value: weekStart.toISOString().slice(0, 10),

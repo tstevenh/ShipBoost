@@ -54,7 +54,7 @@ export async function sendDuePremiumLaunchSpotlightReminders(now = new Date()) {
   const briefs = await prisma.submissionSpotlightBrief.findMany({
     where: {
       status: {
-        not: "PUBLISHED",
+        in: ["NOT_STARTED", "IN_PROGRESS"],
       },
       submission: {
         submissionType: "FEATURED_LAUNCH",
@@ -63,6 +63,7 @@ export async function sendDuePremiumLaunchSpotlightReminders(now = new Date()) {
     },
     select: {
       submissionId: true,
+      status: true,
       reminderThreeDaysSentAt: true,
       reminderLaunchWeekSentAt: true,
       submission: {
@@ -87,6 +88,10 @@ export async function sendDuePremiumLaunchSpotlightReminders(now = new Date()) {
   const dueReminders = briefs
     .map((brief) => {
       const launchDate = brief.submission.preferredLaunchDate;
+
+      if (brief.status !== "NOT_STARTED" && brief.status !== "IN_PROGRESS") {
+        return null;
+      }
 
       if (!launchDate) {
         return null;

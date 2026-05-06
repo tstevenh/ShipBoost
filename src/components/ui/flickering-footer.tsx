@@ -1081,6 +1081,14 @@ const featuredBadges: FeaturedBadge[] = [
     imageStyle: { height: 54, width: "auto" },
   },
   {
+    id: "so-product",
+    href: "https://soproduct.com",
+    src: "https://soproduct.com/badages-awards.svg",
+    alt: "Featured on So Product",
+    rel: "noopener noreferrer",
+    imageStyle: { height: 54, width: "auto" },
+  },
+  {
     id: "the-one-startup",
     href: "https://theonestartup.com",
     src: "https://theonestartup.com/badages-awards.svg",

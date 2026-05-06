@@ -338,15 +338,16 @@ model SubmissionSpotlightBrief {
 }
 
 model Launch {
-  id             String       @id @default(cuid())
-  toolId         String
-  createdById    String
-  launchType     LaunchType
-  status         LaunchStatus @default(PENDING)
-  launchDate     DateTime     @default(now())
-  startAt        DateTime
-  endAt          DateTime?
-  priorityWeight Int          @default(0)
+  id                   String       @id @default(cuid())
+  toolId               String
+  createdById          String
+  launchType           LaunchType
+  status               LaunchStatus @default(PENDING)
+  launchDate           DateTime     @default(now())
+  startAt              DateTime
+  endAt                DateTime?
+  preLaunchEmailSentAt DateTime?
+  priorityWeight       Int          @default(0)
 
   tool      Tool @relation(fields: [toolId], references: [id], onDelete: Cascade)
   createdBy User @relation("LaunchCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)

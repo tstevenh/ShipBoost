@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { MarkdownContent } from "@/components/content/markdown-content";
-import { BlogAuthorCard } from "@/components/blog/blog-author-card";
 import { Footer } from "@/components/ui/footer";
 
 type BlogArticlePageProps = {
@@ -69,8 +68,6 @@ export function BlogArticlePage({
   previewMode = false,
 }: BlogArticlePageProps) {
   const publishedLabel = formatDate(article.publishedAt ?? article.updatedAt);
-  const updatedLabel = formatDate(article.lastUpdatedAt ?? article.updatedAt);
-  const sidebarRelatedArticle = relatedArticles[0] ?? null;
 
   return (
     <main className="flex flex-1 flex-col bg-muted/20 pt-32">
@@ -147,29 +144,6 @@ export function BlogArticlePage({
             <div className="rounded-[1.75rem] border border-border bg-card p-6 shadow-sm sm:p-8">
               <MarkdownContent content={article.markdownContent} />
             </div>
-            {sidebarRelatedArticle ? (
-              <section className="mt-6 rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
-                <h2 className="text-sm font-black tracking-[0.2em] text-foreground/60">
-                  Related
-                </h2>
-                <div className="mt-4 space-y-3">
-                  <p className="text-[11px] font-black tracking-[0.22em] text-foreground/45">
-                    {sidebarRelatedArticle.primaryCategory.name}
-                  </p>
-                  <h3 className="text-base font-black tracking-tight text-foreground">
-                    <Link
-                      href={`/blog/${sidebarRelatedArticle.slug}`}
-                      className="hover:underline underline-offset-4"
-                    >
-                      {sidebarRelatedArticle.title}
-                    </Link>
-                  </h3>
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    {sidebarRelatedArticle.excerpt}
-                  </p>
-                </div>
-              </section>
-            ) : null}
           </article>
         </div>
 

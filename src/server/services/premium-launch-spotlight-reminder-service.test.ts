@@ -48,10 +48,65 @@ describe("premium-launch-spotlight-reminder-service", () => {
     expect(sendPremiumLaunchSpotlightReminderEmailMessageMock).not.toHaveBeenCalled();
   });
 
+  it("only queries unfinished spotlight briefs", async () => {
+    prismaMock.submissionSpotlightBrief.findMany.mockResolvedValueOnce([]);
+
+    await sendDuePremiumLaunchSpotlightReminders(
+      new Date("2026-05-05T00:00:00.000Z"),
+    );
+
+    expect(prismaMock.submissionSpotlightBrief.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          status: {
+            in: ["NOT_STARTED", "IN_PROGRESS"],
+          },
+          submission: {
+            submissionType: "FEATURED_LAUNCH",
+            paymentStatus: "PAID",
+          },
+        },
+      }),
+    );
+  });
+
+  it("does not send reminders for ready briefs returned by a stale client", async () => {
+    prismaMock.submissionSpotlightBrief.findMany.mockResolvedValueOnce([
+      {
+        submissionId: "submission_ready",
+        status: "READY",
+        reminderThreeDaysSentAt: null,
+        reminderLaunchWeekSentAt: null,
+        submission: {
+          preferredLaunchDate: new Date("2026-05-08T00:00:00.000Z"),
+          user: {
+            email: "founder@example.com",
+            name: "Founder",
+          },
+          tool: {
+            name: "Acme",
+          },
+        },
+      },
+    ]);
+
+    const result = await sendDuePremiumLaunchSpotlightReminders(
+      new Date("2026-05-08T00:00:00.000Z"),
+    );
+
+    expect(sendPremiumLaunchSpotlightReminderEmailMessageMock).not.toHaveBeenCalled();
+    expect(prismaMock.submissionSpotlightBrief.update).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      threeDaysBeforeCount: 0,
+      launchWeekStartCount: 0,
+    });
+  });
+
   it("sends the three-days-before reminder once", async () => {
     prismaMock.submissionSpotlightBrief.findMany.mockResolvedValueOnce([
       {
         submissionId: "submission_1",
+        status: "NOT_STARTED",
         reminderThreeDaysSentAt: null,
         reminderLaunchWeekSentAt: null,
         submission: {
@@ -94,6 +149,7 @@ describe("premium-launch-spotlight-reminder-service", () => {
     prismaMock.submissionSpotlightBrief.findMany.mockResolvedValueOnce([
       {
         submissionId: "submission_1",
+        status: "IN_PROGRESS",
         reminderThreeDaysSentAt: new Date("2026-05-05T00:00:00.000Z"),
         reminderLaunchWeekSentAt: null,
         submission: {
@@ -133,6 +189,7 @@ describe("premium-launch-spotlight-reminder-service", () => {
     prismaMock.submissionSpotlightBrief.findMany.mockResolvedValueOnce([
       {
         submissionId: "submission_1",
+        status: "NOT_STARTED",
         reminderThreeDaysSentAt: new Date("2026-05-05T00:00:00.000Z"),
         reminderLaunchWeekSentAt: new Date("2026-05-08T00:00:00.000Z"),
         submission: {

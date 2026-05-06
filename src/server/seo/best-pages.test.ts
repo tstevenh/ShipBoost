@@ -6,6 +6,38 @@ import {
   getBestGuideEntriesForTool,
 } from "@/server/seo/best-pages";
 
+function countWords(value: string) {
+  return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function estimateBestPageWords(page: (typeof bestPagesRegistry)[string]) {
+  const text = [
+    page.title,
+    page.metaTitle,
+    page.metaDescription,
+    page.intro,
+    page.whoItsFor,
+    ...page.howWeEvaluated,
+    ...page.comparisonTable.flatMap((row) => [
+      row.label,
+      ...Object.values(row.valuesByToolSlug),
+    ]),
+    ...page.rankedTools.flatMap((tool) => [
+      tool.verdict,
+      tool.bestFor,
+      tool.notIdealFor,
+      ...(tool.criteriaHighlights ?? []),
+    ]),
+    ...page.faq.flatMap((item) => [item.question, item.answer]),
+    ...(page.customSections ?? []).flatMap((section) => [
+      section.heading,
+      section.body,
+    ]),
+  ].join(" ");
+
+  return countWords(text);
+}
+
 describe("best-pages registry", () => {
   it("defines the first support cluster pages", () => {
     expect(bestPagesRegistry["help-desk-software"]).toBeDefined();
@@ -280,5 +312,71 @@ describe("best-pages registry", () => {
     expect(
       bestHubSections.some((section) => section.slug === "design-whiteboarding"),
     ).toBe(true);
+  });
+
+  it("defines the cluster 21-30 best pages", () => {
+    for (const slug of [
+      "password-manager-for-small-business",
+      "soc-2-compliance-software",
+      "business-password-manager",
+      "referral-program-software",
+      "referral-software",
+      "affiliate-tracking-software",
+      "customer-feedback-tools",
+      "roadmap-software",
+      "product-roadmap-software",
+      "documentation-software",
+      "wiki-software-for-teams",
+      "sop-software",
+      "developer-documentation-tools",
+      "ai-writing-tools",
+      "ai-copywriting-tools",
+      "writing-assistant-software",
+      "team-communication-tools",
+      "business-messaging-apps",
+      "open-source-team-chat-software",
+      "e-signature-software",
+      "proposal-software",
+      "document-signing-software-for-small-business",
+      "contract-management-software-for-small-business",
+      "business-intelligence-software",
+      "dashboard-software",
+      "data-visualization-tools-for-business",
+      "customer-success-software",
+      "customer-success-software-for-saas",
+      "customer-health-score-software",
+      "business-cloud-storage",
+      "cloud-backup-for-small-business",
+      "file-sharing-software-for-teams",
+      "secure-cloud-storage-for-business",
+    ]) {
+      expect(bestPagesRegistry[slug]).toBeDefined();
+      expect(bestPagesRegistry[slug]?.rankedTools.length).toBeGreaterThanOrEqual(8);
+    }
+  });
+
+  it("includes the cluster 21-30 sections in the best hub", () => {
+    for (const slug of [
+      "security-compliance",
+      "affiliate-referral",
+      "feedback-roadmapping",
+      "documentation-wiki",
+      "ai-writing-productivity",
+      "team-communication",
+      "esignature-proposals",
+      "business-intelligence-dashboards",
+      "customer-success",
+      "cloud-storage-backup",
+    ]) {
+      expect(bestHubSections.some((section) => section.slug === slug)).toBe(true);
+    }
+  });
+
+  it("keeps every best page above the thin-content floor", () => {
+    for (const page of Object.values(bestPagesRegistry)) {
+      expect(page.faq.length).toBeGreaterThanOrEqual(5);
+      expect(page.customSections?.length ?? 0).toBeGreaterThanOrEqual(4);
+      expect(estimateBestPageWords(page)).toBeGreaterThanOrEqual(650);
+    }
   });
 });

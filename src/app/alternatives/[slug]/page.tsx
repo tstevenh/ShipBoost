@@ -16,7 +16,7 @@ import {
   getCachedAlternativesPage,
 } from "@/server/cache/public-content";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
-import { buildCollectionWithBreadcrumbSchema } from "@/server/seo/page-schema";
+import { buildBestPageSchema } from "@/server/seo/page-schema";
 import { alternativesSeoRegistry } from "@/server/seo/registry";
 
 export const revalidate = 1800;
@@ -118,8 +118,8 @@ export default async function AlternativesPage(context: RouteContext) {
     .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
     .slice(0, 3)
     .map((item) => item.name);
-  const schema = buildCollectionWithBreadcrumbSchema({
-    name: page.entry.title,
+  const schema = buildBestPageSchema({
+    title: page.entry.title,
     description: page.entry.metaDescription,
     url: canonical,
     breadcrumbs: [
@@ -131,6 +131,7 @@ export default async function AlternativesPage(context: RouteContext) {
       name: tool.name,
       url: `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`,
     })),
+    faq: page.entry.faq,
   });
 
   return (
@@ -313,6 +314,32 @@ export default async function AlternativesPage(context: RouteContext) {
             title="Other alternative pages on ShipBoost"
             links={relatedComparisonLinks}
           />
+
+          {page.entry.faq?.length ? (
+            <section className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
+              <p className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/60">
+                FAQ
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-foreground">
+                Frequently asked questions
+              </h2>
+              <div className="mt-6 space-y-4">
+                {page.entry.faq.map((item) => (
+                  <article
+                    key={item.question}
+                    className="rounded-2xl border border-border bg-background p-5"
+                  >
+                    <h3 className="text-sm font-black text-foreground">
+                      {item.question}
+                    </h3>
+                    <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                      {item.answer}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
           </div>
         </ShowcaseLayout>
       </ViewerVoteStateProvider>

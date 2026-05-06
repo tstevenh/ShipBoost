@@ -4,6 +4,7 @@ import { getEnv } from "@/server/env";
 
 type TransactionalEmailInput = {
   to: string | string[];
+  from?: string;
   subject: string;
   html: string;
   text: string;
@@ -66,6 +67,20 @@ function linkParagraph(href: string) {
       href,
     )}</a>`,
   );
+}
+
+function getEmailAddress(value: string) {
+  const angleAddress = value.match(/<([^>]+)>/);
+
+  if (angleAddress?.[1]) {
+    return angleAddress[1].trim();
+  }
+
+  return value.trim();
+}
+
+function getTimFromShipBoostAddress() {
+  return `Tim from ShipBoost <${getEmailAddress(getEnv().RESEND_FROM_TRANSACTIONAL)}>`;
 }
 
 function getEmailLogoUrl() {
@@ -134,7 +149,7 @@ async function sendTransactionalEmail(input: TransactionalEmailInput) {
   }
 
   const response = await resend.emails.send({
-    from: env.RESEND_FROM_TRANSACTIONAL,
+    from: input.from ?? env.RESEND_FROM_TRANSACTIONAL,
     to: input.to,
     subject: input.subject,
     html: input.html,
@@ -669,6 +684,63 @@ export async function sendLaunchLiveEmailMessage(input: {
       `${input.toolName} is now live on ShipBoost.`,
       `Launch time: ${input.launchDate}`,
       `Dashboard: ${input.dashboardUrl}`,
+    ].join("\n"),
+  });
+}
+
+export async function sendLaunchPrepEmailMessage(input: {
+  to: string;
+  name?: string | null;
+  launchBoardUrl: string;
+  toolName: string;
+  launchDate: string;
+}) {
+  const subject = `${input.toolName} launches on ShipBoost tomorrow`;
+  const preview =
+    "Your launch week starts tomorrow. Rally your audience and compete for the homepage winner spot.";
+  const greeting = input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, ";
+  const html = renderEmailDocument({
+    title: subject,
+    preview,
+    content: [
+      eyebrow("Launch week starts tomorrow"),
+      h1("Get ready to compete on ShipBoost"),
+      paragraph(
+        `${greeting}<strong>${escapeHtml(
+          input.toolName,
+        )}</strong> is scheduled for ShipBoost launch week starting <strong>${escapeHtml(
+          input.launchDate,
+        )}</strong>.`,
+      ),
+      paragraph(
+        "Tomorrow is the time to bring your audience in. Post on X, LinkedIn, founder communities, your newsletter, or anywhere your users already follow your work.",
+      ),
+      paragraph(
+        "The top weekly winner gets an extra featured spot on the ShipBoost homepage for the following week. More votes can mean more visibility, more clicks, and a stronger launch signal.",
+      ),
+      paragraph(
+        "Bring your supporters, watch the board, and compete for the top spot.",
+      ),
+      ctaButton(input.launchBoardUrl, "Open the weekly board"),
+      linkParagraph(input.launchBoardUrl),
+    ].join(""),
+  });
+
+  await sendTransactionalEmail({
+    to: input.to,
+    from: getTimFromShipBoostAddress(),
+    subject,
+    html,
+    text: [
+      input.name ? `Hi ${input.name},` : "Hi,",
+      "",
+      `${input.toolName} is scheduled for ShipBoost launch week starting ${input.launchDate}.`,
+      "Tomorrow is the time to bring your audience in. Post on social media, founder communities, your newsletter, or anywhere your users already follow your work.",
+      "The top weekly winner gets an extra featured spot on the ShipBoost homepage for the following week.",
+      "Bring your supporters, watch the board, and compete for the top spot.",
+      `Weekly board: ${input.launchBoardUrl}`,
+      "",
+      "Tim from ShipBoost",
     ].join("\n"),
   });
 }

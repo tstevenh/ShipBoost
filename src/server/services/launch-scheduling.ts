@@ -12,7 +12,7 @@ export const UTC_WEEK_IN_DAYS = 7;
 export const UTC_WEEK_IN_MS = UTC_WEEK_IN_DAYS * 24 * 60 * 60 * 1000;
 
 export const DEFAULT_FREE_LAUNCH_SLOTS_PER_WEEK = 10;
-export const DEFAULT_PREMIUM_LAUNCH_WEEKS_AHEAD = 12;
+export const DEFAULT_PREMIUM_LAUNCH_WEEKS_AHEAD = 104;
 
 export function getLaunchpadGoLiveAtUtc() {
   return startOfUtcDay(new Date(getEnv().LAUNCHPAD_GO_LIVE_AT));

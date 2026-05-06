@@ -129,6 +129,7 @@ shipboost/
 - submission approved
 - submission rejected
 - featured payment received
+- premium spotlight brief reminders
 - launch live
 
 ### Payments
@@ -224,7 +225,7 @@ CRON_SECRET=""
 
 ```env
 RESEND_API_KEY=""
-RESEND_FROM_TRANSACTIONAL="Shipboost <onboarding@resend.dev>"
+RESEND_FROM_TRANSACTIONAL="ShipBoost <onboarding@resend.dev>"
 RESEND_REPLY_TO_TRANSACTIONAL=""
 RESEND_FROM_MARKETING=""
 ```
@@ -327,23 +328,35 @@ Due launches are published through:
 
 - [`/api/cron/launches/publish-due`](/Users/tsth/Coding/shipboost/my-app/src/app/api/cron/launches/publish-due/route.ts)
 
+Premium launch spotlight brief reminders are sent through:
+
+- [`/api/cron/premium-launch-spotlights/remind-due`](/Users/tsth/Coding/shipboost/my-app/src/app/api/cron/premium-launch-spotlights/remind-due/route.ts)
+
+Launch-week traction reminders are sent through:
+
+- [`/api/cron/launches/send-prelaunch-reminders`](/Users/tsth/Coding/shipboost/my-app/src/app/api/cron/launches/send-prelaunch-reminders/route.ts)
+
 ### Local testing
 
 If `APP_ENV=development` and `CRON_SECRET` is empty:
 
 ```bash
 curl http://localhost:3000/api/cron/launches/publish-due
+curl http://localhost:3000/api/cron/premium-launch-spotlights/remind-due
+curl http://localhost:3000/api/cron/launches/send-prelaunch-reminders
 ```
 
 If `CRON_SECRET` is set:
 
 ```bash
 curl -H "x-cron-secret: YOUR_SECRET" http://localhost:3000/api/cron/launches/publish-due
+curl -H "x-cron-secret: YOUR_SECRET" http://localhost:3000/api/cron/premium-launch-spotlights/remind-due
+curl -H "x-cron-secret: YOUR_SECRET" http://localhost:3000/api/cron/launches/send-prelaunch-reminders
 ```
 
 ### Production
 
-You need a real cron trigger to call this route regularly.
+You need real cron triggers to call these routes regularly.
 
 ## Badge verification
 
