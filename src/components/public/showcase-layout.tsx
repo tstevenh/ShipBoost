@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { Rocket } from "lucide-react";
 import { DeferredHomeSearchModal } from "@/components/public/deferred-home-search-modal";
+import { DeferredSidebarLeadMagnetForm } from "@/components/public/deferred-sidebar-lead-magnet-form";
 import { FrogDrBadge } from "@/components/public/frog-dr-badge";
-import { SidebarLeadMagnetForm } from "@/components/public/sidebar-lead-magnet-form";
 import { SidebarSponsorPlacements } from "@/components/public/sidebar-sponsor-placements";
 import {
   TopWinnerSidebarSpot,
@@ -15,7 +16,7 @@ import {
 } from "@/server/cache/public-content";
 
 export function SidebarLeadMagnet() {
-  return <SidebarLeadMagnetForm />;
+  return <DeferredSidebarLeadMagnetForm />;
 }
 
 function SidebarSubmitButton({ className }: { className?: string }) {
@@ -36,7 +37,13 @@ function SidebarSubmitButton({ className }: { className?: string }) {
 function MobileSidebarTopStack() {
   return (
     <div className="mb-6 grid gap-3 xl:hidden">
-      <DeferredHomeSearchModal className="max-w-none" />
+      <Suspense
+        fallback={
+          <div className="h-[42px] w-full rounded-xl border border-border bg-card" />
+        }
+      >
+        <DeferredHomeSearchModal className="max-w-none" />
+      </Suspense>
       <SidebarSubmitButton className="max-w-none" />
     </div>
   );
@@ -50,7 +57,7 @@ export function MobileSidebarFollowup({
   return (
     <div className="mt-6 grid gap-4 xl:hidden">
       <TopWinnerSidebarSpot winner={topWinner ?? null} className="max-w-none" />
-      <SidebarLeadMagnetForm />
+      <DeferredSidebarLeadMagnetForm />
     </div>
   );
 }
@@ -90,7 +97,13 @@ export async function ShowcaseLayout({
               "hidden xl:flex w-[275px] shrink-0 flex-col items-stretch gap-4 px-4 py-6",
               "sticky top-[80px] self-start h-fit",
             )}>
-              <DeferredHomeSearchModal className="max-w-none" />
+              <Suspense
+                fallback={
+                  <div className="h-[42px] w-full rounded-xl border border-border bg-card" />
+                }
+              >
+                <DeferredHomeSearchModal className="max-w-none" />
+              </Suspense>
               <SidebarSubmitButton className="max-w-none" />
               <FrogDrBadge fullWidth />
               <SidebarLeadMagnet />

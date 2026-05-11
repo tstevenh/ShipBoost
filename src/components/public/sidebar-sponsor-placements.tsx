@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { ExternalLink, Megaphone } from "lucide-react";
 
@@ -27,32 +28,70 @@ const FADE_DURATION_MS = 400;
 
 function EmptySponsorSlot() {
   return (
-    <SponsorAdvertiseModal
-      triggerClassName="group block w-full text-left rounded-xl border border-dashed border-border/70 bg-card/70 p-4 transition-colors hover:border-primary/40 hover:bg-card"
-      triggerContent={
-        <>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
-            Sponsored
+    <Suspense fallback={<SponsorAdvertiseFallback variant="empty" />}>
+      <SponsorAdvertiseModal
+        triggerClassName="group block w-full text-left rounded-xl border border-dashed border-border/70 bg-card/70 p-4 transition-colors hover:border-primary/40 hover:bg-card"
+        triggerContent={
+          <>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+              Sponsored
+            </p>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Megaphone size={18} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold tracking-tight text-foreground">
+                  Advertise here
+                </p>
+                <p className="mt-0.5 text-[11px] font-normal leading-relaxed text-muted-foreground">
+                  Reach thousands of founders
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 rounded-lg bg-primary py-2 text-center text-[12px] font-semibold tracking-tight text-primary-foreground transition-opacity group-hover:opacity-90">
+              Book this spot
+            </div>
+          </>
+        }
+      />
+    </Suspense>
+  );
+}
+
+function SponsorAdvertiseFallback({ variant }: { variant: "empty" | "link" }) {
+  if (variant === "link") {
+    return (
+      <div className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card px-2.5 py-1 text-[10px] font-semibold tracking-tight text-muted-foreground">
+        <Megaphone size={11} className="opacity-70" />
+        Advertise here
+        <span aria-hidden>→</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="block w-full rounded-xl border border-dashed border-border/70 bg-card/70 p-4 text-left">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+        Sponsored
+      </p>
+      <div className="mt-3 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Megaphone size={18} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-bold tracking-tight text-foreground">
+            Advertise here
           </p>
-          <div className="mt-3 flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Megaphone size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold tracking-tight text-foreground">
-                Advertise here
-              </p>
-              <p className="mt-0.5 text-[11px] font-normal leading-relaxed text-muted-foreground">
-                Reach thousands of founders
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 rounded-lg bg-primary py-2 text-center text-[12px] font-semibold tracking-tight text-primary-foreground transition-opacity group-hover:opacity-90">
-            Book this spot
-          </div>
-        </>
-      }
-    />
+          <p className="mt-0.5 text-[11px] font-normal leading-relaxed text-muted-foreground">
+            Reach thousands of founders
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 rounded-lg bg-primary py-2 text-center text-[12px] font-semibold tracking-tight text-primary-foreground">
+        Book this spot
+      </div>
+    </div>
   );
 }
 
@@ -152,18 +191,20 @@ export function SidebarSponsorPlacements({
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
           Our partners
         </p>
-        <SponsorAdvertiseModal
-          triggerClassName="group inline-flex items-center gap-1 rounded-full border border-border/60 bg-card px-2.5 py-1 text-[10px] font-semibold tracking-tight text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-          triggerContent={
-            <>
-              <Megaphone size={11} className="opacity-70 group-hover:opacity-100" />
-              Advertise here
-              <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
-                →
-              </span>
-            </>
-          }
-        />
+        <Suspense fallback={<SponsorAdvertiseFallback variant="link" />}>
+          <SponsorAdvertiseModal
+            triggerClassName="group inline-flex items-center gap-1 rounded-full border border-border/60 bg-card px-2.5 py-1 text-[10px] font-semibold tracking-tight text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+            triggerContent={
+              <>
+                <Megaphone size={11} className="opacity-70 group-hover:opacity-100" />
+                Advertise here
+                <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
+                  →
+                </span>
+              </>
+            }
+          />
+        </Suspense>
       </div>
 
       <div
