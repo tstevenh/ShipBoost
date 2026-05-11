@@ -372,6 +372,42 @@ describe("best-pages registry", () => {
     }
   });
 
+  it("defines the cluster 31-40 category best pages", () => {
+    for (const slug of [
+      "ai-chatbots",
+      "online-video-editors",
+      "note-taking-apps",
+      "code-hosting-platforms",
+      "no-code-app-builders",
+      "website-builders-and-cms",
+      "sales-engagement-software",
+      "api-testing-tools",
+      "online-course-platforms",
+      "ci-cd-tools",
+    ]) {
+      expect(bestPagesRegistry[slug]).toBeDefined();
+      expect(bestPagesRegistry[slug]?.rankedTools.length).toBeGreaterThanOrEqual(10);
+      expect(bestPagesRegistry[slug]?.faq.length).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  it("includes the cluster 31-40 category sections in the best hub", () => {
+    for (const slug of [
+      "ai-chatbots-assistants",
+      "video-editing-creative-production",
+      "notes-knowledge-management",
+      "code-hosting-repository-management",
+      "no-code-databases-app-builders",
+      "website-builders-cms",
+      "sales-engagement-cold-outreach",
+      "api-development-testing",
+      "online-course-community-platforms",
+      "ci-cd-devops-automation",
+    ]) {
+      expect(bestHubSections.some((section) => section.slug === slug)).toBe(true);
+    }
+  });
+
   it("keeps every best page above the thin-content floor", () => {
     for (const page of Object.values(bestPagesRegistry)) {
       expect(page.faq.length).toBeGreaterThanOrEqual(5);

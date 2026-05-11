@@ -23,7 +23,7 @@ function SidebarSubmitButton({ className }: { className?: string }) {
     <Link
       href="/submit"
       className={cn(
-        "group flex w-full max-w-[250px] items-center justify-center gap-2 rounded-xl bg-primary py-3 text-xs font-black text-primary-foreground shadow-lg shadow-black/10 transition-all hover:opacity-90 active:scale-95",
+        "group flex w-full max-w-[250px] items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-[13px] font-semibold tracking-tight text-primary-foreground transition-all hover:opacity-90 active:scale-95",
         className,
       )}
     >
@@ -77,42 +77,47 @@ export async function ShowcaseLayout({
     : [];
 
   return (
-    <section className={cn("pb-20 bg-muted/20 min-h-screen", isHomePage ? "pt-0" : "pt-24")}>
-      <div className="mx-auto max-w-[1600px] px-6">
+    <section className={cn("pb-20 bg-background min-h-screen", isHomePage ? "pt-0" : "pt-24")}>
+      <div className="mx-auto w-full max-w-[1440px]">
         <div className={cn(
-          "grid grid-cols-1 gap-8 items-start",
-          !isPrelaunch && "xl:grid-cols-[250px_minmax(0,1fr)_250px]"
+          "flex flex-col xl:flex-row xl:items-stretch",
+          isPrelaunch && "block",
         )}>
-          
-          {/* Left Column: Search + Submit + Lead Magnet */}
+
+          {/* Left Column: Search + Submit + DR Badge + Lead Magnet */}
           {!isPrelaunch && (
             <aside className={cn(
-              "hidden xl:flex flex-col items-center gap-3 sticky top-[100px] h-fit self-start pt-4",
+              "hidden xl:flex w-[275px] shrink-0 flex-col items-stretch gap-4 px-4 py-6",
+              "sticky top-[80px] self-start h-fit",
             )}>
-              <DeferredHomeSearchModal />
-              <SidebarSubmitButton />
-              <FrogDrBadge />
+              <DeferredHomeSearchModal className="max-w-none" />
+              <SidebarSubmitButton className="max-w-none" />
+              <FrogDrBadge fullWidth />
               <SidebarLeadMagnet />
             </aside>
           )}
 
-          {/* Middle Column */}
+          {/* Middle Column: Launchboard */}
           <div className={cn(
-            "min-w-0",
-            isHomePage && "pt-8",
+            "min-w-0 flex-1",
+            !isPrelaunch && "xl:border-x xl:border-border",
+            isHomePage && "xl:pt-6",
             isPrelaunch && "max-w-5xl mx-auto w-full",
           )}>
             {!isPrelaunch ? <MobileSidebarTopStack /> : null}
-            {children}
+            <div className={cn(!isPrelaunch && "px-4 xl:px-6 pb-8")}>
+              {children}
+            </div>
             {!isPrelaunch && showMobileFollowup ? (
               <MobileSidebarFollowup topWinner={resolvedTopWinner ?? null} />
             ) : null}
           </div>
 
-          {/* Right Column: Sponsors + Top Winner */}
+          {/* Right Column: Sponsored + Top 1 Winner */}
           {!isPrelaunch && (
             <aside className={cn(
-              "hidden xl:flex flex-col items-center gap-3 sticky top-[100px] h-fit self-start pt-4",
+              "hidden xl:flex w-[350px] shrink-0 flex-col items-stretch gap-4 px-5 py-6",
+              "sticky top-[80px] self-start h-fit",
             )}>
               <SidebarSponsorPlacements placements={sponsorPlacements} />
               <TopWinnerSidebarSpot winner={resolvedTopWinner ?? null} compactSlot />

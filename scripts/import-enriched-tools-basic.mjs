@@ -15,6 +15,17 @@ if (!csvPath) {
   process.exit(1);
 }
 
+function buildInternalNote(filePath) {
+  const normalized = filePath.replaceAll(path.sep, "/");
+  const match = normalized.match(/Cluster ([0-9]+-[0-9]+)/i);
+
+  if (match) {
+    return `Imported from cluster ${match[1]} enriched CSV`;
+  }
+
+  return "Imported from enriched anchor tools CSV";
+}
+
 function parseCsv(text) {
   const rows = [];
   let row = [];
@@ -104,6 +115,7 @@ async function createUniqueToolSlug(baseValue) {
 
 async function main() {
   const rows = parseCsv(fs.readFileSync(csvPath, "utf8"));
+  const internalNote = buildInternalNote(csvPath);
   const categoryBySlug = new Map(
     (
       await prisma.category.findMany({
@@ -174,7 +186,7 @@ async function main() {
         pricingModel: mapPricingModel(row.pricing_model),
         moderationStatus: "APPROVED",
         publicationStatus: "PUBLISHED",
-        internalNote: "Imported from cluster 21-30 enriched CSV",
+        internalNote,
       },
       create: {
         slug,
@@ -185,7 +197,7 @@ async function main() {
         pricingModel: mapPricingModel(row.pricing_model),
         moderationStatus: "APPROVED",
         publicationStatus: "PUBLISHED",
-        internalNote: "Imported from cluster 21-30 enriched CSV",
+        internalNote,
       },
       select: { id: true },
     });

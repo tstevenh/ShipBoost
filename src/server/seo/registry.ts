@@ -337,6 +337,7 @@ type PhaseOneAlternativesSpec = {
   market: string;
   comparisonAngle: string;
   toolSlugs: string[];
+  metaDescription?: string;
 };
 
 function createPhaseOneAlternativesEntry(
@@ -348,7 +349,9 @@ function createPhaseOneAlternativesEntry(
     title: `Best ${spec.anchorName} Alternatives`,
     intro: `Compare the best ${spec.anchorName} alternatives for teams evaluating ${spec.market}. Use this shortlist to understand where each option fits better by pricing, workflow depth, integrations, implementation effort, and the specific tradeoffs that matter when replacing or comparing ${spec.anchorName}.`,
     metaTitle: `Best ${spec.anchorName} Alternatives | ShipBoost`,
-    metaDescription: `Compare ${spec.anchorName} alternatives for ${spec.market}, including tools with different tradeoffs in ${spec.comparisonAngle}.`,
+    metaDescription:
+      spec.metaDescription ??
+      `Compare ${spec.anchorName} alternatives for ${spec.market}, including tools with different tradeoffs in ${spec.comparisonAngle}.`,
     toolSlugs: spec.toolSlugs,
     faq: [
       {
@@ -1448,12 +1451,248 @@ const clusterTwentyOneToThirtyAlternativesEntries = Object.fromEntries(
   ].map((entry) => [entry.slug, createPhaseOneAlternativesEntry(entry)]),
 ) as Record<string, AlternativesSeoEntry>;
 
+const clusterThirtyOneToFortyAlternativesEntries = Object.fromEntries(
+  [
+    {
+      slug: "chatgpt",
+      anchorToolSlug: "chatgpt",
+      anchorName: "ChatGPT",
+      market: "AI chatbots, general AI assistants, writing support, analysis, and productivity workflows",
+      comparisonAngle: "reasoning quality, research workflow, file handling, multimodal support, pricing, and team controls",
+      toolSlugs: ["claude", "gemini", "perplexity", "microsoft-copilot", "poe", "you-com", "phind", "mistral-le-chat", "grok"],
+    },
+    {
+      slug: "perplexity",
+      anchorToolSlug: "perplexity",
+      anchorName: "Perplexity",
+      market: "AI search, answer engines, research assistants, and source-backed discovery workflows",
+      comparisonAngle: "source quality, search depth, assistant flexibility, citation workflow, and knowledge work fit",
+      toolSlugs: ["chatgpt", "claude", "gemini", "microsoft-copilot", "you-com", "phind", "poe", "mistral-le-chat", "grok"],
+    },
+    {
+      slug: "capcut",
+      anchorToolSlug: "capcut",
+      anchorName: "CapCut",
+      market: "online video editing, short-form clips, creator workflows, captions, and social video production",
+      comparisonAngle: "editing speed, templates, captions, AI features, collaboration, export quality, and brand workflow",
+      toolSlugs: ["veed", "kapwing", "clipchamp", "invideo", "descript", "runway", "canva-video", "adobe-premiere-pro", "davinci-resolve"],
+    },
+    {
+      slug: "veed",
+      anchorToolSlug: "veed",
+      anchorName: "VEED",
+      market: "browser-based video editing, subtitles, repurposing, and lightweight creative production",
+      comparisonAngle: "caption workflow, browser editing, templates, collaboration, AI assistance, and pricing",
+      toolSlugs: ["capcut", "kapwing", "clipchamp", "invideo", "descript", "runway", "canva-video", "adobe-premiere-pro", "davinci-resolve"],
+    },
+    {
+      slug: "kapwing",
+      anchorToolSlug: "kapwing",
+      anchorName: "Kapwing",
+      market: "online video editing, meme creation, social clips, subtitles, and team content production",
+      comparisonAngle: "timeline usability, brand workspace, templates, AI tools, captions, and export controls",
+      toolSlugs: ["capcut", "veed", "clipchamp", "invideo", "descript", "runway", "canva-video", "adobe-premiere-pro", "davinci-resolve"],
+    },
+    {
+      slug: "clipchamp",
+      anchorToolSlug: "clipchamp",
+      anchorName: "Clipchamp",
+      market: "simple video editing, Microsoft-connected video workflows, templates, and browser-based production",
+      comparisonAngle: "Microsoft ecosystem fit, editing depth, stock assets, templates, captions, and team workflow",
+      toolSlugs: ["capcut", "veed", "kapwing", "invideo", "descript", "runway", "canva-video", "adobe-premiere-pro", "davinci-resolve"],
+    },
+    {
+      slug: "invideo",
+      anchorToolSlug: "invideo",
+      anchorName: "InVideo",
+      market: "AI video creation, template-based marketing videos, social content, and creator production",
+      comparisonAngle: "AI generation, template depth, editing control, stock assets, brand workflow, and publishing speed",
+      toolSlugs: ["capcut", "veed", "kapwing", "clipchamp", "descript", "runway", "canva-video", "adobe-premiere-pro", "davinci-resolve"],
+    },
+    {
+      slug: "obsidian",
+      anchorToolSlug: "obsidian",
+      anchorName: "Obsidian",
+      market: "note taking, personal knowledge management, linked notes, research systems, and local-first writing",
+      comparisonAngle: "capture speed, backlinks, local storage, collaboration, mobile workflow, and knowledge retrieval",
+      toolSlugs: ["evernote", "microsoft-onenote", "notion", "capacities", "anytype", "logseq", "mem", "craft", "reflect"],
+    },
+    {
+      slug: "evernote",
+      anchorToolSlug: "evernote",
+      anchorName: "Evernote",
+      market: "note taking, web clipping, personal organization, document capture, and cross-device note workflows",
+      comparisonAngle: "capture quality, search, organization model, pricing, collaboration, and long-term knowledge fit",
+      toolSlugs: ["obsidian", "microsoft-onenote", "notion", "capacities", "anytype", "logseq", "mem", "craft", "reflect"],
+    },
+    {
+      slug: "onenote",
+      anchorToolSlug: "microsoft-onenote",
+      anchorName: "OneNote",
+      market: "Microsoft-connected note taking, notebooks, research capture, and personal organization",
+      comparisonAngle: "Microsoft ecosystem fit, note organization, handwriting support, search, sharing, and mobile usability",
+      toolSlugs: ["obsidian", "evernote", "notion", "capacities", "anytype", "logseq", "mem", "craft", "reflect"],
+    },
+    {
+      slug: "github",
+      anchorToolSlug: "github",
+      anchorName: "GitHub",
+      market: "code hosting, Git repositories, pull requests, developer collaboration, and platform automation",
+      comparisonAngle: "code review workflow, CI/CD fit, security features, self-hosting needs, issue tracking, and ecosystem depth",
+      toolSlugs: ["gitlab", "bitbucket", "gitea", "codeberg", "sourcehut", "azure-devops", "aws-codecommit", "gerrit", "phorge"],
+    },
+    {
+      slug: "gitlab",
+      anchorToolSlug: "gitlab",
+      anchorName: "GitLab",
+      market: "Git hosting, DevOps platforms, code review, CI/CD, and software delivery workflows",
+      comparisonAngle: "platform breadth, CI/CD depth, code hosting, self-managed deployment, security, and pricing",
+      toolSlugs: ["github", "bitbucket", "gitea", "codeberg", "sourcehut", "azure-devops", "aws-codecommit", "gerrit", "phorge"],
+    },
+    {
+      slug: "softr",
+      anchorToolSlug: "softr",
+      anchorName: "Softr",
+      market: "no-code portals, client apps, internal tools, Airtable-backed apps, and business workflows",
+      comparisonAngle: "front-end builder quality, data source flexibility, permissions, app polish, integrations, and maintenance effort",
+      toolSlugs: ["firebase", "airtable", "supabase", "bubble", "glide", "adalo", "baserow", "xano", "retool"],
+    },
+    {
+      slug: "firebase",
+      anchorToolSlug: "firebase",
+      anchorName: "Firebase",
+      market: "app backends, databases, authentication, hosting, realtime apps, and developer platform services",
+      comparisonAngle: "backend depth, database model, authentication, scaling posture, developer workflow, and lock-in",
+      toolSlugs: ["supabase", "airtable", "xano", "baserow", "softr", "bubble", "glide", "adalo", "retool"],
+    },
+    {
+      slug: "wix",
+      anchorToolSlug: "wix",
+      anchorName: "Wix",
+      market: "website builders, small-business websites, visual site editing, ecommerce add-ons, and CMS workflows",
+      comparisonAngle: "template quality, editing speed, design control, SEO basics, app marketplace, and long-term site management",
+      toolSlugs: ["webflow", "wordpress", "squarespace", "framer", "carrd", "dorik", "typedream", "webstudio", "duda"],
+    },
+    {
+      slug: "webflow",
+      anchorToolSlug: "webflow",
+      anchorName: "Webflow",
+      market: "visual website building, CMS websites, landing pages, agency workflows, and design-led marketing sites",
+      comparisonAngle: "design control, CMS depth, publishing workflow, SEO flexibility, editor usability, and maintenance effort",
+      toolSlugs: ["wix", "wordpress", "squarespace", "framer", "carrd", "dorik", "typedream", "webstudio", "duda"],
+    },
+    {
+      slug: "apollo",
+      anchorToolSlug: "apollo",
+      anchorName: "Apollo",
+      market: "sales engagement, prospect databases, cold outreach, sequencing, enrichment, and outbound sales workflows",
+      comparisonAngle: "data quality, outreach workflow, deliverability controls, personalization, CRM sync, and pricing",
+      toolSlugs: ["salesloft", "outreach", "reply-io", "instantly", "lemlist", "woodpecker", "smartlead", "clay", "zoominfo"],
+    },
+    {
+      slug: "salesloft",
+      anchorToolSlug: "salesloft",
+      anchorName: "Salesloft",
+      market: "enterprise sales engagement, sequencing, calling, revenue workflows, and outbound team management",
+      comparisonAngle: "sales team workflow, enterprise controls, call and email sequencing, CRM integration, analytics, and admin depth",
+      toolSlugs: ["apollo", "outreach", "reply-io", "instantly", "lemlist", "woodpecker", "smartlead", "clay", "zoominfo"],
+    },
+    {
+      slug: "outreach",
+      anchorToolSlug: "outreach",
+      anchorName: "Outreach",
+      market: "sales engagement platforms, outbound workflows, revenue execution, sequencing, and sales team productivity",
+      comparisonAngle: "sequence management, governance, reporting, CRM fit, rep productivity, and enterprise sales process support",
+      toolSlugs: ["apollo", "salesloft", "reply-io", "instantly", "lemlist", "woodpecker", "smartlead", "clay", "zoominfo"],
+    },
+    {
+      slug: "reply-io",
+      anchorToolSlug: "reply-io",
+      anchorName: "Reply.io",
+      market: "sales engagement, cold email, multichannel outreach, SDR workflows, and outbound automation",
+      comparisonAngle: "email sequencing, multichannel workflow, deliverability, personalization, CRM sync, and team usability",
+      toolSlugs: ["apollo", "salesloft", "outreach", "instantly", "lemlist", "woodpecker", "smartlead", "clay", "zoominfo"],
+    },
+    {
+      slug: "instantly",
+      anchorToolSlug: "instantly",
+      anchorName: "Instantly",
+      market: "cold email outreach, deliverability, lead lists, email warmup, and outbound campaign management",
+      comparisonAngle: "deliverability workflow, sending infrastructure, list management, personalization, analytics, and pricing",
+      toolSlugs: ["apollo", "salesloft", "outreach", "reply-io", "lemlist", "woodpecker", "smartlead", "clay", "zoominfo"],
+    },
+    {
+      slug: "postman",
+      anchorToolSlug: "postman",
+      anchorName: "Postman",
+      market: "API clients, API testing, developer collaboration, documentation, and API lifecycle workflows",
+      comparisonAngle: "request workflow, collections, automation, OpenAPI support, collaboration, docs, and team governance",
+      toolSlugs: ["swagger", "insomnia", "stoplight", "bruno", "hoppscotch", "readme", "redocly", "apidog", "kong-insomnia"],
+    },
+    {
+      slug: "swagger",
+      anchorToolSlug: "swagger",
+      anchorName: "Swagger",
+      market: "API design, OpenAPI documentation, API testing, developer portals, and API governance",
+      comparisonAngle: "OpenAPI workflow, docs generation, design review, testing support, collaboration, and developer experience",
+      toolSlugs: ["postman", "insomnia", "stoplight", "bruno", "hoppscotch", "readme", "redocly", "apidog", "kong-insomnia"],
+    },
+    {
+      slug: "podia",
+      anchorToolSlug: "podia",
+      anchorName: "Podia",
+      market: "online courses, digital products, memberships, creator commerce, and community-led education",
+      comparisonAngle: "course delivery, checkout, memberships, community features, email marketing, and creator operations",
+      toolSlugs: ["teachable", "thinkific", "kajabi", "circle", "mighty-networks", "learnworlds", "skilljar", "gumroad", "lemon-squeezy"],
+    },
+    {
+      slug: "teachable",
+      anchorToolSlug: "teachable",
+      anchorName: "Teachable",
+      market: "course creation, coaching products, creator education, student management, and digital learning businesses",
+      comparisonAngle: "course builder depth, payments, student experience, marketing tools, customization, and pricing",
+      toolSlugs: ["podia", "thinkific", "kajabi", "circle", "mighty-networks", "learnworlds", "skilljar", "gumroad", "lemon-squeezy"],
+    },
+    {
+      slug: "thinkific",
+      anchorToolSlug: "thinkific",
+      anchorName: "Thinkific",
+      market: "online course platforms, creator education, student portals, learning products, and course commerce",
+      comparisonAngle: "course design, student experience, customization, community options, checkout workflow, and integrations",
+      toolSlugs: ["podia", "teachable", "kajabi", "circle", "mighty-networks", "learnworlds", "skilljar", "gumroad", "lemon-squeezy"],
+    },
+    {
+      slug: "jenkins",
+      anchorToolSlug: "jenkins",
+      anchorName: "Jenkins",
+      market: "CI/CD automation, build pipelines, self-hosted deployment workflows, and DevOps orchestration",
+      comparisonAngle: "pipeline flexibility, maintenance overhead, plugin ecosystem, hosted runner support, security, and deployment workflow",
+      toolSlugs: ["github-actions", "gitlab-ci-cd", "circleci", "buildkite", "travis-ci", "azure-pipelines", "harness", "argo-cd", "semaphore"],
+    },
+    {
+      slug: "github-actions",
+      anchorToolSlug: "github-actions",
+      anchorName: "GitHub Actions",
+      market: "GitHub-native CI/CD, workflow automation, build pipelines, tests, and deployment automation",
+      comparisonAngle: "GitHub integration, runner model, workflow syntax, deployment controls, cost, and team scale",
+      toolSlugs: ["jenkins", "gitlab-ci-cd", "circleci", "buildkite", "travis-ci", "azure-pipelines", "harness", "argo-cd", "semaphore"],
+    },
+  ].map((entry) => [
+    entry.slug,
+    createPhaseOneAlternativesEntry({
+      ...entry,
+      metaDescription: `Compare the best ${entry.anchorName} alternatives. Review top options by workflow fit, pricing, integrations, setup effort, and team needs.`,
+    }),
+  ]),
+) as Record<string, AlternativesSeoEntry>;
+
 Object.assign(
   alternativesSeoRegistry,
   phaseOneAlternativesEntries,
   phaseTwoAlternativesEntries,
   phaseThreeAlternativesEntries,
   clusterTwentyOneToThirtyAlternativesEntries,
+  clusterThirtyOneToFortyAlternativesEntries,
 );
 
 for (const entry of Object.values(alternativesSeoRegistry)) {

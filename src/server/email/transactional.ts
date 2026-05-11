@@ -695,16 +695,16 @@ export async function sendLaunchPrepEmailMessage(input: {
   toolName: string;
   launchDate: string;
 }) {
-  const subject = `${input.toolName} launches on ShipBoost tomorrow`;
+  const subject = `${input.toolName} launches on ShipBoost in 24 hours`;
   const preview =
-    "Your launch week starts tomorrow. Rally your audience and compete for the homepage winner spot.";
+    "Your launch is about 24 hours away. Promote it today and compete for the $59 homepage winner spot.";
   const greeting = input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, ";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
-      eyebrow("Launch week starts tomorrow"),
-      h1("Get ready to compete on ShipBoost"),
+      eyebrow("Launch starts in about 24 hours"),
+      h1("Get your audience ready"),
       paragraph(
         `${greeting}<strong>${escapeHtml(
           input.toolName,
@@ -713,10 +713,10 @@ export async function sendLaunchPrepEmailMessage(input: {
         )}</strong>.`,
       ),
       paragraph(
-        "Tomorrow is the time to bring your audience in. Post on X, LinkedIn, founder communities, your newsletter, or anywhere your users already follow your work.",
+        "Use today to get ready: schedule your posts, line up your founder communities, prep your newsletter, and make sure the people who already follow your work know when to support the launch.",
       ),
       paragraph(
-        "The top weekly winner gets an extra featured spot on the ShipBoost homepage for the following week. More votes can mean more visibility, more clicks, and a stronger launch signal.",
+        "The #1 product of the week gets a featured winner spot on the ShipBoost homepage for the following week, a visibility prize valued at $59. More votes can mean more visibility, more clicks, and a stronger launch signal.",
       ),
       paragraph(
         "Bring your supporters, watch the board, and compete for the top spot.",
@@ -735,8 +735,8 @@ export async function sendLaunchPrepEmailMessage(input: {
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
       `${input.toolName} is scheduled for ShipBoost launch week starting ${input.launchDate}.`,
-      "Tomorrow is the time to bring your audience in. Post on social media, founder communities, your newsletter, or anywhere your users already follow your work.",
-      "The top weekly winner gets an extra featured spot on the ShipBoost homepage for the following week.",
+      "Your launch is about 24 hours away. Use today to schedule your posts, line up founder communities, prep your newsletter, and make sure the people who already follow your work know when to support the launch.",
+      "The #1 product of the week gets a featured winner spot on the ShipBoost homepage for the following week, a visibility prize valued at $59.",
       "Bring your supporters, watch the board, and compete for the top spot.",
       `Weekly board: ${input.launchBoardUrl}`,
       "",

@@ -1188,9 +1188,10 @@ function FooterLogo() {
 
 type FlickeringFooterProps = {
   className?: string;
+  hideFeaturedBadgeRail?: boolean;
 } & Omit<React.ComponentProps<"footer">, "children">;
 
-export function FlickeringFooter({ className, ...props }: FlickeringFooterProps) {
+export function FlickeringFooter({ className, hideFeaturedBadgeRail = false, ...props }: FlickeringFooterProps) {
   return (
     <footer
       id="footer"
@@ -1235,7 +1236,7 @@ export function FlickeringFooter({ className, ...props }: FlickeringFooterProps)
           <FlickeringGridLogo />
         </div>
       </div>
-      <FeaturedBadgeRail />
+      {hideFeaturedBadgeRail ? null : <FeaturedBadgeRail />}
       <div className="flex flex-col items-center justify-center gap-3 border-t border-border bg-muted/30 p-6 relative z-20 sm:flex-row sm:gap-4">
         <p className="text-muted-foreground text-[10px] font-bold tracking-widest">
           © {new Date().getFullYear()} ShipBoost. All rights reserved.

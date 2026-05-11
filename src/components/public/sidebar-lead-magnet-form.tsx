@@ -60,23 +60,25 @@ export function SidebarLeadMagnetForm({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative w-full max-w-full overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm xl:max-w-[250px]",
+        "relative w-full max-w-full overflow-hidden rounded-xl border border-border/60 bg-card p-4",
         className,
       )}
     >
-      <h3 className="relative mb-3 text-[9px] font-bold tracking-[0.18em] text-foreground/40">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
         Founder resource
-      </h3>
-      <h4 className="relative mb-2 text-base font-black leading-tight">
-        Search {startupDirectoriesMarketingCountLabel} startup directories in
-        one place.
+      </p>
+      <h4 className="mt-2 text-sm font-bold tracking-tight leading-snug text-foreground">
+        {startupDirectoriesMarketingCountLabel} startup directories in one place.
       </h4>
-      <p className="relative mb-4 text-[11px] leading-relaxed text-muted-foreground">
-        Get the hosted ShipBoost resource and work through founder distribution
-        research faster.
+      <p className="mt-1.5 text-[11px] font-normal leading-relaxed text-muted-foreground">
+        Hosted ShipBoost resource for faster distribution research.
       </p>
 
-      <form onSubmit={handleSubmit} className="relative space-y-2.5">
+      <form
+        onSubmit={handleSubmit}
+        className="relative mt-3 space-y-2"
+        suppressHydrationWarning
+      >
         <input
           required
           type="email"
@@ -84,19 +86,21 @@ export function SidebarLeadMagnetForm({ className }: { className?: string }) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@startup.com"
-          className="w-full rounded-xl border border-border bg-muted/20 px-3 py-2.5 text-xs font-medium outline-none transition-all focus:border-foreground"
+          data-lpignore="true"
+          data-form-type="other"
+          data-1p-ignore="true"
+          className="w-full rounded-lg border border-border/70 bg-background px-3 py-2 text-xs font-normal outline-none transition-all focus:border-foreground"
         />
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-xl bg-primary py-2.5 text-[11px] font-black text-primary-foreground shadow-lg shadow-black/10 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+          className="w-full rounded-lg bg-primary py-2 text-[12px] font-semibold tracking-tight text-primary-foreground transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
         >
           {isSubmitting ? "Sending..." : "Get the directory list"}
         </button>
       </form>
 
-      <p className="mt-3 text-[9px] font-black tracking-[0.12em] text-muted-foreground/45">
-        {startupDirectoriesMarketingCountLabel} directories and launch sites.
+      <p className="mt-2.5 text-[10px] font-normal text-muted-foreground/60">
         Access link sent by email.
       </p>
 

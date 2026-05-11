@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
-import { Check, Star, X } from "lucide-react";
+import { BadgeCheck, Check, X } from "lucide-react";
 
 const premiumFeatures = [
   "Reserve a specific launch week",
@@ -65,15 +65,15 @@ export function PremiumLaunchIndicator() {
               </button>
 
               <div className="pr-12">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
-                  <Star size={20} fill="currentColor" />
+                <div className="inline-flex h-11 w-11 items-center justify-center text-sky-600 dark:text-sky-400">
+                  <BadgeCheck size={36} strokeWidth={1.75} fill="currentColor" className="[&>path:first-child]:fill-current [&>path:last-child]:fill-background" />
                 </div>
-                <p className="mt-5 text-[10px] font-black tracking-[0.24em] text-amber-700 dark:text-amber-300">
-                  Premium launch
+                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 dark:text-sky-400">
+                  Verified premium launch
                 </p>
                 <h3
                   id="premium-launch-title"
-                  className="mt-2 text-2xl font-black tracking-tight text-foreground"
+                  className="mt-2 text-2xl font-bold tracking-tight text-foreground"
                 >
                   Get stronger launch visibility
                 </h3>
@@ -116,14 +116,22 @@ export function PremiumLaunchIndicator() {
       <span className="relative inline-flex shrink-0">
         <button
           type="button"
-          aria-label="Premium launch"
-          onClick={() => setIsOpen(true)}
-          className="peer inline-flex h-5 w-5 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-700 shadow-sm shadow-amber-950/5 transition hover:scale-105 hover:bg-amber-500/15 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300"
+          aria-label="Verified premium launch"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setIsOpen(true);
+          }}
+          className="peer relative z-20 inline-flex items-center justify-center text-sky-500 transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-sky-500/40 rounded-full dark:text-sky-400"
         >
-          <Star size={12} fill="currentColor" strokeWidth={2.5} />
+          <BadgeCheck
+            size={15}
+            strokeWidth={2}
+            className="fill-sky-500 stroke-background dark:fill-sky-400 dark:stroke-background"
+          />
         </button>
-        <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden -translate-x-1/2 whitespace-nowrap rounded-full bg-foreground px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-background shadow-lg peer-hover:block peer-focus-visible:block">
-          Premium launch
+        <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2.5 py-1 text-[10px] font-semibold tracking-tight text-background shadow-lg peer-hover:block peer-focus-visible:block">
+          Verified premium
         </span>
       </span>
 

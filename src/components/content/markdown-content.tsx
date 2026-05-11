@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { withShipboostUtm } from "@/lib/outbound-link";
+
 export type MarkdownHeading = {
   id: string;
   text: string;
@@ -122,16 +124,31 @@ export function MarkdownContent({ content }: { content: string }) {
             {children}
           </blockquote>
         ),
-        a: ({ href, children }) => (
-          <a
-            href={href}
-            target={href?.startsWith("#") ? undefined : "_blank"}
-            rel={href?.startsWith("#") ? undefined : "noreferrer"}
-            className="font-bold text-foreground underline decoration-border underline-offset-4 transition-all hover:decoration-foreground"
-          >
-            {children}
-          </a>
-        ),
+        a: ({ href, children }) => {
+          const isHash = href?.startsWith("#");
+          const trackedHref = isHash
+            ? href
+            : withShipboostUtm(href, {
+                surface: "blog_content",
+                content:
+                  typeof children === "string" ? children : undefined,
+              });
+          return (
+            <a
+              href={trackedHref}
+              target={isHash ? undefined : "_blank"}
+              rel={isHash ? undefined : "noreferrer"}
+              data-shipboost-outbound-source={isHash ? undefined : "blog_content"}
+              data-shipboost-outbound-context={isHash ? undefined : "blog"}
+              data-shipboost-outbound-text={
+                isHash || typeof children !== "string" ? undefined : children
+              }
+              className="font-bold text-foreground underline decoration-border underline-offset-4 transition-all hover:decoration-foreground"
+            >
+              {children}
+            </a>
+          );
+        },
         img: ({ src, alt }) => (
           // eslint-disable-next-line @next/next/no-img-element
           <img

@@ -3067,6 +3067,100 @@ const phaseOneToolLabels: Record<string, string> = {
   "sync-com": "Sync.com",
   mega: "MEGA",
   idrive: "IDrive",
+  chatgpt: "ChatGPT",
+  claude: "Claude",
+  gemini: "Gemini",
+  perplexity: "Perplexity",
+  "microsoft-copilot": "Microsoft Copilot",
+  poe: "Poe",
+  "you-com": "You.com",
+  phind: "Phind",
+  "mistral-le-chat": "Mistral Le Chat",
+  grok: "Grok",
+  capcut: "CapCut",
+  veed: "VEED",
+  kapwing: "Kapwing",
+  clipchamp: "Clipchamp",
+  invideo: "InVideo",
+  runway: "Runway",
+  "canva-video": "Canva Video",
+  "adobe-premiere-pro": "Adobe Premiere Pro",
+  "davinci-resolve": "DaVinci Resolve",
+  obsidian: "Obsidian",
+  evernote: "Evernote",
+  "microsoft-onenote": "Microsoft OneNote",
+  capacities: "Capacities",
+  anytype: "Anytype",
+  logseq: "Logseq",
+  mem: "Mem",
+  craft: "Craft",
+  reflect: "Reflect",
+  github: "GitHub",
+  gitlab: "GitLab",
+  bitbucket: "Bitbucket",
+  gitea: "Gitea",
+  codeberg: "Codeberg",
+  sourcehut: "SourceHut",
+  "azure-devops": "Azure DevOps",
+  "aws-codecommit": "AWS CodeCommit",
+  gerrit: "Gerrit",
+  phorge: "Phorge",
+  softr: "Softr",
+  firebase: "Firebase",
+  supabase: "Supabase",
+  bubble: "Bubble",
+  glide: "Glide",
+  adalo: "Adalo",
+  baserow: "Baserow",
+  xano: "Xano",
+  retool: "Retool",
+  wix: "Wix",
+  webflow: "Webflow",
+  wordpress: "WordPress",
+  squarespace: "Squarespace",
+  framer: "Framer",
+  carrd: "Carrd",
+  dorik: "Dorik",
+  typedream: "Typedream",
+  webstudio: "Webstudio",
+  duda: "Duda",
+  apollo: "Apollo",
+  salesloft: "Salesloft",
+  outreach: "Outreach",
+  "reply-io": "Reply.io",
+  instantly: "Instantly",
+  lemlist: "Lemlist",
+  woodpecker: "Woodpecker",
+  smartlead: "Smartlead",
+  clay: "Clay",
+  zoominfo: "ZoomInfo",
+  postman: "Postman",
+  swagger: "Swagger",
+  insomnia: "Insomnia",
+  stoplight: "Stoplight",
+  bruno: "Bruno",
+  hoppscotch: "Hoppscotch",
+  redocly: "Redocly",
+  apidog: "Apidog",
+  "kong-insomnia": "Kong Insomnia",
+  podia: "Podia",
+  teachable: "Teachable",
+  thinkific: "Thinkific",
+  kajabi: "Kajabi",
+  circle: "Circle",
+  "mighty-networks": "Mighty Networks",
+  learnworlds: "LearnWorlds",
+  skilljar: "Skilljar",
+  jenkins: "Jenkins",
+  "github-actions": "GitHub Actions",
+  "gitlab-ci-cd": "GitLab CI/CD",
+  circleci: "CircleCI",
+  buildkite: "Buildkite",
+  "travis-ci": "Travis CI",
+  "azure-pipelines": "Azure Pipelines",
+  harness: "Harness",
+  "argo-cd": "Argo CD",
+  semaphore: "Semaphore",
 };
 
 type PhaseOneBestPageSpec = {
@@ -5454,12 +5548,278 @@ const clusterTwentyOneToThirtyBestPages = Object.fromEntries(
   ].map((entry) => [entry.slug, createPhaseOneBestPage(entry)]),
 ) as Record<string, BestPageEntry>;
 
+const clusterThirtyOneToFortyBestPages = Object.fromEntries(
+  [
+    {
+      slug: "ai-chatbots",
+      targetKeyword: "best ai chatbots",
+      title: "Best AI Chatbots and AI Assistants",
+      metaTitle: "Best AI Chatbots and AI Assistants | ShipBoost",
+      metaDescription:
+        "Compare the best AI chatbots, including ChatGPT, Claude, Gemini, Perplexity, Microsoft Copilot, Poe, You.com, Phind, Mistral Le Chat, and Grok.",
+      intro:
+        "The best AI chatbots should help teams research, write, analyze, brainstorm, code, and summarize work without forcing every use case into the same assistant workflow.",
+      whoItsFor:
+        "This guide is for founders, operators, marketers, developers, and knowledge workers comparing AI assistants for daily productivity, research, content, coding, and team workflows.",
+      primaryCategorySlug: "ai",
+      supportingTagSlugs: ["ai-chatbot", "ai-assistant", "research"],
+      toolSlugs: ["chatgpt", "claude", "gemini", "perplexity", "microsoft-copilot", "poe", "you-com", "phind", "mistral-le-chat", "grok"],
+      buyingFocus: "AI assistant productivity, research quality, writing support, coding help, multimodal work, and team adoption",
+      internalLinks: [
+        { href: "/categories/ai", label: "Browse AI tools", description: "Explore AI assistants, research tools, and productivity software." },
+        { href: "/alternatives/chatgpt", label: "Compare ChatGPT alternatives", description: "Review AI assistants similar to ChatGPT." },
+        { href: "/alternatives/perplexity", label: "Compare Perplexity alternatives", description: "See AI search and research assistant options." },
+      ],
+      customSection: {
+        heading: "How to choose an AI chatbot category fit",
+        body:
+          "Start with the job the assistant must perform most often. General assistants fit mixed writing, analysis, and reasoning work; research-first assistants are better when citations and source discovery matter; developer-focused assistants need stronger code context; and enterprise assistants should be judged by admin controls, data handling, and collaboration workflow.",
+      },
+    },
+    {
+      slug: "online-video-editors",
+      targetKeyword: "best online video editors",
+      title: "Best Online Video Editors",
+      metaTitle: "Best Online Video Editors | ShipBoost",
+      metaDescription:
+        "Compare online video editors, including CapCut, VEED, Kapwing, Clipchamp, InVideo, Descript, Runway, Canva Video, Adobe Premiere Pro, and DaVinci Resolve.",
+      intro:
+        "The best online video editors should help creators and teams turn raw footage into publishable clips, ads, demos, tutorials, and social content without slowing down production.",
+      whoItsFor:
+        "This guide is for founders, marketers, creators, agencies, and product teams comparing video tools for short-form clips, repurposing, captions, templates, screen recordings, and AI-assisted editing.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["video-editing", "online-video-editor", "creator-tools"],
+      toolSlugs: ["capcut", "veed", "kapwing", "clipchamp", "invideo", "descript", "runway", "canva-video", "adobe-premiere-pro", "davinci-resolve"],
+      buyingFocus: "online video editing, social clips, captions, templates, AI-assisted editing, and collaborative content production",
+      internalLinks: [
+        { href: "/categories/marketing", label: "Browse marketing tools", description: "Explore creator, content, and video production tools." },
+        { href: "/alternatives/capcut", label: "Compare CapCut alternatives", description: "Review online video editors similar to CapCut." },
+        { href: "/alternatives/veed", label: "Compare VEED alternatives", description: "See browser-based video editing options." },
+      ],
+      customSection: {
+        heading: "Match the editor to the production workflow",
+        body:
+          "Short-form social teams usually need caption speed, templates, resizing, and asset reuse. Product marketers need screen recording, voiceover, brand controls, and review flows. Creative teams comparing pro editors should validate export quality, timeline control, effects depth, and whether collaboration happens inside the editor or in a separate review process.",
+      },
+    },
+    {
+      slug: "note-taking-apps",
+      targetKeyword: "best note taking apps",
+      title: "Best Note Taking Apps and Personal Knowledge Management Tools",
+      metaTitle: "Best Note Taking Apps and PKM Tools | ShipBoost",
+      metaDescription:
+        "Compare note taking apps, including Obsidian, Evernote, Microsoft OneNote, Notion, Capacities, Anytype, Logseq, Mem, Craft, and Reflect.",
+      intro:
+        "The best note taking apps should capture information quickly, keep it easy to retrieve, and support the way a person or team turns raw notes into usable knowledge.",
+      whoItsFor:
+        "This guide is for founders, operators, students, creators, researchers, and teams comparing note apps for capture, writing, personal knowledge management, collaboration, and long-term organization.",
+      primaryCategorySlug: "productivity",
+      supportingTagSlugs: ["notes", "knowledge-management", "productivity"],
+      toolSlugs: ["obsidian", "evernote", "microsoft-onenote", "notion", "capacities", "anytype", "logseq", "mem", "craft", "reflect"],
+      buyingFocus: "note capture, personal knowledge management, search, backlinks, collaboration, writing, and long-term organization",
+      internalLinks: [
+        { href: "/categories/productivity", label: "Browse productivity tools", description: "Explore notes, knowledge management, and workflow software." },
+        { href: "/alternatives/obsidian", label: "Compare Obsidian alternatives", description: "Review PKM and note taking apps similar to Obsidian." },
+        { href: "/alternatives/evernote", label: "Compare Evernote alternatives", description: "See note apps for capture and organization." },
+      ],
+      customSection: {
+        heading: "Separate capture tools from knowledge systems",
+        body:
+          "Fast capture matters when notes come from meetings, mobile ideas, and documents. Knowledge systems matter when notes need links, resurfacing, structured objects, or publishing workflows. A lightweight app can win for daily capture, while a graph-based or database-backed tool can be better for research-heavy work.",
+      },
+    },
+    {
+      slug: "code-hosting-platforms",
+      targetKeyword: "best code hosting platforms",
+      title: "Best Code Hosting Platforms",
+      metaTitle: "Best Code Hosting Platforms | ShipBoost",
+      metaDescription:
+        "Compare code hosting platforms, including GitHub, GitLab, Bitbucket, Gitea, Codeberg, SourceHut, Azure DevOps, AWS CodeCommit, Gerrit, and Phorge.",
+      intro:
+        "The best code hosting platforms should make repositories, reviews, issues, permissions, automation, and release workflows easier for engineering teams to manage.",
+      whoItsFor:
+        "This guide is for engineering leaders, founders, developers, and DevOps teams comparing Git hosting, pull request workflows, self-hosting options, and platform-native CI/CD fit.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["git", "code-hosting", "repositories"],
+      toolSlugs: ["github", "gitlab", "bitbucket", "gitea", "codeberg", "sourcehut", "azure-devops", "aws-codecommit", "gerrit", "phorge"],
+      buyingFocus: "Git repository hosting, code review, issue tracking, permissions, automation, self-hosting, and release workflow management",
+      internalLinks: [
+        { href: "/categories/development", label: "Browse development tools", description: "Explore developer platforms, Git tools, and DevOps software." },
+        { href: "/alternatives/github", label: "Compare GitHub alternatives", description: "Review code hosting platforms similar to GitHub." },
+        { href: "/alternatives/gitlab", label: "Compare GitLab alternatives", description: "See Git hosting and DevOps platform options." },
+      ],
+      customSection: {
+        heading: "Evaluate repository hosting as an operating system",
+        body:
+          "A code host is rarely just storage for Git repositories. Teams should check pull request ergonomics, branch protection, project management, security scanning, CI/CD integration, audit needs, and how external contributors or clients will work inside the platform.",
+      },
+    },
+    {
+      slug: "no-code-app-builders",
+      targetKeyword: "best no code app builders",
+      title: "Best No-Code Databases and App Builders",
+      metaTitle: "Best No-Code App Builders and Databases | ShipBoost",
+      metaDescription:
+        "Compare no-code app builders and databases, including Softr, Firebase, Airtable, Supabase, Bubble, Glide, Adalo, Baserow, Xano, and Retool.",
+      intro:
+        "The best no-code app builders should help teams ship usable internal tools, portals, marketplaces, and data-backed products without turning every change into custom engineering work.",
+      whoItsFor:
+        "This guide is for founders, operators, agencies, and product teams comparing no-code builders, backend platforms, databases, and internal-tool systems for faster app delivery.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["no-code", "app-builder", "database"],
+      toolSlugs: ["softr", "firebase", "airtable", "supabase", "bubble", "glide", "adalo", "baserow", "xano", "retool"],
+      buyingFocus: "no-code app building, database-backed workflows, internal tools, portals, backend services, and operational automation",
+      internalLinks: [
+        { href: "/categories/development", label: "Browse development tools", description: "Explore no-code, database, and app development platforms." },
+        { href: "/alternatives/softr", label: "Compare Softr alternatives", description: "Review no-code portal and app builder options." },
+        { href: "/alternatives/firebase", label: "Compare Firebase alternatives", description: "See backend and database platforms for app builders." },
+      ],
+      customSection: {
+        heading: "Choose by front-end, data, and backend ownership",
+        body:
+          "Some no-code tools optimize the front-end builder, some focus on data modeling, and some provide backend services that still require technical ownership. Buyers should map who will maintain schemas, permissions, automations, integrations, and customer-facing polish before choosing a platform.",
+      },
+    },
+    {
+      slug: "website-builders-and-cms",
+      targetKeyword: "best website builders for small business",
+      title: "Best Website Builders and CMS Platforms",
+      metaTitle: "Best Website Builders and CMS Platforms | ShipBoost",
+      metaDescription:
+        "Compare website builders and CMS platforms, including Wix, Webflow, WordPress, Squarespace, Framer, Carrd, Dorik, Typedream, Webstudio, and Duda.",
+      intro:
+        "The best website builders should help small businesses and startups publish fast, maintain pages confidently, and grow from a basic site into a real marketing engine.",
+      whoItsFor:
+        "This guide is for founders, local businesses, agencies, creators, and marketers comparing website builders, CMS platforms, landing-page tools, and visual site editors.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["website-builder", "cms", "no-code"],
+      toolSlugs: ["wix", "webflow", "wordpress", "squarespace", "framer", "carrd", "dorik", "typedream", "webstudio", "duda"],
+      buyingFocus: "website building, CMS publishing, landing pages, small-business site management, SEO basics, and visual design workflow",
+      internalLinks: [
+        { href: "/categories/marketing", label: "Browse marketing tools", description: "Explore website, CMS, and landing-page software." },
+        { href: "/alternatives/wix", label: "Compare Wix alternatives", description: "Review website builders similar to Wix." },
+        { href: "/alternatives/webflow", label: "Compare Webflow alternatives", description: "See visual CMS and site builder options." },
+      ],
+      customSection: {
+        heading: "Balance design control with publishing maintenance",
+        body:
+          "A builder with deep design control can be ideal for agencies and growth teams, but small businesses may value editing speed, templates, hosting, support, and SEO basics more. The right CMS should match who updates the site after launch, not just who builds the first version.",
+      },
+    },
+    {
+      slug: "sales-engagement-software",
+      targetKeyword: "best sales engagement software",
+      title: "Best Sales Engagement and Cold Outreach Software",
+      metaTitle: "Best Sales Engagement and Cold Outreach Software | ShipBoost",
+      metaDescription:
+        "Compare sales engagement software, including Apollo, Salesloft, Outreach, Reply.io, Instantly, Lemlist, Woodpecker, Smartlead, Clay, and ZoomInfo.",
+      intro:
+        "The best sales engagement software should help revenue teams find prospects, build lists, run sequences, personalize outreach, manage deliverability, and turn replies into pipeline.",
+      whoItsFor:
+        "This guide is for founders, SDR teams, agencies, and sales leaders comparing prospecting databases, cold email tools, sequencing platforms, and outbound workflow systems.",
+      primaryCategorySlug: "sales",
+      supportingTagSlugs: ["sales-engagement", "cold-email", "outreach"],
+      toolSlugs: ["apollo", "salesloft", "outreach", "reply-io", "instantly", "lemlist", "woodpecker", "smartlead", "clay", "zoominfo"],
+      buyingFocus: "sales engagement, cold outreach, prospecting, enrichment, email sequencing, deliverability, and pipeline generation",
+      internalLinks: [
+        { href: "/categories/sales", label: "Browse sales tools", description: "Explore prospecting, outreach, and revenue software." },
+        { href: "/alternatives/apollo", label: "Compare Apollo alternatives", description: "Review prospecting and sales engagement tools similar to Apollo." },
+        { href: "/alternatives/salesloft", label: "Compare Salesloft alternatives", description: "See sales engagement platforms for revenue teams." },
+      ],
+      customSection: {
+        heading: "Separate prospect data from engagement workflow",
+        body:
+          "Some buyers need a database first, while others need sequence management, deliverability controls, call steps, CRM sync, or AI personalization. Shortlist tools by the bottleneck in the outbound process, then validate data quality and reply handling with a real campaign.",
+      },
+    },
+    {
+      slug: "api-testing-tools",
+      targetKeyword: "best api testing tools",
+      title: "Best API Development and Testing Tools",
+      metaTitle: "Best API Development and Testing Tools | ShipBoost",
+      metaDescription:
+        "Compare API development and testing tools, including Postman, Swagger, Insomnia, Stoplight, Bruno, Hoppscotch, ReadMe, Redocly, Apidog, and Kong Insomnia.",
+      intro:
+        "The best API testing tools should help teams design, document, test, debug, collaborate on, and publish APIs without scattering specs and examples across disconnected systems.",
+      whoItsFor:
+        "This guide is for developers, API platform teams, product engineers, and technical writers comparing API clients, documentation tools, design systems, and testing workflows.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["api-testing", "api-client", "api-documentation"],
+      toolSlugs: ["postman", "swagger", "insomnia", "stoplight", "bruno", "hoppscotch", "readme", "redocly", "apidog", "kong-insomnia"],
+      buyingFocus: "API testing, API clients, OpenAPI workflows, documentation, debugging, collaboration, and developer experience",
+      internalLinks: [
+        { href: "/categories/development", label: "Browse development tools", description: "Explore API, developer experience, and testing software." },
+        { href: "/alternatives/postman", label: "Compare Postman alternatives", description: "Review API clients and testing tools similar to Postman." },
+        { href: "/alternatives/swagger", label: "Compare Swagger alternatives", description: "See API design and documentation options." },
+      ],
+      customSection: {
+        heading: "Know whether the team needs a client, spec workflow, or docs platform",
+        body:
+          "API buyers often mix three jobs: sending requests, managing OpenAPI definitions, and publishing developer documentation. A small engineering team may only need a fast client, while a platform team should evaluate governance, changelogs, mock servers, review workflows, and portal quality.",
+      },
+    },
+    {
+      slug: "online-course-platforms",
+      targetKeyword: "best online course platforms",
+      title: "Best Online Course and Community Platforms",
+      metaTitle: "Best Online Course and Community Platforms | ShipBoost",
+      metaDescription:
+        "Compare online course platforms, including Podia, Teachable, Thinkific, Kajabi, Circle, Mighty Networks, LearnWorlds, Skilljar, Gumroad, and Lemon Squeezy.",
+      intro:
+        "The best online course platforms should help creators and companies package knowledge, sell access, deliver lessons, manage members, and build durable learning businesses.",
+      whoItsFor:
+        "This guide is for creators, educators, SaaS teams, coaches, and communities comparing course builders, membership platforms, checkout tools, and customer education software.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["online-courses", "community-platform", "creator-tools"],
+      toolSlugs: ["podia", "teachable", "thinkific", "kajabi", "circle", "mighty-networks", "learnworlds", "skilljar", "gumroad", "lemon-squeezy"],
+      buyingFocus: "online course delivery, memberships, communities, checkout, customer education, content hosting, and creator monetization",
+      internalLinks: [
+        { href: "/categories/marketing", label: "Browse marketing tools", description: "Explore creator, community, and monetization software." },
+        { href: "/alternatives/podia", label: "Compare Podia alternatives", description: "Review online course platforms similar to Podia." },
+        { href: "/alternatives/teachable", label: "Compare Teachable alternatives", description: "See course builders for creators and educators." },
+      ],
+      customSection: {
+        heading: "Decide if the product is course-first, community-first, or commerce-first",
+        body:
+          "A course-first platform should make curriculum, progress, certificates, and student experience strong. A community-first platform should make member engagement and events easier. A commerce-first setup should prioritize checkout, taxes, bundles, subscriptions, and creator payout workflow.",
+      },
+    },
+    {
+      slug: "ci-cd-tools",
+      targetKeyword: "best ci cd tools",
+      title: "Best CI/CD and DevOps Automation Tools",
+      metaTitle: "Best CI/CD and DevOps Automation Tools | ShipBoost",
+      metaDescription:
+        "Compare CI/CD tools, including Jenkins, GitHub Actions, GitLab CI/CD, CircleCI, Buildkite, Travis CI, Azure Pipelines, Harness, Argo CD, and Semaphore.",
+      intro:
+        "The best CI/CD tools should help engineering teams build, test, secure, deploy, and roll back software with reliable automation that fits the repository and infrastructure stack.",
+      whoItsFor:
+        "This guide is for developers, platform teams, DevOps engineers, and engineering leaders comparing CI/CD systems, deployment automation, GitOps tools, and pipeline orchestration.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["ci-cd", "devops", "automation"],
+      toolSlugs: ["jenkins", "github-actions", "gitlab-ci-cd", "circleci", "buildkite", "travis-ci", "azure-pipelines", "harness", "argo-cd", "semaphore"],
+      buyingFocus: "CI/CD automation, build pipelines, deployment workflows, GitOps, release management, test automation, and developer productivity",
+      internalLinks: [
+        { href: "/categories/development", label: "Browse development tools", description: "Explore DevOps, automation, and deployment software." },
+        { href: "/alternatives/jenkins", label: "Compare Jenkins alternatives", description: "Review CI/CD tools similar to Jenkins." },
+        { href: "/alternatives/github-actions", label: "Compare GitHub Actions alternatives", description: "See CI/CD options for GitHub-centered teams." },
+      ],
+      customSection: {
+        heading: "Choose around repository, runtime, and deployment model",
+        body:
+          "CI/CD fit depends on where code lives, how tests run, what infrastructure receives deployments, and how releases are approved. Hosted CI is often faster for small teams, while self-hosted runners, GitOps workflows, and progressive delivery controls matter more as systems and compliance needs grow.",
+      },
+    },
+  ].map((entry) => [entry.slug, createPhaseOneBestPage(entry)]),
+) as Record<string, BestPageEntry>;
+
 Object.assign(
   bestPagesRegistry,
   phaseOneBestPages,
   phaseTwoBestPages,
   phaseThreeBestPages,
   clusterTwentyOneToThirtyBestPages,
+  clusterThirtyOneToFortyBestPages,
 );
 
 for (const entry of Object.values(bestPagesRegistry)) {
@@ -6182,6 +6542,196 @@ export const bestHubSections: BestHubSection[] = [
         href: "/alternatives/dropbox",
         label: "Compare storage alternatives",
         description: "See alternatives pages for cloud storage and backup platforms.",
+      },
+    ],
+  },
+  {
+    slug: "ai-chatbots-assistants",
+    title: "AI Chatbots and Assistants",
+    intro:
+      "These pages help buyers compare general AI assistants, research-first chatbots, coding helpers, and multimodal productivity tools by real workflow fit.",
+    pageSlugs: ["ai-chatbots"],
+    supportingLinks: [
+      {
+        href: "/categories/ai",
+        label: "Browse AI tools",
+        description: "Explore AI assistants, research tools, and productivity software.",
+      },
+      {
+        href: "/alternatives/chatgpt",
+        label: "Compare AI alternatives",
+        description: "See alternatives pages for leading AI assistants.",
+      },
+    ],
+  },
+  {
+    slug: "video-editing-creative-production",
+    title: "Video Editing and Creative Production",
+    intro:
+      "These pages help creators and marketers compare online video editors by publishing speed, caption workflow, collaboration, and AI editing depth.",
+    pageSlugs: ["online-video-editors"],
+    supportingLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore creator, content, and video production tools.",
+      },
+      {
+        href: "/alternatives/capcut",
+        label: "Compare video editor alternatives",
+        description: "See alternatives pages for online video editors.",
+      },
+    ],
+  },
+  {
+    slug: "notes-knowledge-management",
+    title: "Notes and Knowledge Management",
+    intro:
+      "These pages help teams and individuals compare note apps by capture speed, retrieval, backlinks, writing workflow, and long-term knowledge organization.",
+    pageSlugs: ["note-taking-apps"],
+    supportingLinks: [
+      {
+        href: "/categories/productivity",
+        label: "Browse productivity tools",
+        description: "Explore notes, knowledge management, and workflow software.",
+      },
+      {
+        href: "/alternatives/obsidian",
+        label: "Compare note app alternatives",
+        description: "See alternatives pages for note taking and PKM tools.",
+      },
+    ],
+  },
+  {
+    slug: "code-hosting-repository-management",
+    title: "Code Hosting and Repository Management",
+    intro:
+      "These pages help engineering teams compare Git hosting, code review, repository permissions, and developer platform workflows.",
+    pageSlugs: ["code-hosting-platforms"],
+    supportingLinks: [
+      {
+        href: "/categories/development",
+        label: "Browse development tools",
+        description: "Explore developer platforms, Git tools, and DevOps software.",
+      },
+      {
+        href: "/alternatives/github",
+        label: "Compare code hosting alternatives",
+        description: "See alternatives pages for repository hosting platforms.",
+      },
+    ],
+  },
+  {
+    slug: "no-code-databases-app-builders",
+    title: "No-Code Databases and App Builders",
+    intro:
+      "These pages help operators and founders compare no-code builders by front-end control, database depth, backend ownership, and internal-tool fit.",
+    pageSlugs: ["no-code-app-builders"],
+    supportingLinks: [
+      {
+        href: "/categories/development",
+        label: "Browse development tools",
+        description: "Explore no-code, database, and app development platforms.",
+      },
+      {
+        href: "/alternatives/softr",
+        label: "Compare no-code alternatives",
+        description: "See alternatives pages for no-code app builders.",
+      },
+    ],
+  },
+  {
+    slug: "website-builders-cms",
+    title: "Website Builders and CMS",
+    intro:
+      "These pages help small businesses and marketing teams compare site builders by design control, publishing workflow, CMS depth, and SEO readiness.",
+    pageSlugs: ["website-builders-and-cms"],
+    supportingLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore website, CMS, and landing-page software.",
+      },
+      {
+        href: "/alternatives/wix",
+        label: "Compare website builder alternatives",
+        description: "See alternatives pages for website and CMS platforms.",
+      },
+    ],
+  },
+  {
+    slug: "sales-engagement-cold-outreach",
+    title: "Sales Engagement and Cold Outreach",
+    intro:
+      "These pages help revenue teams compare outbound platforms by prospect data, sequencing, personalization, deliverability, CRM sync, and reply workflow.",
+    pageSlugs: ["sales-engagement-software"],
+    supportingLinks: [
+      {
+        href: "/categories/sales",
+        label: "Browse sales tools",
+        description: "Explore prospecting, outreach, and revenue software.",
+      },
+      {
+        href: "/alternatives/apollo",
+        label: "Compare sales engagement alternatives",
+        description: "See alternatives pages for prospecting and outbound platforms.",
+      },
+    ],
+  },
+  {
+    slug: "api-development-testing",
+    title: "API Development and Testing",
+    intro:
+      "These pages help developers compare API clients, testing tools, OpenAPI workflows, documentation platforms, and developer-experience systems.",
+    pageSlugs: ["api-testing-tools"],
+    supportingLinks: [
+      {
+        href: "/categories/development",
+        label: "Browse development tools",
+        description: "Explore API, developer experience, and testing software.",
+      },
+      {
+        href: "/alternatives/postman",
+        label: "Compare API tool alternatives",
+        description: "See alternatives pages for API testing and documentation tools.",
+      },
+    ],
+  },
+  {
+    slug: "online-course-community-platforms",
+    title: "Online Course and Community Platforms",
+    intro:
+      "These pages help creators and education teams compare course platforms by lessons, memberships, community, checkout, and customer education workflow.",
+    pageSlugs: ["online-course-platforms"],
+    supportingLinks: [
+      {
+        href: "/categories/marketing",
+        label: "Browse marketing tools",
+        description: "Explore creator, community, and monetization software.",
+      },
+      {
+        href: "/alternatives/podia",
+        label: "Compare course platform alternatives",
+        description: "See alternatives pages for course and community products.",
+      },
+    ],
+  },
+  {
+    slug: "ci-cd-devops-automation",
+    title: "CI/CD and DevOps Automation",
+    intro:
+      "These pages help engineering teams compare build, test, deployment, GitOps, and release automation platforms by stack fit and reliability.",
+    pageSlugs: ["ci-cd-tools"],
+    supportingLinks: [
+      {
+        href: "/categories/development",
+        label: "Browse development tools",
+        description: "Explore DevOps, automation, and deployment software.",
+      },
+      {
+        href: "/alternatives/jenkins",
+        label: "Compare CI/CD alternatives",
+        description: "See alternatives pages for CI/CD and deployment tools.",
       },
     ],
   },

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
+import { Search } from "lucide-react";
 
 import type { PublicToolSearchResult } from "@/server/services/tool-service";
 import { cn } from "@/lib/utils";
@@ -272,18 +273,21 @@ export function HomeSearchModal({ className }: { className?: string }) {
     <>
       <div
         className={cn(
-          "w-full max-w-full rounded-xl border border-border bg-card p-1.5 shadow-sm xl:max-w-[250px]",
+          "w-full max-w-full rounded-xl border border-border/60 bg-card",
           className,
         )}
       >
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent"
+          className="flex w-full items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-left text-muted-foreground transition-colors hover:bg-muted/40"
           aria-label="Open search"
         >
-          <span className="truncate text-xs font-bold">Search products</span>
-          <span className="shrink-0 rounded-md border border-border bg-muted px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-muted-foreground ">
+          <span className="flex items-center gap-2 truncate text-xs font-medium text-muted-foreground/90">
+            <Search size={14} className="shrink-0 text-muted-foreground" aria-hidden />
+            Search products
+          </span>
+          <span className="shrink-0 rounded-md border border-border/60 bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground/80">
             ⌘ K
           </span>
         </button>

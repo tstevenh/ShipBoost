@@ -102,7 +102,7 @@ function renderStaticToolGrid(
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="overflow-hidden rounded-xl border border-border/60 bg-card [&>article:last-child]:border-b-0">
       {tools.map((tool) => (
         <PublicDirectoryToolCard
           key={tool.id}
@@ -293,7 +293,7 @@ export default async function CategoryPage(context: RouteContext) {
                     Premium picks
                   </p>
                 </div>
-                <div className="grid gap-5">
+                <div className="overflow-hidden rounded-xl border border-border/60 bg-card [&>article:last-child]:border-b-0">
                   {featuredTools.map((tool) => (
                     <PublicDirectoryToolCard
                       key={`featured-${tool.id}`}
@@ -306,6 +306,7 @@ export default async function CategoryPage(context: RouteContext) {
                       tags={tool.tags}
                       linkedTags={tool.linkedTags}
                       primaryCategory={tool.primaryCategory}
+                      isPremiumLaunch
                     />
                   ))}
                 </div>

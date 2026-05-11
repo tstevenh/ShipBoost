@@ -6,6 +6,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const csvPath = process.argv[2] ? path.resolve(process.cwd(), process.argv[2]) : null;
 const shouldExecute = process.argv.includes("--execute");
+const shouldReplace = process.argv.includes("--replace");
 
 if (!csvPath) {
   console.error("Usage: node scripts/backfill-og-images-for-csv-tools.mjs <enriched.csv> [--execute]");
@@ -88,6 +89,10 @@ try {
 
   if (shouldExecute) {
     args.push("--execute");
+  }
+
+  if (shouldReplace) {
+    args.push("--replace");
   }
 
   const result = spawnSync(process.execPath, args, {

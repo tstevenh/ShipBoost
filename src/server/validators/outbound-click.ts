@@ -14,5 +14,6 @@ export const outboundClickQuerySchema = z.object({
     "category_featured",
     "best_tag_page",
     "alternatives_page",
+    "sponsor_slot",
   ]),
 });

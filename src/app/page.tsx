@@ -15,6 +15,7 @@ import { getEnv } from "@/server/env";
 import { getCachedHomePageData } from "@/server/cache/public-content";
 import { buildHomePageSchema } from "@/server/seo/page-schema";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
+import { getServerSession } from "@/server/auth/session";
 
 export const revalidate = 300;
 
@@ -28,6 +29,8 @@ export const metadata: Metadata = buildPublicPageMetadata({
 
 export default async function Home() {
   const env = getEnv();
+  const session = await getServerSession();
+  const isSignedIn = Boolean(session?.user);
   const showLaunchpadCountdown =
     Date.now() < new Date(env.LAUNCHPAD_GO_LIVE_AT).getTime();
   const currentPeriod = "weekly";
@@ -50,9 +53,12 @@ export default async function Home() {
   return (
     <main className="flex-1">
       <JsonLdScript data={homeSchema} />
-      {/* Full Width Hero */}
-      <MinimalHero />
-      
+      {/* Hero shown only to signed-out visitors */}
+      {isSignedIn ? null : <MinimalHero />}
+
+      {/* Spacer to clear the fixed header when the hero is hidden */}
+      {isSignedIn ? <div aria-hidden className="h-20 lg:h-24" /> : null}
+
       <Suspense fallback={<div className="h-[73px] border-b border-border bg-background" />}>
         <FilterBar launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT} />
       </Suspense>
@@ -244,7 +250,7 @@ export default async function Home() {
         </ShowcaseLayout>
       </ViewerVoteStateProvider>
       
-      <Footer />
+      <Footer hideFeaturedBadgeRail={isSignedIn} />
     </main>
   );
 }

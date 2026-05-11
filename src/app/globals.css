@@ -105,6 +105,36 @@
   }
 }
 
+@keyframes premium-shimmer {
+  0% {
+    transform: translate3d(-120%, 0, 0);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  78%, 100% {
+    transform: translate3d(220%, 0, 0);
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .premium-shimmer-track {
+    animation: premium-shimmer 5s linear infinite;
+    will-change: transform, opacity;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .premium-shimmer-track {
+      animation: none;
+    }
+  }
+}
+
 @keyframes footer-badge-marquee {
   from {
     transform: translate3d(0, 0, 0);

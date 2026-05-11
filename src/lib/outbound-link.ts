@@ -14,7 +14,8 @@ export type OutboundLinkSurface =
   | "category_page"
   | "category_featured"
   | "best_tag_page"
-  | "alternatives_page";
+  | "alternatives_page"
+  | "sponsor_slot";
 
 export type OutboundLinkContext =
   | "startup_directories"
@@ -77,6 +78,53 @@ export function isTrackableOutboundHttpUrl({
     return resolvedUrl.origin !== currentSiteUrl.origin;
   } catch {
     return false;
+  }
+}
+
+const SHIPBOOST_UTM_SOURCE = "shipboost";
+const SHIPBOOST_UTM_MEDIUM = "referral";
+
+/**
+ * Generic UTM injector for any outbound href.
+ * - Leaves same-origin / mailto / tel / hash / unparsable URLs untouched
+ * - Does NOT override pre-existing utm_* params (e.g. affiliate links that already carry tracking)
+ *
+ * Use directly when you control the href server-side. The TrackedExternalLink
+ * component and the markdown renderer call this automatically.
+ */
+export function withShipboostUtm(
+  href: string | undefined | null,
+  options: {
+    surface: OutboundLinkSurface | string;
+    content?: string | null;
+    siteOrigin?: string;
+  },
+): string {
+  if (!href) return "";
+  // Skip non-http(s), same-origin, or unparsable
+  if (href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+    return href;
+  }
+
+  try {
+    const url = new URL(href);
+    if (!["http:", "https:"].includes(url.protocol)) return href;
+
+    // Respect URLs that already carry utm_* — don't overwrite the founder's own / affiliate's tracking
+    const alreadyTagged = ["utm_source", "utm_medium", "utm_campaign"].some(
+      (key) => url.searchParams.has(key),
+    );
+    if (alreadyTagged) return url.toString();
+
+    url.searchParams.set("utm_source", SHIPBOOST_UTM_SOURCE);
+    url.searchParams.set("utm_medium", SHIPBOOST_UTM_MEDIUM);
+    url.searchParams.set("utm_campaign", options.surface);
+    if (options.content) {
+      url.searchParams.set("utm_content", options.content);
+    }
+    return url.toString();
+  } catch {
+    return href;
   }
 }
 

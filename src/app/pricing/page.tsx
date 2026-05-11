@@ -275,7 +275,7 @@ export default async function PricingPage() {
                 {[
                   {
                     icon: Megaphone,
-                    text: "One of 3 active sponsor slots",
+                    text: "Featured in the rotating sponsor placement",
                   },
                   {
                     icon: MousePointerClick,

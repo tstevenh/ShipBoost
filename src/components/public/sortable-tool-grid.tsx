@@ -74,7 +74,7 @@ export function SortableToolGrid({
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="overflow-hidden rounded-xl border border-border/60 bg-card [&>article:last-child]:border-b-0">
       {sortedTools.map((tool) => (
         <ToolCard
           key={tool.id}

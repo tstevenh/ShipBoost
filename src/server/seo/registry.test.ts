@@ -177,6 +177,47 @@ describe("alternatives SEO registry", () => {
     }
   });
 
+  it("defines the cluster 31-40 alternatives pages", () => {
+    for (const slug of [
+      "chatgpt",
+      "perplexity",
+      "capcut",
+      "veed",
+      "kapwing",
+      "clipchamp",
+      "invideo",
+      "obsidian",
+      "evernote",
+      "onenote",
+      "github",
+      "gitlab",
+      "softr",
+      "firebase",
+      "wix",
+      "webflow",
+      "apollo",
+      "salesloft",
+      "outreach",
+      "reply-io",
+      "instantly",
+      "postman",
+      "swagger",
+      "podia",
+      "teachable",
+      "thinkific",
+      "jenkins",
+      "github-actions",
+    ]) {
+      expect(alternativesSeoRegistry[slug]).toBeDefined();
+      expect(alternativesSeoRegistry[slug]?.toolSlugs.length).toBeGreaterThanOrEqual(
+        6,
+      );
+      expect(alternativesSeoRegistry[slug]?.faq?.length ?? 0).toBeGreaterThanOrEqual(
+        5,
+      );
+    }
+  });
+
   it("keeps every alternatives page above the FAQ depth floor", () => {
     for (const entry of Object.values(alternativesSeoRegistry)) {
       expect(entry.faq?.length ?? 0).toBeGreaterThanOrEqual(5);

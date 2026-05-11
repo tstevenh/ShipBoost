@@ -101,7 +101,7 @@ function renderStaticToolGrid(
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="overflow-hidden rounded-xl border border-border/60 bg-card [&>article:last-child]:border-b-0">
       {tools.map((tool) => (
         <PublicDirectoryToolCard
           key={tool.id}

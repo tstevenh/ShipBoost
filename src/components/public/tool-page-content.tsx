@@ -13,6 +13,7 @@ import { ViewerClaimState } from "@/components/public/viewer-claim-state";
 import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { Footer } from "@/components/ui/footer";
 import { resolveToolWebsiteRel } from "@/lib/outbound-link";
+import { buildToolOutboundHref } from "@/lib/tool-outbound";
 import { buildToolPageSchema } from "@/server/seo/page-schema";
 import {
   buildToolPageDescription,
@@ -97,7 +98,12 @@ export function ToolPageContent({
     image: tool.logoMedia?.url,
     categoryName: primaryCategory?.name ?? null,
   });
-  const websiteHref = tool.websiteUrl;
+  const websiteHref =
+    buildToolOutboundHref({
+      websiteUrl: tool.websiteUrl,
+      source: "tool_page",
+      toolSlug: tool.slug,
+    }) ?? tool.websiteUrl;
   const websiteRel = isPreview ? "noreferrer" : resolveToolWebsiteRel(tool);
   const timeline = getToolTimelineDisplay({
     createdAt: tool.createdAt,

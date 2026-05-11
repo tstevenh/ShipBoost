@@ -63,9 +63,10 @@ function getSponsorEligibleToolWhere(founderId: string, now = new Date()) {
 
 function getDodoSponsorPlacementReturnUrl(placementId: string) {
   const env = getEnv();
-  const url = new URL(`${env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/advertise`);
+  const url = new URL(
+    `${env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/api/sponsor/return`,
+  );
 
-  url.searchParams.set("checkout", "success");
   url.searchParams.set("sponsor_placement_id", placementId);
 
   return url.toString();
@@ -533,7 +534,7 @@ export async function processSponsorPlacementLifecycle(now = new Date()) {
   const advertiseUrl = `${getEnv().NEXT_PUBLIC_APP_URL.replace(
     /\/$/,
     "",
-  )}/advertise`;
+  )}/?advertise=1`;
 
   for (const placement of placements) {
     if (!placement.endsAt || !placement.tool.owner?.email) {

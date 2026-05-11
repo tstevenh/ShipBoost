@@ -24,20 +24,22 @@ export function LaunchpadShowcase({
 }) {
   return (
     <section>
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-3xl font-black tracking-tight sm:text-3xl">Launch Pad</h2>
-          <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[10px] font-black  tracking-wider text-foreground">
-            {boardLabels[board]}
-          </span>
+      <div className="mb-5 flex items-end justify-between gap-3 border-b border-border/60 pb-4">
+        <div className="flex flex-col gap-1">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+            Launch Pad &middot; {boardLabels[board]}
+          </p>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-[26px]">
+            {boardLabels[board]}&apos;s launches
+          </h2>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-black  tracking-widest text-muted-foreground">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          Weekly cycle
+        <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Live
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5">
+      <div className="overflow-hidden rounded-xl border border-border/60 bg-card [&>article:last-child]:border-b-0">
         {launches.map((launch, index) => (
           <PublicDirectoryToolCard
             key={launch.id}
@@ -65,13 +67,13 @@ export function LaunchpadShowcase({
         ) : null}
 
         {launches.length === 0 && emptyState === "default" ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-32">
-            <p className="text-xs font-black  tracking-widest text-muted-foreground">
+          <div className="flex flex-col items-center justify-center px-4 py-24 text-center">
+            <p className="text-xs font-medium text-muted-foreground">
               No launches found for this period.
             </p>
             <Link
               href="/submit"
-              className="mt-4 text-sm font-black text-foreground transition-all hover:opacity-70"
+              className="mt-4 text-sm font-semibold text-foreground transition-all hover:opacity-70"
             >
               Submit a product →
             </Link>
