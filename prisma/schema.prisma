@@ -137,6 +137,11 @@ model User {
   listingClaims         ListingClaim[] @relation("ListingClaimClaimant")
   reviewedListingClaims ListingClaim[] @relation("ListingClaimReviewer")
 
+  hideFromLeaderboard Boolean         @default(false)
+  streakDays          UserStreakDay[]
+  streakRewards       StreakReward[]
+  lotteryRolls        LotteryRoll[]
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   sessions  Session[]
@@ -584,4 +589,66 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@index([identifier])
+}
+
+enum StreakRewardSource {
+  MILESTONE
+  LOTTERY
+}
+
+enum StreakProductScope {
+  PREMIUM_LAUNCH
+  SPONSOR_PLACEMENT
+}
+
+enum LotteryOutcome {
+  LOSE
+  OFF_5
+  OFF_10
+  OFF_25
+  OFF_50
+  OFF_100
+}
+
+model UserStreakDay {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day       DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([userId, day])
+  @@index([userId])
+}
+
+model StreakReward {
+  id             String              @id @default(cuid())
+  userId         String
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source         StreakRewardSource
+  milestoneDay   Int?
+  productScope   StreakProductScope
+  percentOff     Int
+  code           String              @unique
+  dodoDiscountId String?
+  unlockedAt     DateTime            @default(now())
+  redeemedAt     DateTime?
+
+  rollsAwarded LotteryRoll[]
+
+  @@index([userId])
+}
+
+model LotteryRoll {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rollDate  DateTime
+  outcome   LotteryOutcome
+  rewardId  String?
+  reward    StreakReward?  @relation(fields: [rewardId], references: [id], onDelete: SetNull)
+  createdAt DateTime       @default(now())
+
+  @@unique([userId, rollDate])
+  @@index([outcome, rollDate])
 }

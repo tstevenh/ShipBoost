@@ -167,7 +167,7 @@ export default function LaunchGuidePage() {
           {
             title: "When Premium Launch makes sense",
             body:
-              "Use Premium Launch when timing matters, you want to reserve a specific week, you want stronger baseline placement in the board, or you want a dofollow backlink included by default.",
+              "Use Premium Launch when timing matters, you want to reserve a specific week, you want stronger baseline placement in the board, or you want a guaranteed dofollow backlink.",
           },
         ].map((item) => (
           <article

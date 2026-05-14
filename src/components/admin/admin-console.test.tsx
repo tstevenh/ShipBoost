@@ -60,7 +60,11 @@ import { AdminConsole } from "@/components/admin/admin-console";
 
 describe("AdminConsole", () => {
   it("loads each admin boot endpoint once on initial mount", async () => {
-    apiRequestMock.mockResolvedValue([]);
+    apiRequestMock.mockImplementation(async (path: string) =>
+      path === "/api/admin/launches"
+        ? { months: [], nextFreeLaunch: { launchDate: "", daysFromNow: 0 } }
+        : [],
+    );
 
     render(<AdminConsole />);
 

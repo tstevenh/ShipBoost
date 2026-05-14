@@ -208,3 +208,47 @@ Verify these flows in production:
 - admin login and review screens
 - Dodo checkout success and webhook processing
 - cron endpoints respond with `200` when called with the bearer secret
+
+## Cron Scheduler (GitHub Actions — current setup)
+
+ShipBoost ships a GitHub Actions workflow at `.github/workflows/shipboost-cron.yml`
+that drives all five production cron routes. This is the **current** scheduler
+and replaces any DigitalOcean Worker / Scheduled Job pattern described above.
+
+### Why GitHub Actions
+
+- Free for private repos within the standard Actions minute allowance (about
+  20 min/day of cron usage at the cadences below — well under the 2,000 min/mo
+  ceiling for personal accounts).
+- No always-on worker means no $5/mo per-service baseline.
+- Each route is already an HTTP endpoint with `Authorization: Bearer
+  $CRON_SECRET` auth, so the workflow is just a thin `curl` per job.
+
+### Schedules
+
+| Job | Endpoint | Cadence (UTC) |
+|---|---|---|
+| `publish-due` | `/api/cron/launches/publish-due` | hourly `0 * * * *` |
+| `prelaunch-reminders` | `/api/cron/launches/send-prelaunch-reminders` | hourly `0 * * * *` |
+| `revalidate-cache` | `/api/cron/public-content/revalidate` | hourly `0 * * * *` |
+| `spotlight-reminders` | `/api/cron/premium-launch-spotlights/remind-due` | daily `0 9 * * *` |
+| `sponsor-renewals` | `/api/cron/sponsor-placements` | daily `0 9 * * *` |
+
+### Repository secrets to set
+
+In **Settings → Secrets and variables → Actions**, add:
+
+- `SITE_URL` — e.g. `https://shipboost.io` (no trailing slash)
+- `CRON_SECRET` — must match the `CRON_SECRET` env var on the deployed app
+
+### Manual testing
+
+From the GitHub UI: **Actions → ShipBoost Scheduled Crons → Run workflow**.
+Choose `all` to fire every route, or pick a specific job name. Each step uses
+`curl --fail`, so a non-2xx response will fail the run and email repo admins.
+
+### Migrating away from DigitalOcean cron
+
+The DigitalOcean Worker / Scheduled Job pattern in earlier sections of this
+document remains usable if you ever want to migrate back, but is **no longer
+required**. You can leave any DO scheduled jobs disabled.

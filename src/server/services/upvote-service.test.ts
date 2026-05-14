@@ -24,6 +24,16 @@ vi.mock("@/server/db/client", () => ({
   prisma: prismaMock,
 }));
 
+const { getVoteMultiplierMock, recordStreakActivityMock } = vi.hoisted(() => ({
+  getVoteMultiplierMock: vi.fn(),
+  recordStreakActivityMock: vi.fn(),
+}));
+
+vi.mock("@/server/services/streak-service", () => ({
+  getVoteMultiplier: getVoteMultiplierMock,
+  recordStreakActivity: recordStreakActivityMock,
+}));
+
 import {
   getDailyVotesRemaining,
   getToolUpvoteCount,
@@ -36,6 +46,8 @@ describe("upvote-service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prismaMock.user.findUnique.mockResolvedValue({ role: "FOUNDER" });
+    getVoteMultiplierMock.mockResolvedValue(1);
+    recordStreakActivityMock.mockResolvedValue({ recorded: true, streakCount: 1, crossedMilestone: null });
   });
 
   it("creates a vote for a public tool", async () => {
@@ -227,5 +239,26 @@ describe("upvote-service", () => {
         ["tool_2", 1],
       ]),
     );
+  });
+
+  it("applies streak multiplier to vote weight for 5-day-streak user", async () => {
+    getVoteMultiplierMock.mockResolvedValueOnce(2);
+    prismaMock.toolVote.findUnique.mockResolvedValueOnce(null);
+    prismaMock.tool.findFirst.mockResolvedValueOnce({ id: "tool_1" });
+    prismaMock.toolVote.count.mockResolvedValueOnce(1);
+    prismaMock.toolVote.create.mockResolvedValueOnce({ id: "vote_1" });
+    prismaMock.toolVote.aggregate.mockResolvedValueOnce({ _sum: { weight: 2 } });
+    prismaMock.toolVote.findUnique.mockResolvedValueOnce({ id: "vote_1" });
+    prismaMock.toolVote.count.mockResolvedValueOnce(1);
+
+    await toggleToolUpvote("tool_1", "user_streak", new Date("2026-01-06T10:00:00.000Z"));
+
+    expect(prismaMock.toolVote.create).toHaveBeenCalledWith({
+      data: {
+        toolId: "tool_1",
+        userId: "user_streak",
+        weight: 2,
+      },
+    });
   });
 });

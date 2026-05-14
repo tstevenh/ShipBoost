@@ -3,10 +3,10 @@ import { Prisma, type UserRole } from "@prisma/client";
 import { prisma } from "@/server/db/client";
 import { AppError } from "@/server/http/app-error";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
+import { getVoteMultiplier, recordStreakActivity } from "@/server/services/streak-service";
 import { startOfDay } from "@/server/services/time";
 
 const DAILY_UPVOTE_LIMIT = 3;
-const STANDARD_VOTE_WEIGHT = 1;
 const ADMIN_VOTE_WEIGHT = 3;
 const ADMIN_DAILY_VOTES_REMAINING = Number.MAX_SAFE_INTEGER;
 
@@ -35,8 +35,9 @@ async function ensurePublicTool(toolId: string) {
   return tool;
 }
 
-function getVoteWeightForRole(role: UserRole) {
-  return role === "ADMIN" ? ADMIN_VOTE_WEIGHT : STANDARD_VOTE_WEIGHT;
+async function resolveVoteWeight(userId: string, role: UserRole): Promise<number> {
+  if (role === "ADMIN") return ADMIN_VOTE_WEIGHT;
+  return getVoteMultiplier(userId);
 }
 
 async function getUserVoteRole(userId: string) {
@@ -234,12 +235,14 @@ export async function toggleToolUpvote(
     throw new AppError(409, "Daily upvote limit reached.");
   }
 
+  const weight = await resolveVoteWeight(userId, role);
+
   try {
     await prisma.toolVote.create({
       data: {
         toolId,
         userId,
-        weight: getVoteWeightForRole(role),
+        weight,
       },
     });
   } catch (error) {
@@ -247,6 +250,10 @@ export async function toggleToolUpvote(
       throw error;
     }
   }
+
+  void recordStreakActivity(userId).catch((err) => {
+    console.error("[shipboost streak] record activity (vote) failed", err);
+  });
 
   return getToolVoteState(toolId, userId, now);
 }

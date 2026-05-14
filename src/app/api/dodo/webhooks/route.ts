@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { Webhook } from "standardwebhooks";
 
 import { revalidateAllPublicContent } from "@/server/cache/public-content";
+import { prisma } from "@/server/db/client";
 import { getEnv } from "@/server/env";
 import {
   handlePremiumLaunchPaymentSucceeded,
@@ -16,6 +17,8 @@ type DodoWebhookPayload = {
     checkout_session_id?: string | null;
     status?: string | null;
     metadata?: Record<string, unknown>;
+    discount_id?: string | null;
+    discount_code?: string | null;
   };
 };
 
@@ -53,6 +56,22 @@ export async function POST(request: Request) {
           paymentId: payload.data.payment_id,
           checkoutSessionId: payload.data.checkout_session_id ?? null,
           metadata: payload.data.metadata ?? {},
+        });
+      }
+
+      // Mark any applied streak reward as redeemed
+      const discountCode = payload.data.discount_code;
+      const discountId = payload.data.discount_id;
+      if (discountCode || discountId) {
+        await prisma.streakReward.updateMany({
+          where: {
+            redeemedAt: null,
+            OR: [
+              ...(discountCode ? [{ code: discountCode }] : []),
+              ...(discountId ? [{ dodoDiscountId: discountId }] : []),
+            ],
+          },
+          data: { redeemedAt: new Date() },
         });
       }
 

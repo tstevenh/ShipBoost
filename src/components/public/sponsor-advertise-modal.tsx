@@ -19,6 +19,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import type { SponsorEligibilityResponse } from "@/app/api/sponsor/eligibility/route";
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 
 type SponsorAdvertiseModalProps = {
   triggerClassName?: string;
@@ -46,6 +47,7 @@ export function SponsorAdvertiseModal({
 
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  useBodyScrollLock(isOpen);
   const [eligibility, setEligibility] = useState<EligibilityState>({
     kind: "idle",
   });

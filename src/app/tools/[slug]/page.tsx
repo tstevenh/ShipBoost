@@ -15,7 +15,6 @@ import {
   buildToolPageDescription,
   buildToolPageTitle,
 } from "@/server/services/tool-page";
-
 export const revalidate = 3600;
 
 type RouteContext = {

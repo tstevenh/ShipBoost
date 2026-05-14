@@ -557,7 +557,7 @@ export async function sendPremiumLaunchPaidEmailMessage(input: {
         )}</strong>.`,
       ),
       paragraph(
-        "As part of the founding offer, your premium launch also includes one ShipBoost editorial launch spotlight. Fill in the short dashboard brief so ShipBoost has the angle, audience, and CTA for launch week coverage.",
+        "As part of the founding offer, your premium launch also includes one hand-written editorial spotlight by our editor. Fill in the short dashboard brief so we have the angle, audience, and CTA for launch week coverage.",
       ),
       ctaButton(input.spotlightBriefUrl, "Complete spotlight brief"),
       paragraph(
@@ -577,7 +577,7 @@ export async function sendPremiumLaunchPaidEmailMessage(input: {
       `Payment was received for ${input.toolName}.`,
       `Premium launch date: ${input.launchDate}`,
       `Spotlight brief: ${input.spotlightBriefUrl}`,
-      "Your founding bonus includes one ShipBoost editorial launch spotlight during launch week.",
+      "Your founding bonus includes one hand-written editorial spotlight by our editor during launch week.",
       `Dashboard: ${input.dashboardUrl}`,
     ].join("\n"),
   });
@@ -611,8 +611,8 @@ export async function sendPremiumLaunchSpotlightReminderEmailMessage(input: {
         )}</strong> has started.`;
   const reminder =
     input.stage === "THREE_DAYS_BEFORE"
-      ? "Complete the spotlight brief now so ShipBoost can publish your editorial launch spotlight during launch week with the angle and CTA you want."
-      : "Complete the spotlight brief if you still want to shape the editorial angle. If it stays unfinished, ShipBoost can still publish using your existing listing and submission details.";
+      ? "Complete the spotlight brief now so our editor can hand-write your editorial spotlight during launch week with the angle and CTA you want."
+      : "Complete the spotlight brief if you still want to shape the editorial angle. If it stays unfinished, our editor can still publish using your existing listing and submission details.";
 
   const html = renderEmailDocument({
     title: subject,
@@ -628,7 +628,7 @@ export async function sendPremiumLaunchSpotlightReminderEmailMessage(input: {
       paragraph(reminder),
       ctaButton(input.dashboardUrl, "Open spotlight brief"),
       paragraph(
-        "The editorial launch spotlight is a standardized ShipBoost founder feature, not a custom commissioned article.",
+        "Standardized format — our editor follows a consistent house style, not a custom commissioned piece.",
       ),
     ].join(""),
   });

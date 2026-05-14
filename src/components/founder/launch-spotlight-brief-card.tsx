@@ -291,10 +291,12 @@ export function LaunchSpotlightBriefCard({
               Editorial launch spotlight
             </h4>
             <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground/80">
-              Complete this short brief for {toolName}. ShipBoost uses it to
-              publish one standardized editorial launch spotlight during{" "}
-              {launchWindowLabel}. If you leave it unfinished, ShipBoost can
-              still publish using your existing listing details.
+              Complete this short brief for {toolName}. Our editor uses it to
+              hand-write a short editorial article published during{" "}
+              {launchWindowLabel} — lives permanently on /blog, indexed by
+              Google, with a high-quality do-follow backlink. Not AI. If you
+              leave it unfinished, ShipBoost can still publish using your
+              existing listing details.
             </p>
           </div>
         </div>
@@ -483,8 +485,8 @@ export function LaunchSpotlightBriefCard({
           </span>
         )}
         <span>
-          The editorial launch spotlight is a standardized ShipBoost founder
-          feature, not a custom commissioned article.
+          Standardized format — our editor follows a consistent house style,
+          not a custom commissioned piece.
         </span>
       </div>
     </section>

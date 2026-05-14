@@ -1096,6 +1096,54 @@ const featuredBadges: FeaturedBadge[] = [
     rel: "noopener noreferrer",
     imageStyle: { height: 54, width: "auto" },
   },
+  {
+    id: "nicklaunches",
+    href: "https://nicklaunches.com/products/shipboost/?utm_source=shipboost.io&utm_medium=badge&utm_campaign=featured",
+    src: "https://nicklaunches.com/badges/featured.svg",
+    alt: "ShipBoost on Nick Launches",
+    width: 244,
+    height: 56,
+    rel: "noopener",
+  },
+  {
+    id: "directoryforai",
+    href: "https://directoryforai.com",
+    alt: "DirectoryforAI",
+    rel: "noopener",
+    content: (
+      <div className="flex h-12 w-[133px] overflow-hidden border border-[#121212] bg-[#fffdf9] box-border">
+        <div className="w-[3.3px] shrink-0 bg-[#656565]" />
+        <div className="flex flex-col justify-center gap-[2.5px] px-2">
+          <span className="text-[4.5px] font-semibold tracking-[0.14em] text-[#a2a2a2]">AS SEEN ON</span>
+          <span className="font-serif text-xs font-medium leading-none text-[#121212]">DirectoryforAI</span>
+          <span className="text-[6px] tracking-[0.06em] text-[#656565]">directoryforai.com ↗</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "scrolllaunch",
+    href: "https://www.scrolllaunch.com/products/shipboost?utm_source=badge&utm_medium=embed&utm_campaign=shipboost&ref=scrolllaunch",
+    src: "https://www.scrolllaunch.com/api/badge/shipboost",
+    alt: "Featured on ScrollLaunch",
+    width: 220,
+    height: 48,
+    rel: "noopener noreferrer",
+  },
+  {
+    id: "launchit",
+    href: "https://launchit.fast",
+    src: "launching.svg",
+    alt: "Featured on LaunchIt",
+    rel: "noopener",
+  },
+  {
+    id: "aidirectories",
+    href: "https://www.aidirectori.es",
+    src: "https://cdn.aidirectori.es/ai-tools/badges/dark-mode.png",
+    alt: "AI Directories Badge",
+    rel: "noopener noreferrer",
+  },
 ];
 
 function FeaturedBadgeRail() {
@@ -1206,6 +1254,49 @@ export function FlickeringFooter({ className, hideFeaturedBadgeRail = false, ...
           <p className="text-sm tracking-tight text-muted-foreground font-medium leading-relaxed">
             {siteConfig.hero.description}
           </p>
+          <div className="flex items-center gap-2">
+            <TrackedExternalLink
+              href="https://x.com/ShipBoost"
+              target="_blank"
+              rel="noopener noreferrer"
+              sourceSurface="footer"
+              linkContext="footer"
+              linkText="X (Twitter)"
+              aria-label="Follow ShipBoost on X"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <div className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/20 transition-colors hover:bg-muted/40">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="h-4 w-4 fill-current"
+                >
+                  <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932L18.901 1.153zM17.61 20.644h2.039L6.486 3.24H4.298l13.312 17.404z" />
+                </svg>
+              </div>
+            </TrackedExternalLink>
+            <a
+              href="mailto:support@shipboost.io"
+              aria-label="Email support@shipboost.io"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <div className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/20 transition-colors hover:bg-muted/40">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <path d="m3 7 9 6 9-6" />
+                </svg>
+              </div>
+            </a>
+          </div>
         </div>
         <div className="pt-5 md:pt-0 md:flex-1">
           <div className="grid grid-cols-2 gap-10 md:grid-cols-3 lg:grid-cols-5 lg:pl-10">

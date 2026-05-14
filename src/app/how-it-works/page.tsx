@@ -47,7 +47,7 @@ const rules = [
     title: "Premium Launch",
     points: [
       "Choose a launch week",
-      "Dofollow backlink included by default",
+      "Guaranteed dofollow backlink",
       "No badge step required",
       "Starts ahead of free launches outside the top vote slots",
     ],
@@ -190,7 +190,7 @@ export default function HowItWorksPage() {
             },
             {
               title: "Choose Premium Launch if…",
-              body: "Timing matters, you want less submission friction, you want stronger baseline placement, and you want a dofollow backlink by default.",
+              body: "Timing matters, you want less submission friction, you want stronger baseline placement, and you want a guaranteed dofollow backlink.",
             },
             {
               title: "Use partner submissions if…",

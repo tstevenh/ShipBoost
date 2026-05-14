@@ -21,6 +21,8 @@ import {
   type SubmissionReviewResult,
   type SponsorPlacement,
   type AdminLaunchMonth,
+  type AdminLaunchOverview,
+  type AdminNextFreeLaunchEstimate,
   type Tag as TagType,
   type TagDraft,
   type Tool,
@@ -95,6 +97,8 @@ export function AdminConsole() {
   const [claims, setClaims] = useState<ListingClaim[]>([]);
   const [sponsorPlacements, setSponsorPlacements] = useState<SponsorPlacement[]>([]);
   const [launchMonths, setLaunchMonths] = useState<AdminLaunchMonth[]>([]);
+  const [nextFreeLaunch, setNextFreeLaunch] =
+    useState<AdminNextFreeLaunchEstimate | null>(null);
 
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [toolError, setToolError] = useState<string | null>(null);
@@ -305,7 +309,7 @@ export function AdminConsole() {
           nextSubmissions,
           nextClaims,
           nextSponsorPlacements,
-          nextLaunchMonths,
+          launchOverview,
         ] =
           await Promise.all([
             apiRequest<Category[]>("/api/admin/categories"),
@@ -314,7 +318,7 @@ export function AdminConsole() {
             apiRequest<Submission[]>("/api/admin/submissions?reviewStatus=PENDING"),
             apiRequest<ListingClaim[]>("/api/admin/listing-claims?status=PENDING"),
             apiRequest<SponsorPlacement[]>("/api/admin/sponsor-placements"),
-            apiRequest<AdminLaunchMonth[]>("/api/admin/launches"),
+            apiRequest<AdminLaunchOverview>("/api/admin/launches"),
           ]);
 
         if (cancelled) {
@@ -327,7 +331,8 @@ export function AdminConsole() {
         setSubmissions(nextSubmissions);
         setClaims(nextClaims);
         setSponsorPlacements(nextSponsorPlacements);
-        setLaunchMonths(nextLaunchMonths);
+        setLaunchMonths(launchOverview.months);
+        setNextFreeLaunch(launchOverview.nextFreeLaunch);
       } catch (error) {
         if (!cancelled) {
           setBootError(toErrorMessage(error));
@@ -1018,7 +1023,10 @@ export function AdminConsole() {
 
         {activeNav === "launches" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <LaunchSchedulePanel months={launchMonths} />
+            <LaunchSchedulePanel
+              months={launchMonths}
+              nextFreeLaunch={nextFreeLaunch}
+            />
           </div>
         )}
 

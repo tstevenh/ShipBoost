@@ -188,6 +188,16 @@ export type AdminLaunchMonth = {
   weeks: AdminLaunchWeek[];
 };
 
+export type AdminNextFreeLaunchEstimate = {
+  launchDate: string;
+  daysFromNow: number;
+};
+
+export type AdminLaunchOverview = {
+  months: AdminLaunchMonth[];
+  nextFreeLaunch: AdminNextFreeLaunchEstimate;
+};
+
 export type SubmissionReviewResult = {
   submission: Submission;
   tool: {

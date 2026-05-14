@@ -16,6 +16,7 @@ import {
   type AdminLaunchEntry,
   type AdminLaunchMonth,
   type AdminLaunchWeek,
+  type AdminNextFreeLaunchEstimate,
 } from "@/components/admin/admin-console-shared";
 import { LogoFallback } from "@/components/ui/logo-fallback";
 
@@ -128,7 +129,13 @@ function LaunchEntryCard({ entry }: { entry: AdminLaunchEntry }) {
   );
 }
 
-export function LaunchSchedulePanel({ months }: { months: AdminLaunchMonth[] }) {
+export function LaunchSchedulePanel({
+  months,
+  nextFreeLaunch,
+}: {
+  months: AdminLaunchMonth[];
+  nextFreeLaunch: AdminNextFreeLaunchEstimate | null;
+}) {
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
   const [expandedWeeks, setExpandedWeeks] = useState<Record<string, boolean>>({});
 
@@ -196,6 +203,32 @@ export function LaunchSchedulePanel({ months }: { months: AdminLaunchMonth[] }) 
       title="Launch History"
       description="Scan launch history and upcoming launch weeks, then jump straight into the tool or submission that needs attention."
     >
+      {nextFreeLaunch ? (
+        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-border bg-muted/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <div className="text-[10px] font-black tracking-[0.28em] text-muted-foreground">
+              Next Free Launch Slot
+            </div>
+            <p className="text-sm font-black text-foreground">
+              {formatDate(nextFreeLaunch.launchDate, {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+            <p className="text-xs font-medium text-muted-foreground">
+              {nextFreeLaunch.daysFromNow === 0
+                ? "Available today"
+                : `In ${nextFreeLaunch.daysFromNow} day${nextFreeLaunch.daysFromNow === 1 ? "" : "s"}`}
+            </p>
+          </div>
+          <div className="inline-flex items-center gap-2 self-start rounded-full border border-border bg-card px-3 py-1 text-[10px] font-black tracking-[0.2em] text-muted-foreground sm:self-auto">
+            <Rocket size={12} />
+            ETA for next founder submission
+          </div>
+        </div>
+      ) : null}
       {months.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-muted/10 p-8 text-sm font-medium text-muted-foreground">
           No launches are scheduled yet.

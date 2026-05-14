@@ -163,7 +163,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         : "overview";
 
   return (
-    <main className="flex flex-1 flex-col overflow-x-hidden bg-secondary/30 pt-32">
+    <main className="flex flex-1 flex-col bg-secondary/30 pt-32">
       <section className="mx-auto mb-32 flex w-full max-w-7xl flex-1 flex-col px-4 sm:px-6">
         {isPrelaunch ? (
           <div className="mb-8 rounded-[2rem] border border-primary/20 bg-primary/5 px-6 py-5">

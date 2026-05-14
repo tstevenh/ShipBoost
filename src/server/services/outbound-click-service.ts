@@ -4,6 +4,7 @@ import { AppError } from "@/server/http/app-error";
 import { buildOutboundLinkClickedProperties } from "@/lib/outbound-link";
 import { capturePostHogEvent } from "@/server/posthog";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
+import { recordStreakActivity } from "@/server/services/streak-service";
 import type { ToolOutboundSource, ToolOutboundTarget } from "@/lib/tool-outbound";
 
 const SHIPBOOST_UTM_SOURCE = "shipboost";
@@ -172,6 +173,12 @@ export async function resolveTrackedToolOutboundClick(input: {
     });
   } catch (error) {
     console.error("[shipboost outbound-click:capture-error]", error);
+  }
+
+  if (session?.user.id) {
+    void recordStreakActivity(session.user.id).catch((err) => {
+      console.error("[shipboost streak] record activity (outbound) failed", err);
+    });
   }
 
   return {

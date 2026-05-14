@@ -76,7 +76,7 @@ export default async function PricingPage() {
       price: foundingPremiumPrice.currentPrice,
       originalPrice: foundingPremiumPrice.compareAtPrice,
       description:
-        "Reserve your launch week, get stronger baseline placement, receive a ShipBoost editorial launch spotlight, and get a dofollow backlink by default.",
+        "Reserve your launch week, get a guaranteed do-follow backlink, stronger baseline placement, a hand-written editorial spotlight, and skip the queue.",
       eyebrow: "Founding offer",
       foundingSpotsLabel: `First ${foundingPremiumLaunchLimit} Premium Launches`,
       ctaLabel: premiumLaunchAvailable
@@ -90,10 +90,10 @@ export default async function PricingPage() {
       icon: Star,
       points: [
         "Reserve a specific launch week",
-        "Dofollow backlink included by default",
+        "Guaranteed dofollow backlink",
         "No badge step required",
         "Get stronger baseline board placement",
-        "Includes one editorial launch spotlight during launch period",
+        "Includes one hand-written editorial spotlight",
       ],
     },
     {
@@ -337,13 +337,15 @@ export default async function PricingPage() {
           </h2>
           <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-muted-foreground">
             For the first {foundingPremiumLaunchLimit} Premium Launches,
-            ShipBoost includes one editorial launch spotlight published during
-            launch week. It gives your launch one extra public discovery asset
-            linked back to your listing and product site.
+            ShipBoost includes one hand-written editorial spotlight published
+            during launch week. Our editor writes it from your brief — not
+            AI-generated. It lives permanently on /blog with a do-follow
+            backlink, gives your launch one more discovery surface, and is
+            indexed by Google.
           </p>
           <p className="mt-3 max-w-3xl text-xs font-bold leading-relaxed text-muted-foreground">
-            The editorial launch spotlight is a standardized ShipBoost founder
-            feature, not a custom commissioned article.
+            Standardized format (consistent house style), not a custom
+            commissioned piece.
           </p>
         </section>
 

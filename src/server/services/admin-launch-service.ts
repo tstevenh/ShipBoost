@@ -1,6 +1,12 @@
 import { prisma } from "@/server/db/client";
-import { getLaunchWeekStart, UTC_WEEK_IN_DAYS } from "@/server/services/launch-scheduling";
+import {
+  getLaunchWeekStart,
+  scheduleNextFreeLaunchDate,
+  UTC_WEEK_IN_DAYS,
+} from "@/server/services/launch-scheduling";
 import { addUtcDays, startOfUtcDay } from "@/server/services/time";
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 type LaunchStatus = "PENDING" | "APPROVED" | "LIVE" | "ENDED";
 
@@ -23,6 +29,21 @@ function addUtcMonths(value: Date, amount: number) {
   return new Date(
     Date.UTC(value.getUTCFullYear(), value.getUTCMonth() + amount, 1),
   );
+}
+
+export type NextFreeLaunchEstimate = {
+  launchDate: string;
+  daysFromNow: number;
+};
+
+async function getNextFreeLaunchEstimate(now = new Date()): Promise<NextFreeLaunchEstimate> {
+  const launchDate = await scheduleNextFreeLaunchDate(prisma, { fromDate: now });
+  const daysFromNow = Math.max(
+    0,
+    Math.round((launchDate.getTime() - startOfUtcDay(now).getTime()) / MS_PER_DAY),
+  );
+
+  return { launchDate: launchDate.toISOString(), daysFromNow };
 }
 
 export async function listAdminLaunchMonths() {
@@ -141,7 +162,7 @@ export async function listAdminLaunchMonths() {
     groupedMonths.set(monthStartKey, existingMonth);
   }
 
-  return [...groupedMonths.values()]
+  const months = [...groupedMonths.values()]
     .sort((left, right) => right.monthStart.localeCompare(left.monthStart))
     .map((month) => {
       const weeks = [...month.weeks.values()]
@@ -204,4 +225,8 @@ export async function listAdminLaunchMonths() {
         weeks,
       };
     });
+
+  const nextFreeLaunch = await getNextFreeLaunchEstimate();
+
+  return { months, nextFreeLaunch };
 }

@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { BadgeCheck, Check, X } from "lucide-react";
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 
 const premiumFeatures = [
   "Reserve a specific launch week",
-  "Dofollow backlink included by default",
+  "Guaranteed dofollow backlink",
   "No badge verification needed",
   "Stronger baseline board placement",
   "Editorial launch spotlight during launch period",
@@ -17,6 +18,7 @@ const premiumFeatures = [
 export function PremiumLaunchIndicator() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  useBodyScrollLock(isOpen);
 
   useEffect(() => {
     setIsMounted(true);

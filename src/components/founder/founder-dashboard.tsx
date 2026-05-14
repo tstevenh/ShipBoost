@@ -692,8 +692,10 @@ export function FounderDashboard({
                                 Editorial launch spotlight
                               </h4>
                               <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground/80">
-                                Keep the dashboard clean here and finish the
-                                short spotlight brief on its own page.
+                                A short editorial article hand-written by our
+                                editor — not AI, not a template. Permanent home
+                                on /blog with a high-quality do-follow
+                                backlink. Finish your brief on its own page.
                               </p>
                               {sub.spotlightBrief?.updatedAt ? (
                                 <p className="text-xs font-bold tracking-widest text-muted-foreground">

@@ -18,6 +18,7 @@ const {
     },
     launch: {
       create: vi.fn(),
+      updateMany: vi.fn(),
     },
     $transaction: vi.fn(),
   },
@@ -124,6 +125,7 @@ describe("submission-review-service", () => {
         },
         launch: {
           create: prismaMock.launch.create,
+            updateMany: prismaMock.launch.updateMany,
         },
         }),
     );
@@ -211,6 +213,7 @@ describe("submission-review-service", () => {
           },
           launch: {
             create: prismaMock.launch.create,
+            updateMany: prismaMock.launch.updateMany,
           },
         }),
     );
@@ -243,6 +246,85 @@ describe("submission-review-service", () => {
       dashboardUrl: "https://app.shipboost.test/dashboard",
       toolName: "Acme",
       founderVisibleNote: "Needs stronger update",
+    });
+  });
+
+  it("rejects pending/approved launches for the tool when a free submission is rejected", async () => {
+    const submission = {
+      id: "submission_reject_free",
+      toolId: "tool_reject_free",
+      submissionType: "FREE_LAUNCH",
+      reviewStatus: "PENDING",
+      preferredLaunchDate: new Date("2026-05-20T00:00:00.000Z"),
+      user: {
+        id: "user_rf",
+        email: "founder@acme.com",
+        name: "Founder",
+      },
+      paymentStatus: "NOT_REQUIRED",
+      badgeFooterUrl: "https://acme.test",
+      badgeVerification: "VERIFIED",
+      createdAt: new Date("2026-05-10T00:00:00.000Z"),
+      tool: {
+        id: "tool_reject_free",
+        slug: "acme",
+        name: "Acme",
+        tagline: "Ship faster",
+        websiteUrl: "https://acme.test",
+        logoMedia: null,
+        publicationStatus: "PUBLISHED",
+        moderationStatus: "APPROVED",
+        launches: [],
+      },
+    };
+
+    getSubmissionByIdMock.mockResolvedValueOnce(submission);
+    prismaMock.$transaction.mockImplementation(
+      async (
+        callback: (tx: {
+          submission: typeof prismaMock.submission;
+          tool: typeof prismaMock.tool;
+          launch: typeof prismaMock.launch;
+        }) => Promise<unknown>,
+      ) =>
+        callback({
+          submission: { update: prismaMock.submission.update },
+          tool: { update: prismaMock.tool.update },
+          launch: {
+            create: prismaMock.launch.create,
+            updateMany: prismaMock.launch.updateMany,
+          },
+        }),
+    );
+
+    await reviewSubmission(
+      "submission_reject_free",
+      {
+        action: "REJECT",
+        founderVisibleNote: "Not a fit",
+        internalReviewNote: undefined,
+        publishTool: false,
+        goLiveNow: false,
+      },
+      "admin_1",
+    );
+
+    expect(prismaMock.launch.updateMany).toHaveBeenCalledWith({
+      where: {
+        toolId: "tool_reject_free",
+        launchType: "FREE",
+        status: { in: ["PENDING", "APPROVED"] },
+      },
+      data: { status: "REJECTED" },
+    });
+    expect(prismaMock.tool.update).toHaveBeenCalledWith({
+      where: { id: "tool_reject_free" },
+      data: {
+        moderationStatus: "REJECTED",
+        publicationStatus: "UNPUBLISHED",
+        internalNote: null,
+        currentLaunchType: null,
+      },
     });
   });
 
@@ -302,6 +384,7 @@ describe("submission-review-service", () => {
           },
           launch: {
             create: prismaMock.launch.create,
+            updateMany: prismaMock.launch.updateMany,
           },
         }),
     );
@@ -380,6 +463,7 @@ describe("submission-review-service", () => {
           },
           launch: {
             create: prismaMock.launch.create,
+            updateMany: prismaMock.launch.updateMany,
           },
         }),
     );

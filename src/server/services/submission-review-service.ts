@@ -69,6 +69,7 @@ export async function reviewSubmission(
     | null = null;
 
   if (input.action === "REJECT") {
+    const rejectedLaunchType = resolveLaunchType(submission.submissionType);
     await prisma.$transaction(async (tx) => {
       await tx.submission.update({
         where: { id: submissionId },
@@ -90,7 +91,17 @@ export async function reviewSubmission(
                 moderationStatus: "REJECTED",
                 publicationStatus: "UNPUBLISHED",
                 internalNote: internalReviewNote,
+                currentLaunchType: null,
               },
+      });
+
+      await tx.launch.updateMany({
+        where: {
+          toolId: submission.toolId,
+          launchType: rejectedLaunchType,
+          status: { in: ["PENDING", "APPROVED"] },
+        },
+        data: { status: "REJECTED" },
       });
     });
   } else {

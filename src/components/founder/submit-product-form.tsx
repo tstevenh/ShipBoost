@@ -28,6 +28,7 @@ import {
 } from "@/lib/premium-launch";
 import { captureBrowserPostHogEvent } from "@/lib/posthog-browser";
 import { cn } from "@/lib/utils";
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 
 type CategoryOption = {
   id: string;
@@ -451,6 +452,10 @@ export function SubmitProductForm({
   const [isBadgePromptOpen, setIsBadgePromptOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  useBodyScrollLock(
+    isScheduleModalOpen || isDeleteModalOpen || isBadgePromptOpen,
+  );
   const [scheduleModalView, setScheduleModalView] = useState<"plans" | "premium-date">("plans");
   const [premiumLaunchMonthIndex, setPremiumLaunchMonthIndex] = useState(0);
   const [badgePromptSubmissionId, setBadgePromptSubmissionId] = useState<string | null>(null);
@@ -1167,9 +1172,30 @@ export function SubmitProductForm({
                       <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
                         Get the next free launch slot. Free launches include a nofollow website link by default.
                       </p>
-                      <p className="mt-2 text-xs font-bold text-muted-foreground">
-                        Estimated launch week: {getLaunchWeekCopyDate(freeLaunchEstimateDate)}.
-                      </p>
+                      {freeLaunchEstimateDate ? (
+                        <>
+                          <p className="mt-2 text-xs font-bold text-muted-foreground">
+                            Estimated launch in{" "}
+                            <span className="text-foreground">
+                              ~{Math.max(
+                                1,
+                                Math.ceil(
+                                  (new Date(freeLaunchEstimateDate).getTime() -
+                                    Date.now()) /
+                                    86_400_000,
+                                ),
+                              )}{" "}
+                              days
+                            </span>{" "}
+                            (week of{" "}
+                            {getLaunchWeekCopyDate(freeLaunchEstimateDate)}).
+                          </p>
+                          <p className="mt-1 text-[11px] font-medium text-muted-foreground/70">
+                            Want to launch sooner? Choose any launch week
+                            yourself with Premium →
+                          </p>
+                        </>
+                      ) : null}
                     </div>
                   </div>
                 </button>
@@ -1202,9 +1228,9 @@ export function SubmitProductForm({
                       <ul className="mt-3 space-y-2 text-sm font-bold text-foreground/80">
                         {[
                           "Reserve a specific launch week",
-                          "Dofollow backlink included by default",
+                          "Guaranteed dofollow backlink",
                           "Get stronger baseline board placement",
-                          "Includes one editorial launch spotlight during launch period",
+                          "Includes one hand-written editorial spotlight",
                         ].map((item) => (
                           <li key={item} className="flex gap-2">
                             <Check size={15} className="mt-0.5 text-primary" />

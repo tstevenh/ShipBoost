@@ -383,7 +383,14 @@ export const getCachedRelatedPublishedTools = cache(
 );
 
 export const getCachedActiveSponsorPlacements = cache(() =>
-  listActiveSponsorPlacements(),
+  unstable_cache(
+    () => listActiveSponsorPlacements(),
+    ["public-active-sponsor-placements", "v1"],
+    {
+      revalidate: 300,
+      tags: [PUBLIC_CACHE_TAGS.sponsorPlacements],
+    },
+  )(),
 );
 
 export const getCachedBlogIndexPage = cache(async () =>

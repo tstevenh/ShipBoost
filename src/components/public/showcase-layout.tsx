@@ -14,6 +14,7 @@ import {
   getCachedActiveSponsorPlacements,
   getCachedPreviousWeeklyTopWinner,
 } from "@/server/cache/public-content";
+import { StreakSidebar } from "@/components/streaks/streak-sidebar";
 
 export function SidebarLeadMagnet() {
   return <DeferredSidebarLeadMagnetForm />;
@@ -95,7 +96,9 @@ export async function ShowcaseLayout({
           {!isPrelaunch && (
             <aside className={cn(
               "hidden xl:flex w-[275px] shrink-0 flex-col items-stretch gap-4 px-4 py-6",
-              "sticky top-[80px] self-start h-fit",
+              "sticky top-[80px] self-start",
+              "max-h-[calc(100vh-80px)] overflow-y-auto overflow-x-hidden overscroll-contain",
+              "[scrollbar-width:thin]",
             )}>
               <Suspense
                 fallback={
@@ -107,6 +110,7 @@ export async function ShowcaseLayout({
               <SidebarSubmitButton className="max-w-none" />
               <FrogDrBadge fullWidth />
               <SidebarLeadMagnet />
+              <StreakSidebar />
             </aside>
           )}
 
