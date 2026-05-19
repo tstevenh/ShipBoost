@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+
 import Image from "next/image";
 
 import { PostHogImpressionTracker } from "@/components/analytics/posthog-impression-tracker";
@@ -78,15 +80,17 @@ function RealBannerContent({ placement }: { placement: InlinePlacement }) {
   return (
     <div className="relative flex w-full items-center gap-3 md:gap-4">
       <div className="hidden md:flex items-center justify-center w-16 shrink-0">
-        <SponsorAdvertiseModal
-          slot="INLINE_BANNER"
-          triggerClassName="flex items-center justify-center"
-          triggerContent={
-            <span className="text-xs font-bold text-muted-foreground tracking-wider transform -rotate-90 whitespace-nowrap opacity-60 hover:opacity-100 transition-opacity">
-              SPONSORED
-            </span>
-          }
-        />
+        <Suspense fallback={null}>
+          <SponsorAdvertiseModal
+            slot="INLINE_BANNER"
+            triggerClassName="flex items-center justify-center"
+            triggerContent={
+              <span className="text-xs font-bold text-muted-foreground tracking-wider transform -rotate-90 whitespace-nowrap opacity-60 hover:opacity-100 transition-opacity">
+                SPONSORED
+              </span>
+            }
+          />
+        </Suspense>
       </div>
       <a
         href={href}
@@ -192,11 +196,13 @@ export function InlineSponsorBanner({
       {placement ? (
         <RealBannerContent placement={placement} />
       ) : (
-        <SponsorAdvertiseModal
-          slot="INLINE_BANNER"
-          triggerClassName="relative block w-full text-left"
-          triggerContent={<HouseAdContent />}
-        />
+        <Suspense fallback={null}>
+          <SponsorAdvertiseModal
+            slot="INLINE_BANNER"
+            triggerClassName="relative block w-full text-left"
+            triggerContent={<HouseAdContent />}
+          />
+        </Suspense>
       )}
     </article>
   );

@@ -112,15 +112,17 @@ function SponsorCard({ placement }: { placement: SponsorPlacement }) {
   return (
     <div className="group block w-full rounded-xl border border-primary/30 bg-primary/10 transition-colors hover:bg-primary/15">
       {/* SPONSORED label opens the advertise modal */}
-      <SponsorAdvertiseModal
-        slot="SIDEBAR"
-        triggerClassName="block w-full px-4 pt-4 pb-0 text-left"
-        triggerContent={
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70 hover:text-muted-foreground transition-colors">
-            Sponsored
-          </p>
-        }
-      />
+      <Suspense fallback={<SponsorAdvertiseFallback variant="link" />}>
+        <SponsorAdvertiseModal
+          slot="SIDEBAR"
+          triggerClassName="block w-full px-4 pt-4 pb-0 text-left"
+          triggerContent={
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70 hover:text-muted-foreground transition-colors">
+              Sponsored
+            </p>
+          }
+        />
+      </Suspense>
 
       {/* Tool content links to the tool website */}
       <a

@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+
 import { ArrowUpRight, ExternalLink, Megaphone } from "lucide-react";
 
 import { PostHogImpressionTracker } from "@/components/analytics/posthog-impression-tracker";
@@ -32,15 +34,17 @@ function RealProductAd({ placement }: { placement: InlinePlacement }) {
   return (
     <div className="flex w-full items-center gap-3 md:gap-4 px-4 sm:px-5 py-4 min-w-0">
       {/* SPONSORED pill — opens advertise modal */}
-      <SponsorAdvertiseModal
-        slot="INLINE_PRODUCT"
-        triggerClassName="shrink-0 flex w-7 items-center justify-center select-none"
-        triggerContent={
-          <span className="rotate-[-90deg] origin-center whitespace-nowrap text-[8px] font-semibold uppercase tracking-[0.16em] text-primary/70 hover:text-primary transition-colors">
-            Sponsored
-          </span>
-        }
-      />
+      <Suspense fallback={null}>
+        <SponsorAdvertiseModal
+          slot="INLINE_PRODUCT"
+          triggerClassName="shrink-0 flex w-7 items-center justify-center select-none"
+          triggerContent={
+            <span className="rotate-[-90deg] origin-center whitespace-nowrap text-[8px] font-semibold uppercase tracking-[0.16em] text-primary/70 hover:text-primary transition-colors">
+              Sponsored
+            </span>
+          }
+        />
+      </Suspense>
 
       <a
         href={href}
@@ -104,10 +108,11 @@ export function InlineProductAd({
       {placement ? (
         <RealProductAd placement={placement} />
       ) : (
-        <SponsorAdvertiseModal
-          slot="INLINE_PRODUCT"
-          triggerClassName="group flex w-full items-center gap-3 md:gap-4 px-4 sm:px-5 py-4 text-left cursor-pointer transition-colors hover:bg-muted/50 min-w-0"
-          triggerContent={
+        <Suspense fallback={null}>
+          <SponsorAdvertiseModal
+            slot="INLINE_PRODUCT"
+            triggerClassName="group flex w-full items-center gap-3 md:gap-4 px-4 sm:px-5 py-4 text-left cursor-pointer transition-colors hover:bg-muted/50 min-w-0"
+            triggerContent={
             <>
               <div className="shrink-0 flex w-7 items-center justify-center select-none">
                 <span className="rotate-[-90deg] origin-center whitespace-nowrap text-[8px] font-semibold uppercase tracking-[0.16em] text-primary/70">
@@ -141,7 +146,8 @@ export function InlineProductAd({
               </div>
             </>
           }
-        />
+          />
+        </Suspense>
       )}
     </article>
   );
