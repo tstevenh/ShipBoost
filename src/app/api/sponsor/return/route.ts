@@ -34,6 +34,9 @@ export async function GET(request: NextRequest) {
       if (reconciled?.status) {
         redirectUrl.searchParams.set("placement_status", reconciled.status);
       }
+      if (reconciled && "slot" in reconciled && reconciled.slot) {
+        redirectUrl.searchParams.set("placement_slot", String(reconciled.slot));
+      }
     }
   } catch {
     redirectUrl.searchParams.set("sponsor", "error");

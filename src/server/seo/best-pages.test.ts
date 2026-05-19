@@ -408,6 +408,77 @@ describe("best-pages registry", () => {
     }
   });
 
+  it("defines the cluster 41-50 best pages", () => {
+    for (const slug of [
+      "time-tracking-software-for-small-business",
+      "time-tracking-software",
+      "enterprise-search-software",
+      "paas-providers",
+      "ab-testing-tools",
+      "landing-page-builders",
+      "ai-coding-assistants",
+      "ai-meeting-assistants",
+      "employee-time-tracking-software",
+      "site-search-software",
+      "cloud-hosting-for-startups",
+      "ab-testing-software",
+      "landing-page-software",
+      "application-monitoring-tools",
+      "observability-tools",
+      "transactional-email-services",
+      "email-api-services",
+      "ai-coding-tools",
+      "meeting-transcription-software",
+      "feature-flag-software",
+    ]) {
+      expect(bestPagesRegistry[slug]).toBeDefined();
+      expect(bestPagesRegistry[slug]?.rankedTools.length).toBeGreaterThanOrEqual(8);
+      expect(bestPagesRegistry[slug]?.faq.length).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  it("includes the cluster 41-50 sections in the best hub", () => {
+    for (const slug of [
+      "time-tracking-productivity",
+      "site-search-search-infrastructure",
+      "hosting-deployment-platforms",
+      "ab-testing-experimentation",
+      "landing-pages-conversion-optimization",
+      "application-monitoring-error-tracking",
+      "transactional-email-infrastructure",
+      "ai-coding-assistants-ides",
+      "ai-meeting-assistants-transcription",
+      "feature-flags-release-management",
+    ]) {
+      expect(bestHubSections.some((section) => section.slug === slug)).toBe(true);
+    }
+  });
+
+  it("keeps best page registry slugs unique and aligned with keys", () => {
+    const entrySlugs = Object.values(bestPagesRegistry).map((entry) => entry.slug);
+
+    expect(new Set(entrySlugs).size).toBe(entrySlugs.length);
+
+    for (const [key, entry] of Object.entries(bestPagesRegistry)) {
+      expect(entry.slug).toBe(key);
+    }
+  });
+
+  it("keeps best page internal links on known public route families", () => {
+    const knownPrefixes = ["/best/", "/alternatives/", "/categories/", "/tags/"];
+
+    for (const page of Object.values(bestPagesRegistry)) {
+      for (const link of page.internalLinks) {
+        expect(link.href.startsWith("/")).toBe(true);
+        expect(knownPrefixes.some((prefix) => link.href.startsWith(prefix))).toBe(true);
+
+        if (link.href.startsWith("/best/")) {
+          expect(bestPagesRegistry[link.href.replace("/best/", "")]).toBeDefined();
+        }
+      }
+    }
+  });
+
   it("keeps every best page above the thin-content floor", () => {
     for (const page of Object.values(bestPagesRegistry)) {
       expect(page.faq.length).toBeGreaterThanOrEqual(5);

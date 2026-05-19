@@ -200,28 +200,15 @@ describe("submission-payment-service", () => {
       preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
       paymentStatus: "PENDING",
       polarCheckoutId: "cs_test_1",
-      tool: {
-        launches: [],
-      },
-    };
-    const updatedSubmission = {
-      ...submission,
-      paymentStatus: "PAID",
       user: {
         id: "founder_1",
         email: "founder@acme.com",
         name: "Founder",
       },
       tool: {
-        ...submission.tool,
         id: "tool_1",
         name: "Acme",
-        launches: [
-          {
-            launchType: "FEATURED",
-            launchDate: new Date("2026-05-11T00:00:00.000Z"),
-          },
-        ],
+        launches: [],
       },
     };
 
@@ -246,12 +233,15 @@ describe("submission-payment-service", () => {
           },
         };
         const result = await callback(tx);
-        expect(result).toBe("submission_1");
+        expect(result).toMatchObject({
+          submission: expect.objectContaining({ id: "submission_1" }),
+        });
         expect(tx.submission.findFirst).toHaveBeenCalledWith({
           where: {
             polarCheckoutId: "cs_test_1",
           },
           include: {
+            user: true,
             tool: {
               include: {
                 launches: true,
@@ -279,7 +269,6 @@ describe("submission-payment-service", () => {
         return result;
       },
     );
-    getSubmissionByIdMock.mockResolvedValueOnce(updatedSubmission);
 
     await handlePremiumLaunchPaymentSucceeded({
       paymentId: "pay_1",
@@ -315,19 +304,13 @@ describe("submission-payment-service", () => {
       preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
       paymentStatus: "PENDING",
       polarCheckoutId: "cs_test_1",
-      tool: {
-        launches: [],
-      },
-    };
-    const updatedSubmission = {
-      ...submission,
-      paymentStatus: "PAID",
       user: {
+        id: "founder_1",
         email: "founder@acme.com",
         name: "Founder",
       },
       tool: {
-        ...submission.tool,
+        id: "tool_1",
         name: "Acme",
         launches: [],
       },
@@ -375,11 +358,12 @@ describe("submission-payment-service", () => {
           },
         };
         const result = await callback(tx);
-        expect(result).toBe("submission_1");
+        expect(result).toMatchObject({
+          submission: expect.objectContaining({ id: "submission_1" }),
+        });
         return result;
       },
     );
-    getSubmissionByIdMock.mockResolvedValueOnce(updatedSubmission);
 
     const result = await reconcilePremiumLaunchPayment({
       submissionId: "submission_1",

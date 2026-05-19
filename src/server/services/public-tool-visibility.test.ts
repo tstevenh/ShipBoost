@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   combinePubliclyVisibleToolWhere,
+  getPrelaunchToolPageWhere,
   getPublicLaunchBoardWhere,
   getPubliclyVisibleToolWhere,
+  getToolPrelaunchDate,
   isLaunchPubliclyVisible,
+  isToolPrelaunchPageVisible,
   isToolPubliclyVisible,
 } from "@/server/services/public-tool-visibility";
 
@@ -160,5 +163,113 @@ describe("getPubliclyVisibleToolWhere", () => {
     expect(combinePubliclyVisibleToolWhere(callerWhere, now)).toEqual({
       AND: [getPubliclyVisibleToolWhere(now), callerWhere],
     });
+  });
+
+  it("matches approved scheduled tools for prelaunch pages", () => {
+    const now = new Date("2026-05-04T00:00:00.000Z");
+
+    expect(getPrelaunchToolPageWhere(now)).toEqual({
+      OR: [
+        {
+          publicationStatus: "PUBLISHED",
+          moderationStatus: "APPROVED",
+          launches: {
+            some: {
+              status: "APPROVED",
+              launchDate: {
+                gt: now,
+              },
+            },
+          },
+        },
+        {
+          publicationStatus: "UNPUBLISHED",
+          moderationStatus: "PENDING",
+          submissions: {
+            some: {
+              reviewStatus: "PENDING",
+              preferredLaunchDate: {
+                gt: now,
+              },
+            },
+          },
+        },
+      ],
+    });
+  });
+
+  it("shows a prelaunch page for approved future launches", () => {
+    expect(
+      isToolPrelaunchPageVisible(
+        {
+          publicationStatus: "PUBLISHED",
+          moderationStatus: "APPROVED",
+          launches: [
+            {
+              status: "APPROVED",
+              launchDate: new Date("2026-05-11T00:00:00.000Z"),
+            },
+          ],
+        },
+        new Date("2026-05-04T00:00:00.000Z"),
+      ),
+    ).toBe(true);
+  });
+
+  it("shows a prelaunch page for pending review submissions with a future launch date", () => {
+    expect(
+      isToolPrelaunchPageVisible(
+        {
+          publicationStatus: "UNPUBLISHED",
+          moderationStatus: "PENDING",
+          launches: [],
+          submissions: [
+            {
+              reviewStatus: "PENDING",
+              preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
+            },
+          ],
+        },
+        new Date("2026-05-04T00:00:00.000Z"),
+      ),
+    ).toBe(true);
+  });
+
+  it("does not show prelaunch pages for rejected tools", () => {
+    expect(
+      isToolPrelaunchPageVisible(
+        {
+          publicationStatus: "UNPUBLISHED",
+          moderationStatus: "REJECTED",
+          launches: [
+            {
+              status: "APPROVED",
+              launchDate: new Date("2026-05-11T00:00:00.000Z"),
+            },
+          ],
+        },
+        new Date("2026-05-04T00:00:00.000Z"),
+      ),
+    ).toBe(false);
+  });
+
+  it("uses the next scheduled prelaunch date", () => {
+    expect(
+      getToolPrelaunchDate(
+        {
+          launches: [
+            {
+              status: "APPROVED",
+              launchDate: new Date("2026-05-18T00:00:00.000Z"),
+            },
+            {
+              status: "APPROVED",
+              launchDate: new Date("2026-05-11T00:00:00.000Z"),
+            },
+          ],
+        },
+        new Date("2026-05-04T00:00:00.000Z"),
+      ),
+    ).toEqual(new Date("2026-05-11T00:00:00.000Z"));
   });
 });

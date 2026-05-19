@@ -68,12 +68,14 @@ export async function ShowcaseLayout({
   isHomePage,
   isPrelaunch,
   topWinner,
+  rightSidebarContent,
   showMobileFollowup = true,
 }: {
   children: React.ReactNode;
   isHomePage?: boolean;
   isPrelaunch?: boolean;
   topWinner?: TopWinnerSidebarSpotWinner | null;
+  rightSidebarContent?: React.ReactNode;
   showMobileFollowup?: boolean;
 }) {
   const resolvedTopWinner =
@@ -81,7 +83,7 @@ export async function ShowcaseLayout({
       ? await getCachedPreviousWeeklyTopWinner()
       : topWinner;
   const sponsorPlacements = !isPrelaunch
-    ? await getCachedActiveSponsorPlacements()
+    ? await getCachedActiveSponsorPlacements("SIDEBAR")
     : [];
 
   return (
@@ -138,6 +140,7 @@ export async function ShowcaseLayout({
             )}>
               <SidebarSponsorPlacements placements={sponsorPlacements} />
               <TopWinnerSidebarSpot winner={resolvedTopWinner ?? null} compactSlot />
+              {rightSidebarContent}
             </aside>
           )}
 

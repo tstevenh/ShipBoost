@@ -79,7 +79,7 @@ export function StreakSidebar() {
               ?
             </span>
             <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 w-60 -translate-x-1/2 rounded-md bg-foreground px-3 py-2 text-xs leading-relaxed text-background shadow-lg opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">
-              You earn a streak each day you upvote a product, click out to a tool, or view a tool page. Hit milestones for vote multipliers and discount codes.
+              You earn a streak each day you upvote a product or click out to a tool. Hit milestones for vote multipliers and discount codes.
             </span>
           </span>
         </div>

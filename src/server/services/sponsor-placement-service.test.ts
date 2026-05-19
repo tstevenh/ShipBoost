@@ -64,7 +64,7 @@ describe("sponsor-placement-service", () => {
         email: "founder@example.com",
         name: "Founder",
       }),
-    ).rejects.toThrow("Tool is not eligible for sponsor placement.");
+    ).rejects.toThrow("Tool is not eligible for this sponsor placement tier.");
   });
 
   it("rejects checkout when all three sponsor slots are active", async () => {
@@ -77,7 +77,7 @@ describe("sponsor-placement-service", () => {
         email: "founder@example.com",
         name: "Founder",
       }),
-    ).rejects.toThrow("Sponsor placements are sold out.");
+    ).rejects.toThrow("Sidebar sponsor placements are sold out.");
   });
 
   it("creates a pending placement and Dodo checkout", async () => {
@@ -103,7 +103,13 @@ describe("sponsor-placement-service", () => {
     expect(dodoMock.checkoutSessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
         return_url:
-          "https://shipboost.io/advertise?checkout=success&sponsor_placement_id=placement_1",
+          "https://shipboost.io/api/sponsor/return?sponsor_placement_id=placement_1",
+        metadata: expect.objectContaining({
+          shipboostProduct: "sponsor_placement",
+          shipboostToolId: "tool_1",
+          shipboostSponsorPlacementId: "placement_1",
+          shipboostSponsorSlot: "SIDEBAR",
+        }),
       }),
     );
   });
@@ -142,6 +148,7 @@ describe("sponsor-placement-service", () => {
     prismaMock.sponsorPlacement.findUnique.mockResolvedValue({
       id: "placement_1",
       toolId: "tool_1",
+      slot: "SIDEBAR",
       status: "PENDING_PAYMENT",
       tool: {
         launches: [],
@@ -179,6 +186,7 @@ describe("sponsor-placement-service", () => {
     prismaMock.sponsorPlacement.findUnique.mockResolvedValue({
       id: "placement_1",
       toolId: "tool_1",
+      slot: "SIDEBAR",
       status: "PENDING_PAYMENT",
       tool: {
         launches: [],
@@ -216,6 +224,7 @@ describe("sponsor-placement-service", () => {
     prismaMock.sponsorPlacement.findUnique.mockResolvedValue({
       id: "placement_1",
       toolId: "tool_1",
+      slot: "SIDEBAR",
       status: "PENDING_PAYMENT",
       tool: {
         launches: [{ status: "APPROVED", launchDate }],
@@ -262,6 +271,7 @@ describe("sponsor-placement-service", () => {
       })
       .mockResolvedValueOnce({
         id: "placement_1",
+        slot: "SIDEBAR",
         status: "PENDING_PAYMENT",
         tool: {
           launches: [],
@@ -354,6 +364,7 @@ describe("sponsor-placement-service", () => {
       })
       .mockResolvedValueOnce({
         id: "placement_1",
+        slot: "SIDEBAR",
         status: "PENDING_PAYMENT",
         tool: {
           launches: [],
@@ -435,7 +446,6 @@ describe("sponsor-placement-service", () => {
             moderationStatus: "APPROVED",
           }),
         }),
-        take: 3,
       }),
     );
   });
@@ -490,7 +500,7 @@ describe("sponsor-placement-service", () => {
       expect.objectContaining({
         to: "founder@example.com",
         toolName: "Sponsor Tool",
-        advertiseUrl: "https://shipboost.io/advertise",
+        advertiseUrl: "https://shipboost.io/?advertise=1",
       }),
     );
     expect(prismaMock.sponsorPlacement.update).toHaveBeenCalledWith({

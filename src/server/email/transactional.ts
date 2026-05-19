@@ -168,19 +168,19 @@ export async function sendVerificationEmailMessage(input: {
   verificationUrl: string;
 }) {
   const subject = "Verify your ShipBoost account";
-  const preview = "Confirm your email to activate your founder workspace.";
+  const preview = "One click confirms your email and opens your dashboard.";
   const greeting = input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, ";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
-      h1("Confirm your founder account"),
+      h1("Verify your email"),
       paragraph(
-        `${greeting}verify your email to activate your ShipBoost account and unlock your submission dashboard, listing management, and launch workflow.`,
+        `${greeting}click the button below to verify your email. Then you can submit your product, manage your listing, and schedule your launch.`,
       ),
       ctaButton(input.verificationUrl, "Verify email"),
       linkParagraph(input.verificationUrl),
-      paragraph("If you did not create this account, you can ignore this email."),
+      paragraph("Didn't create this account? Ignore this email."),
     ].join(""),
   });
 
@@ -191,10 +191,10 @@ export async function sendVerificationEmailMessage(input: {
     text: [
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
-      "Verify your email to activate your ShipBoost account.",
+      "Click the link below to verify your email and open your ShipBoost dashboard.",
       input.verificationUrl,
       "",
-      "If you did not create this account, you can ignore this email.",
+      "Didn't create this account? Ignore this email.",
     ].join("\n"),
   });
 }
@@ -205,7 +205,7 @@ export async function sendPasswordResetEmailMessage(input: {
   resetUrl: string;
 }) {
   const subject = "Reset your ShipBoost password";
-  const preview = "Use this secure link to reset your password.";
+  const preview = "Set a new password with the link below.";
   const greeting = input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, ";
   const html = renderEmailDocument({
     title: subject,
@@ -213,12 +213,12 @@ export async function sendPasswordResetEmailMessage(input: {
     content: [
       h1("Reset your password"),
       paragraph(
-        `${greeting}use the secure link below to choose a new password for your ShipBoost account.`,
+        `${greeting}use the link below to set a new password. It expires after one use.`,
       ),
       ctaButton(input.resetUrl, "Reset password"),
       linkParagraph(input.resetUrl),
       paragraph(
-        "If you did not request this, you can ignore this email and your password will stay the same.",
+        "Didn't request this? Ignore this email — your password stays the same.",
       ),
     ].join(""),
   });
@@ -230,10 +230,10 @@ export async function sendPasswordResetEmailMessage(input: {
     text: [
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
-      "Use this link to reset your ShipBoost password:",
+      "Use this link to set a new ShipBoost password. It expires after one use.",
       input.resetUrl,
       "",
-      "If you did not request this, you can ignore this email.",
+      "Didn't request this? Ignore this email — your password stays the same.",
     ].join("\n"),
   });
 }
@@ -244,7 +244,7 @@ export async function sendPasswordResetConfirmationEmail(input: {
   signInUrl: string;
 }) {
   const subject = "Your ShipBoost password was changed";
-  const preview = "Your password was updated successfully.";
+  const preview = "Your password was just changed.";
   const greeting = input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, ";
   const html = renderEmailDocument({
     title: subject,
@@ -252,14 +252,11 @@ export async function sendPasswordResetConfirmationEmail(input: {
     content: [
       h1("Password updated"),
       paragraph(
-        `${greeting}your ShipBoost password has been updated successfully.`,
-      ),
-      paragraph(
-        "If you made this change, you can sign in again with your new password.",
+        `${greeting}your ShipBoost password was just changed. Sign in with the new password.`,
       ),
       ctaButton(input.signInUrl, "Sign in"),
       paragraph(
-        "If you did not make this change, reset your password again immediately and review your account access.",
+        "Didn't make this change? Reset your password again immediately and review who has access to your account.",
       ),
     ].join(""),
   });
@@ -271,10 +268,10 @@ export async function sendPasswordResetConfirmationEmail(input: {
     text: [
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
-      "Your ShipBoost password has been updated successfully.",
+      "Your ShipBoost password was just changed. Sign in with the new password.",
       `Sign in: ${input.signInUrl}`,
       "",
-      "If you did not make this change, reset your password again immediately.",
+      "Didn't make this change? Reset your password again immediately and review who has access to your account.",
     ].join("\n"),
   });
 }
@@ -284,19 +281,19 @@ export async function sendWelcomeEmailMessage(input: {
   name?: string | null;
   dashboardUrl: string;
 }) {
-  const subject = "Your ShipBoost founder workspace is ready";
-  const preview = "Your account is verified and ready for submissions.";
+  const subject = "Your ShipBoost account is verified";
+  const preview = "Submit your product when you're ready.";
   const greeting = input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, ";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
-      h1("You’re in"),
+      h1("Verified"),
       paragraph(
-        `${greeting}your email is verified and your ShipBoost founder workspace is ready.`,
+        `${greeting}your email is verified. Your dashboard is ready.`,
       ),
       paragraph(
-        "Next step: submit your SaaS, request a premium launch, or start with a clean affiliate-ready listing.",
+        "Three ways to start: submit a free launch, reserve a premium launch slot, or list your product without launching yet. All three live in the dashboard.",
       ),
       ctaButton(input.dashboardUrl, "Open dashboard"),
     ].join(""),
@@ -309,7 +306,8 @@ export async function sendWelcomeEmailMessage(input: {
     text: [
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
-      "Your email is verified and your ShipBoost founder workspace is ready.",
+      "Your email is verified. Your ShipBoost dashboard is ready.",
+      "Three ways to start: submit a free launch, reserve a premium launch slot, or list your product without launching yet.",
       `Open dashboard: ${input.dashboardUrl}`,
     ].join("\n"),
   });
@@ -320,19 +318,18 @@ export async function sendMagicLinkSignInEmailMessage(input: {
   signInUrl: string;
 }) {
   const subject = "Your ShipBoost sign-in link";
-  const preview = "Use this secure link to open your ShipBoost account.";
+  const preview = "One-click access to your dashboard.";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
-      eyebrow("Secure sign-in"),
-      h1("Sign in securely"),
+      h1("Sign in"),
       paragraph(
-        "Use the secure sign-in link below to open your ShipBoost account and get back to your founder workspace.",
+        "Click the button below to sign in to ShipBoost. The link expires after one use.",
       ),
       ctaButton(input.signInUrl, "Sign in to ShipBoost"),
       linkParagraph(input.signInUrl),
-      paragraph("If you did not request this email, you can ignore it."),
+      paragraph("Didn't request this? Ignore it."),
     ].join(""),
   });
 
@@ -341,10 +338,10 @@ export async function sendMagicLinkSignInEmailMessage(input: {
     subject,
     html,
     text: [
-      "Use this secure sign-in link to open your ShipBoost account:",
+      "Click the link below to sign in to ShipBoost. The link expires after one use.",
       input.signInUrl,
       "",
-      "If you did not request this email, you can ignore it.",
+      "Didn't request this? Ignore it.",
     ].join("\n"),
   });
 }
@@ -353,21 +350,20 @@ export async function sendDirectoriesAccessEmailMessage(input: {
   to: string;
   accessUrl: string;
 }) {
-  const subject = "Your startup directories access link";
-  const preview = "Open the hosted startup directories resource inside ShipBoost.";
+  const subject = "Your startup directories list is ready";
+  const preview = "Open the full directories list inside ShipBoost.";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
-      eyebrow("Directories access"),
-      h1("Your directories list is ready"),
+      h1("Your directories list"),
       paragraph(
-        "Here is your access link to the hosted startup directories resource inside ShipBoost. Open it to browse the full list, search faster, and work through the sheet without leaving the app.",
+        "Here's your access link. Browse the full directory, search it, and filter by category without leaving the app.",
       ),
       ctaButton(input.accessUrl, "Open the directories"),
       linkParagraph(input.accessUrl),
       paragraph(
-        "If you did not request this email, you can ignore it. The preview page will still be there when you come back.",
+        "Didn't request this? Ignore it. The link still works when you come back.",
       ),
     ].join(""),
   });
@@ -377,12 +373,10 @@ export async function sendDirectoriesAccessEmailMessage(input: {
     subject,
     html,
     text: [
-      "Your startup directories access link is ready:",
+      "Your ShipBoost startup directories list is ready. Browse, search, and filter the full directory inside ShipBoost.",
       input.accessUrl,
       "",
-      "Open it to access the full hosted directories resource inside ShipBoost.",
-      "",
-      "If you did not request this email, you can ignore it.",
+      "Didn't request this? Ignore it. The link still works when you come back.",
     ].join("\n"),
   });
 }
@@ -395,8 +389,8 @@ export async function sendSubmissionReceivedEmailMessage(input: {
   submissionType: "LISTING_ONLY" | "FREE_LAUNCH" | "FEATURED_LAUNCH" | "RELAUNCH";
   preferredLaunchDate?: string | null;
 }) {
-  const subject = `${input.toolName} was submitted to ShipBoost`;
-  const preview = "Your submission is in and the review workflow has started.";
+  const subject = `${input.toolName} is in — review starts now`;
+  const preview = "Your submission landed. We'll be in touch with the next step.";
   const html = renderEmailDocument({
     title: subject,
     preview,
@@ -407,16 +401,16 @@ export async function sendSubmissionReceivedEmailMessage(input: {
           input.submissionType.replaceAll("_", " ").toLowerCase(),
         )} submission for <strong>${escapeHtml(
           input.toolName,
-        )}</strong> is now in ShipBoost.`,
+        )}</strong> is in.`,
       ),
       paragraph(
         input.submissionType === "FEATURED_LAUNCH"
-          ? `Next step: complete payment to reserve your premium launch${
+          ? `Next: complete payment to lock in your premium launch${
               input.preferredLaunchDate
                 ? ` for ${escapeHtml(input.preferredLaunchDate)}`
                 : ""
             }.`
-          : "We’ll review it and update you as soon as the next step is decided.",
+          : "We'll review it and email you when there's a decision.",
       ),
       ctaButton(input.dashboardUrl, "Open dashboard"),
     ].join(""),
@@ -429,12 +423,12 @@ export async function sendSubmissionReceivedEmailMessage(input: {
     text: [
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
-      `${input.toolName} was submitted to ShipBoost.`,
+      `${input.toolName} is in — review starts now.`,
       input.submissionType === "FEATURED_LAUNCH"
-        ? `Complete payment to reserve your premium launch${
+        ? `Next: complete payment to lock in your premium launch${
             input.preferredLaunchDate ? ` for ${input.preferredLaunchDate}` : ""
           }.`
-        : "We’ll review it and update you as soon as the next step is decided.",
+        : "We'll review it and email you when there's a decision.",
       `Dashboard: ${input.dashboardUrl}`,
     ].join("\n"),
   });
@@ -447,26 +441,26 @@ export async function sendSubmissionApprovedEmailMessage(input: {
   toolName: string;
   launchDate?: string | null;
 }) {
-  const subject = `${input.toolName} was approved`;
+  const subject = `${input.toolName} is approved`;
   const preview = input.launchDate
-    ? "Your launch is approved and scheduled."
-    : "Your ShipBoost listing is approved.";
+    ? "Your launch is scheduled."
+    : "Your listing is live in the dashboard.";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
-      h1("Submission approved"),
+      h1("Approved"),
       paragraph(
-        `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}your submission for <strong>${escapeHtml(
+        `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}<strong>${escapeHtml(
           input.toolName,
-        )}</strong> has been approved.`,
+        )}</strong> is approved.`,
       ),
       paragraph(
         input.launchDate
-          ? `Your launch is scheduled for <strong>${escapeHtml(
+          ? `Launch scheduled for <strong>${escapeHtml(
               input.launchDate,
-            )}</strong>.`
-          : "Your listing is approved and available in your founder dashboard.",
+            )}</strong>. We'll send a prep email 24 hours before it goes live.`
+          : "Your listing is live in the dashboard.",
       ),
       ctaButton(input.dashboardUrl, "Open dashboard"),
     ].join(""),
@@ -479,8 +473,10 @@ export async function sendSubmissionApprovedEmailMessage(input: {
     text: [
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
-      `Your submission for ${input.toolName} has been approved.`,
-      input.launchDate ? `Launch date: ${input.launchDate}` : "Your listing is approved.",
+      `${input.toolName} is approved.`,
+      input.launchDate
+        ? `Launch scheduled for ${input.launchDate}. We'll send a prep email 24 hours before it goes live.`
+        : "Your listing is live in the dashboard.",
       `Dashboard: ${input.dashboardUrl}`,
     ].join("\n"),
   });
@@ -493,22 +489,22 @@ export async function sendSubmissionRejectedEmailMessage(input: {
   toolName: string;
   founderVisibleNote?: string | null;
 }) {
-  const subject = `${input.toolName} was not approved`;
-  const preview = "Your ShipBoost submission needs changes before it can go live.";
+  const subject = `${input.toolName} needs changes before it can go live`;
+  const preview = "A few things need updating before we can approve it.";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
-      h1("Submission needs changes"),
+      h1("Needs changes"),
       paragraph(
-        `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}your submission for <strong>${escapeHtml(
+        `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}<strong>${escapeHtml(
           input.toolName,
-        )}</strong> was not approved yet.`,
+        )}</strong> isn't ready to go live yet. A few things need updating before we can approve it.`,
       ),
       input.founderVisibleNote
         ? paragraph(`Reviewer note: ${escapeHtml(input.founderVisibleNote)}`)
         : paragraph(
-            "Check your dashboard for the latest status and update your submission if needed.",
+            "Open the dashboard to see what to fix.",
           ),
       ctaButton(input.dashboardUrl, "Open dashboard"),
     ].join(""),
@@ -521,8 +517,8 @@ export async function sendSubmissionRejectedEmailMessage(input: {
     text: [
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
-      `Your submission for ${input.toolName} was not approved yet.`,
-      input.founderVisibleNote ? `Reviewer note: ${input.founderVisibleNote}` : "",
+      `${input.toolName} isn't ready to go live yet. A few things need updating before we can approve it.`,
+      input.founderVisibleNote ? `Reviewer note: ${input.founderVisibleNote}` : "Open the dashboard to see what to fix.",
       `Dashboard: ${input.dashboardUrl}`,
     ]
       .filter(Boolean)
@@ -538,30 +534,26 @@ export async function sendPremiumLaunchPaidEmailMessage(input: {
   toolName: string;
   launchDate: string;
 }) {
-  const subject = `${input.toolName} premium launch is reserved`;
-  const preview =
-    "Payment received, your premium launch slot is confirmed, and your spotlight brief is ready.";
+  const subject = `${input.toolName} premium launch is reserved for ${input.launchDate}`;
+  const preview = "Slot confirmed. Your spotlight brief is the next step.";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
       h1("Premium launch reserved"),
       paragraph(
-        `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}payment was received for <strong>${escapeHtml(
+        `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}payment is in. <strong>${escapeHtml(
           input.toolName,
-        )}</strong>.`,
-      ),
-      paragraph(
-        `Your premium launch is scheduled for <strong>${escapeHtml(
+        )}</strong> is reserved for premium launch on <strong>${escapeHtml(
           input.launchDate,
         )}</strong>.`,
       ),
       paragraph(
-        "As part of the founding offer, your premium launch also includes one hand-written editorial spotlight by our editor. Fill in the short dashboard brief so we have the angle, audience, and CTA for launch week coverage.",
+        "Your premium launch includes a written editorial spotlight from our editor — included with the founding pricing. Fill in the brief so we have the angle, audience, and CTA before launch week.",
       ),
       ctaButton(input.spotlightBriefUrl, "Complete spotlight brief"),
       paragraph(
-        "If you leave the brief unfinished, ShipBoost can still publish your spotlight using the listing details you already submitted.",
+        "Skip the brief and we'll write the spotlight from your existing listing details. Either way, your spotlight runs during launch week.",
       ),
       ctaButton(input.dashboardUrl, "Open dashboard"),
     ].join(""),
@@ -574,10 +566,10 @@ export async function sendPremiumLaunchPaidEmailMessage(input: {
     text: [
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
-      `Payment was received for ${input.toolName}.`,
-      `Premium launch date: ${input.launchDate}`,
+      `Payment is in. ${input.toolName} is reserved for premium launch on ${input.launchDate}.`,
+      "Your premium launch includes a written editorial spotlight from our editor — included with the founding pricing. Fill in the brief so we have the angle, audience, and CTA before launch week.",
       `Spotlight brief: ${input.spotlightBriefUrl}`,
-      "Your founding bonus includes one hand-written editorial spotlight by our editor during launch week.",
+      "Skip the brief and we'll write the spotlight from your existing listing details. Either way, your spotlight runs during launch week.",
       `Dashboard: ${input.dashboardUrl}`,
     ].join("\n"),
   });
@@ -595,36 +587,39 @@ export async function sendPremiumLaunchSpotlightReminderEmailMessage(input: {
 }) {
   const subject =
     input.stage === "THREE_DAYS_BEFORE"
-      ? `${input.toolName} spotlight brief is due soon`
-      : `${input.toolName} launch week spotlight is still waiting`;
+      ? `${input.toolName} spotlight brief is due in 3 days`
+      : `${input.toolName} launch week is live — spotlight brief still open`;
   const preview =
     input.stage === "THREE_DAYS_BEFORE"
-      ? "ShipBoost needs your short spotlight brief before launch week starts."
-      : "Launch week has started. Finish the spotlight brief or ShipBoost will use your listing details.";
+      ? "Launch week starts soon. We need your spotlight brief."
+      : "Last chance to shape the spotlight angle.";
+  const heading =
+    input.stage === "THREE_DAYS_BEFORE"
+      ? "Spotlight brief is due"
+      : "Last chance to shape the spotlight";
   const intro =
     input.stage === "THREE_DAYS_BEFORE"
-      ? `your premium launch for <strong>${escapeHtml(
+      ? `<strong>${escapeHtml(
           input.toolName,
-        )}</strong> is three days away.`
-      : `launch week for <strong>${escapeHtml(
+        )}</strong> launches in 3 days on <strong>${escapeHtml(
+          input.launchDate,
+        )}</strong>.`
+      : `<strong>${escapeHtml(
           input.toolName,
-        )}</strong> has started.`;
+        )}</strong> launch week started on <strong>${escapeHtml(
+          input.launchDate,
+        )}</strong>.`;
   const reminder =
     input.stage === "THREE_DAYS_BEFORE"
-      ? "Complete the spotlight brief now so our editor can hand-write your editorial spotlight during launch week with the angle and CTA you want."
-      : "Complete the spotlight brief if you still want to shape the editorial angle. If it stays unfinished, our editor can still publish using your existing listing and submission details.";
+      ? "Fill in the spotlight brief now so our editor has your angle, audience, and CTA before launch week. Skip it and we'll write the spotlight from your existing listing details."
+      : "Your spotlight brief is still open. Fill it in if you want to shape the angle. Skip it and we'll publish from your existing listing details — either way, the spotlight runs this week.";
 
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
-      h1("Finish your launch spotlight brief"),
+      h1(heading),
       paragraph(`${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}${intro}`),
-      paragraph(
-        `Your scheduled premium launch week begins <strong>${escapeHtml(
-          input.launchDate,
-        )}</strong>.`,
-      ),
       paragraph(reminder),
       ctaButton(input.dashboardUrl, "Open spotlight brief"),
       paragraph(
@@ -641,11 +636,12 @@ export async function sendPremiumLaunchSpotlightReminderEmailMessage(input: {
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
       input.stage === "THREE_DAYS_BEFORE"
-        ? `${input.toolName} launches in three days.`
-        : `${input.toolName} launch week has started.`,
-      `Scheduled launch week: ${input.launchDate}`,
+        ? `${input.toolName} launches in 3 days on ${input.launchDate}.`
+        : `${input.toolName} launch week started on ${input.launchDate}.`,
       reminder,
-      `Dashboard: ${input.dashboardUrl}`,
+      `Spotlight brief: ${input.dashboardUrl}`,
+      "",
+      "Standardized format — our editor follows a consistent house style, not a custom commissioned piece.",
     ].join("\n"),
   });
 }
@@ -657,20 +653,27 @@ export async function sendLaunchLiveEmailMessage(input: {
   toolName: string;
   launchDate: string;
 }) {
-  const subject = `${input.toolName} is now live on ShipBoost`;
-  const preview = "Your scheduled launch has gone live.";
+  const subject = `${input.toolName} is live on ShipBoost`;
+  const preview = "Your launch is on the weekly board. The next 7 days decide your position.";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
       h1("Launch is live"),
       paragraph(
-        `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}your scheduled launch for <strong>${escapeHtml(
+        `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}<strong>${escapeHtml(
           input.toolName,
-        )}</strong> is now live on ShipBoost.`,
+        )}</strong> is live on ShipBoost as of <strong>${escapeHtml(
+          input.launchDate,
+        )}</strong>.`,
       ),
-      paragraph(`Launch time: <strong>${escapeHtml(input.launchDate)}</strong>.`),
-      ctaButton(input.dashboardUrl, "Open dashboard"),
+      paragraph(
+        "The next 7 days decide your weekly board position. Bring your supporters, share your listing link, and watch the board.",
+      ),
+      paragraph(
+        "The #1 product of the week wins the homepage featured spot for the following week.",
+      ),
+      ctaButton(input.dashboardUrl, "Open the launch board"),
     ].join(""),
   });
 
@@ -681,9 +684,10 @@ export async function sendLaunchLiveEmailMessage(input: {
     text: [
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
-      `${input.toolName} is now live on ShipBoost.`,
-      `Launch time: ${input.launchDate}`,
-      `Dashboard: ${input.dashboardUrl}`,
+      `${input.toolName} is live on ShipBoost as of ${input.launchDate}.`,
+      "The next 7 days decide your weekly board position. Bring your supporters, share your listing link, and watch the board.",
+      "The #1 product of the week wins the homepage featured spot for the following week.",
+      `Launch board: ${input.dashboardUrl}`,
     ].join("\n"),
   });
 }
@@ -696,19 +700,18 @@ export async function sendLaunchPrepEmailMessage(input: {
   launchDate: string;
 }) {
   const subject = `${input.toolName} launches on ShipBoost in 24 hours`;
-  const preview =
-    "Your launch is about 24 hours away. Promote it today and compete for the $59 homepage winner spot.";
+  const preview = "Launch is tomorrow. Today is the prep window.";
   const greeting = input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, ";
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
-      eyebrow("Launch starts in about 24 hours"),
+      eyebrow("Launch in 24 hours"),
       h1("Get your audience ready"),
       paragraph(
         `${greeting}<strong>${escapeHtml(
           input.toolName,
-        )}</strong> is scheduled for ShipBoost launch week starting <strong>${escapeHtml(
+        )}</strong> launches on ShipBoost tomorrow — <strong>${escapeHtml(
           input.launchDate,
         )}</strong>.`,
       ),
@@ -716,10 +719,10 @@ export async function sendLaunchPrepEmailMessage(input: {
         "Use today to get ready: schedule your posts, line up your founder communities, prep your newsletter, and make sure the people who already follow your work know when to support the launch.",
       ),
       paragraph(
-        "The #1 product of the week gets a featured winner spot on the ShipBoost homepage for the following week, a visibility prize valued at $59. More votes can mean more visibility, more clicks, and a stronger launch signal.",
+        "Why it matters: the #1 product of the week wins the homepage featured spot for the following week — a $59 visibility slot. More upvotes means more board position, more clicks, more launch-week signal.",
       ),
       paragraph(
-        "Bring your supporters, watch the board, and compete for the top spot.",
+        "Bring your supporters. Compete for the top spot.",
       ),
       ctaButton(input.launchBoardUrl, "Open the weekly board"),
       linkParagraph(input.launchBoardUrl),
@@ -734,10 +737,10 @@ export async function sendLaunchPrepEmailMessage(input: {
     text: [
       input.name ? `Hi ${input.name},` : "Hi,",
       "",
-      `${input.toolName} is scheduled for ShipBoost launch week starting ${input.launchDate}.`,
-      "Your launch is about 24 hours away. Use today to schedule your posts, line up founder communities, prep your newsletter, and make sure the people who already follow your work know when to support the launch.",
-      "The #1 product of the week gets a featured winner spot on the ShipBoost homepage for the following week, a visibility prize valued at $59.",
-      "Bring your supporters, watch the board, and compete for the top spot.",
+      `${input.toolName} launches on ShipBoost tomorrow — ${input.launchDate}. Today is the prep window.`,
+      "Use today to get ready: schedule your posts, line up your founder communities, prep your newsletter, and make sure the people who already follow your work know when to support the launch.",
+      "Why it matters: the #1 product of the week wins the homepage featured spot for the following week — a $59 visibility slot. More upvotes means more board position, more clicks, more launch-week signal.",
+      "Bring your supporters. Compete for the top spot.",
       `Weekly board: ${input.launchBoardUrl}`,
       "",
       "Tim from ShipBoost",
@@ -751,14 +754,14 @@ export async function sendSponsorPlacementRenewalReminderEmailMessage(input: {
   endsAt: string;
   advertiseUrl: string;
 }) {
-  const subject = `${input.toolName} sponsor placement ends soon`;
-  const preview = `Renew your ShipBoost sponsor placement before it ends on ${input.endsAt}.`;
+  const subject = `${input.toolName} sponsor placement ends ${input.endsAt}`;
+  const preview = `Renew before ${input.endsAt} to keep the sidebar spot.`;
   const html = renderEmailDocument({
     title: subject,
     preview,
     content: [
       eyebrow("Sponsor placement"),
-      h1("Your sponsor placement ends soon"),
+      h1(`Sponsor placement ends ${input.endsAt}`),
       paragraph(
         `<strong>${escapeHtml(
           input.toolName,
@@ -767,7 +770,7 @@ export async function sendSponsorPlacementRenewalReminderEmailMessage(input: {
         )}</strong>.`,
       ),
       paragraph(
-        "Renew with another one-time 30-day placement if you want to keep the sidebar spot.",
+        "Renew for another 30 days to keep the sidebar spot. One-time placement, no auto-renewal.",
       ),
       ctaButton(input.advertiseUrl, "Renew placement"),
       linkParagraph(input.advertiseUrl),
@@ -778,6 +781,10 @@ export async function sendSponsorPlacementRenewalReminderEmailMessage(input: {
     to: input.to,
     subject,
     html,
-    text: `${preview}\n\nRenew: ${input.advertiseUrl}`,
+    text: [
+      `${input.toolName} is sponsored on ShipBoost until ${input.endsAt}.`,
+      "Renew for another 30 days to keep the sidebar spot. One-time placement, no auto-renewal.",
+      `Renew: ${input.advertiseUrl}`,
+    ].join("\n"),
   });
 }

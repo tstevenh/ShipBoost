@@ -27,6 +27,7 @@ function makeLaunch(input: {
       name: input.toolId,
       tagline: `${input.toolId} tagline`,
       websiteUrl: `https://${input.toolId}.example.com`,
+      affiliateUrl: null,
       badgeVerification: input.launchType === "FREE" ? "PENDING" : "NOT_REQUIRED",
       currentLaunchType: input.launchType,
       isFeatured: input.launchType === "FEATURED",

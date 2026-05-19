@@ -32,7 +32,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
       body,
       adminUserId,
     );
-    after(() => sendProductEmailSafely(result.emailTask));
+    const { emailTask } = result;
+    if (emailTask) {
+      after(() => sendProductEmailSafely(emailTask));
+    }
 
     revalidateAllPublicContent();
 

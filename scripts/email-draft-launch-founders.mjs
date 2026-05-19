@@ -34,21 +34,18 @@ function buildResumeLink(toolId) {
 
 function buildEmail({ founderName, toolName, resumeLink }) {
   const safeFounderName = founderName?.trim() || "there";
-  const subject = "Your ShipBoost launch is almost ready";
-  const preview = `Your ${toolName} launch draft is still saved on ShipBoost.`;
+  const subject = `Your ${toolName} launch draft is still saved`;
+  const preview = `Pick up where you left off.`;
   const text = [
-    `Hey ${safeFounderName},`,
+    `Hi ${safeFounderName},`,
     "",
-    `Your ${toolName} launch draft is still saved on ShipBoost.`,
-    "",
-    "You’re one step away from joining the launch queue. Review your listing, choose your launch option, and schedule your launch here:",
+    `${toolName} is saved as a draft on ShipBoost. Review the listing, pick a launch option, and schedule it when you're ready.`,
     "",
     resumeLink,
     "",
-    "Free launches can join the queue without extra setup. You can also add a ShipBoost badge if you want the extra trust signal before launch.",
+    "Free launches join the queue without extra setup. Add a ShipBoost badge to your site if you want a trust signal before launch.",
     "",
-    "See you on the launchpad,",
-    "ShipBoost",
+    "— ShipBoost",
   ].join("\n");
 
   const html = `<!DOCTYPE html>
@@ -67,13 +64,11 @@ function buildEmail({ founderName, toolName, resumeLink }) {
           <p style="margin:0;font-size:13px;line-height:1.7;color:rgba(250,250,250,0.58);">Launch smarter. Get distributed.</p>
         </div>
         <div style="padding:12px 30px 28px;">
-          <h1 style="margin:0 0 18px;font-size:36px;line-height:1.08;letter-spacing:-0.04em;color:#fafafa;font-weight:800;">Your ShipBoost launch is almost ready</h1>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.75;color:rgba(250,250,250,0.78);">Hey ${escapeHtml(safeFounderName)},</p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.75;color:rgba(250,250,250,0.78);">Your ${escapeHtml(toolName)} launch draft is still saved on ShipBoost.</p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.75;color:rgba(250,250,250,0.78);">You’re one step away from joining the launch queue. Review your listing, choose your launch option, and schedule your launch here:</p>
+          <h1 style="margin:0 0 18px;font-size:36px;line-height:1.08;letter-spacing:-0.04em;color:#fafafa;font-weight:800;">Your draft is still saved</h1>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.75;color:rgba(250,250,250,0.78);">Hi ${escapeHtml(safeFounderName)},</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.75;color:rgba(250,250,250,0.78);"><strong>${escapeHtml(toolName)}</strong> is saved as a draft on ShipBoost. Review the listing, pick a launch option, and schedule it when you&#39;re ready.</p>
           <a href="${escapeHtml(resumeLink)}" style="display:inline-block;margin:10px 0 18px;border-radius:999px;background-color:#fafafa;color:#0a0a0a;font-size:15px;font-weight:800;line-height:1;padding:16px 24px;text-decoration:none;box-shadow:0 14px 28px rgba(0,0,0,0.22);">Continue your launch</a>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.75;color:rgba(250,250,250,0.78);">Free launches can join the queue without extra setup. You can also add a ShipBoost badge if you want the extra trust signal before launch.</p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.75;color:rgba(250,250,250,0.78);">See you on the launchpad,<br />ShipBoost</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.75;color:rgba(250,250,250,0.78);">Free launches join the queue without extra setup. Add a ShipBoost badge to your site if you want a trust signal before launch.</p>
           <p style="margin:0 0 16px;font-size:13px;line-height:1.65;color:rgba(250,250,250,0.5);">If the button does not work, copy and paste this link into your browser:<br /><a href="${escapeHtml(resumeLink)}" style="color:#fafafa;font-weight:700;word-break:break-word;">${escapeHtml(resumeLink)}</a></p>
         </div>
       </div>

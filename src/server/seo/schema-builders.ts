@@ -80,3 +80,44 @@ export function buildSoftwareApplication(input: SoftwareApplicationInput) {
     ...(input.offers ? { offers: input.offers } : {}),
   };
 }
+
+export function buildFaqSchema(input: {
+  name: string;
+  description: string;
+  url: string;
+  questions: { question: string; answer: string }[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    name: input.name,
+    description: input.description,
+    url: input.url,
+    mainEntity: input.questions.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+}
+
+export function buildHowToSchema(input: {
+  name: string;
+  description: string;
+  steps: string[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: input.name,
+    description: input.description,
+    step: input.steps.map((step, index) => ({
+      "@type": "HowToStep",
+      position: index + 1,
+      text: step,
+    })),
+  };
+}

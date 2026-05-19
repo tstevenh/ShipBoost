@@ -135,6 +135,28 @@
   }
 }
 
+@keyframes banner-marquee-slide {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@layer utilities {
+  .banner-marquee-track {
+    animation: banner-marquee-slide 30s linear infinite;
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .banner-marquee-track {
+      animation: none;
+    }
+  }
+}
+
 @keyframes footer-badge-marquee {
   from {
     transform: translate3d(0, 0, 0);

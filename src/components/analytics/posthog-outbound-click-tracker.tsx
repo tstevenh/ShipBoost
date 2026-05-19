@@ -91,11 +91,24 @@ function getToolOutboundMetadata(anchor: HTMLAnchorElement) {
   };
 }
 
+function recordToolOutboundStreakActivity(toolId: string) {
+  fetch("/api/streaks/outbound-click", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ toolId }),
+    keepalive: true,
+  }).catch(() => {
+    // Best-effort activity recording; analytics clicks should never block navigation.
+  });
+}
+
 export function PostHogOutboundClickTracker({ apiKey }: { apiKey?: string }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!apiKey || isPrivateRoutePathname(pathname)) {
+    if (isPrivateRoutePathname(pathname)) {
       return;
     }
 
@@ -142,26 +155,32 @@ export function PostHogOutboundClickTracker({ apiKey }: { apiKey?: string }) {
       const sourcePath = `${window.location.pathname}${window.location.search}`;
       const linkText = getAnchorLinkText(anchor);
 
-      captureBrowserOutboundLinkClicked({
-        href: anchor.href,
-        sourcePath,
-        sourceSurface,
-        linkContext,
-        linkText,
-        trackingMethod: "browser",
-        isToolLink: Boolean(toolMetadata),
-        toolId: toolMetadata?.toolId,
-        toolSlug: toolMetadata?.toolSlug,
-        toolName: toolMetadata?.toolName,
-      });
+      if (apiKey) {
+        captureBrowserOutboundLinkClicked({
+          href: anchor.href,
+          sourcePath,
+          sourceSurface,
+          linkContext,
+          linkText,
+          trackingMethod: "browser",
+          isToolLink: Boolean(toolMetadata),
+          toolId: toolMetadata?.toolId,
+          toolSlug: toolMetadata?.toolSlug,
+          toolName: toolMetadata?.toolName,
+        });
+      }
 
-      if (toolMetadata) {
+      if (toolMetadata && apiKey) {
         captureBrowserToolOutboundClick({
           href: anchor.href,
           sourcePath,
           sourceSurface,
           ...toolMetadata,
         });
+      }
+
+      if (toolMetadata) {
+        recordToolOutboundStreakActivity(toolMetadata.toolId);
       }
     }
 

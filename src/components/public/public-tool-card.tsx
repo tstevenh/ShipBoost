@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { buildTrackedToolOutboundUrl, type ToolOutboundSource } from "@/lib/tool-outbound";
+import { PostHogImpressionTracker } from "@/components/analytics/posthog-impression-tracker";
+import { buildToolOutboundHref, type ToolOutboundSource } from "@/lib/tool-outbound";
 import { LogoFallback } from "@/components/ui/logo-fallback";
 
 type ToolCardTool = {
@@ -30,12 +31,34 @@ function badgeClassName(featured: boolean) {
 export function PublicToolCard({
   tool,
   sourceSurface = "category_page",
+  position,
 }: {
   tool: ToolCardTool;
   sourceSurface?: ToolOutboundSource;
+  position?: number;
 }) {
+  const specialOfferHref = buildToolOutboundHref({
+    websiteUrl: tool.websiteUrl,
+    affiliateUrl: tool.affiliateUrl,
+    source: sourceSurface,
+    toolSlug: tool.slug,
+  });
+
   return (
     <article className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-foreground/20 hover:shadow-lg hover:shadow-black/5">
+      <PostHogImpressionTracker
+        eventName="product_card_impression"
+        impressionId={`product_card:${tool.id}:${position ?? "unranked"}`}
+        properties={{
+          placement_type: "product_card",
+          tool_id: tool.id,
+          tool_slug: tool.slug,
+          tool_name: tool.name,
+          source_surface: sourceSurface,
+          position,
+          is_featured: tool.isFeatured,
+        }}
+      />
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           <LogoFallback
@@ -99,13 +122,17 @@ export function PublicToolCard({
       {tool.affiliateUrl ? (
         <div className="mt-5 pt-4 border-t border-border">
           <a
-            href={buildTrackedToolOutboundUrl(
-              tool.id,
-              "affiliate",
-              sourceSurface,
-            )}
+            href={specialOfferHref ?? tool.websiteUrl}
             target="_blank"
             rel="noreferrer"
+            data-shipboost-outbound-source={sourceSurface}
+            data-shipboost-outbound-context="tool_listing"
+            data-shipboost-outbound-text={`${tool.name} special offer`}
+            data-shipboost-tool-id={tool.id}
+            data-shipboost-tool-slug={tool.slug}
+            data-shipboost-tool-name={tool.name}
+            data-shipboost-tool-destination-type="affiliate"
+            data-shipboost-tool-is-featured={tool.isFeatured ? "true" : undefined}
             className="text-xs font-black text-foreground hover:underline underline-offset-4 decoration-border"
           >
             Explore special offer →

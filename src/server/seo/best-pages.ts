@@ -3161,6 +3161,103 @@ const phaseOneToolLabels: Record<string, string> = {
   harness: "Harness",
   "argo-cd": "Argo CD",
   semaphore: "Semaphore",
+  "toggl-track": "Toggl Track",
+  clockify: "Clockify",
+  harvest: "Harvest",
+  timely: "Timely",
+  everhour: "Everhour",
+  hubstaff: "Hubstaff",
+  "time-doctor": "Time Doctor",
+  "my-hours": "My Hours",
+  rescuetime: "RescueTime",
+  trackingtime: "TrackingTime",
+  algolia: "Algolia",
+  elasticsearch: "Elasticsearch",
+  typesense: "Typesense",
+  meilisearch: "Meilisearch",
+  coveo: "Coveo",
+  swiftype: "Swiftype",
+  "apache-solr": "Apache Solr",
+  constructor: "Constructor",
+  searchspring: "Searchspring",
+  "luigi-s-box": "Luigi's Box",
+  heroku: "Heroku",
+  render: "Render",
+  vercel: "Vercel",
+  netlify: "Netlify",
+  railway: "Railway",
+  "digitalocean-app-platform": "DigitalOcean App Platform",
+  "fly-io": "Fly.io",
+  "aws-amplify": "AWS Amplify",
+  "cloudflare-pages": "Cloudflare Pages",
+  koyeb: "Koyeb",
+  vwo: "VWO",
+  optimizely: "Optimizely",
+  "ab-tasty": "AB Tasty",
+  "adobe-target": "Adobe Target",
+  growthbook: "GrowthBook",
+  convert: "Convert",
+  kameleoon: "Kameleoon",
+  sitespect: "SiteSpect",
+  "dynamic-yield": "Dynamic Yield",
+  unbounce: "Unbounce",
+  clickfunnels: "ClickFunnels",
+  instapage: "Instapage",
+  leadpages: "Leadpages",
+  landingi: "Landingi",
+  pagewiz: "Pagewiz",
+  "swipe-pages": "Swipe Pages",
+  convertflow: "ConvertFlow",
+  shogun: "Shogun",
+  "builder-io": "Builder.io",
+  "new-relic": "New Relic",
+  datadog: "Datadog",
+  sentry: "Sentry",
+  bugsnag: "Bugsnag",
+  rollbar: "Rollbar",
+  raygun: "Raygun",
+  honeybadger: "Honeybadger",
+  logrocket: "LogRocket",
+  "better-stack": "Better Stack",
+  axiom: "Axiom",
+  sendgrid: "SendGrid",
+  mailgun: "Mailgun",
+  postmark: "Postmark",
+  resend: "Resend",
+  "amazon-ses": "Amazon SES",
+  mailersend: "MailerSend",
+  mailtrap: "Mailtrap",
+  loops: "Loops",
+  socketlabs: "SocketLabs",
+  "customer-io": "Customer.io",
+  cursor: "Cursor",
+  replit: "Replit",
+  "github-copilot": "GitHub Copilot",
+  windsurf: "Windsurf",
+  codeium: "Codeium",
+  tabnine: "Tabnine",
+  "sourcegraph-cody": "Sourcegraph Cody",
+  "amazon-q-developer": "Amazon Q Developer",
+  "jetbrains-ai": "JetBrains AI",
+  zed: "Zed",
+  "otter-ai": "Otter.ai",
+  "fireflies-ai": "Fireflies.ai",
+  "tl-dv": "tl;dv",
+  "read-ai": "Read AI",
+  "fathom": "Fathom",
+  "meetgeek": "MeetGeek",
+  "sembly-ai": "Sembly AI",
+  granola: "Granola",
+  avoma: "Avoma",
+  launchdarkly: "LaunchDarkly",
+  statsig: "Statsig",
+  "cloudbees-feature-management": "CloudBees Feature Management",
+  configcat: "ConfigCat",
+  devcycle: "DevCycle",
+  flagsmith: "Flagsmith",
+  split: "Split",
+  unleash: "Unleash",
+  openfeature: "OpenFeature",
 };
 
 type PhaseOneBestPageSpec = {
@@ -5813,6 +5910,431 @@ const clusterThirtyOneToFortyBestPages = Object.fromEntries(
   ].map((entry) => [entry.slug, createPhaseOneBestPage(entry)]),
 ) as Record<string, BestPageEntry>;
 
+const clusterFortyOneToFiftyBestPages = Object.fromEntries(
+  [
+    {
+      slug: "time-tracking-software-for-small-business",
+      targetKeyword: "best time tracking software for small business",
+      title: "Best Time Tracking Software for Small Business",
+      metaTitle: "Best Time Tracking Software for Small Business | ShipBoost",
+      metaDescription:
+        "Compare time tracking software for small businesses, including Toggl Track, Clockify, Harvest, Timely, Everhour, Hubstaff, Time Doctor, and My Hours.",
+      intro:
+        "Time tracking software for small business should make hours, projects, billable work, budgets, and timesheets easier to manage without turning every employee workflow into an admin burden.",
+      whoItsFor:
+        "This guide is for owners, operators, agencies, consultants, and growing teams choosing a practical way to track time, understand capacity, and bill or report work accurately.",
+      primaryCategorySlug: "productivity",
+      supportingTagSlugs: ["time-tracking", "timesheets", "small-business"],
+      toolSlugs: ["toggl-track", "clockify", "harvest", "timely", "everhour", "hubstaff", "time-doctor", "my-hours"],
+      buyingFocus: "small-business time tracking, timesheets, billable hours, project budgets, and team productivity visibility",
+      internalLinks: [
+        { href: "/categories/productivity", label: "Browse productivity tools", description: "Explore time tracking, notes, and team productivity software." },
+        { href: "/alternatives/toggl-track", label: "Compare Toggl Track alternatives", description: "Review time tracking tools similar to Toggl Track." },
+        { href: "/tags/time-tracking", label: "Browse time tracking tools", description: "See products tagged for time tracking workflows." },
+      ],
+    },
+    {
+      slug: "time-tracking-software",
+      targetKeyword: "best time tracking software",
+      title: "Best Time Tracking Software",
+      metaTitle: "Best Time Tracking Software | ShipBoost",
+      metaDescription:
+        "Compare the best time tracking software, including Toggl Track, Clockify, Harvest, Timely, Everhour, Hubstaff, RescueTime, and TrackingTime.",
+      intro:
+        "The best time tracking software should help teams capture work accurately, understand where time goes, and connect time data to billing, planning, payroll, or productivity decisions.",
+      whoItsFor:
+        "This page is for teams comparing time trackers across freelancer, agency, operations, project, and employee productivity workflows.",
+      primaryCategorySlug: "productivity",
+      supportingTagSlugs: ["time-tracking", "productivity-tracking", "timesheets"],
+      toolSlugs: ["toggl-track", "clockify", "harvest", "timely", "everhour", "hubstaff", "rescuetime", "trackingtime"],
+      buyingFocus: "time capture, timesheets, productivity insight, project reporting, and billable work management",
+      internalLinks: [
+        { href: "/best/time-tracking-software-for-small-business", label: "Compare small-business time tracking", description: "See time tracking options for small teams." },
+        { href: "/alternatives/harvest", label: "Compare Harvest alternatives", description: "Review time tracking and billing tools similar to Harvest." },
+        { href: "/tags/productivity-tracking", label: "Browse productivity tracking tools", description: "See products tagged for productivity visibility." },
+      ],
+    },
+    {
+      slug: "employee-time-tracking-software",
+      targetKeyword: "best employee time tracking software",
+      title: "Best Employee Time Tracking Software",
+      metaTitle: "Best Employee Time Tracking Software | ShipBoost",
+      metaDescription:
+        "Compare employee time tracking software, including Time Doctor, Hubstaff, Clockify, Toggl Track, Timely, Harvest, Everhour, and My Hours.",
+      intro:
+        "Employee time tracking software should support timesheets, approvals, productivity visibility, remote work accountability, and payroll-ready reporting without creating unnecessary surveillance friction.",
+      whoItsFor:
+        "This guide is for managers, operations teams, agencies, and distributed businesses choosing employee time tracking for teams, contractors, or client work.",
+      primaryCategorySlug: "productivity",
+      supportingTagSlugs: ["employee-time-tracking", "employee-time", "timesheets"],
+      toolSlugs: ["time-doctor", "hubstaff", "clockify", "toggl-track", "timely", "harvest", "everhour", "my-hours"],
+      buyingFocus: "employee timesheets, approvals, productivity reporting, remote-team visibility, and payroll-adjacent time data",
+      internalLinks: [
+        { href: "/best/time-tracking-software", label: "Compare time tracking software", description: "See the broader time tracking shortlist." },
+        { href: "/alternatives/clockify", label: "Compare Clockify alternatives", description: "Review employee time tracking products similar to Clockify." },
+        { href: "/tags/employee-time-tracking", label: "Browse employee time tracking tools", description: "See products tagged for employee time tracking." },
+      ],
+    },
+    {
+      slug: "enterprise-search-software",
+      targetKeyword: "best enterprise search software",
+      title: "Best Enterprise Search Software",
+      metaTitle: "Best Enterprise Search Software | ShipBoost",
+      metaDescription:
+        "Compare enterprise search software, including Elasticsearch, Algolia, Coveo, Apache Solr, Typesense, Meilisearch, Swiftype, and Constructor.",
+      intro:
+        "Enterprise search software should help teams make large volumes of content, documentation, products, and internal knowledge searchable with relevance controls, analytics, and scalable indexing.",
+      whoItsFor:
+        "This guide is for product, engineering, data, ecommerce, and knowledge teams comparing search infrastructure for customer-facing or internal search experiences.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["enterprise-search", "search-infrastructure", "search-api"],
+      toolSlugs: ["elasticsearch", "algolia", "coveo", "apache-solr", "typesense", "meilisearch", "swiftype", "constructor"],
+      buyingFocus: "enterprise search, scalable indexing, relevance tuning, analytics, and search infrastructure ownership",
+      internalLinks: [
+        { href: "/categories/development", label: "Browse development tools", description: "Explore search, API, developer, and infrastructure software." },
+        { href: "/alternatives/elasticsearch", label: "Compare Elasticsearch alternatives", description: "Review search infrastructure options similar to Elasticsearch." },
+        { href: "/tags/enterprise-search", label: "Browse enterprise search tools", description: "See products tagged for enterprise search." },
+      ],
+    },
+    {
+      slug: "site-search-software",
+      targetKeyword: "best site search software",
+      title: "Best Site Search Software",
+      metaTitle: "Best Site Search Software | ShipBoost",
+      metaDescription:
+        "Compare site search software, including Algolia, Elasticsearch, Typesense, Meilisearch, Swiftype, Searchspring, Constructor, and Luigi's Box.",
+      intro:
+        "Site search software should help visitors find the right products, articles, docs, or resources quickly while giving teams control over relevance, merchandising, filters, and search analytics.",
+      whoItsFor:
+        "This page is for marketers, ecommerce teams, product teams, and developers choosing search for websites, storefronts, documentation hubs, or content libraries.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["site-search", "ecommerce-search", "search-analytics"],
+      toolSlugs: ["algolia", "elasticsearch", "typesense", "meilisearch", "swiftype", "searchspring", "constructor", "luigi-s-box"],
+      buyingFocus: "site search, relevance tuning, filters, merchandising, analytics, and website conversion improvement",
+      internalLinks: [
+        { href: "/best/enterprise-search-software", label: "Compare enterprise search", description: "See broader search infrastructure options." },
+        { href: "/alternatives/algolia", label: "Compare Algolia alternatives", description: "Review hosted search products similar to Algolia." },
+        { href: "/tags/site-search", label: "Browse site search tools", description: "See products tagged for site search." },
+      ],
+    },
+    {
+      slug: "paas-providers",
+      targetKeyword: "best paas providers",
+      title: "Best PaaS Providers",
+      metaTitle: "Best PaaS Providers | ShipBoost",
+      metaDescription:
+        "Compare PaaS providers, including Heroku, Render, Railway, DigitalOcean App Platform, Fly.io, Vercel, Netlify, and AWS Amplify.",
+      intro:
+        "The best PaaS providers should make deploying applications, databases, background workers, previews, and production services easier without forcing every team to operate raw infrastructure.",
+      whoItsFor:
+        "This guide is for founders, developers, and platform teams comparing application hosting and deployment platforms by developer workflow, scalability, and operational overhead.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["paas", "cloud-hosting", "deployment"],
+      toolSlugs: ["heroku", "render", "railway", "digitalocean-app-platform", "fly-io", "vercel", "netlify", "aws-amplify"],
+      buyingFocus: "PaaS hosting, application deployment, managed infrastructure, preview environments, and developer productivity",
+      internalLinks: [
+        { href: "/categories/development", label: "Browse development tools", description: "Explore hosting, DevOps, and developer platform software." },
+        { href: "/alternatives/heroku", label: "Compare Heroku alternatives", description: "Review PaaS providers similar to Heroku." },
+        { href: "/tags/paas", label: "Browse PaaS tools", description: "See products tagged for platform as a service." },
+      ],
+    },
+    {
+      slug: "cloud-hosting-for-startups",
+      targetKeyword: "best cloud hosting for startups",
+      title: "Best Cloud Hosting for Startups",
+      metaTitle: "Best Cloud Hosting for Startups | ShipBoost",
+      metaDescription:
+        "Compare startup cloud hosting platforms, including Render, Vercel, Railway, Heroku, Netlify, Fly.io, DigitalOcean App Platform, and Cloudflare Pages.",
+      intro:
+        "Cloud hosting for startups should help teams ship quickly, keep deployment simple, support previews and scale, and avoid infrastructure work that slows product iteration.",
+      whoItsFor:
+        "This page is for startup founders, technical teams, and product engineers choosing a hosting platform for web apps, APIs, frontends, and early production workloads.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["cloud-hosting", "app-hosting", "early-stage"],
+      toolSlugs: ["render", "vercel", "railway", "heroku", "netlify", "fly-io", "digitalocean-app-platform", "cloudflare-pages"],
+      buyingFocus: "startup cloud hosting, fast deployments, managed services, previews, scaling, and low-ops application delivery",
+      internalLinks: [
+        { href: "/best/paas-providers", label: "Compare PaaS providers", description: "See broader app hosting platforms." },
+        { href: "/alternatives/render", label: "Compare Render alternatives", description: "Review cloud hosting platforms similar to Render." },
+        { href: "/tags/cloud-hosting", label: "Browse cloud hosting tools", description: "See products tagged for cloud hosting." },
+      ],
+    },
+    {
+      slug: "ab-testing-tools",
+      targetKeyword: "best ab testing tools",
+      title: "Best A/B Testing Tools",
+      metaTitle: "Best A/B Testing Tools | ShipBoost",
+      metaDescription:
+        "Compare A/B testing tools, including VWO, Optimizely, AB Tasty, Adobe Target, GrowthBook, Convert, Kameleoon, and SiteSpect.",
+      intro:
+        "A/B testing tools should help teams design experiments, split traffic, measure conversion impact, and learn from product or marketing changes without compromising implementation quality.",
+      whoItsFor:
+        "This guide is for growth, product, marketing, and engineering teams comparing experimentation tools for websites, landing pages, products, and personalization workflows.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["ab-testing", "experimentation", "conversion-optimization"],
+      toolSlugs: ["vwo", "optimizely", "ab-tasty", "adobe-target", "growthbook", "convert", "kameleoon", "sitespect"],
+      buyingFocus: "A/B testing, experimentation workflow, traffic allocation, conversion measurement, and test governance",
+      internalLinks: [
+        { href: "/categories/marketing", label: "Browse marketing tools", description: "Explore conversion, analytics, and growth software." },
+        { href: "/alternatives/vwo", label: "Compare VWO alternatives", description: "Review experimentation tools similar to VWO." },
+        { href: "/tags/ab-testing", label: "Browse A/B testing tools", description: "See products tagged for A/B testing." },
+      ],
+    },
+    {
+      slug: "ab-testing-software",
+      targetKeyword: "best ab testing software",
+      title: "Best A/B Testing Software",
+      metaTitle: "Best A/B Testing Software | ShipBoost",
+      metaDescription:
+        "Compare A/B testing software, including Optimizely, VWO, GrowthBook, AB Tasty, Adobe Target, Convert, Kameleoon, and Dynamic Yield.",
+      intro:
+        "A/B testing software ranges from lightweight web testing tools to full experimentation platforms with feature flags, server-side tests, personalization, and enterprise governance.",
+      whoItsFor:
+        "This page is for teams choosing experimentation software by technical ownership, marketing autonomy, analytics depth, and rollout control.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["ab-testing", "feature-experimentation", "server-side-testing"],
+      toolSlugs: ["optimizely", "vwo", "growthbook", "ab-tasty", "adobe-target", "convert", "kameleoon", "dynamic-yield"],
+      buyingFocus: "experimentation software, web and server-side testing, personalization, feature experiments, and governance",
+      internalLinks: [
+        { href: "/best/ab-testing-tools", label: "Compare A/B testing tools", description: "See the broader experimentation shortlist." },
+        { href: "/alternatives/optimizely", label: "Compare Optimizely alternatives", description: "Review testing platforms similar to Optimizely." },
+        { href: "/tags/experimentation", label: "Browse experimentation tools", description: "See products tagged for experimentation." },
+      ],
+    },
+    {
+      slug: "landing-page-builders",
+      targetKeyword: "best landing page builders",
+      title: "Best Landing Page Builders",
+      metaTitle: "Best Landing Page Builders | ShipBoost",
+      metaDescription:
+        "Compare landing page builders, including Unbounce, Instapage, Leadpages, ClickFunnels, Landingi, Carrd, Swipe Pages, and ConvertFlow.",
+      intro:
+        "Landing page builders should help teams publish campaign pages, test offers, capture leads, and improve conversion without waiting on a full website or engineering cycle.",
+      whoItsFor:
+        "This guide is for marketers, founders, agencies, and growth teams comparing page builders for ads, launches, lead generation, webinars, and sales funnels.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["landing-pages", "page-builder", "lead-generation"],
+      toolSlugs: ["unbounce", "instapage", "leadpages", "clickfunnels", "landingi", "carrd", "swipe-pages", "convertflow"],
+      buyingFocus: "landing page building, lead capture, conversion testing, campaign publishing, and marketing workflow speed",
+      internalLinks: [
+        { href: "/categories/marketing", label: "Browse marketing tools", description: "Explore landing page, conversion, and campaign software." },
+        { href: "/alternatives/clickfunnels", label: "Compare ClickFunnels alternatives", description: "Review funnel and landing page products similar to ClickFunnels." },
+        { href: "/tags/landing-pages", label: "Browse landing page tools", description: "See products tagged for landing pages." },
+      ],
+    },
+    {
+      slug: "landing-page-software",
+      targetKeyword: "best landing page software",
+      title: "Best Landing Page Software",
+      metaTitle: "Best Landing Page Software | ShipBoost",
+      metaDescription:
+        "Compare landing page software, including Instapage, Unbounce, Leadpages, Landingi, ClickFunnels, Shogun, Builder.io, and Pagewiz.",
+      intro:
+        "Landing page software should make campaign publishing, personalization, analytics, integrations, templates, and conversion testing easier for teams that rely on web pages to generate demand.",
+      whoItsFor:
+        "This page is for marketing teams and agencies comparing landing page systems by design control, collaboration, testing, ecommerce fit, and funnel depth.",
+      primaryCategorySlug: "marketing",
+      supportingTagSlugs: ["landing-pages", "conversion-optimization", "templates"],
+      toolSlugs: ["instapage", "unbounce", "leadpages", "landingi", "clickfunnels", "shogun", "builder-io", "pagewiz"],
+      buyingFocus: "landing page software, campaign production, templates, integrations, A/B testing, and conversion reporting",
+      internalLinks: [
+        { href: "/best/landing-page-builders", label: "Compare landing page builders", description: "See the broader landing page builder shortlist." },
+        { href: "/alternatives/instapage", label: "Compare Instapage alternatives", description: "Review landing page platforms similar to Instapage." },
+        { href: "/tags/conversion-optimization", label: "Browse conversion tools", description: "See products tagged for conversion optimization." },
+      ],
+    },
+    {
+      slug: "application-monitoring-tools",
+      targetKeyword: "best application monitoring tools",
+      title: "Best Application Monitoring Tools",
+      metaTitle: "Best Application Monitoring Tools | ShipBoost",
+      metaDescription:
+        "Compare application monitoring tools, including New Relic, Datadog, Sentry, Better Stack, Honeybadger, Raygun, Bugsnag, and LogRocket.",
+      intro:
+        "Application monitoring tools should help engineering teams detect errors, slow transactions, uptime issues, regressions, and production incidents before customers lose trust.",
+      whoItsFor:
+        "This guide is for developers, DevOps teams, support teams, and engineering leaders comparing monitoring tools for web apps, APIs, frontend experiences, and production reliability.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["application-monitoring", "apm", "error-tracking"],
+      toolSlugs: ["new-relic", "datadog", "sentry", "better-stack", "honeybadger", "raygun", "bugsnag", "logrocket"],
+      buyingFocus: "application monitoring, APM, error detection, uptime visibility, incident response, and production reliability",
+      internalLinks: [
+        { href: "/categories/development", label: "Browse development tools", description: "Explore monitoring, DevOps, and developer software." },
+        { href: "/alternatives/new-relic", label: "Compare New Relic alternatives", description: "Review application monitoring products similar to New Relic." },
+        { href: "/tags/application-monitoring", label: "Browse application monitoring tools", description: "See products tagged for application monitoring." },
+      ],
+    },
+    {
+      slug: "observability-tools",
+      targetKeyword: "best observability tools",
+      title: "Best Observability Tools",
+      metaTitle: "Best Observability Tools | ShipBoost",
+      metaDescription:
+        "Compare observability tools, including Datadog, New Relic, Sentry, Better Stack, Axiom, Elasticsearch, Honeybadger, and Raygun.",
+      intro:
+        "Observability tools should help teams connect metrics, logs, traces, errors, alerts, and service context so production systems become easier to understand and debug.",
+      whoItsFor:
+        "This page is for engineering, platform, SRE, and DevOps teams choosing observability software by telemetry depth, alert quality, cost, and operational fit.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["observability", "log-management", "performance-monitoring"],
+      toolSlugs: ["datadog", "new-relic", "sentry", "better-stack", "axiom", "elasticsearch", "honeybadger", "raygun"],
+      buyingFocus: "observability, logs, metrics, traces, alerting, production debugging, and reliability workflows",
+      internalLinks: [
+        { href: "/best/application-monitoring-tools", label: "Compare application monitoring tools", description: "See adjacent monitoring and APM products." },
+        { href: "/alternatives/datadog", label: "Compare Datadog alternatives", description: "Review observability platforms similar to Datadog." },
+        { href: "/tags/observability", label: "Browse observability tools", description: "See products tagged for observability." },
+      ],
+    },
+    {
+      slug: "transactional-email-services",
+      targetKeyword: "best transactional email services",
+      title: "Best Transactional Email Services",
+      metaTitle: "Best Transactional Email Services | ShipBoost",
+      metaDescription:
+        "Compare transactional email services, including Postmark, SendGrid, Mailgun, Resend, Amazon SES, MailerSend, Mailtrap, and Loops.",
+      intro:
+        "Transactional email services should help teams send password resets, receipts, notifications, product emails, and lifecycle messages reliably with clear deliverability and developer workflows.",
+      whoItsFor:
+        "This guide is for developers, founders, SaaS teams, and product marketers choosing email infrastructure for app-triggered messages and customer communication.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["transactional-email", "email-api", "deliverability"],
+      toolSlugs: ["postmark", "sendgrid", "mailgun", "resend", "amazon-ses", "mailersend", "mailtrap", "loops"],
+      buyingFocus: "transactional email delivery, API workflow, SMTP, templates, deliverability, and product email reliability",
+      internalLinks: [
+        { href: "/categories/development", label: "Browse development tools", description: "Explore email infrastructure, APIs, and developer software." },
+        { href: "/alternatives/sendgrid", label: "Compare SendGrid alternatives", description: "Review transactional email services similar to SendGrid." },
+        { href: "/tags/transactional-email", label: "Browse transactional email tools", description: "See products tagged for transactional email." },
+      ],
+    },
+    {
+      slug: "email-api-services",
+      targetKeyword: "best email api services",
+      title: "Best Email API Services",
+      metaTitle: "Best Email API Services | ShipBoost",
+      metaDescription:
+        "Compare email API services, including SendGrid, Mailgun, Postmark, Resend, Amazon SES, MailerSend, SocketLabs, and Customer.io.",
+      intro:
+        "Email API services should give developers reliable sending, clear API documentation, delivery events, templates, suppression handling, and enough observability to debug email issues quickly.",
+      whoItsFor:
+        "This page is for engineering and product teams choosing an email API for SaaS products, marketplaces, ecommerce apps, and customer notification workflows.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["email-api", "smtp", "saas-email"],
+      toolSlugs: ["sendgrid", "mailgun", "postmark", "resend", "amazon-ses", "mailersend", "socketlabs", "customer-io"],
+      buyingFocus: "email APIs, SMTP delivery, webhooks, templates, event tracking, and developer-friendly email infrastructure",
+      internalLinks: [
+        { href: "/best/transactional-email-services", label: "Compare transactional email services", description: "See broader product email delivery tools." },
+        { href: "/alternatives/mailgun", label: "Compare Mailgun alternatives", description: "Review email API products similar to Mailgun." },
+        { href: "/tags/email-api", label: "Browse email API tools", description: "See products tagged for email API workflows." },
+      ],
+    },
+    {
+      slug: "ai-coding-assistants",
+      targetKeyword: "best ai coding assistants",
+      title: "Best AI Coding Assistants",
+      metaTitle: "Best AI Coding Assistants | ShipBoost",
+      metaDescription:
+        "Compare AI coding assistants, including Cursor, GitHub Copilot, Replit, Windsurf, Codeium, Tabnine, Sourcegraph Cody, and Amazon Q Developer.",
+      intro:
+        "AI coding assistants should help developers write, review, navigate, refactor, and understand code faster while fitting the editor, repository, security, and team workflow.",
+      whoItsFor:
+        "This guide is for developers, founders, and engineering teams comparing AI coding tools for autocomplete, chat, codebase context, cloud IDEs, and enterprise controls.",
+      primaryCategorySlug: "ai",
+      supportingTagSlugs: ["ai-coding", "code-assistant", "developer-tools"],
+      toolSlugs: ["cursor", "github-copilot", "replit", "windsurf", "codeium", "tabnine", "sourcegraph-cody", "amazon-q-developer"],
+      buyingFocus: "AI coding assistance, code completion, codebase chat, refactoring, editor workflow, and developer productivity",
+      internalLinks: [
+        { href: "/categories/ai", label: "Browse AI tools", description: "Explore AI assistants and developer productivity tools." },
+        { href: "/alternatives/cursor", label: "Compare Cursor alternatives", description: "Review AI coding tools similar to Cursor." },
+        { href: "/tags/ai-coding", label: "Browse AI coding tools", description: "See products tagged for AI coding." },
+      ],
+    },
+    {
+      slug: "ai-coding-tools",
+      targetKeyword: "best ai coding tools",
+      title: "Best AI Coding Tools",
+      metaTitle: "Best AI Coding Tools | ShipBoost",
+      metaDescription:
+        "Compare AI coding tools, including GitHub Copilot, Cursor, Replit, Windsurf, Codeium, Tabnine, JetBrains AI, and Zed.",
+      intro:
+        "AI coding tools now span IDEs, autocomplete, codebase search, terminal help, cloud development environments, and team assistants that change how software teams build.",
+      whoItsFor:
+        "This page is for developers and engineering leaders choosing AI coding software by editor fit, repository context, model quality, security controls, and team adoption.",
+      primaryCategorySlug: "ai",
+      supportingTagSlugs: ["ai-coding", "ide", "code-completion"],
+      toolSlugs: ["github-copilot", "cursor", "replit", "windsurf", "codeium", "tabnine", "jetbrains-ai", "zed"],
+      buyingFocus: "AI coding tools, IDE assistance, code completion, repository context, refactoring, and engineering workflow fit",
+      internalLinks: [
+        { href: "/best/ai-coding-assistants", label: "Compare AI coding assistants", description: "See adjacent AI developer assistant options." },
+        { href: "/alternatives/github-copilot", label: "Compare GitHub Copilot alternatives", description: "Review AI coding tools similar to GitHub Copilot." },
+        { href: "/tags/code-assistant", label: "Browse code assistant tools", description: "See products tagged for code assistants." },
+      ],
+    },
+    {
+      slug: "ai-meeting-assistants",
+      targetKeyword: "best ai meeting assistants",
+      title: "Best AI Meeting Assistants",
+      metaTitle: "Best AI Meeting Assistants | ShipBoost",
+      metaDescription:
+        "Compare AI meeting assistants, including Otter.ai, Fireflies.ai, tl;dv, Read AI, Fathom, MeetGeek, Sembly AI, and Granola.",
+      intro:
+        "AI meeting assistants should record, transcribe, summarize, and organize meeting outcomes so teams can capture decisions, follow-ups, customer insight, and searchable knowledge.",
+      whoItsFor:
+        "This guide is for sales, customer success, recruiting, product, and operations teams comparing meeting assistants for notes, recordings, summaries, and workflow handoffs.",
+      primaryCategorySlug: "ai",
+      supportingTagSlugs: ["ai-meeting-assistant", "meeting-notes", "transcription"],
+      toolSlugs: ["otter-ai", "fireflies-ai", "tl-dv", "read-ai", "fathom", "meetgeek", "sembly-ai", "granola"],
+      buyingFocus: "AI meeting notes, transcription, recordings, summaries, follow-ups, and searchable meeting knowledge",
+      internalLinks: [
+        { href: "/categories/ai", label: "Browse AI tools", description: "Explore AI assistants, productivity tools, and workflow software." },
+        { href: "/alternatives/otter-ai", label: "Compare Otter.ai alternatives", description: "Review meeting assistant products similar to Otter.ai." },
+        { href: "/tags/ai-meeting-assistant", label: "Browse AI meeting assistants", description: "See products tagged for AI meeting assistant workflows." },
+      ],
+    },
+    {
+      slug: "meeting-transcription-software",
+      targetKeyword: "best meeting transcription software",
+      title: "Best Meeting Transcription Software",
+      metaTitle: "Best Meeting Transcription Software | ShipBoost",
+      metaDescription:
+        "Compare meeting transcription software, including Fireflies.ai, Otter.ai, tl;dv, Fathom, Read AI, MeetGeek, Sembly AI, and Avoma.",
+      intro:
+        "Meeting transcription software should capture accurate transcripts, identify speakers, create useful summaries, and make conversations searchable across sales calls, interviews, and internal meetings.",
+      whoItsFor:
+        "This page is for teams choosing transcription tools for customer calls, interviews, demos, team meetings, research sessions, and documentation workflows.",
+      primaryCategorySlug: "productivity",
+      supportingTagSlugs: ["transcription", "meeting-recording", "meeting-notes"],
+      toolSlugs: ["fireflies-ai", "otter-ai", "tl-dv", "fathom", "read-ai", "meetgeek", "sembly-ai", "avoma"],
+      buyingFocus: "meeting transcription, speaker detection, recordings, summaries, searchable transcripts, and follow-up workflows",
+      internalLinks: [
+        { href: "/best/ai-meeting-assistants", label: "Compare AI meeting assistants", description: "See broader AI meeting note products." },
+        { href: "/alternatives/fireflies-ai", label: "Compare Fireflies.ai alternatives", description: "Review transcription tools similar to Fireflies.ai." },
+        { href: "/tags/transcription", label: "Browse transcription tools", description: "See products tagged for transcription." },
+      ],
+    },
+    {
+      slug: "feature-flag-software",
+      targetKeyword: "best feature flag software",
+      title: "Best Feature Flag Software",
+      metaTitle: "Best Feature Flag Software | ShipBoost",
+      metaDescription:
+        "Compare feature flag software, including LaunchDarkly, Statsig, Split, Flagsmith, ConfigCat, DevCycle, Unleash, and GrowthBook.",
+      intro:
+        "Feature flag software should help teams release safely, target users, run experiments, roll back changes, and separate deploys from launches without adding fragile release process.",
+      whoItsFor:
+        "This guide is for product, engineering, platform, and growth teams comparing feature management tools for progressive delivery, remote config, experimentation, and release governance.",
+      primaryCategorySlug: "development",
+      supportingTagSlugs: ["feature-flags", "release-management", "feature-experimentation"],
+      toolSlugs: ["launchdarkly", "statsig", "split", "flagsmith", "configcat", "devcycle", "unleash", "growthbook"],
+      buyingFocus: "feature flags, release management, progressive delivery, remote config, targeting, and experimentation workflows",
+      internalLinks: [
+        { href: "/categories/development", label: "Browse development tools", description: "Explore developer, release, and experimentation software." },
+        { href: "/alternatives/launchdarkly", label: "Compare LaunchDarkly alternatives", description: "Review feature flag tools similar to LaunchDarkly." },
+        { href: "/tags/feature-flags", label: "Browse feature flag tools", description: "See products tagged for feature flags." },
+      ],
+    },
+  ].map((entry) => [entry.slug, createPhaseOneBestPage(entry)]),
+) as Record<string, BestPageEntry>;
+
 Object.assign(
   bestPagesRegistry,
   phaseOneBestPages,
@@ -5820,6 +6342,7 @@ Object.assign(
   phaseThreeBestPages,
   clusterTwentyOneToThirtyBestPages,
   clusterThirtyOneToFortyBestPages,
+  clusterFortyOneToFiftyBestPages,
 );
 
 for (const entry of Object.values(bestPagesRegistry)) {
@@ -6733,6 +7256,120 @@ export const bestHubSections: BestHubSection[] = [
         label: "Compare CI/CD alternatives",
         description: "See alternatives pages for CI/CD and deployment tools.",
       },
+    ],
+  },
+  {
+    slug: "time-tracking-productivity",
+    title: "Time Tracking and Productivity",
+    intro:
+      "These pages help teams compare time tracking, timesheets, employee time, and productivity visibility tools by workflow fit and reporting needs.",
+    pageSlugs: [
+      "time-tracking-software-for-small-business",
+      "time-tracking-software",
+      "employee-time-tracking-software",
+    ],
+    supportingLinks: [
+      { href: "/categories/productivity", label: "Browse productivity tools", description: "Explore time tracking, notes, and productivity software." },
+      { href: "/alternatives/toggl-track", label: "Compare time tracking alternatives", description: "See alternatives pages for major time tracking tools." },
+    ],
+  },
+  {
+    slug: "site-search-search-infrastructure",
+    title: "Site Search and Search Infrastructure",
+    intro:
+      "These pages help product, ecommerce, and engineering teams compare hosted search, enterprise search, relevance tuning, and search infrastructure tools.",
+    pageSlugs: ["enterprise-search-software", "site-search-software"],
+    supportingLinks: [
+      { href: "/categories/development", label: "Browse development tools", description: "Explore search, API, and infrastructure software." },
+      { href: "/alternatives/algolia", label: "Compare search alternatives", description: "See alternatives pages for hosted and enterprise search products." },
+    ],
+  },
+  {
+    slug: "hosting-deployment-platforms",
+    title: "Hosting and Deployment Platforms",
+    intro:
+      "These pages help startups and engineering teams compare PaaS, app hosting, frontend hosting, deployment platforms, and managed infrastructure options.",
+    pageSlugs: ["paas-providers", "cloud-hosting-for-startups"],
+    supportingLinks: [
+      { href: "/categories/development", label: "Browse development tools", description: "Explore hosting, deployment, and DevOps software." },
+      { href: "/alternatives/heroku", label: "Compare hosting alternatives", description: "See alternatives pages for major app hosting platforms." },
+    ],
+  },
+  {
+    slug: "ab-testing-experimentation",
+    title: "A/B Testing and Experimentation",
+    intro:
+      "These pages help growth, marketing, product, and engineering teams compare A/B testing and experimentation platforms by test workflow and governance.",
+    pageSlugs: ["ab-testing-tools", "ab-testing-software"],
+    supportingLinks: [
+      { href: "/categories/marketing", label: "Browse marketing tools", description: "Explore conversion, analytics, and growth software." },
+      { href: "/alternatives/vwo", label: "Compare experimentation alternatives", description: "See alternatives pages for leading A/B testing tools." },
+    ],
+  },
+  {
+    slug: "landing-pages-conversion-optimization",
+    title: "Landing Pages and Conversion Optimization",
+    intro:
+      "These pages help marketers compare landing page builders, funnel tools, templates, integrations, and conversion optimization workflows.",
+    pageSlugs: ["landing-page-builders", "landing-page-software"],
+    supportingLinks: [
+      { href: "/categories/marketing", label: "Browse marketing tools", description: "Explore landing page, lead generation, and conversion tools." },
+      { href: "/alternatives/instapage", label: "Compare landing page alternatives", description: "See alternatives pages for landing page platforms." },
+    ],
+  },
+  {
+    slug: "application-monitoring-error-tracking",
+    title: "Application Monitoring and Error Tracking",
+    intro:
+      "These pages help engineering teams compare monitoring, APM, observability, error tracking, and production reliability tools.",
+    pageSlugs: ["application-monitoring-tools", "observability-tools"],
+    supportingLinks: [
+      { href: "/categories/development", label: "Browse development tools", description: "Explore monitoring, DevOps, and developer software." },
+      { href: "/alternatives/datadog", label: "Compare observability alternatives", description: "See alternatives pages for monitoring and observability platforms." },
+    ],
+  },
+  {
+    slug: "transactional-email-infrastructure",
+    title: "Transactional Email and Email Infrastructure",
+    intro:
+      "These pages help developers and SaaS teams compare transactional email services, email APIs, SMTP providers, and deliverability workflows.",
+    pageSlugs: ["transactional-email-services", "email-api-services"],
+    supportingLinks: [
+      { href: "/categories/development", label: "Browse development tools", description: "Explore email infrastructure, APIs, and developer software." },
+      { href: "/alternatives/sendgrid", label: "Compare email API alternatives", description: "See alternatives pages for transactional email platforms." },
+    ],
+  },
+  {
+    slug: "ai-coding-assistants-ides",
+    title: "AI Coding Assistants and IDEs",
+    intro:
+      "These pages help developers compare AI coding assistants, IDEs, autocomplete, codebase chat, and developer productivity tools.",
+    pageSlugs: ["ai-coding-assistants", "ai-coding-tools"],
+    supportingLinks: [
+      { href: "/categories/ai", label: "Browse AI tools", description: "Explore AI assistants and developer productivity software." },
+      { href: "/alternatives/cursor", label: "Compare AI coding alternatives", description: "See alternatives pages for AI coding tools." },
+    ],
+  },
+  {
+    slug: "ai-meeting-assistants-transcription",
+    title: "AI Meeting Assistants and Transcription",
+    intro:
+      "These pages help sales, success, recruiting, and operations teams compare meeting assistants, transcription software, notes, summaries, and recordings.",
+    pageSlugs: ["ai-meeting-assistants", "meeting-transcription-software"],
+    supportingLinks: [
+      { href: "/categories/ai", label: "Browse AI tools", description: "Explore AI assistants, productivity tools, and meeting software." },
+      { href: "/alternatives/otter-ai", label: "Compare meeting assistant alternatives", description: "See alternatives pages for AI meeting assistants." },
+    ],
+  },
+  {
+    slug: "feature-flags-release-management",
+    title: "Feature Flags and Release Management",
+    intro:
+      "These pages help product and engineering teams compare feature flags, progressive delivery, remote config, release management, and experimentation platforms.",
+    pageSlugs: ["feature-flag-software"],
+    supportingLinks: [
+      { href: "/categories/development", label: "Browse development tools", description: "Explore release, developer, and experimentation software." },
+      { href: "/alternatives/launchdarkly", label: "Compare feature flag alternatives", description: "See alternatives pages for feature management tools." },
     ],
   },
 ];

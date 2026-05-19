@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { 
   Save, Trash2, ArrowLeft, RefreshCw, Check, 
   ExternalLink, Info, Image as ImageIcon, AlertCircle,
-  Layout, Share2, Settings, DollarSign
+  Layout, Share2, Settings, DollarSign, X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -275,29 +275,52 @@ export function FounderToolEditor({
     }));
   }
 
-  function replaceLogo(fileList: FileList | null) {
-    if (!fileList?.[0]) {
-      return;
+  function removeTag(tagId: string) {
+    setFieldErrors((current) => ({ ...current, tagIds: undefined }));
+    setForm((current) => ({
+      ...current,
+      tagIds: current.tagIds.filter((id) => id !== tagId),
+    }));
+  }
+
+  function getImageFiles(fileList: FileList | null) {
+    if (!fileList?.length) {
+      return [];
     }
 
+    return Array.from(fileList).filter((file) => file.type.startsWith("image/"));
+  }
+
+  function replaceLogoFile(file: File) {
     if (newLogo) {
       revokePreviewUrl(newLogo.previewUrl);
     }
 
     setNewLogo({
       id: crypto.randomUUID(),
-      file: fileList[0],
-      previewUrl: URL.createObjectURL(fileList[0]),
+      file,
+      previewUrl: URL.createObjectURL(file),
     });
   }
 
+  function replaceLogo(fileList: FileList | null) {
+    const [file] = getImageFiles(fileList);
+
+    if (!file) {
+      return;
+    }
+
+    replaceLogoFile(file);
+  }
+
   function appendScreenshots(fileList: FileList | null) {
-    if (!fileList?.length) {
+    const incoming = getImageFiles(fileList);
+
+    if (incoming.length === 0) {
       return;
     }
 
     const currentTotal = existingScreenshots.length + newScreenshots.length;
-    const incoming = Array.from(fileList);
 
     if (currentTotal + incoming.length > 3) {
       setErrorMessage("You can keep or upload up to 3 screenshots total.");
@@ -314,6 +337,24 @@ export function FounderToolEditor({
     }));
 
     setNewScreenshots((current) => [...current, ...nextImages]);
+  }
+
+  function handleDragOver(event: React.DragEvent<HTMLElement>) {
+    event.preventDefault();
+  }
+
+  function handleLogoDrop(event: React.DragEvent<HTMLElement>) {
+    event.preventDefault();
+    const [file] = getImageFiles(event.dataTransfer.files);
+
+    if (file) {
+      replaceLogoFile(file);
+    }
+  }
+
+  function handleScreenshotsDrop(event: React.DragEvent<HTMLElement>) {
+    event.preventDefault();
+    appendScreenshots(event.dataTransfer.files);
   }
 
   async function uploadPendingMedia(
@@ -558,6 +599,10 @@ export function FounderToolEditor({
     { id: "socials", label: "Socials", icon: Share2 },
     { id: "settings", label: "Settings", icon: Settings },
   ] as const;
+  const selectedTags = form.tagIds.flatMap((tagId) => {
+    const tag = tags.find((item) => item.id === tagId);
+    return tag ? [tag] : [];
+  });
 
   return (
     <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
@@ -734,6 +779,26 @@ export function FounderToolEditor({
                           {getFieldError("tagIds")}
                         </p>
                       )}
+                      {selectedTags.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedTags.map((tag) => (
+                            <span
+                              key={tag.id}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground"
+                            >
+                              {tag.name}
+                              <button
+                                type="button"
+                                onClick={() => removeTag(tag.id)}
+                                className="inline-flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                                aria-label={`Remove ${tag.name} tag`}
+                              >
+                                <X size={12} />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
                       <div className="grid gap-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar text-foreground">
                         {tags.map((tag) => (
                           <label key={tag.id} className="flex items-center gap-3 text-sm font-medium text-foreground cursor-pointer group">
@@ -780,10 +845,14 @@ export function FounderToolEditor({
                           </button>
                         </div>
                       )}
-                      <label className={cn(
-                        "flex w-full flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-border bg-muted/30 p-6 text-center transition-all hover:border-primary/50 hover:bg-muted/50 sm:flex-1 sm:max-w-[320px] sm:aspect-square",
-                        (newLogo || existingLogo) && "hidden sm:flex"
-                      )}>
+                      <label
+                        className={cn(
+                          "flex w-full flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-border bg-muted/30 p-6 text-center transition-all hover:border-primary/50 hover:bg-muted/50 sm:flex-1 sm:max-w-[320px] sm:aspect-square",
+                          (newLogo || existingLogo) && "hidden sm:flex"
+                        )}
+                        onDragOver={handleDragOver}
+                        onDrop={handleLogoDrop}
+                      >
                         <input
                           type="file"
                           accept="image/*"
@@ -849,7 +918,11 @@ export function FounderToolEditor({
                       )}
 
                       {(existingScreenshots.length + newScreenshots.length) < 3 && (
-                        <label className="w-full aspect-video rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center p-8">
+                        <label
+                          className="w-full aspect-video rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center p-8"
+                          onDragOver={handleDragOver}
+                          onDrop={handleScreenshotsDrop}
+                        >
                           <input
                             type="file"
                             multiple

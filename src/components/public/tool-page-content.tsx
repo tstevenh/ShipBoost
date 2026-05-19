@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, Globe, Home as HomeIcon, Lock } from "lucide-react";
+import { ArrowRight, ChevronRight, Globe, Home as HomeIcon, Lock, Newspaper } from "lucide-react";
 
 import { ToolPageViewTracker } from "@/components/analytics/tool-page-view-tracker";
 import { MarkdownContent } from "@/components/content/markdown-content";
@@ -28,6 +28,7 @@ type ToolPageData = {
   richDescription: string;
   pricingModel: string;
   websiteUrl: string;
+  affiliateUrl: string | null;
   badgeVerification: "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "FAILED";
   currentLaunchType: "FREE" | "FEATURED" | "RELAUNCH" | null;
   isFeatured: boolean;
@@ -57,6 +58,10 @@ type ToolPageData = {
     };
   }[];
   upvoteCount: number;
+  spotlight?: {
+    slug: string;
+    title: string;
+  } | null;
 };
 
 type RelatedTool = {
@@ -101,6 +106,7 @@ export function ToolPageContent({
   const websiteHref =
     buildToolOutboundHref({
       websiteUrl: tool.websiteUrl,
+      affiliateUrl: tool.affiliateUrl,
       source: "tool_page",
       toolSlug: tool.slug,
     }) ?? tool.websiteUrl;
@@ -109,6 +115,9 @@ export function ToolPageContent({
     createdAt: tool.createdAt,
     launches: tool.launches,
   });
+  const spotlightCategoryPhrase = primaryCategory
+    ? `${primaryCategory.name} tools`
+    : "tools for founders";
   const morePathsSection = relatedListingLinks.length > 0 ? (
     <InternalLinkSection
       eyebrow="Explore"
@@ -246,7 +255,9 @@ export function ToolPageContent({
                   data-shipboost-tool-id={tool.id}
                   data-shipboost-tool-slug={tool.slug}
                   data-shipboost-tool-name={tool.name}
-                  data-shipboost-tool-destination-type="website"
+                  data-shipboost-tool-destination-type={
+                    tool.affiliateUrl ? "affiliate" : "website"
+                  }
                   data-shipboost-tool-current-launch-type={
                     tool.currentLaunchType ?? undefined
                   }
@@ -294,6 +305,31 @@ export function ToolPageContent({
                   </div>
                 </div>
               </div>
+
+              {!isPreview && tool.spotlight ? (
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <Newspaper size={20} className="mt-0.5 shrink-0 text-primary" />
+                    <div>
+                      <h3 className="text-sm font-black text-foreground">
+                        Premium Launch Spotlight
+                      </h3>
+                      <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                        Read ShipBoost&apos;s editorial spotlight on {tool.name}:
+                        what it does, who it helps, and why it stands out
+                        among {spotlightCategoryPhrase}.
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/blog/${tool.spotlight.slug}`}
+                    className="mt-5 inline-flex items-center gap-2 text-sm font-black text-primary transition hover:underline"
+                  >
+                    Read the {tool.name} spotlight
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+              ) : null}
 
               {tool.toolTags.length > 0 ? (
                 <div className="space-y-4">

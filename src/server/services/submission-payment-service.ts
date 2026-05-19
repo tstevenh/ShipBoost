@@ -70,35 +70,31 @@ function assertValidPremiumLaunchWeekStart(date: Date) {
   return launchWeekStart;
 }
 
-async function applyPremiumLaunchPaymentSucceeded(
+export async function applyPremiumLaunchPaymentSucceeded(
   payment: PremiumLaunchPaymentLike,
 ) {
-  const updatedSubmissionId = await prisma.$transaction(
+  const txResult = await prisma.$transaction(
     async (tx) => {
       const submissionId = readSubmissionIdFromPayment(payment);
+      const submissionInclude = {
+        user: true,
+        tool: {
+          include: {
+            launches: true,
+          },
+        },
+      } as const;
       const submission = submissionId
         ? await tx.submission.findUnique({
             where: { id: submissionId },
-            include: {
-              tool: {
-                include: {
-                  launches: true,
-                },
-              },
-            },
+            include: submissionInclude,
           })
         : payment.checkoutSessionId
           ? await tx.submission.findFirst({
               where: {
                 polarCheckoutId: payment.checkoutSessionId,
               },
-              include: {
-                tool: {
-                  include: {
-                    launches: true,
-                  },
-                },
-              },
+              include: submissionInclude,
             })
           : null;
 
@@ -164,19 +160,19 @@ async function applyPremiumLaunchPaymentSucceeded(
         },
       });
 
-      if (!existingPremiumLaunch) {
-        await tx.launch.create({
-          data: {
-            toolId: submission.toolId,
-            createdById: submission.userId,
-            launchType: "FEATURED",
-            status: shouldGoLiveImmediately ? "LIVE" : "APPROVED",
-            launchDate,
-            startAt: launchDate,
-            priorityWeight: 100,
-          },
-        });
-      }
+      const createdLaunch = existingPremiumLaunch
+        ? null
+        : await tx.launch.create({
+            data: {
+              toolId: submission.toolId,
+              createdById: submission.userId,
+              launchType: "FEATURED",
+              status: shouldGoLiveImmediately ? "LIVE" : "APPROVED",
+              launchDate,
+              startAt: launchDate,
+              priorityWeight: 100,
+            },
+          });
 
       await tx.submissionSpotlightBrief.upsert({
         where: { submissionId: submission.id },
@@ -187,27 +183,61 @@ async function applyPremiumLaunchPaymentSucceeded(
         },
       });
 
-      return submission.id;
+      return {
+        submission,
+        preferredLaunchDate,
+        polarOrderId: payment.id,
+        polarCheckoutId:
+          payment.checkoutSessionId ?? submission.polarCheckoutId,
+        paidAt: now,
+        createdLaunch,
+        existingPremiumLaunch: existingPremiumLaunch ?? null,
+      };
     },
     {
-      maxWait: 15_000,
-      timeout: 15_000,
+      maxWait: 30_000,
+      timeout: 60_000,
     },
   );
 
-  if (!updatedSubmissionId) {
+  if (!txResult) {
     return null;
   }
 
-  const updatedSubmission = await getSubmissionById(prisma, updatedSubmissionId);
-
-  if (!updatedSubmission) {
-    return null;
-  }
-
-  const premiumLaunch = updatedSubmission.tool.launches.find(
-    (launch) => launch.launchType === "FEATURED",
+  const remainingLaunches = txResult.submission.tool.launches.filter(
+    (launch) =>
+      !(
+        launch.launchType === "FREE" &&
+        (launch.status === "PENDING" || launch.status === "APPROVED") &&
+        launch.launchDate.getTime() > txResult.paidAt.getTime()
+      ),
   );
+  const nextLaunches = txResult.createdLaunch
+    ? [txResult.createdLaunch, ...remainingLaunches].sort(
+        (a, b) => b.launchDate.getTime() - a.launchDate.getTime(),
+      )
+    : remainingLaunches;
+
+  const updatedSubmission = {
+    ...txResult.submission,
+    paymentStatus: "PAID" as const,
+    submissionType: "FEATURED_LAUNCH" as const,
+    preferredLaunchDate: txResult.preferredLaunchDate,
+    polarOrderId: txResult.polarOrderId,
+    polarCheckoutId: txResult.polarCheckoutId,
+    paidAt: txResult.paidAt,
+    reviewStatus: "APPROVED" as const,
+    tool: {
+      ...txResult.submission.tool,
+      moderationStatus: "APPROVED" as const,
+      publicationStatus: "PUBLISHED" as const,
+      currentLaunchType: "FEATURED" as const,
+      launches: nextLaunches,
+    },
+  };
+
+  const premiumLaunch =
+    txResult.createdLaunch ?? txResult.existingPremiumLaunch ?? null;
 
   await sendProductEmailSafely(
     sendPremiumLaunchPaidEmailMessage({

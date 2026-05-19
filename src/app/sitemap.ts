@@ -12,6 +12,7 @@ import {
   getLaunchBoardStaticParams,
 } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
+import { freeTools, getFreeToolPath } from "@/server/seo/free-tools";
 
 function toAbsoluteUrl(path: string, appUrl: string) {
   return new URL(path, appUrl).toString();
@@ -137,7 +138,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      url: toAbsoluteUrl("/free-tools", appUrl),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
   ];
+
+  const freeToolRoutes: MetadataRoute.Sitemap = freeTools.map((tool) => ({
+    url: toAbsoluteUrl(getFreeToolPath(tool.slug), appUrl),
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
 
   const launchBoardRoutes: MetadataRoute.Sitemap = getLaunchBoardStaticParams().map(
     ({ board }) => ({
@@ -220,6 +234,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...bestPageRoutes,
     ...alternativeRoutes,
     ...toolRoutes,
+    ...freeToolRoutes,
     ...blogArticleRoutes,
     ...blogCategoryRoutes,
     ...blogTagRoutes,

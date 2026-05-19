@@ -26,6 +26,7 @@ import {
 } from "@/server/services/seo-service";
 import {
   getPublishedToolBySlug,
+  getToolPageBySlug,
   listRelatedPublishedTools,
 } from "@/server/services/tool-service";
 import { listActiveSponsorPlacements } from "@/server/services/sponsor-placement-service";
@@ -359,6 +360,17 @@ export const getCachedPublishedTool = cache(async (slug: string) =>
   )(),
 );
 
+export const getCachedToolPage = cache(async (slug: string) =>
+  unstable_cache(
+    () => getToolPageBySlug(slug),
+    ["public-tool-page", "v3", slug],
+    {
+      revalidate: PUBLIC_TOOL_REVALIDATE,
+      tags: [PUBLIC_CACHE_TAGS.tools, `public:tool:${slug}`],
+    },
+  )(),
+);
+
 export const getCachedRelatedPublishedTools = cache(
   async (toolId: string, categoryIds: string[], tagIds: string[]) =>
     unstable_cache(
@@ -382,15 +394,16 @@ export const getCachedRelatedPublishedTools = cache(
     )(),
 );
 
-export const getCachedActiveSponsorPlacements = cache(() =>
-  unstable_cache(
-    () => listActiveSponsorPlacements(),
-    ["public-active-sponsor-placements", "v1"],
-    {
-      revalidate: 300,
-      tags: [PUBLIC_CACHE_TAGS.sponsorPlacements],
-    },
-  )(),
+export const getCachedActiveSponsorPlacements = cache(
+  async (slot?: import("@prisma/client").SponsorSlot) =>
+    unstable_cache(
+      () => listActiveSponsorPlacements(slot),
+      ["public-active-sponsor-placements", "v2", slot ?? "all"],
+      {
+        revalidate: 300,
+        tags: [PUBLIC_CACHE_TAGS.sponsorPlacements],
+      },
+    )(),
 );
 
 export const getCachedBlogIndexPage = cache(async () =>

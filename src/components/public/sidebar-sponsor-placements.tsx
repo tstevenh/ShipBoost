@@ -2,8 +2,10 @@
 
 import { Suspense } from "react";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { ExternalLink, Megaphone } from "lucide-react";
 
+import { PostHogImpressionTracker } from "@/components/analytics/posthog-impression-tracker";
 import { LogoFallback } from "@/components/ui/logo-fallback";
 import { SponsorAdvertiseModal } from "@/components/public/sponsor-advertise-modal";
 import { buildToolOutboundHref } from "@/lib/tool-outbound";
@@ -12,10 +14,12 @@ import { cn } from "@/lib/utils";
 type SponsorPlacement = {
   id: string;
   tool: {
+    id: string;
     slug: string;
     name: string;
     tagline: string;
     websiteUrl: string;
+    affiliateUrl: string | null;
     logoMedia: { url: string } | null;
     toolCategories: Array<{
       category: { name: string; slug: string };
@@ -30,6 +34,7 @@ function EmptySponsorSlot() {
   return (
     <Suspense fallback={<SponsorAdvertiseFallback variant="empty" />}>
       <SponsorAdvertiseModal
+        slot="SIDEBAR"
         triggerClassName="group block w-full text-left rounded-xl border border-dashed border-border/70 bg-card/70 p-4 transition-colors hover:border-primary/40 hover:bg-card"
         triggerContent={
           <>
@@ -99,52 +104,78 @@ function SponsorCard({ placement }: { placement: SponsorPlacement }) {
   const outboundHref =
     buildToolOutboundHref({
       websiteUrl: placement.tool.websiteUrl,
+      affiliateUrl: placement.tool.affiliateUrl,
       source: "sponsor_slot",
       toolSlug: placement.tool.slug,
     }) ?? placement.tool.websiteUrl;
 
   return (
-    <a
-      href={outboundHref}
-      target="_blank"
-      rel="noreferrer sponsored"
-      data-shipboost-outbound-source="sponsor_slot"
-      data-shipboost-outbound-context="tool_listing"
-      data-shipboost-outbound-text={placement.tool.name}
-      data-shipboost-tool-slug={placement.tool.slug}
-      data-shipboost-tool-name={placement.tool.name}
-      data-shipboost-tool-destination-type="website"
-      className="group block w-full rounded-xl border border-border/60 bg-card p-4 transition-colors hover:bg-muted/40"
-    >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
-        Sponsored
-      </p>
-
-      <div className="mt-3 flex items-center gap-3">
-        <LogoFallback
-          name={placement.tool.name}
-          src={placement.tool.logoMedia?.url}
-          websiteUrl={placement.tool.websiteUrl}
-          sizes="44px"
-          className="h-11 w-11 shrink-0 rounded-lg border border-border/60"
-          textClassName="text-sm"
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="line-clamp-1 text-sm font-bold tracking-tight text-foreground">
-              {placement.tool.name}
-            </h3>
-            <ExternalLink
-              size={13}
-              className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
-            />
-          </div>
-          <p className="mt-0.5 line-clamp-2 text-[11px] font-normal leading-snug text-muted-foreground">
-            {placement.tool.tagline}
+    <div className="group block w-full rounded-xl border border-border/60 bg-card transition-colors hover:bg-muted/40">
+      {/* SPONSORED label opens the advertise modal */}
+      <SponsorAdvertiseModal
+        slot="SIDEBAR"
+        triggerClassName="block w-full px-4 pt-4 pb-0 text-left"
+        triggerContent={
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70 hover:text-muted-foreground transition-colors">
+            Sponsored
           </p>
+        }
+      />
+
+      {/* Tool content links to the tool website */}
+      <a
+        href={outboundHref}
+        target="_blank"
+        rel="noreferrer sponsored"
+        data-shipboost-outbound-source="sponsor_slot"
+        data-shipboost-outbound-context="tool_listing"
+        data-shipboost-outbound-text={placement.tool.name}
+        data-shipboost-tool-id={placement.tool.id}
+        data-shipboost-tool-slug={placement.tool.slug}
+        data-shipboost-tool-name={placement.tool.name}
+        data-shipboost-tool-destination-type={
+          placement.tool.affiliateUrl ? "affiliate" : "website"
+        }
+        className="block px-4 pb-4"
+      >
+        <PostHogImpressionTracker
+          eventName="sponsor_impression"
+          impressionId={`sidebar_sponsor:${placement.id}`}
+          properties={{
+            placement_type: "sidebar_sponsor",
+            placement_id: placement.id,
+            tool_id: placement.tool.id,
+            tool_slug: placement.tool.slug,
+            tool_name: placement.tool.name,
+            source_surface: "sponsor_slot",
+          }}
+        />
+        <div className="mt-3 flex items-center gap-3">
+          <LogoFallback
+            name={placement.tool.name}
+            src={placement.tool.logoMedia?.url}
+            websiteUrl={placement.tool.websiteUrl}
+            sizes="44px"
+            className="h-11 w-11 shrink-0 rounded-lg border border-border/60"
+            textClassName="text-sm"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="line-clamp-1 text-sm font-bold tracking-tight text-foreground">
+                {placement.tool.name}
+              </h3>
+              <ExternalLink
+                size={13}
+                className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+              />
+            </div>
+            <p className="mt-0.5 line-clamp-2 text-[11px] font-normal leading-snug text-muted-foreground">
+              {placement.tool.tagline}
+            </p>
+          </div>
         </div>
-      </div>
-    </a>
+      </a>
+    </div>
   );
 }
 
@@ -191,20 +222,16 @@ export function SidebarSponsorPlacements({
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
           Our partners
         </p>
-        <Suspense fallback={<SponsorAdvertiseFallback variant="link" />}>
-          <SponsorAdvertiseModal
-            triggerClassName="group inline-flex items-center gap-1 rounded-full border border-border/60 bg-card px-2.5 py-1 text-[10px] font-semibold tracking-tight text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-            triggerContent={
-              <>
-                <Megaphone size={11} className="opacity-70 group-hover:opacity-100" />
-                Advertise here
-                <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
-                  →
-                </span>
-              </>
-            }
-          />
-        </Suspense>
+        <Link
+          href="/pricing#advertise"
+          className="group inline-flex items-center gap-1 rounded-full border border-border/60 bg-card px-2.5 py-1 text-[10px] font-semibold tracking-tight text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+        >
+          <Megaphone size={11} className="opacity-70 group-hover:opacity-100" />
+          Advertise here
+          <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
+            →
+          </span>
+        </Link>
       </div>
 
       <div

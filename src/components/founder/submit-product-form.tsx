@@ -1,32 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
   Check,
-  ChevronLeft,
-  ChevronRight,
   Copy,
   Image as ImageIcon,
   Layout,
   Loader2,
   Search,
   ShieldCheck,
-  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
 
+import { LaunchSection } from "@/components/founder/launch-section";
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
 import { NativeSelect } from "@/components/forms/native-select";
-import {
-  premiumLaunchAvailable,
-  premiumLaunchUnavailableMessage,
-} from "@/lib/premium-launch";
-import { captureBrowserPostHogEvent } from "@/lib/posthog-browser";
 import { cn } from "@/lib/utils";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 
@@ -155,16 +148,7 @@ type ScheduledLaunch = {
   launchDate: string;
 };
 
-const foundingPremiumPrice = {
-  original: "$19",
-  discounted: "$9",
-};
-
 const BADGE_SUPPORT_EMAIL = "support@shipboost.io";
-
-function formatFoundingPremiumSpotsLabel(spotsLeft: number, limit: number) {
-  return `${spotsLeft} of ${limit} founding spots left`;
-}
 
 const pricingModels: PricingModel[] = [
   "FREE",
@@ -321,19 +305,26 @@ function createFormFromDraft(
   };
 }
 
-function findActiveScheduledLaunch(
+export function findActiveScheduledLaunch(
   draft: SubmitProductFormProps["initialDraft"],
+  now = new Date(),
 ) {
   const launches = draft?.tool.launches ?? [];
   const activeLaunch = launches.find(
-    (launch) => launch.status !== "REJECTED" && launch.status !== "ENDED",
+    (launch) =>
+      (launch.status === "PENDING" || launch.status === "APPROVED") &&
+      new Date(launch.launchDate).getTime() > now.getTime(),
   );
 
   if (activeLaunch) {
     return activeLaunch;
   }
 
-  if (draft?.preferredLaunchDate && draft.submissionType !== "LISTING_ONLY") {
+  if (
+    draft?.preferredLaunchDate &&
+    draft.submissionType !== "LISTING_ONLY" &&
+    new Date(draft.preferredLaunchDate).getTime() > now.getTime()
+  ) {
     return {
       id: draft.id,
       launchType:
@@ -344,6 +335,23 @@ function findActiveScheduledLaunch(
   }
 
   return null;
+}
+
+export function findPublishedLaunch(
+  draft: SubmitProductFormProps["initialDraft"],
+  now = new Date(),
+) {
+  const launches = draft?.tool.launches ?? [];
+
+  return (
+    launches.find(
+      (launch) =>
+        launch.status === "LIVE" ||
+        launch.status === "ENDED" ||
+        (launch.status === "APPROVED" &&
+          new Date(launch.launchDate).getTime() <= now.getTime()),
+    ) ?? null
+  );
 }
 
 function formatLaunchDate(value: string | null | undefined) {
@@ -426,11 +434,13 @@ export function SubmitProductForm({
   supportEmail,
   premiumLaunchWeeks,
   foundingPremiumLaunchSpotsLeft = 0,
-  foundingPremiumLaunchLimit = 100,
+  foundingPremiumLaunchLimit = 20,
   estimatedFreeLaunchDate = null,
   initialDraft = null,
 }: SubmitProductFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeSection = searchParams.get("section");
   const [activeTab, setActiveTab] = useState<"general" | "media" | "socials">("general");
   const [form, setForm] = useState<FormState>(
     initialDraft ? createFormFromDraft(initialDraft) : emptyForm(),
@@ -450,14 +460,9 @@ export function SubmitProductForm({
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
   const [isVerifyingBadge, setIsVerifyingBadge] = useState(false);
   const [isBadgePromptOpen, setIsBadgePromptOpen] = useState(false);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  useBodyScrollLock(
-    isScheduleModalOpen || isDeleteModalOpen || isBadgePromptOpen,
-  );
-  const [scheduleModalView, setScheduleModalView] = useState<"plans" | "premium-date">("plans");
-  const [premiumLaunchMonthIndex, setPremiumLaunchMonthIndex] = useState(0);
+  useBodyScrollLock(isDeleteModalOpen || isBadgePromptOpen);
   const [badgePromptSubmissionId, setBadgePromptSubmissionId] = useState<string | null>(null);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [slugStatus, setSlugStatus] = useState<string>("");
@@ -484,9 +489,13 @@ export function SubmitProductForm({
   );
   const [currentScheduledLaunch, setCurrentScheduledLaunch] =
     useState<ScheduledLaunch | null>(() => findActiveScheduledLaunch(initialDraft));
+  const [publishedLaunch] = useState<ScheduledLaunch | null>(() =>
+    findPublishedLaunch(initialDraft),
+  );
   const [lastSavedPayloadSignature, setLastSavedPayloadSignature] = useState<string | null>(null);
   const [badgeTheme, setBadgeTheme] = useState<BadgeTheme>("light");
   const [copiedBadgeTheme, setCopiedBadgeTheme] = useState<BadgeTheme | null>(null);
+  const [sidebarBadgeError, setSidebarBadgeError] = useState<string | null>(null);
   const [catSearch, setCatSearch] = useState("");
   const [tagSearch, setTagSearch] = useState("");
   const [isCatOpen, setIsCatOpen] = useState(false);
@@ -506,31 +515,32 @@ export function SubmitProductForm({
     currentScheduledLaunch?.launchType === "FREE"
       ? currentScheduledLaunch.launchDate
       : estimatedFreeLaunchDate;
-  const foundingPremiumSpotsLabel = formatFoundingPremiumSpotsLabel(
-    foundingPremiumLaunchSpotsLeft,
-    foundingPremiumLaunchLimit,
-  );
-  const premiumLaunchMonths = useMemo(
-    () => groupPremiumLaunchWeeksByMonth(premiumLaunchWeeks),
-    [premiumLaunchWeeks],
-  );
-  const visiblePremiumLaunchMonth =
-    premiumLaunchMonths[
-      Math.min(premiumLaunchMonthIndex, Math.max(premiumLaunchMonths.length - 1, 0))
-    ] ?? null;
+  const publishedLaunchDate = publishedLaunch?.launchDate ?? null;
   const selectedCategory = categories.find((category) => category.id === form.categoryIds[0]);
   const selectedTags = form.tagIds.flatMap((tagId) => {
     const tag = tags.find((item) => item.id === tagId);
     return tag ? [tag] : [];
   });
+  const isFreeLaunchSubmission =
+    Boolean(lastSavedDraft) &&
+    lastSavedDraft?.submissionType === "FREE_LAUNCH" &&
+    !isPremiumScheduled;
+  const currentBadgeVerification =
+    lastSavedDraft?.badgeVerification ?? "PENDING";
+  const isBadgeVerified = currentBadgeVerification === "VERIFIED";
+  const showBadgeVerifyCard = isFreeLaunchSubmission && !isBadgeVerified;
+  const showBadgeVerifiedCard = isFreeLaunchSubmission && isBadgeVerified;
   const shipboostUrl = appUrl.replace(/\/$/, "");
   const shipboostHost = shipboostUrl.replace(/^https?:\/\//, "");
+  const shipboostToolUrl = `${shipboostUrl}/tools/${encodeURIComponent(
+    form.requestedSlug.trim() || initialDraft?.tool.slug || "your-tool-slug",
+  )}`;
   const getBadgeAssetPath = (theme: BadgeTheme) =>
     theme === "light"
       ? "/ShipBoost-Badge/ShipBoost-Light-Badge.svg"
       : "/ShipBoost-Badge/ShipBoost-Dark-Badge.svg";
   const getBadgePreviewSrc = (theme: BadgeTheme) => `${shipboostUrl}${getBadgeAssetPath(theme)}`;
-  const getFreeLaunchBadgeSnippet = (theme: BadgeTheme) => `<a href="${shipboostUrl}" data-shipboost-badge="free-launch" target="_blank" rel="noopener">
+  const getFreeLaunchBadgeSnippet = (theme: BadgeTheme) => `<a href="${shipboostToolUrl}" data-shipboost-badge="free-launch" target="_blank" rel="noopener">
   <img src="${getBadgePreviewSrc(theme)}" alt="Featured on ShipBoost" style="height: 54px; width: auto;" />
 </a>`;
   const submissionChecklist = [
@@ -563,6 +573,57 @@ export function SubmitProductForm({
       ),
     [tagSearch, tags],
   );
+
+  function removeTag(tagId: string) {
+    setForm((current) => ({
+      ...current,
+      tagIds: current.tagIds.filter((id) => id !== tagId),
+    }));
+  }
+
+  function getImageFiles(fileList: FileList | null) {
+    if (!fileList?.length) {
+      return [];
+    }
+
+    return Array.from(fileList).filter((file) => file.type.startsWith("image/"));
+  }
+
+  function replaceLogoFile(file: File) {
+    if (logo) {
+      maybeRevokeObjectUrl(logo.previewUrl);
+    }
+
+    setLogo(createDraftImage(file));
+  }
+
+  function appendScreenshotFiles(fileList: FileList | null) {
+    const nextImages = getImageFiles(fileList).map(createDraftImage);
+
+    if (nextImages.length === 0) {
+      return;
+    }
+
+    setScreenshots((current) => [...current, ...nextImages].slice(0, 3));
+  }
+
+  function handleDragOver(event: React.DragEvent<HTMLElement>) {
+    event.preventDefault();
+  }
+
+  function handleLogoDrop(event: React.DragEvent<HTMLElement>) {
+    event.preventDefault();
+    const [file] = getImageFiles(event.dataTransfer.files);
+
+    if (file) {
+      replaceLogoFile(file);
+    }
+  }
+
+  function handleScreenshotsDrop(event: React.DragEvent<HTMLElement>) {
+    event.preventDefault();
+    appendScreenshotFiles(event.dataTransfer.files);
+  }
 
   useEffect(() => {
     if (!form.name.trim() || draftSubmissionId) return;
@@ -740,6 +801,7 @@ export function SubmitProductForm({
           submissionId: savedDraft.id,
         }),
       );
+      hasFormChangedRef.current = false;
       return savedDraft;
     } finally {
       setIsSavingDraft(false);
@@ -796,95 +858,30 @@ export function SubmitProductForm({
     }
   }
 
-  async function handleOpenScheduleModal(view: "plans" | "premium-date" = "plans") {
+  async function handleNavigateToLaunch() {
     setErrorMessage(null);
-    setSuccessMessage(null);
-    if (view === "premium-date") {
-      setPremiumLaunchMonthIndex(
-        getPremiumLaunchMonthIndexForDate(
-          premiumLaunchMonths,
-          form.preferredLaunchDate || scheduledLaunchDate,
-        ),
-      );
-    }
 
     if (incompleteChecklistItems.length > 0) {
       setErrorMessage(`Please complete: ${incompleteChecklistItems.join(", ")}.`);
       return;
     }
 
-    if (
-      view === "premium-date" &&
-      currentScheduledLaunch &&
-      draftSubmissionId
-    ) {
-      setScheduleModalView(view);
-      setIsScheduleModalOpen(true);
-      return;
-    }
-
     try {
-      await saveDraft({
-        submissionType: isPremiumScheduled ? "FEATURED_LAUNCH" : form.submissionType,
-      });
-      setScheduleModalView(view);
-      setIsScheduleModalOpen(true);
+      const overrides = {
+        submissionType: isPremiumScheduled
+          ? ("FEATURED_LAUNCH" as const)
+          : form.submissionType,
+      };
+      const overrideChanged = overrides.submissionType !== form.submissionType;
+      if (hasFormChangedRef.current || overrideChanged || !draftSubmissionId) {
+        await saveDraft(overrides);
+        hasFormChangedRef.current = false;
+      }
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("section", "launch");
+      router.push(`?${params.toString()}`);
     } catch (error) {
       setErrorMessage(getErrorMessage(error, "Unable to save before scheduling."));
-    }
-  }
-
-  async function handleJoinFreeQueue() {
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    setIsSubmittingDraft(true);
-
-    try {
-      const savedDraft = await saveDraft({
-        submissionType: "FREE_LAUNCH",
-        preferredLaunchDate: "",
-      });
-      const response = await fetch(`/api/submissions/${savedDraft.id}/schedule-free`, {
-        method: "POST",
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Unable to schedule your free launch.");
-      }
-
-      const data = payload.data as {
-        submission: SavedSubmission & {
-          preferredLaunchDate: string | null;
-          tool?: { launches?: ScheduledLaunch[] };
-        };
-        launch: ScheduledLaunch;
-      };
-
-      setLastSavedDraft({
-        id: data.submission.id,
-        submissionType: data.submission.submissionType,
-        reviewStatus: data.submission.reviewStatus,
-        paymentStatus: data.submission.paymentStatus,
-        badgeVerification: data.submission.badgeVerification,
-      });
-      setDraftSubmissionId(data.submission.id);
-      setDraftBadgeVerification(data.submission.badgeVerification);
-      setCurrentScheduledLaunch(data.launch);
-      setForm((current) => ({
-        ...current,
-        submissionType: "FREE_LAUNCH",
-        preferredLaunchDate:
-          data.submission.preferredLaunchDate?.slice(0, 10) ??
-          data.launch.launchDate.slice(0, 10),
-      }));
-      setBadgePromptSubmissionId(data.submission.id);
-      setIsScheduleModalOpen(false);
-      setIsBadgePromptOpen(true);
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Unable to schedule your launch."));
-    } finally {
-      setIsSubmittingDraft(false);
     }
   }
 
@@ -969,86 +966,108 @@ export function SubmitProductForm({
     setSuccessMessage("Launch scheduled.");
   }
 
-  async function handlePremiumLaunch() {
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    setIsSubmittingDraft(true);
+  async function handleVerifyBadgeFromSidebar() {
+    if (!draftSubmissionId) return;
+    setIsVerifyingBadge(true);
+    setSidebarBadgeError(null);
 
     try {
-      if (!premiumLaunchAvailable) {
-        throw new Error(premiumLaunchUnavailableMessage);
-      }
-
-      if (!form.preferredLaunchDate) {
-        throw new Error("Please choose your preferred launch week first.");
-      }
-
-      if (lastSavedDraft?.paymentStatus === "PAID" && draftSubmissionId) {
-        const response = await fetch(`/api/submissions/${draftSubmissionId}/reschedule`, {
-          method: "PATCH",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({ preferredLaunchDate: form.preferredLaunchDate }),
-        });
-        const payload = await response.json();
-
-        if (!response.ok) {
-          throw new Error(payload.error || "Unable to change launch date.");
-        }
-
-        setCurrentScheduledLaunch({
-          id: currentScheduledLaunch?.id ?? draftSubmissionId,
-          launchType: "FEATURED",
-          status: "APPROVED",
-          launchDate: form.preferredLaunchDate,
-        });
-        setIsScheduleModalOpen(false);
-        setSuccessMessage("Premium launch date updated.");
-        return;
-      }
-
-      const savedDraft =
-        currentScheduledLaunch && draftSubmissionId
-          ? { id: draftSubmissionId }
-          : await saveDraft({
-              submissionType: "FEATURED_LAUNCH",
-              preferredLaunchDate: form.preferredLaunchDate,
-            });
-      const response = await fetch("/api/dodo/checkout/premium-launch", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          submissionId: savedDraft.id,
-          preferredLaunchDate: form.preferredLaunchDate,
-        }),
-      });
+      const response = await fetch(
+        `/api/submissions/${draftSubmissionId}/verify-badge`,
+        { method: "POST" },
+      );
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error || "Unable to start checkout.");
+        throw new Error(payload.error || "Verification failed.");
       }
 
-      captureBrowserPostHogEvent("premium_launch_checkout_started", {
-        submission_id: savedDraft.id,
-        source_surface: "submit_product_form",
-      });
-      window.location.href = payload.data.checkoutUrl;
+      const nextBadgeVerification = payload.data.submission.badgeVerification;
+      setDraftBadgeVerification(nextBadgeVerification);
+      setLastSavedDraft((current) =>
+        current
+          ? { ...current, badgeVerification: nextBadgeVerification }
+          : current,
+      );
+      if (payload.data.verified) {
+        setSuccessMessage(payload.data.message || "Badge verified.");
+      } else {
+        setSidebarBadgeError(
+          payload.data.message ||
+            "Badge not found. Make sure it is on your homepage or footer.",
+        );
+      }
     } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Unable to continue with premium launch."));
+      setSidebarBadgeError(getErrorMessage(error, "Verification failed."));
     } finally {
-      setIsSubmittingDraft(false);
+      setIsVerifyingBadge(false);
     }
   }
 
-  function choosePremiumDate(value: string) {
-    setForm((current) => ({
-      ...current,
-      submissionType: "FEATURED_LAUNCH",
-      preferredLaunchDate: value,
-    }));
+  // Auto-save refs (debounced, only when logo is uploaded)
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveDraftFnRef = useRef(saveDraft);
+  const logoAssetRef = useRef(logo?.asset);
+  const isBusyRef = useRef(isBusy);
+  const hasFormChangedRef = useRef(false);
+  const isFirstFormEffectRef = useRef(true);
+
+  useEffect(() => { saveDraftFnRef.current = saveDraft; });
+  useEffect(() => { logoAssetRef.current = logo?.asset; });
+  useEffect(() => { isBusyRef.current = isBusy; });
+
+  useEffect(() => {
+    if (isFirstFormEffectRef.current) {
+      isFirstFormEffectRef.current = false;
+      return;
+    }
+    hasFormChangedRef.current = true;
+    if (!logoAssetRef.current) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      if (!logoAssetRef.current || isBusyRef.current) return;
+      saveDraftFnRef.current().catch(() => {});
+    }, 800);
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [form]);
+
+  if (activeSection === "launch" && draftSubmissionId) {
+    return (
+      <LaunchSection
+        submissionId={draftSubmissionId}
+        toolId={toolId}
+        freeLaunchEstimateDate={freeLaunchEstimateDate ?? null}
+        premiumLaunchWeeks={premiumLaunchWeeks}
+        foundingPremiumSpotsLeft={foundingPremiumLaunchSpotsLeft}
+        foundingPremiumLaunchLimit={foundingPremiumLaunchLimit}
+        currentScheduledLaunch={currentScheduledLaunch as never}
+        isPremiumScheduled={isPremiumScheduled}
+        isFreeScheduled={isFreeScheduled}
+        onBack={() => {
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete("section");
+          router.push(`?${params.toString()}`);
+        }}
+        onFreeScheduled={(launch, submission) => {
+          setLastSavedDraft({
+            id: submission.id,
+            submissionType: submission.submissionType as never,
+            reviewStatus: submission.reviewStatus as never,
+            paymentStatus: submission.paymentStatus as never,
+            badgeVerification: submission.badgeVerification as never,
+          });
+          setDraftSubmissionId(submission.id);
+          setCurrentScheduledLaunch(launch as never);
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete("section");
+          router.push(`?${params.toString()}`);
+          setBadgePromptSubmissionId(submission.id);
+          setIsBadgePromptOpen(true);
+        }}
+      />
+    );
   }
 
   return (
@@ -1122,219 +1141,6 @@ export function SubmitProductForm({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      ) : null}
-
-      {isScheduleModalOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 px-4 py-8 backdrop-blur-sm">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="schedule-launch-title"
-            className="w-full max-w-2xl rounded-2xl border border-border bg-background shadow-2xl"
-          >
-            <div className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
-              <h3 id="schedule-launch-title" className="text-lg font-black tracking-tight text-foreground">
-                {scheduleModalView === "plans"
-                  ? "Schedule your launch"
-                  : "Skip the line and launch your product"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsScheduleModalOpen(false)}
-                className="rounded-xl border border-border bg-card p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                aria-label="Close schedule modal"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {scheduleModalView === "plans" ? (
-              <div className="space-y-4 p-6">
-                <button
-                  type="button"
-                  onClick={() => void handleJoinFreeQueue()}
-                  disabled={isSubmittingDraft}
-                  className="w-full rounded-2xl border border-border bg-card p-5 text-left transition hover:border-foreground/40 disabled:opacity-50"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="rounded-xl border border-border bg-background p-2 text-muted-foreground">
-                      <CalendarDays size={18} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <h4 className="text-base font-black text-foreground">
-                          Join the waiting line (Free)
-                        </h4>
-                        <span className="text-sm font-black text-foreground">$0</span>
-                      </div>
-                      <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
-                        Get the next free launch slot. Free launches include a nofollow website link by default.
-                      </p>
-                      {freeLaunchEstimateDate ? (
-                        <>
-                          <p className="mt-2 text-xs font-bold text-muted-foreground">
-                            Estimated launch in{" "}
-                            <span className="text-foreground">
-                              ~{Math.max(
-                                1,
-                                Math.ceil(
-                                  (new Date(freeLaunchEstimateDate).getTime() -
-                                    Date.now()) /
-                                    86_400_000,
-                                ),
-                              )}{" "}
-                              days
-                            </span>{" "}
-                            (week of{" "}
-                            {getLaunchWeekCopyDate(freeLaunchEstimateDate)}).
-                          </p>
-                          <p className="mt-1 text-[11px] font-medium text-muted-foreground/70">
-                            Want to launch sooner? Choose any launch week
-                            yourself with Premium →
-                          </p>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setScheduleModalView("premium-date")}
-                  disabled={!premiumLaunchAvailable}
-                  className="w-full rounded-2xl border border-primary/30 bg-primary/5 p-5 text-left transition hover:border-primary disabled:opacity-50"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="rounded-xl bg-primary p-2 text-primary-foreground">
-                      <Sparkles size={18} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <h4 className="text-base font-black text-foreground">
-                          Premium Launch
-                        </h4>
-                        <span className="text-sm font-black text-foreground">
-                          <span className="mr-2 text-muted-foreground line-through">
-                            {foundingPremiumPrice.original}
-                          </span>
-                          {foundingPremiumPrice.discounted}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-[10px] font-black tracking-widest text-primary">
-                        {foundingPremiumSpotsLabel}
-                      </p>
-                      <ul className="mt-3 space-y-2 text-sm font-bold text-foreground/80">
-                        {[
-                          "Reserve a specific launch week",
-                          "Guaranteed dofollow backlink",
-                          "Get stronger baseline board placement",
-                          "Includes one hand-written editorial spotlight",
-                        ].map((item) => (
-                          <li key={item} className="flex gap-2">
-                            <Check size={15} className="mt-0.5 text-primary" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                      {!premiumLaunchAvailable ? (
-                        <p className="mt-3 text-xs font-bold text-amber-700">
-                          {premiumLaunchUnavailableMessage}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                </button>
-              </div>
-            ) : (
-              <div className="p-6">
-                <div className="rounded-2xl border border-border bg-card p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPremiumLaunchMonthIndex((current) => Math.max(current - 1, 0))
-                      }
-                      disabled={premiumLaunchMonthIndex === 0}
-                      className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
-                      aria-label="Previous launch month"
-                    >
-                      <ChevronLeft size={17} />
-                    </button>
-                    <div className="text-center">
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">
-                        Choose launch week
-                      </p>
-                      <h4 className="mt-1 text-lg font-black text-foreground">
-                        {visiblePremiumLaunchMonth?.label ?? "No weeks available"}
-                      </h4>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPremiumLaunchMonthIndex((current) =>
-                          Math.min(current + 1, Math.max(premiumLaunchMonths.length - 1, 0)),
-                        )
-                      }
-                      disabled={premiumLaunchMonthIndex >= premiumLaunchMonths.length - 1}
-                      className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
-                      aria-label="Next launch month"
-                    >
-                      <ChevronRight size={17} />
-                    </button>
-                  </div>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    {visiblePremiumLaunchMonth?.weeks.map((week) => (
-                      <button
-                        key={week.value}
-                        type="button"
-                        onClick={() => choosePremiumDate(week.value)}
-                        className={cn(
-                          "rounded-xl border px-4 py-3 text-left text-sm font-black transition",
-                          form.preferredLaunchDate === week.value
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border bg-background text-foreground hover:border-foreground/40",
-                        )}
-                      >
-                        {week.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold leading-relaxed text-muted-foreground">
-                    Premium Launch can be scheduled into any available future
-                    ShipBoost launch week in the next two years.
-                  </p>
-                </div>
-
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setScheduleModalView("plans")}
-                    className="text-sm font-bold text-muted-foreground transition hover:text-foreground"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handlePremiumLaunch()}
-                    disabled={isSubmittingDraft || !form.preferredLaunchDate}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-                  >
-                    {isSubmittingDraft ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <ArrowRight size={16} />
-                    )}
-                    {lastSavedDraft?.paymentStatus === "PAID"
-                      ? "Change launch date"
-                      : `Launch for ${foundingPremiumPrice.discounted}`}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       ) : null}
@@ -1463,8 +1269,8 @@ export function SubmitProductForm({
                 <div className="mt-5 space-y-3">
                   <button
                     type="button"
-                    onClick={() => void handleOpenScheduleModal("premium-date")}
-                    disabled={isBusy}
+                    onClick={() => void handleNavigateToLaunch()}
+                    disabled={isSubmittingDraft || isVerifyingBadge || isDeletingProduct}
                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
                   >
                     {isPremiumScheduled ? "Change launch date" : "Skip the waiting line"}
@@ -1481,6 +1287,23 @@ export function SubmitProductForm({
                   ) : null}
                 </div>
               </>
+            ) : publishedLaunch ? (
+              <>
+                <h3 className="text-lg font-black text-foreground">
+                  Launch Published
+                </h3>
+                <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                  Your product launched on {getLaunchWeekCopyDate(publishedLaunchDate)}.
+                  Keep your listing current so visitors get the best version of your product.
+                </p>
+                <Link
+                  href={`/tools/${form.requestedSlug}`}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+                >
+                  View public listing
+                  <ArrowRight size={14} />
+                </Link>
+              </>
             ) : (
               <>
                 <h3 className="text-lg font-black text-foreground">
@@ -1492,24 +1315,24 @@ export function SubmitProductForm({
                 </p>
                 <button
                   type="button"
-                  onClick={() => void handleOpenScheduleModal()}
-                  disabled={isBusy || !requiredFieldsComplete}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+                  onClick={() => void handleNavigateToLaunch()}
+                  disabled={(isSubmittingDraft || isVerifyingBadge || isDeletingProduct) || !requiredFieldsComplete}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-black/20 transition hover:opacity-90 disabled:opacity-50"
                 >
-                  {isBusy ? <Loader2 size={14} className="animate-spin" /> : <CalendarDays size={14} />}
+                  {(isSubmittingDraft || isVerifyingBadge || isDeletingProduct) ? <Loader2 size={14} className="animate-spin" /> : <CalendarDays size={14} />}
                   Schedule your launch
                 </button>
               </>
             )}
           </div>
 
-          {currentScheduledLaunch ? (
+          {showBadgeVerifyCard ? (
             <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <h3 className="text-lg font-black text-foreground">
-                Add a badge to your website
+                Add the ShipBoost badge
               </h3>
               <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
-                Build anticipation by displaying a badge on your website.
+                Add the badge to your homepage or footer, then verify it to upgrade your backlink to dofollow.
               </p>
               <div className="mt-5 space-y-3">
                 {(["light", "dark"] as const).map((theme) => (
@@ -1548,6 +1371,42 @@ export function SubmitProductForm({
                     </button>
                   </div>
                 ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleVerifyBadgeFromSidebar()}
+                disabled={isVerifyingBadge || !isValidUrl(form.websiteUrl)}
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+              >
+                {isVerifyingBadge ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <ShieldCheck size={14} />
+                )}
+                {isVerifyingBadge ? "Verifying..." : "Verify badge now"}
+              </button>
+              {sidebarBadgeError ? (
+                <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
+                  {sidebarBadgeError}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {showBadgeVerifiedCard ? (
+            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+                  <Check size={14} strokeWidth={3} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-foreground">
+                    Badge verified
+                  </h3>
+                  <p className="mt-1 text-xs font-medium leading-relaxed text-muted-foreground">
+                    Your backlink on ShipBoost is now dofollow. Keep the badge installed to maintain it.
+                  </p>
+                </div>
               </div>
             </div>
           ) : null}
@@ -1593,7 +1452,7 @@ export function SubmitProductForm({
               type="button"
               onClick={() => void handleSaveProduct()}
               disabled={isBusy}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm font-black text-foreground transition hover:bg-muted disabled:opacity-50"
             >
               {isSavingDraft ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
               {isSavingDraft ? "Saving..." : successMessage === "Product saved." ? "Saved" : "Save your product"}
@@ -1808,6 +1667,26 @@ export function SubmitProductForm({
                         })}
                       </div>
                     ) : null}
+                    {selectedTags.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedTags.map((tagItem) => (
+                          <span
+                            key={tagItem.id}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-bold text-foreground"
+                          >
+                            {tagItem.name}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tagItem.id)}
+                              className="inline-flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground transition hover:bg-background hover:text-foreground"
+                              aria-label={`Remove ${tagItem.name} tag`}
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
@@ -1868,17 +1747,20 @@ export function SubmitProductForm({
                         </button>
                       </div>
                     ) : null}
-                    <label className="flex h-32 w-56 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 text-center transition hover:bg-muted/50">
+                    <label
+                      className="flex h-32 w-56 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 text-center transition hover:border-foreground/40 hover:bg-muted/50"
+                      onDragOver={handleDragOver}
+                      onDrop={handleLogoDrop}
+                    >
                       <input
                         type="file"
                         accept="image/*"
                         className="hidden"
                         onChange={(event) => {
-                          if (event.target.files?.[0]) {
-                            if (logo) {
-                              maybeRevokeObjectUrl(logo.previewUrl);
-                            }
-                            setLogo(createDraftImage(event.target.files[0]));
+                          const [file] = getImageFiles(event.target.files);
+
+                          if (file) {
+                            replaceLogoFile(file);
                           }
                         }}
                       />
@@ -1922,18 +1804,17 @@ export function SubmitProductForm({
                     </div>
                   ) : null}
                   {screenshots.length < 3 ? (
-                    <label className="flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 text-center transition hover:bg-muted/50">
+                    <label
+                      className="flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 text-center transition hover:border-foreground/40 hover:bg-muted/50"
+                      onDragOver={handleDragOver}
+                      onDrop={handleScreenshotsDrop}
+                    >
                       <input
                         type="file"
                         multiple
                         accept="image/*"
                         className="hidden"
-                        onChange={(event) => {
-                          if (event.target.files) {
-                            const nextFiles = Array.from(event.target.files).map(createDraftImage);
-                            setScreenshots((current) => [...current, ...nextFiles].slice(0, 3));
-                          }
-                        }}
+                        onChange={(event) => appendScreenshotFiles(event.target.files)}
                       />
                       <ImageIcon size={28} className="text-muted-foreground" />
                       <span className="text-sm font-black text-foreground">

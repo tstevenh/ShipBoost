@@ -1,6 +1,5 @@
 import { prisma } from "@/server/db/client";
 import {
-  sendSubmissionApprovedEmailMessage,
   sendSubmissionRejectedEmailMessage,
 } from "@/server/email/transactional";
 import { AppError } from "@/server/http/app-error";
@@ -17,7 +16,6 @@ import type { SubmissionReviewInput } from "@/server/validators/submission";
 
 import {
   type DeferredEmailTask,
-  formatLaunchDateForEmail,
   getDashboardUrl,
   resolveLaunchType,
 } from "@/server/services/submission-service-shared";
@@ -276,7 +274,7 @@ export async function reviewSubmission(
     },
   };
 
-  const emailTask: DeferredEmailTask =
+  const emailTask: DeferredEmailTask | null =
     input.action === "REJECT"
       ? () =>
           sendSubmissionRejectedEmailMessage({
@@ -286,17 +284,7 @@ export async function reviewSubmission(
             toolName: reviewedSubmission.tool.name,
             founderVisibleNote: reviewedSubmission.founderVisibleNote,
           })
-      : () => {
-          const launchDate = reviewedLaunches[0]?.launchDate ?? null;
-
-          return sendSubmissionApprovedEmailMessage({
-            to: reviewedSubmission.user.email,
-            name: reviewedSubmission.user.name,
-            dashboardUrl: getDashboardUrl(),
-            toolName: reviewedSubmission.tool.name,
-            launchDate: launchDate ? formatLaunchDateForEmail(launchDate) : null,
-          });
-        };
+      : null;
 
   return {
     submission: reviewedSubmission,

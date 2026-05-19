@@ -24,7 +24,7 @@ type SubmitPageProps = {
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Submit Your SaaS Product | ShipBoost",
   description:
-    "Submit your SaaS product to ShipBoost, choose a Free Launch or Premium Launch path, and turn launch into ongoing distribution.",
+    "Submit your SaaS product to ShipBoost. Free Launch for launch-day exposure, Premium Launch with a hand-written editorial spotlight that keeps sending you visitors long after launch day.",
   url: "/submit",
 });
 
@@ -202,28 +202,6 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
   return (
     <main className="flex-1 flex flex-col bg-muted/20 pt-32">
       <section className="mx-auto mb-32 w-full max-w-[1500px] px-4 sm:px-6">
-        <div className="mb-8 flex flex-col gap-4 rounded-xl border border-border bg-card px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 inline-flex rounded-lg border border-border bg-muted p-2 text-muted-foreground">
-              <ArrowRight size={16} />
-            </span>
-            <div>
-              <h2 className="text-sm font-black text-foreground">
-                Submit your product to ShipBoost
-              </h2>
-              <p className="mt-1 text-sm font-medium text-muted-foreground">
-                Save your listing, schedule a free launch, or skip the waiting line with Premium Launch.
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
-          >
-            Compare launch options
-            <ArrowRight size={15} />
-          </Link>
-        </div>
         <SubmitProductForm
           categories={categories}
           tags={tags}

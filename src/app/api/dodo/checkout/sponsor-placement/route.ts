@@ -10,11 +10,15 @@ export async function POST(request: NextRequest) {
     const session = await requireSession(request);
     const body = sponsorPlacementCheckoutSchema.parse(await request.json());
 
-    const checkout = await createSponsorPlacementCheckout(body.toolId, {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name,
-    });
+    const checkout = await createSponsorPlacementCheckout(
+      body.toolId,
+      {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+      },
+      body.slot,
+    );
 
     return ok(checkout);
   } catch (error) {

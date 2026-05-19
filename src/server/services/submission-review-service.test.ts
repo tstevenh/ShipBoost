@@ -1,11 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { formatLaunchDateForEmail } from "@/server/services/submission-service-shared";
-
 const {
   prismaMock,
   getSubmissionByIdMock,
-  sendSubmissionApprovedEmailMessageMock,
   sendSubmissionRejectedEmailMessageMock,
   scheduleNextFreeLaunchDateMock,
 } = vi.hoisted(() => ({
@@ -23,7 +20,6 @@ const {
     $transaction: vi.fn(),
   },
   getSubmissionByIdMock: vi.fn(),
-  sendSubmissionApprovedEmailMessageMock: vi.fn(),
   sendSubmissionRejectedEmailMessageMock: vi.fn(),
   scheduleNextFreeLaunchDateMock: vi.fn(),
 }));
@@ -37,7 +33,6 @@ vi.mock("@/server/repositories/submission-repository", () => ({
 }));
 
 vi.mock("@/server/email/transactional", () => ({
-  sendSubmissionApprovedEmailMessage: sendSubmissionApprovedEmailMessageMock,
   sendSubmissionRejectedEmailMessage: sendSubmissionRejectedEmailMessageMock,
 }));
 
@@ -150,20 +145,7 @@ describe("submission-review-service", () => {
         }),
       }),
     );
-    expect(sendSubmissionApprovedEmailMessageMock).not.toHaveBeenCalled();
-
-    sendSubmissionApprovedEmailMessageMock.mockReturnValue(Promise.resolve());
-    await result.emailTask();
-
-    expect(sendSubmissionApprovedEmailMessageMock).toHaveBeenCalledWith({
-      to: "founder@acme.com",
-      name: "Founder",
-      dashboardUrl: "https://app.shipboost.test/dashboard",
-      toolName: "Acme",
-      launchDate: formatLaunchDateForEmail(
-        new Date("2026-04-10T00:00:00.000Z"),
-      ),
-    });
+    expect(result.emailTask).toBeNull();
   });
 
   it("does not unpublish the existing tool when a relaunch is rejected", async () => {
@@ -238,6 +220,10 @@ describe("submission-review-service", () => {
     expect(sendSubmissionRejectedEmailMessageMock).not.toHaveBeenCalled();
 
     sendSubmissionRejectedEmailMessageMock.mockReturnValue(Promise.resolve());
+    expect(result.emailTask).not.toBeNull();
+    if (!result.emailTask) {
+      throw new Error("Expected rejection review to return an email task.");
+    }
     await result.emailTask();
 
     expect(sendSubmissionRejectedEmailMessageMock).toHaveBeenCalledWith({

@@ -1,4 +1,3 @@
-export type ToolOutboundTarget = "website" | "affiliate";
 export type ToolOutboundSource =
   | "tool_page"
   | "tool_page_related"
@@ -8,19 +7,6 @@ export type ToolOutboundSource =
   | "best_tag_page"
   | "alternatives_page"
   | "sponsor_slot";
-
-export function buildTrackedToolOutboundUrl(
-  toolId: string,
-  target: ToolOutboundTarget,
-  source: ToolOutboundSource,
-) {
-  const searchParams = new URLSearchParams({
-    target,
-    source,
-  });
-
-  return `/api/outbound/tool/${toolId}?${searchParams.toString()}`;
-}
 
 const SHIPBOOST_UTM_SOURCE = "shipboost";
 const SHIPBOOST_UTM_MEDIUM = "referral";

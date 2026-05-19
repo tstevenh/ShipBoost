@@ -3,9 +3,9 @@ import { getDodoClient } from "@/server/dodo";
 import { sendSponsorPlacementRenewalReminderEmailMessage } from "@/server/email/transactional";
 import { getEnv } from "@/server/env";
 import { AppError } from "@/server/http/app-error";
-import { getPublicLaunchWhere } from "@/server/services/public-tool-visibility";
+import { getSponsorSlotConfig } from "@/server/services/sponsor-pricing";
+import type { SponsorSlot } from "@prisma/client";
 
-const SPONSOR_SLOT_LIMIT = 3;
 const SPONSOR_PLACEMENT_DAYS = 30;
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -19,45 +19,22 @@ function addDays(date: Date, days: number) {
   return new Date(date.getTime() + days * DAY_IN_MS);
 }
 
-function getActivePlacementWhere(now = new Date()) {
+function getActivePlacementWhere(now = new Date(), slot?: SponsorSlot) {
   return {
     status: "ACTIVE" as const,
     disabledAt: null,
     endsAt: { gt: now },
+    ...(slot ? { slot } : {}),
   };
 }
 
-function getVisiblePlacementWhere(now = new Date()) {
-  return getActivePlacementWhere(now);
+function getVisiblePlacementWhere(now = new Date(), slot?: SponsorSlot) {
+  return getActivePlacementWhere(now, slot);
 }
 
-function getSponsorEligibleToolWhere(founderId: string, now = new Date()) {
+function getSponsorEligibleToolWhere(founderId: string) {
   return {
     ownerUserId: founderId,
-    publicationStatus: "PUBLISHED" as const,
-    moderationStatus: "APPROVED" as const,
-    OR: [
-      {
-        launches: {
-          none: {},
-        },
-      },
-      {
-        launches: {
-          some: getPublicLaunchWhere(now),
-        },
-      },
-      {
-        launches: {
-          some: {
-            status: "APPROVED" as const,
-            launchDate: {
-              gt: now,
-            },
-          },
-        },
-      },
-    ],
   };
 }
 
@@ -72,10 +49,35 @@ function getDodoSponsorPlacementReturnUrl(placementId: string) {
   return url.toString();
 }
 
-export async function countActiveSponsorPlacements(now = new Date()) {
+export async function countActiveSponsorPlacements(
+  now = new Date(),
+  slot?: SponsorSlot,
+) {
   return prisma.sponsorPlacement.count({
-    where: getActivePlacementWhere(now),
+    where: getActivePlacementWhere(now, slot),
   });
+}
+
+export async function countActiveSponsorPlacementsBySlot(
+  now = new Date(),
+): Promise<Record<SponsorSlot, number>> {
+  const counts = await prisma.sponsorPlacement.groupBy({
+    by: ["slot"],
+    where: getActivePlacementWhere(now),
+    _count: { id: true },
+  });
+
+  const result: Record<SponsorSlot, number> = {
+    SIDEBAR: 0,
+    INLINE_BANNER: 0,
+    INLINE_PRODUCT: 0,
+  };
+
+  for (const row of counts) {
+    result[row.slot] = row._count.id;
+  }
+
+  return result;
 }
 
 export async function listFounderSponsorEligibleTools(founderId: string) {
@@ -90,18 +92,21 @@ export async function listFounderSponsorEligibleTools(founderId: string) {
       logoMedia: { select: { url: true } },
       sponsorPlacements: {
         where: getActivePlacementWhere(),
-        select: { id: true, endsAt: true },
-        take: 1,
+        select: { slot: true },
       },
     },
     orderBy: { name: "asc" },
   });
 }
 
-export async function listActiveSponsorPlacements(now = new Date()) {
+export async function listActiveSponsorPlacements(
+  slot?: SponsorSlot,
+  now = new Date(),
+) {
+  const config = slot ? getSponsorSlotConfig(slot) : null;
   return prisma.sponsorPlacement.findMany({
     where: {
-      ...getVisiblePlacementWhere(now),
+      ...getVisiblePlacementWhere(now, slot),
       tool: {
         publicationStatus: "PUBLISHED",
         moderationStatus: "APPROVED",
@@ -109,6 +114,7 @@ export async function listActiveSponsorPlacements(now = new Date()) {
     },
     select: {
       id: true,
+      slot: true,
       startsAt: true,
       endsAt: true,
       tool: {
@@ -118,6 +124,7 @@ export async function listActiveSponsorPlacements(now = new Date()) {
           name: true,
           tagline: true,
           websiteUrl: true,
+          affiliateUrl: true,
           logoMedia: { select: { url: true } },
           toolCategories: {
             select: { category: { select: { name: true, slug: true } } },
@@ -128,7 +135,7 @@ export async function listActiveSponsorPlacements(now = new Date()) {
       },
     },
     orderBy: { startsAt: "asc" },
-    take: SPONSOR_SLOT_LIMIT,
+    ...(config ? { take: config.inventoryCap } : {}),
   });
 }
 
@@ -146,6 +153,7 @@ export async function listFounderSponsorPlacements(founderId: string) {
     select: {
       id: true,
       status: true,
+      slot: true,
       startsAt: true,
       endsAt: true,
       paidAt: true,
@@ -168,13 +176,23 @@ export async function listFounderSponsorPlacements(founderId: string) {
 export async function createSponsorPlacementCheckout(
   toolId: string,
   founder: FounderLike,
+  slot: SponsorSlot = "SIDEBAR",
 ) {
+  const slotConfig = getSponsorSlotConfig(slot);
+
+  if (!slotConfig.dodoProductId) {
+    throw new AppError(
+      500,
+      `Dodo product for ${slot} sponsor placement is not configured.`,
+    );
+  }
+
   const tool = await prisma.tool.findFirst({
     where: {
       id: toolId,
       ...getSponsorEligibleToolWhere(founder.id),
       sponsorPlacements: {
-        none: getActivePlacementWhere(),
+        none: getActivePlacementWhere(new Date(), slot),
       },
     },
     select: {
@@ -190,25 +208,20 @@ export async function createSponsorPlacementCheckout(
   });
 
   if (!tool) {
-    throw new AppError(400, "Tool is not eligible for sponsor placement.");
-  }
-
-  if ((await countActiveSponsorPlacements()) >= SPONSOR_SLOT_LIMIT) {
-    throw new AppError(409, "Sponsor placements are sold out.");
-  }
-
-  const env = getEnv();
-
-  if (!env.DODO_SPONSOR_PLACEMENT_PRODUCT_ID) {
     throw new AppError(
-      500,
-      "Dodo sponsor placement product is not configured.",
+      400,
+      "Tool is not eligible for this sponsor placement tier.",
     );
+  }
+
+  if ((await countActiveSponsorPlacements(new Date(), slot)) >= slotConfig.inventoryCap) {
+    throw new AppError(409, `${slotConfig.label} sponsor placements are sold out.`);
   }
 
   const placement = await prisma.sponsorPlacement.create({
     data: {
       toolId: tool.id,
+      slot,
       status: "PENDING_PAYMENT",
     },
     select: { id: true },
@@ -222,7 +235,7 @@ export async function createSponsorPlacementCheckout(
     checkout = await getDodoClient().checkoutSessions.create({
       product_cart: [
         {
-          product_id: env.DODO_SPONSOR_PLACEMENT_PRODUCT_ID,
+          product_id: slotConfig.dodoProductId,
           quantity: 1,
         },
       ],
@@ -235,6 +248,7 @@ export async function createSponsorPlacementCheckout(
         shipboostProduct: "sponsor_placement",
         shipboostToolId: tool.id,
         shipboostSponsorPlacementId: placement.id,
+        shipboostSponsorSlot: slot,
       },
     });
   } catch (error) {
@@ -391,6 +405,7 @@ export async function handleSponsorPlacementPaymentSucceeded(input: {
         where: { id: placementId },
         select: {
           id: true,
+          slot: true,
           status: true,
           startsAt: true,
           tool: {
@@ -410,6 +425,7 @@ export async function handleSponsorPlacementPaymentSucceeded(input: {
           where: { checkoutSessionId: input.checkoutSessionId },
           select: {
             id: true,
+            slot: true,
             status: true,
             startsAt: true,
             tool: {
@@ -437,7 +453,8 @@ export async function handleSponsorPlacementPaymentSucceeded(input: {
   const now = new Date();
   const startsAt = now;
 
-  if ((await countActiveSponsorPlacements(now)) >= SPONSOR_SLOT_LIMIT) {
+  const slotConfig = getSponsorSlotConfig(placement.slot);
+  if ((await countActiveSponsorPlacements(now, placement.slot)) >= slotConfig.inventoryCap) {
     return prisma.sponsorPlacement.update({
       where: { id: placement.id },
       data: {
@@ -564,4 +581,58 @@ export async function processSponsorPlacementLifecycle(now = new Date()) {
     expiredCount: expired.count,
     remindersSent,
   };
+}
+
+export async function createPendingSponsorPlacements(
+  toolId: string,
+  founderId: string,
+  slots: SponsorSlot[],
+): Promise<Array<{ slot: SponsorSlot; placementId: string }>> {
+  if (slots.length === 0) return [];
+
+  const tool = await prisma.tool.findFirst({
+    where: { id: toolId, ...getSponsorEligibleToolWhere(founderId) },
+    select: { id: true },
+  });
+
+  if (!tool) {
+    throw new AppError(400, "Tool is not eligible for sponsor placements.");
+  }
+
+  const now = new Date();
+  const [activeCountsBySlot, activeForTool] = await Promise.all([
+    countActiveSponsorPlacementsBySlot(now),
+    prisma.sponsorPlacement.findMany({
+      where: { toolId, slot: { in: slots }, ...getActivePlacementWhere(now) },
+      select: { slot: true },
+    }),
+  ]);
+  const activeSlotsForTool = new Set(activeForTool.map((p) => p.slot));
+
+  for (const slot of slots) {
+    const slotConfig = getSponsorSlotConfig(slot);
+
+    if (!slotConfig.dodoProductId) {
+      throw new AppError(500, `Dodo product for ${slot} sponsor placement is not configured.`);
+    }
+
+    if (activeCountsBySlot[slot] >= slotConfig.inventoryCap) {
+      throw new AppError(409, `${slotConfig.label} sponsor placements are sold out.`);
+    }
+
+    if (activeSlotsForTool.has(slot)) {
+      throw new AppError(409, `Tool already has an active ${slotConfig.label} sponsor placement.`);
+    }
+  }
+
+  const created = await Promise.all(
+    slots.map((slot) =>
+      prisma.sponsorPlacement.create({
+        data: { toolId, slot, status: "PENDING_PAYMENT" },
+        select: { id: true, slot: true },
+      }),
+    ),
+  );
+
+  return created.map((row) => ({ slot: row.slot, placementId: row.id }));
 }

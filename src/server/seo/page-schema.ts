@@ -1,11 +1,70 @@
 import {
   buildBreadcrumbList,
   buildCollectionPage,
+  buildFaqSchema,
+  buildHowToSchema,
   buildItemList,
   buildOrganization,
   buildSoftwareApplication,
   buildWebSite,
 } from "@/server/seo/schema-builders";
+
+export function buildFreeToolsIndexSchema(input: {
+  title: string;
+  description: string;
+  url: string;
+  items: { name: string; url: string }[];
+}) {
+  return buildCollectionListingSchema({
+    name: input.title,
+    description: input.description,
+    url: input.url,
+    items: input.items,
+  });
+}
+
+export function buildFreeToolPageSchema(input: {
+  name: string;
+  description: string;
+  url: string;
+  breadcrumbs: { name: string; url: string }[];
+  applicationCategory: string;
+  faq: { question: string; answer: string }[];
+  howTo?: {
+    name: string;
+    description: string;
+    steps: string[];
+  };
+  type?: "SoftwareApplication" | "WebApplication";
+}) {
+  const application = buildSoftwareApplication({
+    name: input.name,
+    description: input.description,
+    url: input.url,
+    applicationCategory: input.applicationCategory,
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+  });
+
+  return [
+    buildBreadcrumbList(input.breadcrumbs),
+    {
+      ...application,
+      "@type": input.type ?? "SoftwareApplication",
+    },
+    ...(input.howTo ? [buildHowToSchema(input.howTo)] : []),
+    buildFaqSchema({
+      name: input.name,
+      description: input.description,
+      url: input.url,
+      questions: input.faq,
+    }),
+  ];
+}
 
 export function buildHomePageSchema(input: {
   title: string;

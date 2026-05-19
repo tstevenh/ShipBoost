@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { ToolPrelaunchPageContent } from "@/components/public/tool-prelaunch-page-content";
 import { ToolPageContent } from "@/components/public/tool-page-content";
 import { getEnv } from "@/server/env";
 import {
-  getCachedPublishedTool,
+  getCachedToolPage,
   getCachedRelatedPublishedTools,
   getCachedToolStaticParams,
 } from "@/server/cache/public-content";
@@ -29,15 +30,55 @@ export async function generateMetadata(
   context: RouteContext,
 ): Promise<Metadata> {
   const { slug } = await context.params;
-  const tool = await getCachedPublishedTool(slug);
+  const toolPage = await getCachedToolPage(slug);
 
-  if (!tool) {
+  if (!toolPage) {
     return {
       title: "Tool not found | ShipBoost",
     };
   }
 
   const env = getEnv();
+
+  if (toolPage.kind === "prelaunch") {
+    const { tool } = toolPage;
+    const canonical = `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`;
+
+    return {
+      title: `${tool.name} is launching soon | ShipBoost`,
+      description: `${tool.name}: ${tool.tagline}`,
+      alternates: {
+        canonical,
+      },
+      robots: {
+        index: false,
+        follow: false,
+      },
+      openGraph: {
+        title: `${tool.name} is launching soon | ShipBoost`,
+        description: `${tool.name}: ${tool.tagline}`,
+        url: canonical,
+        siteName: "ShipBoost",
+        type: "website",
+        images: tool.logoMedia
+          ? [
+              {
+                url: tool.logoMedia.url,
+                alt: `${tool.name} logo`,
+              },
+            ]
+          : undefined,
+      },
+      twitter: {
+        card: tool.logoMedia ? "summary_large_image" : "summary",
+        title: `${tool.name} is launching soon | ShipBoost`,
+        description: `${tool.name}: ${tool.tagline}`,
+        images: tool.logoMedia ? [tool.logoMedia.url] : undefined,
+      },
+    };
+  }
+
+  const { tool } = toolPage;
   const title = buildToolPageTitle(tool);
   const description = buildToolPageDescription(tool);
   const canonical = resolveSameOriginCanonicalUrl(
@@ -45,7 +86,7 @@ export async function generateMetadata(
     `${env.NEXT_PUBLIC_APP_URL}/tools/${tool.slug}`,
   );
 
-  return {
+  const metadata: Metadata = {
     title,
     description,
     alternates: {
@@ -73,16 +114,28 @@ export async function generateMetadata(
       images: tool.logoMedia ? [tool.logoMedia.url] : undefined,
     },
   };
+
+  return metadata;
 }
 
 export default async function ToolPage(context: RouteContext) {
   const { slug } = await context.params;
-  const tool = await getCachedPublishedTool(slug);
+  const toolPage = await getCachedToolPage(slug);
 
-  if (!tool) {
+  if (!toolPage) {
     notFound();
   }
 
+  if (toolPage.kind === "prelaunch") {
+    return (
+      <ToolPrelaunchPageContent
+        tool={toolPage.tool}
+        launchDate={toolPage.launchDate}
+      />
+    );
+  }
+
+  const { tool } = toolPage;
   const primaryCategory = tool.toolCategories[0]?.category ?? null;
   const env = getEnv();
   const canonical = resolveSameOriginCanonicalUrl(

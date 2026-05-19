@@ -135,6 +135,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const serializedSponsorPlacements = sponsorPlacements.map((placement) => ({
     id: placement.id,
     status: placement.status,
+    slot: placement.slot,
     startsAt: placement.startsAt?.toISOString() ?? null,
     endsAt: placement.endsAt?.toISOString() ?? null,
     paidAt: placement.paidAt?.toISOString() ?? null,

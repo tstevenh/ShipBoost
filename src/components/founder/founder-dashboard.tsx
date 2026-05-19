@@ -64,9 +64,18 @@ type FounderListingClaim = {
   };
 };
 
+type SponsorSlot = "SIDEBAR" | "INLINE_BANNER" | "INLINE_PRODUCT";
+
+const SLOT_LABELS: Record<SponsorSlot, string> = {
+  SIDEBAR: "Sidebar",
+  INLINE_BANNER: "Banner",
+  INLINE_PRODUCT: "Product ad",
+};
+
 type FounderSponsorPlacement = {
   id: string;
   status: "PENDING_PAYMENT" | "ACTIVE" | "PAID_WAITLISTED" | "EXPIRED" | "DISABLED";
+  slot: SponsorSlot;
   startsAt: string | null;
   endsAt: string | null;
   paidAt: string | null;
@@ -497,7 +506,7 @@ export function FounderDashboard({
                     SPONSORSHIPS
                   </p>
                   <h2 className="mt-2 text-xl font-black tracking-tight text-foreground">
-                    Sidebar sponsor placements
+                    Sponsor placements
                   </h2>
                 </div>
                 <Link
@@ -510,13 +519,13 @@ export function FounderDashboard({
               </div>
               <div className="mt-5 grid gap-3">
                 {sponsorPlacements.length > 0 ? (
-                  sponsorPlacements.slice(0, 3).map((placement) => (
+                  sponsorPlacements.map((placement) => (
                     <div
                       key={placement.id}
-                      className="flex flex-col gap-4 rounded-2xl border border-border bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex items-center gap-3 rounded-xl border border-border bg-muted/20 px-3 py-2.5"
                     >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-border bg-muted">
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
                           {placement.tool.logoMedia ? (
                             <>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -530,18 +539,21 @@ export function FounderDashboard({
                             <Megaphone size={16} className="m-3 text-muted-foreground" />
                           )}
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-black text-foreground">
                             {placement.tool.name}
                           </p>
-                          <p className="truncate text-xs font-bold text-muted-foreground">
+                          <p className="truncate text-[11px] font-bold text-muted-foreground">
                             {placement.endsAt
                               ? `Ends ${formatDate(placement.endsAt)}`
                               : `Created ${formatDate(placement.createdAt)}`}
                           </p>
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <span className="rounded-full border border-border bg-muted/30 px-2 py-0.5 text-[10px] font-black tracking-widest text-muted-foreground">
+                          {SLOT_LABELS[placement.slot]}
+                        </span>
                         <StatusChip
                           label={sponsorStatusLabel(placement.status)}
                           tone={sponsorStatusTone(placement.status)}
@@ -549,10 +561,10 @@ export function FounderDashboard({
                         <Link
                           href={placement.tool.websiteUrl}
                           target="_blank"
-                          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-black hover:bg-muted"
+                          aria-label="Visit website"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
-                          <ExternalLink size={13} />
-                          Website
+                          <ExternalLink size={12} />
                         </Link>
                       </div>
                     </div>
@@ -612,7 +624,7 @@ export function FounderDashboard({
                           ) : null}
                           {sponsorPlacement ? (
                             <StatusChip
-                              label={`Sponsor: ${sponsorStatusLabel(sponsorPlacement.status)}`}
+                              label={`${SLOT_LABELS[sponsorPlacement.slot]}: ${sponsorStatusLabel(sponsorPlacement.status)}`}
                               tone={sponsorStatusTone(sponsorPlacement.status)}
                             />
                           ) : null}
@@ -665,7 +677,12 @@ export function FounderDashboard({
                       </div>
                   </div>
                     {sub?.submissionType === "FEATURED_LAUNCH" &&
-                    sub.paymentStatus === "PAID" ? (
+                    sub.paymentStatus === "PAID" &&
+                    !sub.tool.launches.some(
+                      (l) =>
+                        l.launchType === "FEATURED" &&
+                        (l.status === "LIVE" || l.status === "ENDED"),
+                    ) ? (
                       <div className="rounded-[1.5rem] border border-border bg-muted/20 p-4 sm:p-5">
                         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                           <div className="space-y-2">

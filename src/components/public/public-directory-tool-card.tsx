@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { PostHogImpressionTracker } from "@/components/analytics/posthog-impression-tracker";
 import { ToolUpvoteButton } from "@/components/public/tool-upvote-button";
 import { PremiumLaunchIndicator } from "@/components/public/premium-launch-indicator";
 import { LogoFallback } from "@/components/ui/logo-fallback";
@@ -14,6 +15,7 @@ type PublicDirectoryToolCardProps = {
   tagline: string;
   logoUrl?: string | null;
   websiteUrl?: string | null;
+  affiliateUrl?: string | null;
   slug: string;
   rank?: number;
   votes: number;
@@ -28,6 +30,7 @@ type PublicDirectoryToolCardProps = {
   } | null;
   imagePriority?: boolean;
   isPremiumLaunch?: boolean;
+  sourceSurface?: "launch_board" | "category_page" | "best_tag_page" | "alternatives_page";
 };
 
 export function PublicDirectoryToolCard({
@@ -36,6 +39,7 @@ export function PublicDirectoryToolCard({
   tagline,
   logoUrl,
   websiteUrl,
+  affiliateUrl,
   slug,
   rank,
   votes,
@@ -44,6 +48,7 @@ export function PublicDirectoryToolCard({
   primaryCategory = null,
   imagePriority = false,
   isPremiumLaunch = false,
+  sourceSurface,
 }: PublicDirectoryToolCardProps) {
   const visibleLinkedTags = linkedTags.slice(0, 3);
   const fallbackTags =
@@ -61,6 +66,7 @@ export function PublicDirectoryToolCard({
 
   const externalHref = buildToolOutboundHref({
     websiteUrl,
+    affiliateUrl,
     source: "launch_board",
     toolSlug: slug,
   });
@@ -71,6 +77,20 @@ export function PublicDirectoryToolCard({
         "group relative flex items-center gap-3 md:gap-4 px-4 sm:px-5 py-4 border-b border-border/60 transition-colors duration-200 hover:bg-muted cursor-pointer min-w-0 overflow-hidden",
       )}
     >
+      <PostHogImpressionTracker
+        eventName="product_card_impression"
+        impressionId={`product_card:${toolId}:${rank ?? "unranked"}`}
+        properties={{
+          placement_type: "product_card",
+          tool_id: toolId,
+          tool_slug: slug,
+          tool_name: name,
+          source_surface: sourceSurface,
+          position: rank,
+          is_featured: isPremiumLaunch,
+          current_launch_type: isPremiumLaunch ? "FEATURED" : undefined,
+        }}
+      />
       {/* Full-card overlay link → tool detail page (clicked when no inner interactive element catches the click) */}
       <Link
         href={`/tools/${slug}`}
@@ -141,7 +161,9 @@ export function PublicDirectoryToolCard({
                 data-shipboost-tool-id={toolId}
                 data-shipboost-tool-slug={slug}
                 data-shipboost-tool-name={name}
-                data-shipboost-tool-destination-type="website"
+                data-shipboost-tool-destination-type={
+                  affiliateUrl ? "affiliate" : "website"
+                }
                 className="pointer-events-auto truncate text-lg font-bold tracking-tight text-foreground transition-colors hover:text-foreground/70 hover:underline underline-offset-4"
               >
                 {name}

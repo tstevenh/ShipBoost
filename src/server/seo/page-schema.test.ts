@@ -8,6 +8,8 @@ import {
   buildCollectionWithBreadcrumbSchema,
   buildContactPageSchema,
   buildFaqPageSchema,
+  buildFreeToolPageSchema,
+  buildFreeToolsIndexSchema,
   buildHomePageSchema,
   buildPricingPageSchema,
   buildSimpleWebPageSchema,
@@ -190,5 +192,79 @@ describe("page-schema", () => {
     });
 
     expect(schema["@type"]).toBe("WebPage");
+  });
+
+  it("builds collection schema for the free tools index", () => {
+    const schemas = buildFreeToolsIndexSchema({
+      title: "Free Tools",
+      description: "Free browser tools.",
+      url: "https://shipboost.io/free-tools",
+      items: [
+        {
+          name: "Reaction Time Test",
+          url: "https://shipboost.io/free-tools/reaction-time-test",
+        },
+      ],
+    });
+
+    expect(schemas.map((item) => item["@type"])).toEqual([
+      "ItemList",
+      "CollectionPage",
+    ]);
+  });
+
+  it("builds breadcrumb, app, and FAQ schema for the reaction test", () => {
+    const schemas = buildFreeToolPageSchema({
+      name: "Reaction Time Test",
+      description: "Test your reflexes.",
+      url: "https://shipboost.io/free-tools/reaction-time-test",
+      type: "WebApplication",
+      applicationCategory: "GameApplication",
+      breadcrumbs: [
+        { name: "Home", url: "https://shipboost.io" },
+        { name: "Free Tools", url: "https://shipboost.io/free-tools" },
+        {
+          name: "Reaction Time Test",
+          url: "https://shipboost.io/free-tools/reaction-time-test",
+        },
+      ],
+      faq: [{ question: "Is it free?", answer: "Yes." }],
+    });
+
+    expect(schemas.map((item) => item["@type"])).toEqual([
+      "BreadcrumbList",
+      "WebApplication",
+      "FAQPage",
+    ]);
+  });
+
+  it("builds breadcrumb, app, HowTo, and FAQ schema for notification mockups", () => {
+    const schemas = buildFreeToolPageSchema({
+      name: "Fake Notification Generator",
+      description: "Create notification mockups.",
+      url: "https://shipboost.io/free-tools/fake-notification-generator",
+      applicationCategory: "DesignApplication",
+      breadcrumbs: [
+        { name: "Home", url: "https://shipboost.io" },
+        { name: "Free Tools", url: "https://shipboost.io/free-tools" },
+        {
+          name: "Fake Notification Generator",
+          url: "https://shipboost.io/free-tools/fake-notification-generator",
+        },
+      ],
+      howTo: {
+        name: "Create a notification mockup",
+        description: "Steps",
+        steps: ["Choose a preset", "Edit fields", "Export PNG"],
+      },
+      faq: [{ question: "Is it free?", answer: "Yes." }],
+    });
+
+    expect(schemas.map((item) => item["@type"])).toEqual([
+      "BreadcrumbList",
+      "SoftwareApplication",
+      "HowTo",
+      "FAQPage",
+    ]);
   });
 });

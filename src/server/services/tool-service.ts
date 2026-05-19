@@ -24,7 +24,10 @@ import { createUniqueToolSlug } from "@/server/services/slug";
 import { assertCatalogAssignments } from "@/server/services/catalog";
 import {
   combinePubliclyVisibleToolWhere,
+  getPrelaunchToolPageWhere,
   getPubliclyVisibleToolWhere,
+  getToolPrelaunchDate,
+  isToolPrelaunchPageVisible,
 } from "@/server/services/public-tool-visibility";
 import { getToolUpvoteCount } from "@/server/services/upvote-service";
 import type {
@@ -32,6 +35,46 @@ import type {
   AdminToolUpdateInput,
   FounderToolUpdateInput,
 } from "@/server/validators/tool";
+
+const prelaunchToolPageSelect = {
+  id: true,
+  slug: true,
+  name: true,
+  tagline: true,
+  logoMedia: {
+    select: {
+      url: true,
+    },
+  },
+  publicationStatus: true,
+  moderationStatus: true,
+  launches: {
+    orderBy: {
+      launchDate: "desc" as const,
+    },
+    select: {
+      status: true,
+      launchType: true,
+      launchDate: true,
+    },
+  },
+  submissions: {
+    where: {
+      reviewStatus: "PENDING" as const,
+      preferredLaunchDate: {
+        not: null,
+      },
+    },
+    orderBy: {
+      createdAt: "desc" as const,
+    },
+    take: 1,
+    select: {
+      reviewStatus: true,
+      preferredLaunchDate: true,
+    },
+  },
+} satisfies Prisma.ToolSelect;
 
 function getToolListWhere(filters: {
   search?: string;
@@ -419,6 +462,88 @@ export async function getPublishedToolBySlug(slug: string) {
   };
 }
 
+async function getPublishedToolSpotlight(toolId: string) {
+  const spotlight = await prisma.submissionSpotlightBrief.findFirst({
+    where: {
+      status: "PUBLISHED",
+      submission: {
+        toolId,
+        submissionType: "FEATURED_LAUNCH",
+        paymentStatus: "PAID",
+      },
+      publishedArticle: {
+        status: "PUBLISHED",
+      },
+    },
+    orderBy: {
+      publishedAt: "desc",
+    },
+    select: {
+      publishedArticle: {
+        select: {
+          slug: true,
+          title: true,
+        },
+      },
+    },
+  });
+
+  return spotlight?.publishedArticle ?? null;
+}
+
+export async function getToolPageBySlug(slug: string) {
+  const now = new Date();
+  const publicTool = await prisma.tool.findFirst({
+    where: {
+      slug,
+      ...getPubliclyVisibleToolWhere(now),
+    },
+    select: publicToolDetailSelect,
+  });
+
+  if (publicTool) {
+    const [upvoteCount, spotlight] = await Promise.all([
+      getToolUpvoteCount(publicTool.id),
+      getPublishedToolSpotlight(publicTool.id),
+    ]);
+
+    return {
+      kind: "public" as const,
+      tool: {
+        ...publicTool,
+        upvoteCount,
+        spotlight,
+      },
+    };
+  }
+
+  const tool = await prisma.tool.findFirst({
+    where: {
+      slug,
+      ...getPrelaunchToolPageWhere(now),
+    },
+    select: prelaunchToolPageSelect,
+  });
+
+  if (!tool) {
+    return null;
+  }
+
+  if (isToolPrelaunchPageVisible(tool, now)) {
+    const launchDate = getToolPrelaunchDate(tool, now);
+
+    if (launchDate) {
+      return {
+        kind: "prelaunch" as const,
+        tool,
+        launchDate,
+      };
+    }
+  }
+
+  return null;
+}
+
 export async function getFounderToolPreviewById(
   ownerUserId: string,
   toolId: string,
@@ -437,6 +562,7 @@ export async function getFounderToolPreviewById(
     richDescription: tool.richDescription,
     pricingModel: tool.pricingModel,
     websiteUrl: tool.websiteUrl,
+    affiliateUrl: tool.affiliateUrl,
     badgeVerification: tool.badgeVerification,
     currentLaunchType: tool.currentLaunchType,
     isFeatured: tool.isFeatured,

@@ -15,6 +15,7 @@ export { createRelaunchSubmission } from "@/server/services/relaunch-service";
 export { reviewSubmission } from "@/server/services/submission-review-service";
 
 export {
+  applyPremiumLaunchPaymentSucceeded,
   createPremiumLaunchCheckout,
   handlePremiumLaunchPaymentSucceeded,
   handlePremiumLaunchRefundSucceeded,

@@ -8,6 +8,9 @@ import {
   Star,
   ShieldCheck,
   Zap,
+  Layout,
+  Newspaper,
+  Package,
 } from "lucide-react";
 import {
   premiumLaunchAvailable,
@@ -17,24 +20,18 @@ import { TrackedExternalLink } from "@/components/analytics/tracked-external-lin
 import { cn } from "@/lib/utils";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
+import { AdPreviewButton } from "@/components/public/ad-preview-modal";
 import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
 import { getPremiumLaunchPriceCard } from "@/server/services/dodo-product-service";
 import { getEnv } from "@/server/env";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildPricingPageSchema } from "@/server/seo/page-schema";
 
-const doneForYouTier = {
-  name: "Done-for-you Submission",
-  price: "From $99",
-  ctaLabel: "See partner plans",
-  ctaHref: "https://www.aidirectori.es/?via=ShipBoost",
-};
-
 export function generateMetadata(): Metadata {
   const isPrelaunch = getEnv().NEXT_PUBLIC_PRELAUNCH_MODE === "true";
   const description = isPrelaunch
-    ? "Compare Free Launch, Premium Launch, and ShipBoost's partner submission support before the opening cohort."
-    : "Choose the ShipBoost launch path that fits your stage: Free Launch, Premium Launch, or partner submission support.";
+    ? "Launch your product and stay visible. Compare Free Launch, Premium Launch with editorial spotlight, and ShipBoost's partner submission support."
+    : "Launch your product and stay visible. Free Launch for launch-day exposure, Premium Launch with an editorial spotlight that keeps working long after.";
 
   return buildPublicPageMetadata({
     title: "ShipBoost Pricing | Free and Premium Launches",
@@ -45,6 +42,15 @@ export function generateMetadata(): Metadata {
 
 export const revalidate = 900;
 
+function CheckItem({ text }: { text: string }) {
+  return (
+    <li className="flex items-start gap-2.5 text-sm font-medium text-foreground/70">
+      <Check size={13} strokeWidth={3} className="mt-0.5 shrink-0 text-primary" />
+      {text}
+    </li>
+  );
+}
+
 export default async function PricingPage() {
   const env = getEnv();
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
@@ -53,71 +59,11 @@ export default async function PricingPage() {
     getRemainingFoundingPremiumLaunchSpots(),
     getPremiumLaunchPriceCard(),
   ]);
-  const pricingTiers = [
-    {
-      name: "Free Launch",
-      price: "$0",
-      description:
-        "Best for founders who want a founder-ready public listing and weekly launch visibility. Free launches use a nofollow website link by default; verified ShipBoost badges unlock a dofollow backlink.",
-      eyebrow: "Weekly launchpad",
-      ctaLabel: "Reserve free launch",
-      ctaHref: "/submit",
-      highlight: false,
-      icon: ShieldCheck,
-      points: [
-        "Weekly launchpad placement",
-        "Public listing on ShipBoost",
-        "Nofollow backlink by default",
-        "Verified badge unlocks a dofollow backlink",
-      ],
-    },
-    {
-      name: "Premium Launch",
-      price: foundingPremiumPrice.currentPrice,
-      originalPrice: foundingPremiumPrice.compareAtPrice,
-      description:
-        "Reserve your launch week, get a guaranteed do-follow backlink, stronger baseline placement, a hand-written editorial spotlight, and skip the queue.",
-      eyebrow: "Founding offer",
-      foundingSpotsLabel: `First ${foundingPremiumLaunchLimit} Premium Launches`,
-      ctaLabel: premiumLaunchAvailable
-        ? "Reserve premium launch"
-        : "Temporarily unavailable",
-      ctaHref: premiumLaunchAvailable ? "/submit" : undefined,
-      availabilityNote: premiumLaunchAvailable
-        ? undefined
-        : premiumLaunchUnavailableMessage,
-      highlight: true,
-      icon: Star,
-      points: [
-        "Reserve a specific launch week",
-        "Guaranteed dofollow backlink",
-        "No badge step required",
-        "Get stronger baseline board placement",
-        "Includes one hand-written editorial spotlight",
-      ],
-    },
-    {
-      name: doneForYouTier.name,
-      price: doneForYouTier.price,
-      description:
-        "Handled by AI Directories: manual submission packages for 30+, 60+, or 100+ AI directories with a detailed report after delivery.",
-      eyebrow: "Partner offer",
-      ctaLabel: doneForYouTier.ctaLabel,
-      ctaHref: doneForYouTier.ctaHref,
-      highlight: false,
-      icon: Zap,
-      points: [
-        "Starter from $99 for 30+ AI directories",
-        "Pro from $149 for 60+ directories",
-        "Premium from $199 for 100+ directories",
-        "Detailed submission report",
-      ],
-    },
-  ] as const;
+
   const schema = buildPricingPageSchema({
     title: "Pricing",
     description: isPrelaunch
-      ? "Choose the ShipBoost launch path that fits your product stage. Start free, reserve a Premium Launch for the May 4 opening cohort, or use our partner submission service."
+      ? "Choose the ShipBoost launch path that fits your product stage. Start free, reserve a Premium Launch, or use our partner submission service."
       : "Choose the ShipBoost launch path that fits your product stage. Start free, reserve a Premium Launch, or use our partner submission service.",
     url: `${env.NEXT_PUBLIC_APP_URL}/pricing`,
   });
@@ -125,269 +71,291 @@ export default async function PricingPage() {
   return (
     <main className="flex-1 flex flex-col bg-muted/20 pt-32">
       <JsonLdScript data={schema} />
-      <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 mb-32">
-        <div className="max-w-3xl">
-          <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40  mb-4">
+      <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-32">
+
+        {/* Page header */}
+        <div className="max-w-2xl">
+          <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40 mb-4">
             Pricing
           </p>
-          <h1 className="text-5xl font-black tracking-tight text-foreground sm:text-6xl ">
-            {isPrelaunch
-              ? "Launch pricing for the opening cohort."
-              : "Choose the launch path that fits your product stage."}
+          <h1 className="text-5xl font-black tracking-tight text-foreground sm:text-6xl">
+            Launch your product. Stay visible.
           </h1>
-          <p className="mt-6 text-xl font-medium leading-relaxed text-muted-foreground/80">
-            {isPrelaunch
-              ? "ShipBoost opens on May 4, 2026 UTC. Start free if you want a credible listing and weekly visibility, reserve Premium if timing and lower friction matter more, or use our partner service for broader directory submissions."
-              : "Start free if you want a credible listing and weekly visibility. Upgrade to Premium if timing, lower friction, and stronger baseline placement matter more."}
+          <p className="mt-5 text-lg font-medium leading-relaxed text-muted-foreground/80">
+            Anyone can get a launch day. ShipBoost gives you the visibility that
+            compounds after it — through permanent listings, ranked categories,
+            and editorial coverage that keeps working for months.
           </p>
         </div>
 
-        <div className="mt-16 grid gap-8 lg:grid-cols-3">
-          {pricingTiers.map((tier) => (
-            <article
-              key={tier.name}
-              className={cn(
-                "flex h-full flex-col rounded-3xl border p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/5",
-                tier.highlight
-                  ? "border-primary bg-card ring-4 ring-primary/5 relative scale-[1.02] z-10"
-                  : "border-border bg-card shadow-sm"
-              )}
-            >
-              {tier.highlight && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-[10px] font-black  tracking-widest whitespace-nowrap shadow-lg shadow-black/20">
-                  Founding offer
-                </div>
-              )}
-              
-              <div className="flex items-center justify-between mb-6">
-                <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40 ">
-                  {tier.eyebrow}
-                </p>
-                <tier.icon size={20} className={cn(tier.highlight ? "text-foreground" : "text-muted-foreground/40")} />
-              </div>
+        {/* ── LAUNCH PLANS ── */}
+        <div className="mt-16">
+          <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40 mb-6">
+            Launch plans
+          </p>
+          <div className="grid gap-5 sm:grid-cols-2">
 
-              <h2 className="text-2xl font-black text-foreground">
-                {tier.name}
-              </h2>
-              <div className="mt-4 flex items-end gap-3">
-                {"originalPrice" in tier && tier.originalPrice ? (
-                  <span className="text-lg font-black text-muted-foreground line-through">
-                    {tier.originalPrice}
+            {/* Free Launch */}
+            <article className="flex flex-col rounded-3xl border border-border bg-card p-7 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40">
+                  Free launch
+                </p>
+                <ShieldCheck size={18} className="text-muted-foreground/30" />
+              </div>
+              <div className="mt-5">
+                <span className="text-5xl font-black tracking-tighter text-foreground">$0</span>
+                <span className="ml-2 text-sm font-bold text-muted-foreground">forever</span>
+              </div>
+              <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
+                A credible public listing and a full week on the launchboard. Great for getting your first users — visibility tapers off after launch week.
+              </p>
+              <ul className="mt-6 flex-1 space-y-3">
+                <CheckItem text="One week on the launchboard" />
+                <CheckItem text="Permanent public listing" />
+                <CheckItem text="Indexed in categories, tags &amp; alternatives pages" />
+                <CheckItem text="Backlink to your site once your badge is verified" />
+              </ul>
+              <Link
+                href="/submit"
+                className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/50 px-6 py-3.5 text-sm font-black text-foreground transition-all hover:bg-muted active:scale-95"
+              >
+                Get started free
+                <ArrowRight size={15} />
+              </Link>
+            </article>
+
+            {/* Premium Launch */}
+            <article className="relative flex flex-col rounded-3xl border border-primary bg-card p-7 shadow-sm ring-4 ring-primary/5">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-[10px] font-black tracking-widest whitespace-nowrap shadow-lg shadow-black/20">
+                Founding offer
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black tracking-[0.2em] text-primary">
+                  Premium launch
+                </p>
+                <Star size={18} className="text-primary" />
+              </div>
+              <div className="mt-5 flex items-end gap-3">
+                {foundingPremiumPrice.compareAtPrice ? (
+                  <span className="text-xl font-black text-muted-foreground line-through">
+                    {foundingPremiumPrice.compareAtPrice}
                   </span>
                 ) : null}
                 <span className="text-5xl font-black tracking-tighter text-foreground">
-                  {tier.price}
+                  {foundingPremiumPrice.currentPrice}
                 </span>
-                {tier.price.startsWith("$") && (
-                  <span className="text-muted-foreground font-bold text-sm">/launch</span>
-                )}
+                <span className="pb-1 text-sm font-bold text-muted-foreground">/ launch</span>
               </div>
-              {"foundingSpotsLabel" in tier && tier.foundingSpotsLabel ? (
-                <p className="mt-2 text-[10px] font-black  tracking-widest text-primary">
-                  {foundingSpotsLeft} of {foundingPremiumLaunchLimit} founding
-                  spots left
-                </p>
-              ) : null}
-              <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
-                {tier.description}
+              <p className="mt-1.5 text-[10px] font-black tracking-widest text-primary">
+                {foundingSpotsLeft} of {foundingPremiumLaunchLimit} founding spots left
               </p>
-              {"availabilityNote" in tier && tier.availabilityNote ? (
-                <p className="mt-3 text-xs font-bold leading-relaxed text-amber-700">
-                  {tier.availabilityNote}
-                </p>
-              ) : null}
-
-              <ul className="mt-10 space-y-4 flex-1">
-                {tier.points.map((point) => (
-                  <li key={point} className="flex items-start gap-3 group">
-                    <div className={cn(
-                      "mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors",
-                      tier.highlight ? "bg-foreground/5 text-foreground" : "bg-muted text-muted-foreground/40"
-                    )}>
-                      <Check size={12} strokeWidth={3} />
-                    </div>
-                    <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground transition-colors">{point}</span>
-                  </li>
-                ))}
+              <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
+                Reserve your launch week and get a hand-written editorial spotlight published on our blog — an asset that keeps sending you visitors long after launch day.
+              </p>
+              {!premiumLaunchAvailable && (
+                <p className="mt-2 text-xs font-bold text-amber-700">{premiumLaunchUnavailableMessage}</p>
+              )}
+              <ul className="mt-6 flex-1 space-y-3">
+                <CheckItem text="Reserve a specific launch week (you pick the date)" />
+                <CheckItem text="Featured placement on the launchboard that week" />
+                <CheckItem text="Hand-written editorial spotlight on our blog" />
+                <CheckItem text="Long-term discovery through search and category pages" />
+                <CheckItem text="Skip the badge verification step" />
+                <CheckItem text="Guaranteed high quality dofollow backlink" />
               </ul>
-
-              <div className="mt-10">
-                {tier.ctaHref ? (
-                  tier.ctaHref.startsWith("http") ? (
-                    <TrackedExternalLink
-                      href={tier.ctaHref}
-                      sourceSurface="pricing_page"
-                      linkContext="pricing"
-                      linkText={tier.ctaLabel}
-                      className={cn(
-                        "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-black transition-all active:scale-95 shadow-xl",
-                        tier.highlight
-                          ? "bg-primary text-primary-foreground hover:opacity-90 shadow-black/20"
-                          : "bg-foreground text-background hover:opacity-90 shadow-black/10"
-                      )}
-                    >
-                      {tier.ctaLabel}
-                      <ArrowRight size={16} />
-                    </TrackedExternalLink>
-                  ) : (
-                    <Link
-                      href={tier.ctaHref}
-                      className={cn(
-                        "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-black transition-all active:scale-95 shadow-xl",
-                        tier.highlight
-                          ? "bg-primary text-primary-foreground hover:opacity-90 shadow-black/20"
-                          : "bg-foreground text-background hover:opacity-90 shadow-black/10"
-                      )}
-                    >
-                      {tier.ctaLabel}
-                      <ArrowRight size={16} />
-                    </Link>
-                  )
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-2xl border border-border bg-muted/50 px-6 py-4 text-sm font-black text-muted-foreground/50"
-                  >
-                    {tier.ctaLabel}
-                  </button>
-                )}
-              </div>
+              {premiumLaunchAvailable ? (
+                <Link
+                  href="/submit"
+                  className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-black text-primary-foreground shadow-xl shadow-black/20 transition-all hover:opacity-90 active:scale-95"
+                >
+                  Reserve premium launch
+                  <ArrowRight size={15} />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="mt-8 inline-flex w-full cursor-not-allowed items-center justify-center rounded-2xl border border-border bg-muted/50 px-6 py-3.5 text-sm font-black text-muted-foreground/50"
+                >
+                  Temporarily unavailable
+                </button>
+              )}
             </article>
-          ))}
+          </div>
         </div>
 
-        <section className="mt-10 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
-            <div>
-              <p className="text-[10px] font-black tracking-[0.2em] text-primary">
-                Visibility add-on
-              </p>
-              <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-                Need more visibility after listing?
-              </h2>
-              <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-muted-foreground">
-                Sponsor your approved ShipBoost tool in the sidebar for 30
-                days. Your card appears across discovery pages and links
-                directly to your website.
-              </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {[
-                  {
-                    icon: Megaphone,
-                    text: "Featured in the rotating sponsor placement",
-                  },
-                  {
-                    icon: MousePointerClick,
-                    text: "Direct website clicks",
-                  },
-                  {
-                    icon: ShieldCheck,
-                    text: "Approved tools only",
-                  },
-                  {
-                    icon: Zap,
-                    text: "Starts after payment confirmation",
-                  },
-                ].map((item) => (
-                  <div key={item.text} className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <item.icon size={14} />
-                    </div>
-                    <p className="text-sm font-bold text-foreground/80">
-                      {item.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-background p-5">
-              <p className="text-[10px] font-black tracking-[0.2em] text-muted-foreground">
-                Sponsor Placement
-              </p>
-              <div className="mt-4 flex items-end gap-2">
-                <span className="text-5xl font-black tracking-tighter text-foreground">
-                  $59
-                </span>
-                <span className="pb-2 text-sm font-black text-muted-foreground">
-                  / 30 days
-                </span>
-              </div>
-              <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
-                One-time checkout. No subscription, no surprise renewal.
-              </p>
-              <Link
-                href="/advertise"
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-6 py-4 text-sm font-black text-background shadow-xl shadow-black/10 transition-all hover:opacity-90 active:scale-95"
-              >
-                Advertise your tool
-                <ArrowRight size={16} />
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-10 rounded-3xl border border-border bg-card p-8 shadow-sm">
-          <p className="text-[10px] font-black tracking-[0.2em] text-primary">
-            Founding bonus
+        {/* ── SPONSOR PLACEMENTS ── */}
+        <div id="advertise" className="mt-20 scroll-mt-28">
+          <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40 mb-2">
+            Sponsor placements
           </p>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-            What is the editorial launch spotlight?
+          <h2 className="text-2xl font-black tracking-tight text-foreground">
+            Reach founders who are actively evaluating tools.
           </h2>
-          <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-muted-foreground">
-            For the first {foundingPremiumLaunchLimit} Premium Launches,
-            ShipBoost includes one hand-written editorial spotlight published
-            during launch week. Our editor writes it from your brief — not
-            AI-generated. It lives permanently on /blog with a do-follow
-            backlink, gives your launch one more discovery surface, and is
-            indexed by Google.
+          <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground">
+            ShipBoost attracts builders in discovery mode — people actively looking for tools to use,
+            not scrolling for entertainment. Pick the placement that fits your budget.
           </p>
-          <p className="mt-3 max-w-3xl text-xs font-bold leading-relaxed text-muted-foreground">
-            Standardized format (consistent house style), not a custom
-            commissioned piece.
-          </p>
-        </section>
 
-        <section className="mt-20 grid gap-12 lg:grid-cols-[1.2fr_0.8fr] items-start">
-          <div className="space-y-6">
-            <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40 ">
-              Why founders choose ShipBoost
-            </p>
-            <h2 className="text-3xl font-black tracking-tight text-foreground">
-              Launch visibility is only useful if discovery keeps working after the board rotates.
-            </h2>
-            <p className="text-lg font-medium leading-relaxed text-muted-foreground/80">
-              ShipBoost is built for founders who want a cleaner public launch
-              surface, a better listing, and discovery paths that keep doing
-              work after launch day.
-            </p>
-            <div className="pt-4">
-              <Link href="/submit" className="inline-flex items-center gap-2 text-sm font-black text-foreground hover:underline underline-offset-4">
-                View submission guidelines <ArrowRight size={14} />
+          <div className="mt-8 grid gap-5 sm:grid-cols-3">
+
+            {/* Product Ad — cheapest, left */}
+            <article className="flex flex-col rounded-3xl border border-border bg-card p-7 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40">
+                  Product Ad
+                </p>
+                <Package size={18} className="text-muted-foreground/30" />
+              </div>
+              <div className="mt-5">
+                <span className="text-5xl font-black tracking-tighter text-foreground">$29</span>
+                <span className="ml-2 text-sm font-bold text-muted-foreground">/ 30 days</span>
+              </div>
+              <p className="mt-4 flex-1 text-sm font-medium leading-relaxed text-muted-foreground">
+                Native placement in the launchboard feed. Looks like an organic listing — founders read it as content, not an ad.
+              </p>
+              <ul className="mt-6 space-y-3">
+                <CheckItem text="Highest-intent audience on ShipBoost" />
+                <CheckItem text="30 days in the launchboard feed" />
+                <CheckItem text="Full product card with logo, title & tagline" />
+                <CheckItem text="Founders actively evaluating tools" />
+                <CheckItem text="Limited to 2 slots for exclusivity" />
+              </ul>
+              <AdPreviewButton slot="INLINE_PRODUCT" className="mt-5 self-center" />
+              <Link
+                href="/launches/weekly?advertise=1"
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/50 px-6 py-3.5 text-sm font-black text-foreground transition-all hover:bg-muted active:scale-95"
+              >
+                Book product ad
+                <ArrowRight size={15} />
               </Link>
-            </div>
+            </article>
+
+            {/* Banner Ad — middle */}
+            <article className="flex flex-col rounded-3xl border border-border bg-card p-7 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40">
+                  Banner Ad
+                </p>
+                <Newspaper size={18} className="text-muted-foreground/30" />
+              </div>
+              <div className="mt-5">
+                <span className="text-5xl font-black tracking-tighter text-foreground">$49</span>
+                <span className="ml-2 text-sm font-bold text-muted-foreground">/ 30 days</span>
+              </div>
+              <p className="mt-4 flex-1 text-sm font-medium leading-relaxed text-muted-foreground">
+                Full-width animated banner injected mid-feed. High first-visit visibility — founders can't scroll past it.
+              </p>
+              <ul className="mt-6 space-y-3">
+                <CheckItem text="Full-width in-feed placement" />
+                <CheckItem text="High first-visit visibility" />
+                <CheckItem text="30 days featured in the launchboard" />
+                <CheckItem text="Full product card with logo, title & tagline" />
+                <CheckItem text="Exclusive — 1 sponsor at a time" />
+              </ul>
+              <AdPreviewButton slot="INLINE_BANNER" className="mt-5 self-center" />
+              <Link
+                href="/launches/weekly?advertise=1"
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/50 px-6 py-3.5 text-sm font-black text-foreground transition-all hover:bg-muted active:scale-95"
+              >
+                Book banner ad
+                <ArrowRight size={15} />
+              </Link>
+            </article>
+
+            {/* Sidebar Ad — most visible, highlighted, right */}
+            <article className="relative flex flex-col rounded-3xl border-2 border-primary bg-card p-7 shadow-sm ring-4 ring-primary/5">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-[10px] font-black tracking-widest whitespace-nowrap shadow-lg shadow-black/20">
+                Most visible
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black tracking-[0.2em] text-primary">
+                  Sidebar Ad
+                </p>
+                <Layout size={18} className="text-primary" />
+              </div>
+              <div className="mt-5">
+                <span className="text-5xl font-black tracking-tighter text-foreground">$59</span>
+                <span className="ml-2 text-sm font-bold text-muted-foreground">/ 30 days</span>
+              </div>
+              <p className="mt-4 flex-1 text-sm font-medium leading-relaxed text-muted-foreground">
+                Your product card across every discovery page — homepage, categories, tags, and launch boards. Highest impression rate of any placement.
+              </p>
+              <ul className="mt-6 space-y-3">
+                <CheckItem text="Highest impression rate of any slot" />
+                <CheckItem text="Best for tools targeting active builders" />
+                <CheckItem text="30 days across all discovery pages" />
+                <CheckItem text="Full product card with logo, title & tagline" />
+                <CheckItem text="Sponsored badge for trust & credibility" />
+                <CheckItem text="Limited spots for exclusivity" />
+              </ul>
+              <AdPreviewButton slot="SIDEBAR" className="mt-5 self-center text-primary/60 hover:text-primary" />
+              <Link
+                href="/?advertise=1"
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-black text-primary-foreground shadow-xl shadow-black/20 transition-all hover:opacity-90 active:scale-95"
+              >
+                Book sidebar ad
+                <ArrowRight size={15} />
+              </Link>
+            </article>
           </div>
 
-          <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
-            <h3 className="text-sm font-black tracking-[0.2em] text-foreground  mb-6 flex items-center gap-2">
-              <Zap size={16} /> Product pillars
-            </h3>
-            <div className="space-y-6">
-              {[
-                { title: "Weekly launch visibility", desc: "Weekly cohorts keep launches readable instead of burying them in a crowded daily feed." },
-                { title: "Cleaner public listings", desc: "Founder-ready public profiles make products easier to trust than disposable directory entries." },
-                { title: "Post-launch discoverability", desc: "Categories, tags, and alternatives pages keep the listing useful after launch day." },
-                { title: "Founder workflow", desc: "Submission, review, launch timing, and listing management live in one system." },
-              ].map((item, i) => (
-                <div key={i} className="space-y-1">
-                  <h4 className="text-sm font-black text-foreground">{item.title}</h4>
-                  <p className="text-xs font-medium text-muted-foreground leading-relaxed">{item.desc}</p>
+          <p className="mt-5 text-center text-[11px] font-medium text-muted-foreground/50">
+            One-time payment · No subscription · No auto-renewal · Approved tools only
+          </p>
+        </div>
+
+        {/* ── SUBMISSION SERVICE ── */}
+        <div className="mt-20">
+          <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40 mb-6">
+            Submission service
+          </p>
+          <div className="rounded-3xl border border-border bg-card p-7 shadow-sm sm:p-8">
+            <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Zap size={18} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40">Partner offer</p>
+                    <h2 className="text-lg font-black tracking-tight text-foreground">Done-for-you directory submission</h2>
+                  </div>
                 </div>
-              ))}
+                <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground">
+                  Manual submission to 30–100+ AI and startup directories with a detailed report after delivery.
+                  Handled by our partner AI Directories — not automated, not scraped.
+                </p>
+                <ul className="mt-5 grid gap-2 sm:grid-cols-3">
+                  {[
+                    "Starter: 30+ directories from $99",
+                    "Pro: 60+ directories from $149",
+                    "Premium: 100+ directories from $199",
+                  ].map((p) => (
+                    <li key={p} className="flex items-start gap-2 text-sm font-medium text-foreground/70">
+                      <Check size={13} strokeWidth={3} className="mt-0.5 shrink-0 text-primary" />
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="shrink-0">
+                <TrackedExternalLink
+                  href="https://www.aidirectori.es/pricing/?via=ShipBoost"
+                  sourceSurface="pricing_page"
+                  linkContext="pricing"
+                  linkText="See partner plans"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-foreground px-6 py-3.5 text-sm font-black text-background shadow-xl shadow-black/10 transition-all hover:opacity-90 active:scale-95 whitespace-nowrap"
+                >
+                  See partner plans
+                  <ArrowRight size={15} />
+                </TrackedExternalLink>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
+
       </section>
       <Footer className="mt-auto" />
     </main>

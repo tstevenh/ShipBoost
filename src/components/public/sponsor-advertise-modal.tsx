@@ -20,8 +20,25 @@ import {
 import { cn } from "@/lib/utils";
 import type { SponsorEligibilityResponse } from "@/app/api/sponsor/eligibility/route";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
+import type { SponsorSlot } from "@prisma/client";
+
+const SLOT_LABELS: Record<SponsorSlot, string> = {
+  SIDEBAR: "Sidebar",
+  INLINE_BANNER: "Banner",
+  INLINE_PRODUCT: "Product ad",
+};
+
+const SLOT_DESCRIPTIONS: Record<SponsorSlot, string> = {
+  SIDEBAR:
+    "Your product card cycles in the high-attention sidebar slot across all discovery pages — homepage, categories, tags, and launchboards — for 30 days.",
+  INLINE_BANNER:
+    "An animated inline banner injected in the launchboard feed. Prominent placement that stops the scroll.",
+  INLINE_PRODUCT:
+    "A native-style product row in the launchboard feed. Looks like an organic listing — founders actually read it.",
+};
 
 type SponsorAdvertiseModalProps = {
+  slot: SponsorSlot;
   triggerClassName?: string;
   triggerContent: React.ReactNode;
 };
@@ -38,6 +55,7 @@ function toErrorMessage(error: unknown) {
 }
 
 export function SponsorAdvertiseModal({
+  slot,
   triggerClassName,
   triggerContent,
 }: SponsorAdvertiseModalProps) {
@@ -59,31 +77,29 @@ export function SponsorAdvertiseModal({
   const sponsorSuccess = searchParams?.get("sponsor") === "success";
   const sponsorError = searchParams?.get("sponsor") === "error";
   const placementStatus = searchParams?.get("placement_status");
+  const placementSlot = searchParams?.get("placement_slot") as SponsorSlot | null;
+
   const successMessage = sponsorSuccess
     ? placementStatus === "ACTIVE"
-      ? "Payment received. Your sponsor placement is active."
+      ? `Payment received. Your ${placementSlot ? SLOT_LABELS[placementSlot] : "sponsor"} placement is active.`
       : placementStatus === "PAID_WAITLISTED"
-        ? "Payment received. Your sponsor placement is reserved and will start when a slot opens."
-        : "Payment received. Your sponsor placement is being set up and will appear shortly."
+        ? "Payment received. Your placement is reserved and will start when a slot opens."
+        : "Payment received. Your placement is being set up and will appear shortly."
     : null;
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Auto-open if URL signals we should
   useEffect(() => {
     if (!searchParams) return;
     const shouldOpen =
       searchParams.get("advertise") === "1" ||
       searchParams.get("sponsor") === "success" ||
       searchParams.get("sponsor") === "error";
-    if (shouldOpen) {
-      setIsOpen(true);
-    }
+    if (shouldOpen) setIsOpen(true);
   }, [searchParams]);
 
-  // Escape key closes
   useEffect(() => {
     if (!isOpen) return;
     function handleKey(event: KeyboardEvent) {
@@ -94,7 +110,6 @@ export function SponsorAdvertiseModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Fetch eligibility once when modal opens
   useEffect(() => {
     if (!isOpen) return;
     if (eligibility.kind === "loading" || eligibility.kind === "loaded") return;
@@ -108,21 +123,28 @@ export function SponsorAdvertiseModal({
           throw new Error(payload?.error ?? "Could not load eligibility.");
         }
         setEligibility({ kind: "loaded", data: payload.data });
-        const first = payload.data.tools[0];
+        const first = payload.data.tools.find(
+          (t) => !t.activeSlots.includes(slot),
+        );
         if (first) setSelectedToolId(first.id);
       })
       .catch((error) =>
         setEligibility({ kind: "error", message: toErrorMessage(error) }),
       );
-  }, [isOpen, eligibility.kind]);
+  }, [isOpen, eligibility.kind, slot]);
 
   function closeAndCleanUrl() {
     setIsOpen(false);
-    // Strip our modal-controlling search params so re-opening behaves cleanly
     if (!searchParams) return;
     const next = new URLSearchParams(searchParams.toString());
     let mutated = false;
-    for (const key of ["advertise", "sponsor", "status", "placement_status"]) {
+    for (const key of [
+      "advertise",
+      "sponsor",
+      "status",
+      "placement_status",
+      "placement_slot",
+    ]) {
       if (next.has(key)) {
         next.delete(key);
         mutated = true;
@@ -136,14 +158,14 @@ export function SponsorAdvertiseModal({
 
   async function startCheckout() {
     if (eligibility.kind !== "loaded") return;
-    if (!selectedToolId || eligibility.data.soldOut) return;
+    if (!selectedToolId) return;
     setCheckoutError(null);
     setIsCheckingOut(true);
     try {
       const response = await fetch("/api/dodo/checkout/sponsor-placement", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ toolId: selectedToolId }),
+        body: JSON.stringify({ toolId: selectedToolId, slot }),
       });
       const payload = (await response.json().catch(() => null)) as
         | { data?: { checkoutUrl: string }; error?: string }
@@ -161,11 +183,14 @@ export function SponsorAdvertiseModal({
   const selectedTool = useMemo(() => {
     if (eligibility.kind !== "loaded") return null;
     return (
-      eligibility.data.tools.find((tool) => tool.id === selectedToolId) ??
-      eligibility.data.tools[0] ??
-      null
+      eligibility.data.tools.find((tool) => tool.id === selectedToolId) ?? null
     );
   }, [eligibility, selectedToolId]);
+
+  const slotData = useMemo(() => {
+    if (eligibility.kind !== "loaded") return null;
+    return eligibility.data.slots.find((s) => s.slot === slot) ?? null;
+  }, [eligibility, slot]);
 
   const modal =
     isOpen && isMounted
@@ -194,7 +219,7 @@ export function SponsorAdvertiseModal({
                 {/* Header */}
                 <div className="pr-10">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
-                    Sponsor placement
+                    {SLOT_LABELS[slot]} placement
                   </p>
                   <h3
                     id="sponsor-advertise-title"
@@ -203,8 +228,7 @@ export function SponsorAdvertiseModal({
                     Advertise on ShipBoost
                   </h3>
                   <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
-                    Your product featured in the rotating sponsor slot across
-                    ShipBoost discovery pages.
+                    {SLOT_DESCRIPTIONS[slot]}
                   </p>
                 </div>
 
@@ -234,54 +258,39 @@ export function SponsorAdvertiseModal({
                       Founders &amp; buyers
                     </p>
                     <p className="text-[11px] font-normal text-muted-foreground">
-                      Across discovery pages
+                      {slot === "SIDEBAR"
+                        ? "Every discovery page"
+                        : "Launchboard feed"}
                     </p>
                   </div>
                   <div className="rounded-xl border border-border/70 bg-card p-3">
                     <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
                       <CalendarDays size={12} />
-                      Duration
+                      Pricing
                     </div>
                     <p className="mt-1.5 text-xl font-bold tracking-tight text-foreground">
-                      30 days
+                      {slotData ? `$${slotData.priceUsd}` : "—"}
                     </p>
                     <p className="text-[11px] font-normal text-muted-foreground">
-                      Rotating placement
+                      Flat · 30 days
                     </p>
                   </div>
                 </div>
 
-                {/* How it works */}
-                <div className="mt-5">
-                  <p className="text-sm font-semibold text-foreground">
-                    How it works
-                  </p>
-                  <p className="mt-1.5 text-[13px] font-normal leading-relaxed text-muted-foreground">
-                    Your card cycles in the high-attention sponsor slot every
-                    few seconds — visible on the homepage, categories, tags,
-                    and launch boards for 30 days. Clicks send visitors straight
-                    to your website with ShipBoost UTM tracking.
-                  </p>
-                </div>
+                {/* Inventory badge */}
+                {slotData && !slotData.soldOut ? (
+                  <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    {slotData.inventoryCap - slotData.activeCount} of{" "}
+                    {slotData.inventoryCap} slots open
+                  </div>
+                ) : null}
 
-                {/* Pricing */}
-                <div className="mt-5 rounded-xl border border-border/70 bg-muted/30 p-3.5">
-                  <p className="text-sm font-semibold text-foreground">
-                    Pricing
-                  </p>
-                  <p className="mt-1 text-[13px] font-normal leading-relaxed text-muted-foreground">
-                    <span className="font-semibold text-foreground">$59</span>
-                    &nbsp;one-time payment ·{" "}
-                    <span className="font-semibold text-foreground">
-                      30 days
-                    </span>
-                    &nbsp;active placement
-                  </p>
-                </div>
-
-                {/* Action area — state machine */}
+                {/* Action area */}
                 <div className="mt-6">
-                  <EligibilityActionArea
+                  <SlotActionArea
+                    slot={slot}
+                    slotData={slotData}
                     eligibility={eligibility}
                     selectedToolId={selectedToolId}
                     selectedTool={selectedTool}
@@ -310,7 +319,7 @@ export function SponsorAdvertiseModal({
         type="button"
         onClick={() => setIsOpen(true)}
         className={triggerClassName}
-        aria-label="Advertise on ShipBoost"
+        aria-label={`Advertise on ShipBoost — ${SLOT_LABELS[slot]} placement`}
       >
         {triggerContent}
       </button>
@@ -319,7 +328,9 @@ export function SponsorAdvertiseModal({
   );
 }
 
-function EligibilityActionArea({
+function SlotActionArea({
+  slot,
+  slotData,
   eligibility,
   selectedToolId,
   selectedTool,
@@ -331,6 +342,8 @@ function EligibilityActionArea({
   onCheckout,
   onCloseModal,
 }: {
+  slot: SponsorSlot;
+  slotData: SponsorEligibilityResponse["slots"][number] | null;
   eligibility: EligibilityState;
   selectedToolId: string;
   selectedTool: SponsorEligibilityResponse["tools"][number] | null;
@@ -398,21 +411,27 @@ function EligibilityActionArea({
     );
   }
 
-  if (data.soldOut) {
+  if (slotData?.soldOut) {
     return (
       <div className="rounded-xl border border-border/70 bg-card p-4">
         <p className="text-sm font-semibold text-foreground">
-          Sponsor placements are sold out right now.
+          {SLOT_LABELS[slot]} placements are sold out right now.
         </p>
         <p className="mt-1 text-[12px] font-normal leading-relaxed text-muted-foreground">
-          Only three tools can be sponsored at the same time. Check back when a
-          placement expires.
+          Check back when a placement expires.
         </p>
       </div>
     );
   }
 
-  if (data.tools.length === 0) {
+  const toolsForSlot = data.tools.map((tool) => ({
+    ...tool,
+    alreadyActiveInSlot: tool.activeSlots.includes(slot),
+  }));
+
+  const eligibleTools = toolsForSlot.filter((t) => !t.alreadyActiveInSlot);
+
+  if (eligibleTools.length === 0 && data.tools.length === 0) {
     return (
       <div className="rounded-xl border border-border/70 bg-card p-4">
         <p className="text-sm font-semibold text-foreground">
@@ -433,6 +452,8 @@ function EligibilityActionArea({
       </div>
     );
   }
+
+  const isToolAlreadyInSlot = selectedTool?.activeSlots.includes(slot) ?? false;
 
   return (
     <div className="space-y-3">
@@ -469,7 +490,7 @@ function EligibilityActionArea({
             role="listbox"
             className="absolute z-20 mt-1.5 max-h-64 w-full overflow-auto rounded-xl border border-border bg-card p-1.5 shadow-xl shadow-black/10"
           >
-            {data.tools.map((tool) => {
+            {toolsForSlot.map((tool) => {
               const selected = tool.id === selectedToolId;
               return (
                 <button
@@ -478,18 +499,18 @@ function EligibilityActionArea({
                   role="option"
                   aria-selected={selected}
                   onClick={() => setSelectedToolId(tool.id)}
-                  disabled={tool.hasActiveSponsor}
+                  disabled={tool.alreadyActiveInSlot}
                   className={cn(
                     "flex w-full items-start justify-between gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-                    !tool.hasActiveSponsor && "hover:bg-muted",
+                    !tool.alreadyActiveInSlot && "hover:bg-muted",
                   )}
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-[13px] font-semibold tracking-tight text-foreground">
                       {tool.name}
-                      {tool.hasActiveSponsor ? (
+                      {tool.alreadyActiveInSlot ? (
                         <span className="ml-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
-                          · already sponsored
+                          · already sponsored here
                         </span>
                       ) : null}
                     </span>
@@ -516,7 +537,7 @@ function EligibilityActionArea({
       <button
         type="button"
         onClick={onCheckout}
-        disabled={isCheckingOut || !selectedToolId || selectedTool?.hasActiveSponsor}
+        disabled={isCheckingOut || !selectedToolId || isToolAlreadyInSlot}
         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold tracking-tight text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
       >
         {isCheckingOut ? (
@@ -527,7 +548,7 @@ function EligibilityActionArea({
         ) : (
           <>
             <Megaphone size={14} />
-            Get started ($59 / 30 days)
+            Get started (${slotData?.priceUsd ?? "—"} / 30 days)
           </>
         )}
       </button>

@@ -10,7 +10,7 @@ describe("launch-scheduling", () => {
   it("never schedules a free launch before the go-live floor", async () => {
     const db = {
       launch: {
-        count: vi.fn().mockResolvedValue(0),
+        groupBy: vi.fn().mockResolvedValue([]),
       },
     };
 
@@ -26,7 +26,16 @@ describe("launch-scheduling", () => {
   it("moves to the next week once the current week is full", async () => {
     const db = {
       launch: {
-        count: vi.fn().mockResolvedValueOnce(10).mockResolvedValueOnce(3),
+        groupBy: vi.fn().mockResolvedValue([
+          {
+            launchDate: new Date("2026-05-04T00:00:00.000Z"),
+            _count: { _all: 10 },
+          },
+          {
+            launchDate: new Date("2026-05-11T00:00:00.000Z"),
+            _count: { _all: 3 },
+          },
+        ]),
       },
     };
 
@@ -37,6 +46,26 @@ describe("launch-scheduling", () => {
     });
 
     expect(result.toISOString()).toBe("2026-05-11T00:00:00.000Z");
+    expect(db.launch.groupBy).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips multiple consecutive full weeks in a single query", async () => {
+    const groupBy = vi.fn().mockResolvedValue([
+      { launchDate: new Date("2026-05-04T00:00:00.000Z"), _count: { _all: 10 } },
+      { launchDate: new Date("2026-05-11T00:00:00.000Z"), _count: { _all: 10 } },
+      { launchDate: new Date("2026-05-18T00:00:00.000Z"), _count: { _all: 10 } },
+      { launchDate: new Date("2026-05-25T00:00:00.000Z"), _count: { _all: 4 } },
+    ]);
+    const db = { launch: { groupBy } };
+
+    const result = await scheduleNextFreeLaunchDate(db as never, {
+      weeklySlots: 10,
+      fromDate: new Date("2026-05-04T00:00:00.000Z"),
+      goLiveAt: new Date("2026-05-04T00:00:00.000Z"),
+    });
+
+    expect(result.toISOString()).toBe("2026-05-25T00:00:00.000Z");
+    expect(groupBy).toHaveBeenCalledTimes(1);
   });
 
   it("offers the next anchored launch week once the current week has started", () => {

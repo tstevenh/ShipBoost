@@ -45,15 +45,51 @@ export async function POST(request: Request) {
 
   try {
     if (payload.type === "payment.succeeded" && payload.data.payment_id) {
-      if (payload.data.metadata?.shipboostProduct === "sponsor_placement") {
+      const paymentId = payload.data.payment_id;
+      const shipboostProduct = payload.data.metadata?.shipboostProduct;
+
+      if (shipboostProduct === "sponsor_placement") {
         await handleSponsorPlacementPaymentSucceeded({
-          paymentId: payload.data.payment_id,
+          paymentId,
           checkoutSessionId: payload.data.checkout_session_id ?? null,
           metadata: payload.data.metadata ?? {},
         });
+      } else if (shipboostProduct === "launch_bundle") {
+        const launchType = payload.data.metadata?.shipboostLaunchType;
+        const placementIdsRaw =
+          payload.data.metadata?.shipboostSponsorPlacementIds;
+        const placementIds =
+          typeof placementIdsRaw === "string" && placementIdsRaw.length > 0
+            ? placementIdsRaw.split(",").map((s) => s.trim()).filter(Boolean)
+            : [];
+
+        const placementHandlers = placementIds.map((placementId) =>
+          handleSponsorPlacementPaymentSucceeded({
+            paymentId,
+            // Bundles share one Dodo session id across placements; SponsorPlacement.checkoutSessionId is unique.
+            checkoutSessionId: null,
+            metadata: {
+              ...(payload.data.metadata ?? {}),
+              shipboostSponsorPlacementId: placementId,
+            },
+          }),
+        );
+
+        if (launchType === "FEATURED") {
+          await Promise.all([
+            handlePremiumLaunchPaymentSucceeded({
+              paymentId,
+              checkoutSessionId: payload.data.checkout_session_id ?? null,
+              metadata: payload.data.metadata ?? {},
+            }),
+            ...placementHandlers,
+          ]);
+        } else {
+          await Promise.all(placementHandlers);
+        }
       } else {
         await handlePremiumLaunchPaymentSucceeded({
-          paymentId: payload.data.payment_id,
+          paymentId,
           checkoutSessionId: payload.data.checkout_session_id ?? null,
           metadata: payload.data.metadata ?? {},
         });

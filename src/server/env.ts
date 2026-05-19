@@ -36,7 +36,7 @@ const envSchema = z.object({
     .datetime({ offset: true })
     .default("2026-05-04T00:00:00Z"),
   FREE_LAUNCH_SLOTS_PER_WEEK: z.coerce.number().int().positive().default(10),
-  FOUNDING_PREMIUM_LAUNCH_LIMIT: z.coerce.number().int().positive().default(100),
+  FOUNDING_PREMIUM_LAUNCH_LIMIT: z.coerce.number().int().positive().default(20),
   CLOUDINARY_CLOUD_NAME: z.string().trim().min(1).optional(),
   CLOUDINARY_API_KEY: z.string().trim().min(1).optional(),
   CLOUDINARY_API_SECRET: z.string().trim().min(1).optional(),
@@ -46,6 +46,8 @@ const envSchema = z.object({
   DODO_PAYMENTS_MODE: z.enum(["test", "live"]).default("test"),
   DODO_PREMIUM_LAUNCH_PRODUCT_ID: optionalEnvString,
   DODO_SPONSOR_PLACEMENT_PRODUCT_ID: optionalEnvString,
+  DODO_SPONSOR_BANNER_PRODUCT_ID: optionalEnvString,
+  DODO_SPONSOR_PRODUCT_AD_PRODUCT_ID: optionalEnvString,
   DODO_PAYMENTS_RETURN_URL: optionalEnvString,
   CRON_SECRET: optionalEnvString,
   ADMIN_EMAIL: z.email().optional(),
@@ -89,6 +91,10 @@ export function getEnv() {
         process.env.DODO_PREMIUM_LAUNCH_PRODUCT_ID,
       DODO_SPONSOR_PLACEMENT_PRODUCT_ID:
         process.env.DODO_SPONSOR_PLACEMENT_PRODUCT_ID,
+      DODO_SPONSOR_BANNER_PRODUCT_ID:
+        process.env.DODO_SPONSOR_BANNER_PRODUCT_ID,
+      DODO_SPONSOR_PRODUCT_AD_PRODUCT_ID:
+        process.env.DODO_SPONSOR_PRODUCT_AD_PRODUCT_ID,
       DODO_PAYMENTS_RETURN_URL: process.env.DODO_PAYMENTS_RETURN_URL,
       CRON_SECRET: process.env.CRON_SECRET,
       ADMIN_EMAIL: process.env.ADMIN_EMAIL,

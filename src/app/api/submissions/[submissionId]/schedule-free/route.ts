@@ -1,4 +1,3 @@
-import { after } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { revalidateAllPublicContent } from "@/server/cache/public-content";
@@ -10,10 +9,7 @@ import {
   startRouteTiming,
   withRouteTiming,
 } from "@/server/http/response";
-import {
-  scheduleFreeSubmissionLaunch,
-} from "@/server/services/submission-service";
-import { sendProductEmailSafely } from "@/server/services/submission-service-shared";
+import { scheduleFreeSubmissionLaunch } from "@/server/services/submission-service";
 
 type RouteContext = {
   params: Promise<{
@@ -31,7 +27,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const result = await scheduleFreeSubmissionLaunch(submissionId, {
       id: session.user.id,
     });
-    after(() => sendProductEmailSafely(result.emailTask));
     revalidateAllPublicContent();
 
     return withRouteTiming(

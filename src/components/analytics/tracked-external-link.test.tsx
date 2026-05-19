@@ -32,10 +32,11 @@ describe("TrackedExternalLink", () => {
 
     expect(captureBrowserOutboundLinkClickedMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        href: "https://frogdr.com/shipboost.io",
+        href: "https://frogdr.com/shipboost.io?utm_source=shipboost&utm_medium=referral&utm_campaign=footer&utm_content=FrogDR",
         sourcePath: "/about?from=footer",
         sourceSurface: "footer",
         linkContext: "footer",
+        linkText: "FrogDR",
         trackingMethod: "browser",
         isToolLink: false,
       }),

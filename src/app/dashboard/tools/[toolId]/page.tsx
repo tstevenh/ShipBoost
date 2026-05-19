@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowRight } from "lucide-react";
 
 import { FounderToolEditor } from "@/components/founder/founder-tool-editor";
 import { SubmitProductForm } from "@/components/founder/submit-product-form";
@@ -162,28 +160,6 @@ export default async function FounderToolEditorPage(context: RouteContext) {
   return (
     <main className="flex flex-1 flex-col overflow-x-hidden bg-muted/20 pt-32">
       <section className="mx-auto mb-32 flex w-full max-w-[1500px] flex-1 flex-col px-4 sm:px-6">
-        <div className="mb-8 flex flex-col gap-4 rounded-xl border border-border bg-card px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 inline-flex rounded-lg border border-border bg-muted p-2 text-muted-foreground">
-              <ArrowRight size={16} />
-            </span>
-            <div>
-              <h2 className="text-sm font-black text-foreground">
-                Submit your product to ShipBoost
-              </h2>
-              <p className="mt-1 text-sm font-medium text-muted-foreground">
-                Save your listing, schedule a free launch, or skip the waiting line with Premium Launch.
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
-          >
-            Compare launch options
-            <ArrowRight size={15} />
-          </Link>
-        </div>
         {initialDraft ? (
           <SubmitProductForm
             categories={categories}

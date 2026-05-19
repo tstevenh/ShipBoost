@@ -27,6 +27,7 @@ describe("PostHogOutboundClickTracker", () => {
   beforeEach(() => {
     captureBrowserOutboundLinkClickedMock.mockReset();
     captureBrowserToolOutboundClickMock.mockReset();
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response(null))));
     usePathnameMock.mockReturnValue("/blog/post");
     window.history.replaceState({}, "", "/blog/post?ref=test");
   });
@@ -53,6 +54,7 @@ describe("PostHogOutboundClickTracker", () => {
       }),
     );
     expect(captureBrowserToolOutboundClickMock).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("captures direct tool website links with tool metadata", () => {
@@ -108,6 +110,14 @@ describe("PostHogOutboundClickTracker", () => {
         isFeatured: true,
       }),
     );
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/streaks/outbound-click",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ toolId: "tool_123" }),
+        keepalive: true,
+      }),
+    );
   });
 
   it("does not duplicate links handled by TrackedExternalLink", () => {
@@ -123,6 +133,39 @@ describe("PostHogOutboundClickTracker", () => {
     fireEvent.click(screen.getByRole("link", { name: "Manual" }));
 
     expect(captureBrowserOutboundLinkClickedMock).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("records tool outbound streak activity even when PostHog is disabled", () => {
+    usePathnameMock.mockReturnValue("/tools/acme");
+    window.history.replaceState({}, "", "/tools/acme");
+
+    render(
+      <>
+        <PostHogOutboundClickTracker />
+        <a
+          href="https://acme.com"
+          data-shipboost-tool-id="tool_123"
+          data-shipboost-tool-slug="acme"
+          data-shipboost-tool-name="Acme"
+        >
+          Visit website
+        </a>
+      </>,
+    );
+
+    fireEvent.click(screen.getByRole("link", { name: "Visit website" }));
+
+    expect(captureBrowserOutboundLinkClickedMock).not.toHaveBeenCalled();
+    expect(captureBrowserToolOutboundClickMock).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/streaks/outbound-click",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ toolId: "tool_123" }),
+        keepalive: true,
+      }),
+    );
   });
 
   it("does not track private dashboard routes", () => {
@@ -139,5 +182,6 @@ describe("PostHogOutboundClickTracker", () => {
     fireEvent.click(screen.getByRole("link", { name: "External" }));
 
     expect(captureBrowserOutboundLinkClickedMock).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

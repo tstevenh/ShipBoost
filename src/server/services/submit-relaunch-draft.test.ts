@@ -4,7 +4,6 @@ const {
   capturePostHogEventSafelyMock,
   prismaMock,
   getSubmissionByIdForFounderMock,
-  sendSubmissionReceivedEmailMessageMock,
 } = vi.hoisted(() => ({
   capturePostHogEventSafelyMock: vi.fn(),
   prismaMock: {
@@ -17,7 +16,6 @@ const {
     },
   },
   getSubmissionByIdForFounderMock: vi.fn(),
-  sendSubmissionReceivedEmailMessageMock: vi.fn(),
 }));
 
 vi.mock("@/server/db/client", () => ({
@@ -26,10 +24,6 @@ vi.mock("@/server/db/client", () => ({
 
 vi.mock("@/server/repositories/submission-repository", () => ({
   getSubmissionByIdForFounder: getSubmissionByIdForFounderMock,
-}));
-
-vi.mock("@/server/email/transactional", () => ({
-  sendSubmissionReceivedEmailMessage: sendSubmissionReceivedEmailMessageMock,
 }));
 
 vi.mock("@/server/posthog", () => ({
@@ -165,7 +159,6 @@ describe("submit-relaunch-draft", () => {
           },
         }),
     );
-    sendSubmissionReceivedEmailMessageMock.mockReturnValue(Promise.resolve());
     const result = await submitSubmissionDraft("submission_1", {
       id: "founder_1",
     });
@@ -177,7 +170,7 @@ describe("submit-relaunch-draft", () => {
       },
     });
     expect(prismaMock.tool.update).not.toHaveBeenCalled();
-    expect(sendSubmissionReceivedEmailMessageMock).not.toHaveBeenCalled();
+    expect(result).not.toHaveProperty("emailTask");
     expect(capturePostHogEventSafelyMock).toHaveBeenCalledWith(
       {
         distinctId: "founder_1",
@@ -195,17 +188,5 @@ describe("submit-relaunch-draft", () => {
       },
       "submitSubmissionDraft",
     );
-
-    sendSubmissionReceivedEmailMessageMock.mockReturnValue(Promise.resolve());
-    await result.emailTask();
-
-    expect(sendSubmissionReceivedEmailMessageMock).toHaveBeenCalledWith({
-      to: "founder@acme.com",
-      name: "Founder",
-      dashboardUrl: "https://app.shipboost.test/dashboard",
-      toolName: "Acme",
-      submissionType: "RELAUNCH",
-      preferredLaunchDate: null,
-    });
   });
 });

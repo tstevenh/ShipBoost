@@ -38,7 +38,7 @@ export type OutboundLinkClickedPropertiesInput = {
   sourceSurface: OutboundLinkSurface;
   linkContext: OutboundLinkContext;
   linkText?: string;
-  trackingMethod: "browser" | "server_redirect";
+  trackingMethod: "browser";
   isToolLink: boolean;
   toolId?: string;
   toolSlug?: string;

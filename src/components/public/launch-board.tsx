@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { buildTrackedToolOutboundUrl } from "@/lib/tool-outbound";
+import { PostHogImpressionTracker } from "@/components/analytics/posthog-impression-tracker";
+import { buildToolOutboundHref } from "@/lib/tool-outbound";
 import { ToolUpvoteButton } from "@/components/public/tool-upvote-button";
 import { LogoFallback } from "@/components/ui/logo-fallback";
 
@@ -16,6 +17,7 @@ type LaunchItem = {
     name: string;
     tagline: string;
     websiteUrl: string;
+    affiliateUrl: string | null;
     logoMedia: { url: string } | null;
     upvoteCount: number;
     hasUpvoted: boolean;
@@ -53,11 +55,33 @@ export function LaunchBoard({
       </div>
 
       <div className="grid gap-4">
-        {launches.map((launch) => (
+        {launches.map((launch, index) => {
+          const outboundHref = buildToolOutboundHref({
+            websiteUrl: launch.tool.websiteUrl,
+            affiliateUrl: launch.tool.affiliateUrl,
+            source: "launch_board",
+            toolSlug: launch.tool.slug,
+          });
+
+          return (
           <article
             key={launch.id}
             className="group relative rounded-2xl border border-border bg-card p-5 transition-all hover:border-foreground/20 hover:shadow-lg hover:shadow-black/5"
           >
+            <PostHogImpressionTracker
+              eventName="product_card_impression"
+              impressionId={`launch_board:${launch.id}:${launch.tool.id}`}
+              properties={{
+                placement_type: "product_card",
+                tool_id: launch.tool.id,
+                tool_slug: launch.tool.slug,
+                tool_name: launch.tool.name,
+                source_surface: "launch_board",
+                position: index + 1,
+                is_featured: launch.launchType === "FEATURED",
+                current_launch_type: launch.launchType,
+              }}
+            />
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-start gap-4">
                 <LogoFallback
@@ -118,13 +142,22 @@ export function LaunchBoard({
                   variant="compact"
                 />
                 <a
-                  href={buildTrackedToolOutboundUrl(
-                    launch.tool.id,
-                    "website",
-                    "launch_board",
-                  )}
+                  href={outboundHref ?? launch.tool.websiteUrl}
                   target="_blank"
                   rel="noreferrer"
+                  data-shipboost-outbound-source="launch_board"
+                  data-shipboost-outbound-context="tool_listing"
+                  data-shipboost-outbound-text={launch.tool.name}
+                  data-shipboost-tool-id={launch.tool.id}
+                  data-shipboost-tool-slug={launch.tool.slug}
+                  data-shipboost-tool-name={launch.tool.name}
+                  data-shipboost-tool-destination-type={
+                    launch.tool.affiliateUrl ? "affiliate" : "website"
+                  }
+                  data-shipboost-tool-current-launch-type={launch.launchType}
+                  data-shipboost-tool-is-featured={
+                    launch.launchType === "FEATURED" ? "true" : undefined
+                  }
                   className="rounded-full border border-border bg-background px-6 py-2.5 text-[10px] font-black  tracking-widest transition-all hover:bg-muted"
                 >
                   Visit site
@@ -132,7 +165,8 @@ export function LaunchBoard({
               </div>
             </div>
           </article>
-        ))}
+          );
+        })}
 
         {launches.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-5 py-12 text-center text-sm font-medium text-muted-foreground">

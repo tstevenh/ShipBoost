@@ -40,8 +40,12 @@ export const metadata: Metadata = {
     "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and discovery paths that outlive launch day.",
   applicationName: "ShipBoost",
   icons: {
-    icon: "/ShipBoost-Logo-BG.svg",
-    shortcut: "/ShipBoost-Logo-BG.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
   },
   robots: {
     index: true,

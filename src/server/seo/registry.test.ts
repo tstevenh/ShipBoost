@@ -218,6 +218,59 @@ describe("alternatives SEO registry", () => {
     }
   });
 
+  it("defines the cluster 41-50 alternatives pages", () => {
+    for (const slug of [
+      "toggl-track",
+      "harvest",
+      "elasticsearch",
+      "algolia",
+      "heroku",
+      "render",
+      "vwo",
+      "optimizely",
+      "clickfunnels",
+      "instapage",
+      "leadpages",
+      "new-relic",
+      "datadog",
+      "sentry",
+      "sendgrid",
+      "mailgun",
+      "postmark",
+      "cursor",
+      "replit",
+      "github-copilot",
+      "otter-ai",
+      "fireflies-ai",
+      "clockify",
+      "timely",
+      "vercel",
+      "netlify",
+      "unbounce",
+      "amazon-ses",
+      "launchdarkly",
+      "statsig",
+    ]) {
+      expect(alternativesSeoRegistry[slug]).toBeDefined();
+      expect(alternativesSeoRegistry[slug]?.toolSlugs.length).toBeGreaterThanOrEqual(
+        6,
+      );
+      expect(alternativesSeoRegistry[slug]?.faq?.length ?? 0).toBeGreaterThanOrEqual(
+        5,
+      );
+    }
+  });
+
+  it("keeps alternatives registry slugs unique and aligned with keys", () => {
+    const entrySlugs = Object.values(alternativesSeoRegistry).map((entry) => entry.slug);
+
+    expect(new Set(entrySlugs).size).toBe(entrySlugs.length);
+
+    for (const [key, entry] of Object.entries(alternativesSeoRegistry)) {
+      expect(entry.slug).toBe(key);
+    }
+  });
+
   it("keeps every alternatives page above the FAQ depth floor", () => {
     for (const entry of Object.values(alternativesSeoRegistry)) {
       expect(entry.faq?.length ?? 0).toBeGreaterThanOrEqual(5);

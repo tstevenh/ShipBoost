@@ -116,6 +116,12 @@ enum SponsorPlacementStatus {
   PAID_WAITLISTED
 }
 
+enum SponsorSlot {
+  SIDEBAR
+  INLINE_BANNER
+  INLINE_PRODUCT
+}
+
 model User {
   id            String   @id @default(cuid())
   name          String?
@@ -394,6 +400,7 @@ model SponsorPlacement {
   id                    String                 @id @default(cuid())
   toolId                String
   tool                  Tool                   @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  slot                  SponsorSlot            @default(SIDEBAR)
   status                SponsorPlacementStatus @default(PENDING_PAYMENT)
   startsAt              DateTime?
   endsAt                DateTime?
@@ -406,6 +413,7 @@ model SponsorPlacement {
   updatedAt             DateTime               @updatedAt
 
   @@index([status, startsAt, endsAt])
+  @@index([slot, status, startsAt, endsAt])
   @@index([toolId, status])
 }
 

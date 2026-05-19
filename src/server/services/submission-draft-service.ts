@@ -3,10 +3,8 @@ import { Prisma } from "@prisma/client";
 import { deleteImageFromCloudinary } from "@/server/cloudinary";
 import { prisma } from "@/server/db/client";
 import { toolDetailsInclude } from "@/server/db/includes";
-import { sendSubmissionReceivedEmailMessage } from "@/server/email/transactional";
 import { AppError } from "@/server/http/app-error";
 import {
-  getSubmissionById,
   getSubmissionByIdForFounder,
   listAdminSubmissions,
   listSubmissionSummariesForFounder,
@@ -35,11 +33,8 @@ import { normalizeHttpUrl } from "@/server/validators/shared";
 
 import {
   type AuthenticatedFounder,
-  type DeferredEmailTask,
   type DraftSaveResult,
   type SavedSubmissionDraft,
-  formatLaunchDateForEmail,
-  getDashboardUrl,
   hasFreeLaunchBadgeInHtmlOrScripts,
   resolveLaunchType,
 } from "@/server/services/submission-service-shared";
@@ -220,18 +215,18 @@ export async function createSubmission(
   input: SubmissionCreateInput,
   founder: AuthenticatedFounder,
 ) {
-  await assertCatalogAssignments(input.categoryIds, input.tagIds);
-
   if (!input.submissionId) {
-    await assertNoDuplicateSubmissionDomain(input.websiteUrl, founder.id);
+    await Promise.all([
+      assertCatalogAssignments(input.categoryIds, input.tagIds),
+      assertNoDuplicateSubmissionDomain(input.websiteUrl, founder.id),
+    ]);
   }
 
   if (input.submissionId) {
-    const existingSubmission = await getSubmissionByIdForFounder(
-      prisma,
-      input.submissionId,
-      founder.id,
-    );
+    const [, existingSubmission] = await Promise.all([
+      assertCatalogAssignments(input.categoryIds, input.tagIds),
+      getSubmissionByIdForFounder(prisma, input.submissionId, founder.id),
+    ]);
 
     if (!existingSubmission) {
       throw new AppError(404, "Draft not found.");
@@ -734,18 +729,6 @@ export async function submitSubmissionDraft(
     },
   };
 
-  const emailTask: DeferredEmailTask = () =>
-    sendSubmissionReceivedEmailMessage({
-      to: submission.user.email,
-      name: submission.user.name,
-      dashboardUrl: getDashboardUrl(),
-      toolName: submitted.tool.name,
-      submissionType: submitted.submissionType,
-      preferredLaunchDate: submitted.preferredLaunchDate
-        ? formatLaunchDateForEmail(submitted.preferredLaunchDate)
-        : null,
-    });
-
   await capturePostHogEventSafely(
     {
       distinctId: submission.userId,
@@ -766,7 +749,6 @@ export async function submitSubmissionDraft(
 
   return {
     submission: submitted,
-    emailTask,
   };
 }
 
@@ -803,63 +785,59 @@ export async function scheduleFreeSubmissionLaunch(
 
   const launch =
     existingFreeLaunch ??
-    (await prisma.$transaction(
-      async (tx) => {
-        const launchDate = await scheduleNextFreeLaunchDate(tx);
-        const launchEndAt = addUtcDays(launchDate, UTC_WEEK_IN_DAYS);
-        const nextBadgeVerification =
-          submission.badgeVerification === "VERIFIED" ? "VERIFIED" : "PENDING";
+    (await (async () => {
+      const launchDate = await scheduleNextFreeLaunchDate(prisma);
+      const launchEndAt = addUtcDays(launchDate, UTC_WEEK_IN_DAYS);
+      const nextBadgeVerification =
+        submission.badgeVerification === "VERIFIED" ? "VERIFIED" : "PENDING";
 
-        await tx.submission.update({
-          where: { id: submission.id },
-          data: {
-            submissionType: "FREE_LAUNCH",
-            reviewStatus: "PENDING",
-            paymentStatus: "NOT_REQUIRED",
-            preferredLaunchDate: launchDate,
-            badgeFooterUrl: submission.tool.websiteUrl,
-            badgeVerification: nextBadgeVerification,
-            founderVisibleNote: null,
-            internalReviewNote: null,
-          },
-        });
+      return prisma.$transaction(
+        async (tx) => {
+          await tx.submission.update({
+            where: { id: submission.id },
+            data: {
+              submissionType: "FREE_LAUNCH",
+              reviewStatus: "PENDING",
+              paymentStatus: "NOT_REQUIRED",
+              preferredLaunchDate: launchDate,
+              badgeFooterUrl: submission.tool.websiteUrl,
+              badgeVerification: nextBadgeVerification,
+              founderVisibleNote: null,
+              internalReviewNote: null,
+            },
+          });
 
-        await tx.tool.update({
-          where: { id: submission.toolId },
-          data: {
-            moderationStatus: "APPROVED",
-            publicationStatus: "PUBLISHED",
-            currentLaunchType: "FREE",
-            isFeatured: false,
-            launchBadgeRequired: false,
-            badgeVerification: nextBadgeVerification,
-          },
-        });
+          await tx.tool.update({
+            where: { id: submission.toolId },
+            data: {
+              moderationStatus: "APPROVED",
+              publicationStatus: "PUBLISHED",
+              currentLaunchType: "FREE",
+              isFeatured: false,
+              launchBadgeRequired: false,
+              badgeVerification: nextBadgeVerification,
+            },
+          });
 
-        return tx.launch.create({
-          data: {
-            toolId: submission.toolId,
-            createdById: founder.id,
-            launchType: "FREE",
-            status: "APPROVED",
-            launchDate,
-            startAt: launchDate,
-            endAt: launchEndAt,
-            priorityWeight: 0,
-          },
-          select: {
-            id: true,
-            launchType: true,
-            status: true,
-            launchDate: true,
-          },
-        });
-      },
-      {
-        maxWait: 15_000,
-        timeout: 15_000,
-      },
-    ));
+          return tx.launch.create({
+            data: {
+              toolId: submission.toolId,
+              createdById: founder.id,
+              launchType: "FREE",
+              status: "APPROVED",
+              launchDate,
+              startAt: launchDate,
+              endAt: launchEndAt,
+              priorityWeight: 0,
+            },
+          });
+        },
+        {
+          maxWait: 15_000,
+          timeout: 15_000,
+        },
+      );
+    })());
 
   if (existingFreeLaunch) {
     await prisma.$transaction(async (tx) => {
@@ -891,23 +869,33 @@ export async function scheduleFreeSubmissionLaunch(
     });
   }
 
-  const updated = await getSubmissionById(prisma, submission.id);
+  const nextBadgeVerification =
+    submission.badgeVerification === "VERIFIED" ? "VERIFIED" : "PENDING";
+  const nextLaunches = existingFreeLaunch
+    ? submission.tool.launches
+    : [launch, ...submission.tool.launches].sort(
+        (a, b) => b.launchDate.getTime() - a.launchDate.getTime(),
+      );
 
-  if (!updated) {
-    throw new AppError(500, "Launch was scheduled but could not be reloaded.");
-  }
-
-  const emailTask: DeferredEmailTask = () =>
-    sendSubmissionReceivedEmailMessage({
-      to: updated.user.email,
-      name: updated.user.name,
-      dashboardUrl: getDashboardUrl(),
-      toolName: updated.tool.name,
-      submissionType: updated.submissionType,
-      preferredLaunchDate: updated.preferredLaunchDate
-        ? formatLaunchDateForEmail(updated.preferredLaunchDate)
-        : null,
-    });
+  const updated = {
+    ...submission,
+    submissionType: "FREE_LAUNCH" as const,
+    reviewStatus: "PENDING" as const,
+    paymentStatus: "NOT_REQUIRED" as const,
+    preferredLaunchDate: launch.launchDate,
+    badgeFooterUrl: submission.tool.websiteUrl,
+    badgeVerification: nextBadgeVerification,
+    tool: {
+      ...submission.tool,
+      moderationStatus: "APPROVED" as const,
+      publicationStatus: "PUBLISHED" as const,
+      currentLaunchType: "FREE" as const,
+      isFeatured: false,
+      launchBadgeRequired: false,
+      badgeVerification: nextBadgeVerification,
+      launches: nextLaunches,
+    },
+  };
 
   await capturePostHogEventSafely(
     {
@@ -928,7 +916,6 @@ export async function scheduleFreeSubmissionLaunch(
   return {
     submission: updated,
     launch: serializeFounderLaunch(launch),
-    emailTask,
   };
 }
 
@@ -956,44 +943,68 @@ export async function unscheduleFreeSubmissionLaunch(
 
   const now = new Date();
 
-  await prisma.$transaction(async (tx) => {
-    await tx.launch.deleteMany({
-      where: {
-        toolId: submission.toolId,
-        launchType: "FREE",
-        status: {
-          in: ["PENDING", "APPROVED"],
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.launch.deleteMany({
+        where: {
+          toolId: submission.toolId,
+          launchType: "FREE",
+          status: {
+            in: ["PENDING", "APPROVED"],
+          },
+          launchDate: {
+            gt: now,
+          },
         },
-        launchDate: {
-          gt: now,
-        },
-      },
-    });
+      });
 
-    await tx.submission.update({
-      where: { id: submission.id },
-      data: {
-        reviewStatus: "DRAFT",
-        preferredLaunchDate: null,
-      },
-    });
+      await Promise.all([
+        tx.submission.update({
+          where: { id: submission.id },
+          data: {
+            reviewStatus: "DRAFT",
+            preferredLaunchDate: null,
+          },
+        }),
+        tx.tool.update({
+          where: { id: submission.toolId },
+          data: {
+            moderationStatus: "DRAFT",
+            publicationStatus: "UNPUBLISHED",
+            currentLaunchType: null,
+            isFeatured: false,
+          },
+        }),
+      ]);
+    },
+    {
+      maxWait: 15_000,
+      timeout: 15_000,
+    },
+  );
 
-    await tx.tool.update({
-      where: { id: submission.toolId },
-      data: {
-        moderationStatus: "DRAFT",
-        publicationStatus: "UNPUBLISHED",
-        currentLaunchType: null,
-        isFeatured: false,
-      },
-    });
-  });
+  const remainingLaunches = submission.tool.launches.filter(
+    (entry) =>
+      !(
+        entry.launchType === "FREE" &&
+        (entry.status === "PENDING" || entry.status === "APPROVED") &&
+        entry.launchDate.getTime() > now.getTime()
+      ),
+  );
 
-  const updated = await getSubmissionById(prisma, submission.id);
-
-  if (!updated) {
-    throw new AppError(500, "Launch was unscheduled but could not be reloaded.");
-  }
+  const updated = {
+    ...submission,
+    reviewStatus: "DRAFT" as const,
+    preferredLaunchDate: null,
+    tool: {
+      ...submission.tool,
+      moderationStatus: "DRAFT" as const,
+      publicationStatus: "UNPUBLISHED" as const,
+      currentLaunchType: null,
+      isFeatured: false,
+      launches: remainingLaunches,
+    },
+  };
 
   await capturePostHogEventSafely(
     {
@@ -1095,11 +1106,17 @@ export async function verifyFreeLaunchBadge(
     });
   });
 
-  const updated = await getSubmissionById(prisma, submission.id);
-
-  if (!updated) {
-    throw new AppError(500, "Badge verification completed but could not be reloaded.");
-  }
+  const nextBadgeVerification = verified ? ("VERIFIED" as const) : ("FAILED" as const);
+  const updated = {
+    ...submission,
+    badgeFooterUrl: websiteUrl,
+    badgeVerification: nextBadgeVerification,
+    tool: {
+      ...submission.tool,
+      websiteUrl,
+      badgeVerification: nextBadgeVerification,
+    },
+  };
 
   return {
     verified,

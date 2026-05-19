@@ -1,9 +1,19 @@
+import { Fragment } from "react";
 import Link from "next/link";
 
+import { InlineProductAd } from "@/components/public/inline-product-ad";
+import { InlineSponsorBanner } from "@/components/public/inline-sponsor-banner";
 import { LaunchpadOpeningCountdown } from "@/components/public/launchpad-opening-countdown";
 import { PublicDirectoryToolCard } from "@/components/public/public-directory-tool-card";
+import { getCachedActiveSponsorPlacements } from "@/server/cache/public-content";
 import type { PublicLaunchBoard } from "@/server/cache/public-content";
 import type { LaunchBoardEntry } from "@/server/services/launch-service";
+
+// Positions in the launchboard feed where inline ads get injected.
+// Indexes are 0-based — `BANNER_AFTER_INDEX = 2` means the banner appears
+// AFTER the 3rd launch row.
+const BANNER_AFTER_INDEX = 2;
+const PRODUCT_AD_AFTER_INDEXES = new Set([5, 8]);
 
 const boardLabels: Record<PublicLaunchBoard, string> = {
   weekly: "This Week",
@@ -11,7 +21,7 @@ const boardLabels: Record<PublicLaunchBoard, string> = {
   yearly: "This Year",
 };
 
-export function LaunchpadShowcase({
+export async function LaunchpadShowcase({
   board,
   launches,
   emptyState = "default",
@@ -22,6 +32,13 @@ export function LaunchpadShowcase({
   emptyState?: "default" | "prelaunch-countdown";
   launchpadGoLiveAt?: string;
 }) {
+  const [bannerPlacements, productAdPlacements] = await Promise.all([
+    getCachedActiveSponsorPlacements("INLINE_BANNER"),
+    getCachedActiveSponsorPlacements("INLINE_PRODUCT"),
+  ]);
+
+  const productAdIndexes = [...PRODUCT_AD_AFTER_INDEXES];
+
   return (
     <section>
       <div className="mb-5 flex items-end justify-between gap-3 border-b border-border/60 pb-4">
@@ -39,23 +56,36 @@ export function LaunchpadShowcase({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border/60 bg-card [&>article:last-child]:border-b-0">
-        {launches.map((launch, index) => (
-          <PublicDirectoryToolCard
-            key={launch.id}
-            toolId={launch.tool.id}
-            name={launch.tool.name}
-            tagline={launch.tool.tagline}
-            logoUrl={launch.tool.logoMedia?.url}
-            websiteUrl={launch.tool.websiteUrl}
-            slug={launch.tool.slug}
-            votes={launch.tool.upvoteCount}
-            primaryCategory={launch.tool.toolCategories[0]?.category ?? null}
-            rank={index + 1}
-            imagePriority={index < 3}
-            isPremiumLaunch={launch.launchType === "FEATURED"}
-          />
-        ))}
+      <div className="overflow-hidden rounded-xl border border-border/60 bg-card [&>article:last-child]:border-b-0 [&>div:last-child]:border-b-0">
+        {launches.map((launch, index) => {
+          const productAdSlotIndex = productAdIndexes.indexOf(index);
+          return (
+            <Fragment key={launch.id}>
+              <PublicDirectoryToolCard
+                toolId={launch.tool.id}
+                name={launch.tool.name}
+                tagline={launch.tool.tagline}
+                logoUrl={launch.tool.logoMedia?.url}
+                websiteUrl={launch.tool.websiteUrl}
+                affiliateUrl={launch.tool.affiliateUrl}
+                slug={launch.tool.slug}
+                votes={launch.tool.upvoteCount}
+                primaryCategory={launch.tool.toolCategories[0]?.category ?? null}
+                rank={index + 1}
+                imagePriority={index < 3}
+                isPremiumLaunch={launch.launchType === "FEATURED"}
+              />
+              {index === BANNER_AFTER_INDEX ? (
+                <InlineSponsorBanner placement={bannerPlacements[0] ?? null} />
+              ) : null}
+              {productAdSlotIndex >= 0 ? (
+                <InlineProductAd
+                  placement={productAdPlacements[productAdSlotIndex] ?? null}
+                />
+              ) : null}
+            </Fragment>
+          );
+        })}
 
         {launches.length === 0 &&
         emptyState === "prelaunch-countdown" &&

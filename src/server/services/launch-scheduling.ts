@@ -4,9 +4,11 @@ import { addUtcDays, startOfUtcDay, subDays } from "@/server/services/time";
 
 type LaunchSchedulingClient = {
   launch: {
-    count: typeof prisma.launch.count;
+    groupBy: typeof prisma.launch.groupBy;
   };
 };
+
+const MAX_FREE_LAUNCH_SEARCH_WEEKS = 104;
 
 export const UTC_WEEK_IN_DAYS = 7;
 export const UTC_WEEK_IN_MS = UTC_WEEK_IN_DAYS * 24 * 60 * 60 * 1000;
@@ -123,24 +125,34 @@ export async function scheduleNextFreeLaunchDate(
   );
   const firstWeekStart = addUtcDays(goLiveAt, elapsedWeeks * UTC_WEEK_IN_DAYS);
 
-  for (let weekOffset = 0; weekOffset < 104; weekOffset += 1) {
+  const searchEnd = addUtcDays(
+    firstWeekStart,
+    MAX_FREE_LAUNCH_SEARCH_WEEKS * UTC_WEEK_IN_DAYS,
+  );
+
+  const occupied = await db.launch.groupBy({
+    by: ["launchDate"],
+    where: {
+      launchType: "FREE",
+      status: { in: ["APPROVED", "LIVE"] },
+      launchDate: { gte: firstWeekStart, lt: searchEnd },
+    },
+    _count: { _all: true },
+  });
+
+  const countByWeek = new Map<number, number>();
+  for (const row of occupied) {
+    const weekStart = getLaunchWeekStart(row.launchDate, { goLiveAt });
+    const key = weekStart.getTime();
+    countByWeek.set(key, (countByWeek.get(key) ?? 0) + row._count._all);
+  }
+
+  for (let weekOffset = 0; weekOffset < MAX_FREE_LAUNCH_SEARCH_WEEKS; weekOffset += 1) {
     const weekStart = addUtcDays(
       firstWeekStart,
       weekOffset * UTC_WEEK_IN_DAYS,
     );
-    const weekEnd = addUtcDays(weekStart, UTC_WEEK_IN_DAYS);
-    const scheduledCount = await db.launch.count({
-      where: {
-        launchType: "FREE",
-        status: {
-          in: ["APPROVED", "LIVE"],
-        },
-        launchDate: {
-          gte: weekStart,
-          lt: weekEnd,
-        },
-      },
-    });
+    const scheduledCount = countByWeek.get(weekStart.getTime()) ?? 0;
 
     if (scheduledCount < weeklySlots) {
       return weekStart;
