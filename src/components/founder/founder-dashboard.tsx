@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { 
   Rocket, Mail, Shield, Activity, CreditCard,
   ExternalLink, Edit, RefreshCw, Check, AlertCircle, Star,
-  Layout, Package, Fingerprint, Megaphone,
+  Layout, Package, Fingerprint, Megaphone, X,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -266,6 +266,7 @@ export function FounderDashboard({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingCheckoutId, setPendingCheckoutId] = useState<string | null>(null);
   const [pendingSponsorCheckoutId, setPendingSponsorCheckoutId] = useState<string | null>(null);
+  const [pendingSponsorCancelId, setPendingSponsorCancelId] = useState<string | null>(null);
 
   const pendingCount = submissions.filter(s => getSubmissionState(s).label === "Pending review").length;
   const awaitingPaymentCount = submissions.filter(s => getSubmissionState(s).label === "Awaiting payment").length;
@@ -384,6 +385,35 @@ export function FounderDashboard({
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : "Unable to start checkout.");
         setPendingSponsorCheckoutId(null);
+      }
+    })();
+  }
+
+  function cancelSponsorPlacement(placement: FounderSponsorPlacement) {
+    if (pendingSponsorCancelId) return;
+    setPendingSponsorCancelId(placement.id);
+    void (async () => {
+      try {
+        setErrorMessage(null);
+        setSuccessMessage(null);
+        await apiRequest<{ id: string }>(
+          `/api/founder/sponsor-placements/${placement.id}/cancel`,
+          {
+            method: "POST",
+          },
+        );
+        setSponsorPlacements((current) =>
+          current.filter((item) => item.id !== placement.id),
+        );
+        setSuccessMessage("Pending sponsor placement canceled.");
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Unable to cancel sponsor placement.",
+        );
+      } finally {
+        setPendingSponsorCancelId(null);
       }
     })();
   }
@@ -584,17 +614,36 @@ export function FounderDashboard({
                           tone={sponsorStatusTone(placement.status)}
                         />
                         {placement.status === "PENDING_PAYMENT" ? (
-                          <button
-                            type="button"
-                            onClick={() => beginSponsorCheckout(placement)}
-                            disabled={pendingSponsorCheckoutId === placement.id}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 py-1.5 text-[10px] font-black text-primary-foreground hover:opacity-90 disabled:opacity-50"
-                          >
-                            <CreditCard size={12} />
-                            {pendingSponsorCheckoutId === placement.id
-                              ? "Opening..."
-                              : "Complete payment"}
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => beginSponsorCheckout(placement)}
+                              disabled={
+                                pendingSponsorCheckoutId === placement.id ||
+                                pendingSponsorCancelId === placement.id
+                              }
+                              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 py-1.5 text-[10px] font-black text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                            >
+                              <CreditCard size={12} />
+                              {pendingSponsorCheckoutId === placement.id
+                                ? "Opening..."
+                                : "Complete payment"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => cancelSponsorPlacement(placement)}
+                              disabled={
+                                pendingSponsorCheckoutId === placement.id ||
+                                pendingSponsorCancelId === placement.id
+                              }
+                              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-2.5 py-1.5 text-[10px] font-black text-destructive hover:bg-destructive/15 disabled:opacity-50"
+                            >
+                              <X size={12} />
+                              {pendingSponsorCancelId === placement.id
+                                ? "Canceling..."
+                                : "Cancel"}
+                            </button>
+                          </>
                         ) : null}
                         <Link
                           href={placement.tool.websiteUrl}

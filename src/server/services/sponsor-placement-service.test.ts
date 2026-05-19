@@ -47,6 +47,7 @@ vi.mock("@/server/posthog", () => ({
 }));
 
 import {
+  cancelPendingSponsorPlacement,
   createPendingSponsorPlacementCheckout,
   createSponsorPlacementCheckout,
   handleSponsorPlacementPaymentSucceeded,
@@ -168,6 +169,62 @@ describe("sponsor-placement-service", () => {
       where: { id: "placement_1" },
       data: { checkoutSessionId: "checkout_2" },
     });
+  });
+
+  it("cancels an owned pending sponsor placement", async () => {
+    const now = new Date("2026-05-19T00:00:00.000Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    prismaMock.sponsorPlacement.findUnique.mockResolvedValue({
+      id: "placement_1",
+      status: "PENDING_PAYMENT",
+      disabledAt: null,
+      tool: {
+        ownerUserId: "user_1",
+      },
+    });
+    prismaMock.sponsorPlacement.update.mockResolvedValue({
+      id: "placement_1",
+      status: "DISABLED",
+      disabledAt: now,
+    });
+
+    await expect(
+      cancelPendingSponsorPlacement("placement_1", "user_1"),
+    ).resolves.toMatchObject({
+      id: "placement_1",
+      status: "DISABLED",
+    });
+
+    expect(prismaMock.sponsorPlacement.update).toHaveBeenCalledWith({
+      where: { id: "placement_1" },
+      data: {
+        status: "DISABLED",
+        disabledAt: now,
+      },
+      select: {
+        id: true,
+        status: true,
+        disabledAt: true,
+      },
+    });
+  });
+
+  it("rejects canceling another founder's sponsor placement", async () => {
+    prismaMock.sponsorPlacement.findUnique.mockResolvedValue({
+      id: "placement_1",
+      status: "PENDING_PAYMENT",
+      disabledAt: null,
+      tool: {
+        ownerUserId: "user_2",
+      },
+    });
+
+    await expect(
+      cancelPendingSponsorPlacement("placement_1", "user_1"),
+    ).rejects.toThrow("Sponsor placement not found.");
+
+    expect(prismaMock.sponsorPlacement.update).not.toHaveBeenCalled();
   });
 
   it("disables a fresh pending placement when Dodo checkout creation fails", async () => {

@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { FounderDashboard } from "@/components/founder/founder-dashboard";
 
@@ -21,6 +21,10 @@ vi.mock("next/link", () => ({
 }));
 
 describe("founder-dashboard", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("hides the Ownership tab when the founder has no pending or approved claims", () => {
     render(
       <FounderDashboard
@@ -110,6 +114,60 @@ describe("founder-dashboard", () => {
     expect(
       screen.getByRole("button", { name: /Complete payment/i }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Cancel/i })).toBeInTheDocument();
+  });
+
+  it("cancels and hides a pending sponsor placement", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ data: { id: "placement_1" } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+
+    render(
+      <FounderDashboard
+        initialSubmissions={[]}
+        initialTools={[]}
+        initialClaims={[]}
+        initialSponsorPlacements={[
+          {
+            id: "placement_1",
+            status: "PENDING_PAYMENT",
+            slot: "SIDEBAR",
+            startsAt: null,
+            endsAt: null,
+            paidAt: null,
+            createdAt: "2099-05-01T00:00:00.000Z",
+            tool: {
+              id: "tool_1",
+              slug: "acme",
+              name: "Acme",
+              websiteUrl: "https://acme.test",
+              logoMedia: null,
+            },
+          },
+        ]}
+        founderEmail="founder@example.com"
+        founderRole="FOUNDER"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Cancel/i }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/founder/sponsor-placements/placement_1/cancel",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+    await waitFor(() => {
+      expect(screen.queryByText("Acme")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Pending sponsor placement canceled.")).toBeInTheDocument();
   });
 
   it("shows complete payment for pending premium launches", () => {

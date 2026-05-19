@@ -349,6 +349,46 @@ export async function createPendingSponsorPlacementCheckout(
   });
 }
 
+export async function cancelPendingSponsorPlacement(
+  placementId: string,
+  founderId: string,
+) {
+  const placement = await prisma.sponsorPlacement.findUnique({
+    where: { id: placementId },
+    select: {
+      id: true,
+      status: true,
+      disabledAt: true,
+      tool: {
+        select: {
+          ownerUserId: true,
+        },
+      },
+    },
+  });
+
+  if (!placement || placement.tool.ownerUserId !== founderId) {
+    throw new AppError(404, "Sponsor placement not found.");
+  }
+
+  if (placement.disabledAt || placement.status !== "PENDING_PAYMENT") {
+    throw new AppError(409, "Only pending sponsor placements can be canceled.");
+  }
+
+  return prisma.sponsorPlacement.update({
+    where: { id: placement.id },
+    data: {
+      status: "DISABLED",
+      disabledAt: new Date(),
+    },
+    select: {
+      id: true,
+      status: true,
+      disabledAt: true,
+    },
+  });
+}
+
 export async function reconcileSponsorPlacementPayment(input: {
   placementId?: string;
   paymentId: string;
