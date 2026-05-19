@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { getServerSession } from "@/server/auth/session";
+import { getEnv } from "@/server/env";
 import { reconcileSponsorPlacementPayment } from "@/server/services/sponsor-placement-service";
 
 /**
@@ -16,8 +17,8 @@ export async function GET(request: NextRequest) {
   const paymentId = url.searchParams.get("payment_id") ?? undefined;
   const status = url.searchParams.get("status") ?? undefined;
 
-  const origin = url.origin;
-  const redirectUrl = new URL(`${origin}/`);
+  const appUrl = getEnv().NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  const redirectUrl = new URL(`${appUrl}/`);
   redirectUrl.searchParams.set("sponsor", "success");
   if (status) {
     redirectUrl.searchParams.set("status", status);
