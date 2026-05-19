@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { prismaMock, dodoMock, sendSponsorPlacementRenewalReminderEmailMessageMock } =
-  vi.hoisted(() => ({
+const {
+  prismaMock,
+  dodoMock,
+  sendSponsorPlacementRenewalReminderEmailMessageMock,
+  capturePostHogEventSafelyMock,
+} = vi.hoisted(() => ({
   prismaMock: {
     tool: {
       findFirst: vi.fn(),
@@ -21,6 +25,7 @@ const { prismaMock, dodoMock, sendSponsorPlacementRenewalReminderEmailMessageMoc
     payments: { retrieve: vi.fn() },
   },
   sendSponsorPlacementRenewalReminderEmailMessageMock: vi.fn(),
+  capturePostHogEventSafelyMock: vi.fn(),
 }));
 
 vi.mock("@/server/db/client", () => ({ prisma: prismaMock }));
@@ -37,8 +42,12 @@ vi.mock("@/server/email/transactional", () => ({
   sendSponsorPlacementRenewalReminderEmailMessage:
     sendSponsorPlacementRenewalReminderEmailMessageMock,
 }));
+vi.mock("@/server/posthog", () => ({
+  capturePostHogEventSafely: capturePostHogEventSafelyMock,
+}));
 
 import {
+  createPendingSponsorPlacementCheckout,
   createSponsorPlacementCheckout,
   handleSponsorPlacementPaymentSucceeded,
   listActiveSponsorPlacements,
@@ -114,6 +123,53 @@ describe("sponsor-placement-service", () => {
     );
   });
 
+  it("creates a fresh Dodo checkout for an existing pending placement", async () => {
+    prismaMock.sponsorPlacement.findUnique.mockResolvedValue({
+      id: "placement_1",
+      slot: "SIDEBAR",
+      status: "PENDING_PAYMENT",
+      disabledAt: null,
+      tool: {
+        id: "tool_1",
+        ownerUserId: "user_1",
+        sponsorPlacements: [],
+      },
+    });
+    prismaMock.sponsorPlacement.count.mockResolvedValue(0);
+    dodoMock.checkoutSessions.create.mockResolvedValue({
+      session_id: "checkout_2",
+      checkout_url: "https://checkout.example/again",
+    });
+    prismaMock.sponsorPlacement.update.mockResolvedValue({ id: "placement_1" });
+
+    await expect(
+      createPendingSponsorPlacementCheckout("placement_1", {
+        id: "user_1",
+        email: "founder@example.com",
+        name: "Founder",
+      }),
+    ).resolves.toEqual({
+      checkoutUrl: "https://checkout.example/again",
+      checkoutId: "checkout_2",
+    });
+    expect(dodoMock.checkoutSessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        return_url:
+          "https://shipboost.io/api/sponsor/return?sponsor_placement_id=placement_1",
+        metadata: expect.objectContaining({
+          shipboostProduct: "sponsor_placement",
+          shipboostToolId: "tool_1",
+          shipboostSponsorPlacementId: "placement_1",
+          shipboostSponsorSlot: "SIDEBAR",
+        }),
+      }),
+    );
+    expect(prismaMock.sponsorPlacement.update).toHaveBeenCalledWith({
+      where: { id: "placement_1" },
+      data: { checkoutSessionId: "checkout_2" },
+    });
+  });
+
   it("disables a fresh pending placement when Dodo checkout creation fails", async () => {
     prismaMock.tool.findFirst.mockResolvedValue({ id: "tool_1", name: "Tool" });
     prismaMock.sponsorPlacement.count.mockResolvedValue(0);
@@ -151,6 +207,10 @@ describe("sponsor-placement-service", () => {
       slot: "SIDEBAR",
       status: "PENDING_PAYMENT",
       tool: {
+        id: "tool_1",
+        ownerUserId: "user_1",
+        slug: "sponsor-tool",
+        name: "Sponsor Tool",
         launches: [],
       },
     });
@@ -177,6 +237,23 @@ describe("sponsor-placement-service", () => {
         }),
       }),
     );
+    expect(capturePostHogEventSafelyMock).toHaveBeenCalledWith(
+      {
+        distinctId: "user_1",
+        event: "sponsor_placement_paid",
+        properties: expect.objectContaining({
+          sponsor_placement_id: "placement_1",
+          sponsor_slot: "SIDEBAR",
+          tool_id: "tool_1",
+          tool_slug: "sponsor-tool",
+          tool_name: "Sponsor Tool",
+          payment_id: "payment_1",
+          checkout_session_id: "checkout_1",
+          sponsor_placement_status: "ACTIVE",
+        }),
+      },
+      "sponsor-placement-paid-active",
+    );
   });
 
   it("waitlists a paid placement when inventory fills before payment succeeds", async () => {
@@ -189,6 +266,10 @@ describe("sponsor-placement-service", () => {
       slot: "SIDEBAR",
       status: "PENDING_PAYMENT",
       tool: {
+        id: "tool_1",
+        ownerUserId: "user_1",
+        slug: "sponsor-tool",
+        name: "Sponsor Tool",
         launches: [],
       },
     });
@@ -227,6 +308,10 @@ describe("sponsor-placement-service", () => {
       slot: "SIDEBAR",
       status: "PENDING_PAYMENT",
       tool: {
+        id: "tool_1",
+        ownerUserId: "user_1",
+        slug: "sponsor-tool",
+        name: "Sponsor Tool",
         launches: [{ status: "APPROVED", launchDate }],
       },
     });
@@ -271,9 +356,14 @@ describe("sponsor-placement-service", () => {
       })
       .mockResolvedValueOnce({
         id: "placement_1",
+        toolId: "tool_1",
         slot: "SIDEBAR",
         status: "PENDING_PAYMENT",
         tool: {
+          id: "tool_1",
+          ownerUserId: "user_1",
+          slug: "sponsor-tool",
+          name: "Sponsor Tool",
           launches: [],
         },
       });
@@ -364,9 +454,14 @@ describe("sponsor-placement-service", () => {
       })
       .mockResolvedValueOnce({
         id: "placement_1",
+        toolId: "tool_1",
         slot: "SIDEBAR",
         status: "PENDING_PAYMENT",
         tool: {
+          id: "tool_1",
+          ownerUserId: "user_1",
+          slug: "sponsor-tool",
+          name: "Sponsor Tool",
           launches: [],
         },
       });

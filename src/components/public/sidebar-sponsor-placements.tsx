@@ -35,7 +35,7 @@ function EmptySponsorSlot() {
     <Suspense fallback={<SponsorAdvertiseFallback variant="empty" />}>
       <SponsorAdvertiseModal
         slot="SIDEBAR"
-        triggerClassName="group block w-full text-left rounded-xl border border-dashed border-border/70 bg-card/70 p-4 transition-colors hover:border-primary/40 hover:bg-card"
+        triggerClassName="group block w-full text-left rounded-xl border border-dashed border-primary/40 bg-primary/10 p-4 transition-colors hover:border-primary/60 hover:bg-primary/15"
         triggerContent={
           <>
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
@@ -76,7 +76,7 @@ function SponsorAdvertiseFallback({ variant }: { variant: "empty" | "link" }) {
   }
 
   return (
-    <div className="block w-full rounded-xl border border-dashed border-border/70 bg-card/70 p-4 text-left">
+    <div className="block w-full rounded-xl border border-dashed border-primary/40 bg-primary/10 p-4 text-left">
       <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
         Sponsored
       </p>
@@ -110,7 +110,7 @@ function SponsorCard({ placement }: { placement: SponsorPlacement }) {
     }) ?? placement.tool.websiteUrl;
 
   return (
-    <div className="group block w-full rounded-xl border border-border/60 bg-card transition-colors hover:bg-muted/40">
+    <div className="group block w-full rounded-xl border border-primary/30 bg-primary/10 transition-colors hover:bg-primary/15">
       {/* SPONSORED label opens the advertise modal */}
       <SponsorAdvertiseModal
         slot="SIDEBAR"
@@ -130,6 +130,7 @@ function SponsorCard({ placement }: { placement: SponsorPlacement }) {
         data-shipboost-outbound-source="sponsor_slot"
         data-shipboost-outbound-context="tool_listing"
         data-shipboost-outbound-text={placement.tool.name}
+        data-shipboost-sponsor-slot="SIDEBAR"
         data-shipboost-tool-id={placement.tool.id}
         data-shipboost-tool-slug={placement.tool.slug}
         data-shipboost-tool-name={placement.tool.name}

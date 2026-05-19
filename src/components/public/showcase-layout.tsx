@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, type ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 import { Rocket } from "lucide-react";
 import { DeferredHomeSearchModal } from "@/components/public/deferred-home-search-modal";
@@ -15,6 +15,10 @@ import {
   getCachedPreviousWeeklyTopWinner,
 } from "@/server/cache/public-content";
 import { StreakSidebar } from "@/components/streaks/streak-sidebar";
+
+type SidebarSponsorPlacement = ComponentProps<
+  typeof SidebarSponsorPlacements
+>["placements"][number];
 
 export function SidebarLeadMagnet() {
   return <DeferredSidebarLeadMagnetForm />;
@@ -50,13 +54,19 @@ function MobileSidebarTopStack() {
   );
 }
 
-export function MobileSidebarFollowup({
+export async function MobileSidebarFollowup({
   topWinner,
+  sponsorPlacements,
 }: {
   topWinner?: TopWinnerSidebarSpotWinner | null;
+  sponsorPlacements?: SidebarSponsorPlacement[];
 }) {
+  const resolvedSponsorPlacements =
+    sponsorPlacements ?? (await getCachedActiveSponsorPlacements("SIDEBAR"));
+
   return (
     <div className="mt-6 grid gap-4 xl:hidden">
+      <SidebarSponsorPlacements placements={resolvedSponsorPlacements} />
       <TopWinnerSidebarSpot winner={topWinner ?? null} className="max-w-none" />
       <DeferredSidebarLeadMagnetForm />
     </div>
@@ -128,7 +138,10 @@ export async function ShowcaseLayout({
               {children}
             </div>
             {!isPrelaunch && showMobileFollowup ? (
-              <MobileSidebarFollowup topWinner={resolvedTopWinner ?? null} />
+              <MobileSidebarFollowup
+                topWinner={resolvedTopWinner ?? null}
+                sponsorPlacements={sponsorPlacements}
+              />
             ) : null}
           </div>
 

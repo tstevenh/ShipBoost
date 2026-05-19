@@ -4,6 +4,7 @@ import posthog from "posthog-js";
 
 import {
   buildOutboundLinkClickedProperties,
+  type SponsorAdSlot,
   type OutboundLinkClickedPropertiesInput,
 } from "@/lib/outbound-link";
 
@@ -33,6 +34,7 @@ export function captureBrowserToolOutboundClick(input: {
   toolName?: string;
   currentLaunchType?: string;
   isFeatured?: boolean;
+  sponsorSlot?: SponsorAdSlot;
 }) {
   let destinationDomain: string | null = null;
 
@@ -56,5 +58,6 @@ export function captureBrowserToolOutboundClick(input: {
     used_affiliate_url: input.destinationType === "affiliate",
     is_featured: Boolean(input.isFeatured),
     current_launch_type: input.currentLaunchType ?? null,
+    sponsor_slot: input.sponsorSlot ?? null,
   });
 }

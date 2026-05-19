@@ -3,8 +3,6 @@ import Link from "next/link";
 import {
   Check,
   ArrowRight,
-  Megaphone,
-  MousePointerClick,
   Star,
   ShieldCheck,
   Zap,
@@ -17,7 +15,6 @@ import {
   premiumLaunchUnavailableMessage,
 } from "@/lib/premium-launch";
 import { TrackedExternalLink } from "@/components/analytics/tracked-external-link";
-import { cn } from "@/lib/utils";
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
 import { AdPreviewButton } from "@/components/public/ad-preview-modal";
@@ -224,7 +221,7 @@ export default async function PricingPage() {
               </ul>
               <AdPreviewButton slot="INLINE_PRODUCT" className="mt-5 self-center" />
               <Link
-                href="/launches/weekly?advertise=1"
+                href="/launches/weekly?advertise=1&advertise_slot=INLINE_PRODUCT"
                 className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/50 px-6 py-3.5 text-sm font-black text-foreground transition-all hover:bg-muted active:scale-95"
               >
                 Book product ad
@@ -245,7 +242,7 @@ export default async function PricingPage() {
                 <span className="ml-2 text-sm font-bold text-muted-foreground">/ 30 days</span>
               </div>
               <p className="mt-4 flex-1 text-sm font-medium leading-relaxed text-muted-foreground">
-                Full-width animated banner injected mid-feed. High first-visit visibility — founders can't scroll past it.
+                Full-width animated banner injected mid-feed. High first-visit visibility — founders can&apos;t scroll past it.
               </p>
               <ul className="mt-6 space-y-3">
                 <CheckItem text="Full-width in-feed placement" />
@@ -256,7 +253,7 @@ export default async function PricingPage() {
               </ul>
               <AdPreviewButton slot="INLINE_BANNER" className="mt-5 self-center" />
               <Link
-                href="/launches/weekly?advertise=1"
+                href="/launches/weekly?advertise=1&advertise_slot=INLINE_BANNER"
                 className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/50 px-6 py-3.5 text-sm font-black text-foreground transition-all hover:bg-muted active:scale-95"
               >
                 Book banner ad
@@ -292,7 +289,7 @@ export default async function PricingPage() {
               </ul>
               <AdPreviewButton slot="SIDEBAR" className="mt-5 self-center text-primary/60 hover:text-primary" />
               <Link
-                href="/?advertise=1"
+                href="/?advertise=1&advertise_slot=SIDEBAR"
                 className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-black text-primary-foreground shadow-xl shadow-black/20 transition-all hover:opacity-90 active:scale-95"
               >
                 Book sidebar ad

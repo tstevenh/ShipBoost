@@ -40,6 +40,7 @@ describe("posthog-browser", () => {
       linkText: "Acme",
       trackingMethod: "browser",
       isToolLink: true,
+      sponsorSlot: "SIDEBAR",
     });
 
     expect(captureMock).toHaveBeenCalledWith(
@@ -52,6 +53,7 @@ describe("posthog-browser", () => {
         link_text: "Acme",
         tracking_method: "browser",
         is_tool_link: true,
+        sponsor_slot: "SIDEBAR",
       }),
     );
   });
@@ -67,6 +69,7 @@ describe("posthog-browser", () => {
       toolName: "Acme",
       currentLaunchType: "FEATURED",
       isFeatured: true,
+      sponsorSlot: "SIDEBAR",
     });
 
     expect(captureMock).toHaveBeenCalledWith("tool_outbound_click", {
@@ -83,6 +86,7 @@ describe("posthog-browser", () => {
       used_affiliate_url: true,
       is_featured: true,
       current_launch_type: "FEATURED",
+      sponsor_slot: "SIDEBAR",
     });
   });
 });

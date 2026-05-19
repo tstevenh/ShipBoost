@@ -25,7 +25,11 @@ export type OutboundLinkContext =
   | "footer"
   | "public_page"
   | "tool_page"
-  | "tool_listing";
+  | "tool_listing"
+  | "inline_banner"
+  | "inline_product";
+
+export type SponsorAdSlot = "SIDEBAR" | "INLINE_BANNER" | "INLINE_PRODUCT";
 
 type IsTrackableInput = {
   href: string;
@@ -43,6 +47,7 @@ export type OutboundLinkClickedPropertiesInput = {
   toolId?: string;
   toolSlug?: string;
   toolName?: string;
+  sponsorSlot?: SponsorAdSlot;
 };
 
 export type ToolWebsiteRelPolicyInput = {
@@ -145,5 +150,6 @@ export function buildOutboundLinkClickedProperties(
     tool_id: input.toolId ?? null,
     tool_slug: input.toolSlug ?? null,
     tool_name: input.toolName ?? null,
+    sponsor_slot: input.sponsorSlot ?? null,
   };
 }

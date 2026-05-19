@@ -133,14 +133,14 @@ describe("submission-payment-service", () => {
     vi.useRealTimers();
   });
 
-  it("creates a Dodo checkout session and stores the checkout session id", async () => {
+  it("creates a Dodo checkout session and stores the checkout session id for a pending premium payment", async () => {
     getSubmissionByIdForFounderMock.mockResolvedValueOnce({
       id: "submission_1",
       toolId: "tool_1",
       submissionType: "FEATURED_LAUNCH",
       preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
       paymentStatus: "PENDING",
-      reviewStatus: "DRAFT",
+      reviewStatus: "PENDING",
     });
     getDodoDashboardReturnUrlMock.mockReturnValue(
       "https://shipboost.io/dashboard?checkout=success&submission_id=submission_1",

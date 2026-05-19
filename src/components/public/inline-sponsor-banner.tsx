@@ -94,6 +94,7 @@ function RealBannerContent({ placement }: { placement: InlinePlacement }) {
         rel="noreferrer sponsored"
         data-shipboost-outbound-source="sponsor_slot"
         data-shipboost-outbound-context="inline_banner"
+        data-shipboost-sponsor-slot="INLINE_BANNER"
         data-shipboost-tool-id={placement.tool.id}
         data-shipboost-tool-slug={placement.tool.slug}
         className="flex flex-1 items-center gap-3 md:gap-4 min-w-0"

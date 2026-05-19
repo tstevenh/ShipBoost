@@ -310,7 +310,9 @@ export async function createPremiumLaunchCheckout(
 
   if (
     submission.submissionType === "FEATURED_LAUNCH" &&
-    submission.reviewStatus !== "DRAFT"
+    submission.reviewStatus !== "DRAFT" &&
+    submission.paymentStatus !== "PENDING" &&
+    submission.paymentStatus !== "FAILED"
   ) {
     throw new AppError(
       409,

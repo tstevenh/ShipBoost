@@ -77,6 +77,76 @@ describe("founder-dashboard", () => {
     expect(screen.getByRole("button", { name: /Ownership/i })).toBeInTheDocument();
   });
 
+  it("shows a complete payment action for pending sponsor placements", () => {
+    render(
+      <FounderDashboard
+        initialSubmissions={[]}
+        initialTools={[]}
+        initialClaims={[]}
+        initialSponsorPlacements={[
+          {
+            id: "placement_1",
+            status: "PENDING_PAYMENT",
+            slot: "INLINE_PRODUCT",
+            startsAt: null,
+            endsAt: null,
+            paidAt: null,
+            createdAt: "2099-05-01T00:00:00.000Z",
+            tool: {
+              id: "tool_1",
+              slug: "acme",
+              name: "Acme",
+              websiteUrl: "https://acme.test",
+              logoMedia: null,
+            },
+          },
+        ]}
+        founderEmail="founder@example.com"
+        founderRole="FOUNDER"
+      />,
+    );
+
+    expect(screen.getByText("Awaiting payment")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Complete payment/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows complete payment for pending premium launches", () => {
+    render(
+      <FounderDashboard
+        initialSubmissions={[
+          {
+            id: "submission_1",
+            submissionType: "FEATURED_LAUNCH",
+            reviewStatus: "PENDING",
+            preferredLaunchDate: "2099-05-12T00:00:00.000Z",
+            paymentStatus: "PENDING",
+            badgeVerification: "NOT_REQUIRED",
+            spotlightBrief: null,
+            tool: {
+              id: "tool_1",
+              slug: "acme-premium",
+              name: "Acme Premium",
+              websiteUrl: "https://acme-premium.test",
+              logoMedia: null,
+              launches: [],
+            },
+          },
+        ]}
+        initialTools={[]}
+        initialClaims={[]}
+        founderEmail="founder@example.com"
+        founderRole="FOUNDER"
+        initialActiveNav="submissions"
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: /Complete payment/i }),
+    ).toBeInTheDocument();
+  });
+
   it("shows Scheduled for approved free launches with a future launch slot", () => {
     render(
       <FounderDashboard

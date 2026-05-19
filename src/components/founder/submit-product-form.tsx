@@ -312,6 +312,7 @@ export function findActiveScheduledLaunch(
   const launches = draft?.tool.launches ?? [];
   const activeLaunch = launches.find(
     (launch) =>
+      (launch.launchType !== "FEATURED" || draft?.paymentStatus === "PAID") &&
       (launch.status === "PENDING" || launch.status === "APPROVED") &&
       new Date(launch.launchDate).getTime() > now.getTime(),
   );
@@ -323,6 +324,8 @@ export function findActiveScheduledLaunch(
   if (
     draft?.preferredLaunchDate &&
     draft.submissionType !== "LISTING_ONLY" &&
+    (draft.submissionType !== "FEATURED_LAUNCH" ||
+      draft.paymentStatus === "PAID") &&
     new Date(draft.preferredLaunchDate).getTime() > now.getTime()
   ) {
     return {
@@ -503,11 +506,16 @@ export function SubmitProductForm({
 
   const isBusy =
     isSavingDraft || isSubmittingDraft || isVerifyingBadge || isDeletingProduct;
+  const hasIncompletePremiumPayment =
+    lastSavedDraft?.submissionType === "FEATURED_LAUNCH" &&
+    lastSavedDraft.paymentStatus !== "PAID";
   const isPremiumScheduled =
-    currentScheduledLaunch?.launchType === "FEATURED" ||
-    lastSavedDraft?.paymentStatus === "PAID";
+    lastSavedDraft?.paymentStatus === "PAID" &&
+    currentScheduledLaunch?.launchType === "FEATURED";
   const isFreeScheduled =
-    currentScheduledLaunch?.launchType === "FREE" && !isPremiumScheduled;
+    currentScheduledLaunch?.launchType === "FREE" &&
+    !isPremiumScheduled &&
+    !hasIncompletePremiumPayment;
   const scheduledLaunchDate =
     currentScheduledLaunch?.launchDate ??
     (lastSavedDraft?.reviewStatus === "PENDING" ? form.preferredLaunchDate : null);
@@ -921,6 +929,32 @@ export function SubmitProductForm({
     }
   }
 
+  async function handleCompletePremiumPayment() {
+    if (!draftSubmissionId) return;
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSubmittingDraft(true);
+
+    try {
+      const response = await fetch("/api/dodo/checkout/premium-launch", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ submissionId: draftSubmissionId }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to start premium checkout.");
+      }
+
+      const data = payload.data as { checkoutUrl: string };
+      window.location.href = data.checkoutUrl;
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, "Unable to start premium checkout."));
+      setIsSubmittingDraft(false);
+    }
+  }
+
   async function handleVerifyBadge() {
     if (!badgePromptSubmissionId && !draftSubmissionId) return;
     setIsVerifyingBadge(true);
@@ -1256,7 +1290,29 @@ export function SubmitProductForm({
       <div className="grid w-full items-start gap-8 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1120px)_320px]">
         <aside className="order-2 space-y-4 xl:sticky xl:top-28 xl:self-start">
           <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-            {currentScheduledLaunch ? (
+            {hasIncompletePremiumPayment ? (
+              <>
+                <h3 className="text-lg font-black text-foreground">
+                  Payment incomplete
+                </h3>
+                <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                  Complete your Premium Launch payment to reserve the week of {getLaunchWeekCopyDate(form.preferredLaunchDate)}.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void handleCompletePremiumPayment()}
+                  disabled={isSubmittingDraft || isVerifyingBadge || isDeletingProduct}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {isSubmittingDraft ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <ArrowRight size={14} />
+                  )}
+                  Complete payment
+                </button>
+              </>
+            ) : currentScheduledLaunch ? (
               <>
                 <h3 className="text-lg font-black text-foreground">
                   Launch Scheduled

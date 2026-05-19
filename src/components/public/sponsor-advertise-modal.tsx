@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { SponsorEligibilityResponse } from "@/app/api/sponsor/eligibility/route";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
+import { captureBrowserPostHogEvent } from "@/lib/posthog-browser";
 import type { SponsorSlot } from "@prisma/client";
 
 const SLOT_LABELS: Record<SponsorSlot, string> = {
@@ -37,6 +38,12 @@ const SLOT_DESCRIPTIONS: Record<SponsorSlot, string> = {
     "A native-style product row in the launchboard feed. Looks like an organic listing — founders actually read it.",
 };
 
+const SPONSOR_SLOTS = new Set<SponsorSlot>([
+  "SIDEBAR",
+  "INLINE_BANNER",
+  "INLINE_PRODUCT",
+]);
+
 type SponsorAdvertiseModalProps = {
   slot: SponsorSlot;
   triggerClassName?: string;
@@ -52,6 +59,30 @@ type EligibilityState =
 function toErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
   return "Something went wrong.";
+}
+
+export function readSponsorSlotParam(value: string | null): SponsorSlot | null {
+  return value && SPONSOR_SLOTS.has(value as SponsorSlot)
+    ? (value as SponsorSlot)
+    : null;
+}
+
+export function shouldAutoOpenSponsorModal(
+  slot: SponsorSlot,
+  searchParams: Pick<URLSearchParams, "get"> | null | undefined,
+) {
+  if (!searchParams) return false;
+
+  const sponsorState = searchParams.get("sponsor");
+  if (sponsorState === "success" || sponsorState === "error") {
+    return (readSponsorSlotParam(searchParams.get("placement_slot")) ?? "SIDEBAR") === slot;
+  }
+
+  if (searchParams.get("advertise") === "1") {
+    return (readSponsorSlotParam(searchParams.get("advertise_slot")) ?? "SIDEBAR") === slot;
+  }
+
+  return false;
 }
 
 export function SponsorAdvertiseModal({
@@ -92,13 +123,8 @@ export function SponsorAdvertiseModal({
   }, []);
 
   useEffect(() => {
-    if (!searchParams) return;
-    const shouldOpen =
-      searchParams.get("advertise") === "1" ||
-      searchParams.get("sponsor") === "success" ||
-      searchParams.get("sponsor") === "error";
-    if (shouldOpen) setIsOpen(true);
-  }, [searchParams]);
+    if (shouldAutoOpenSponsorModal(slot, searchParams)) setIsOpen(true);
+  }, [searchParams, slot]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -140,6 +166,7 @@ export function SponsorAdvertiseModal({
     let mutated = false;
     for (const key of [
       "advertise",
+      "advertise_slot",
       "sponsor",
       "status",
       "placement_status",
@@ -173,6 +200,11 @@ export function SponsorAdvertiseModal({
       if (!response.ok || !payload?.data?.checkoutUrl) {
         throw new Error(payload?.error ?? "Could not open checkout.");
       }
+      captureBrowserPostHogEvent("sponsor_placement_checkout_started", {
+        tool_id: selectedToolId,
+        sponsor_slot: slot,
+        source_surface: "sponsor_modal",
+      });
       window.location.href = payload.data.checkoutUrl;
     } catch (error) {
       setCheckoutError(toErrorMessage(error));
@@ -392,7 +424,7 @@ function SlotActionArea({
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
-            href="/sign-in?redirect=/?advertise=1"
+            href={`/sign-in?redirect=${encodeURIComponent(`/?advertise=1&advertise_slot=${slot}`)}`}
             onClick={onCloseModal}
             className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-[13px] font-semibold tracking-tight text-primary-foreground transition hover:opacity-90"
           >

@@ -48,6 +48,7 @@ function RealProductAd({ placement }: { placement: InlinePlacement }) {
         rel="noreferrer sponsored"
         data-shipboost-outbound-source="sponsor_slot"
         data-shipboost-outbound-context="inline_product"
+        data-shipboost-sponsor-slot="INLINE_PRODUCT"
         data-shipboost-tool-id={placement.tool.id}
         data-shipboost-tool-slug={placement.tool.slug}
         className="group flex flex-1 items-center gap-3 md:gap-4 min-w-0 transition-colors hover:bg-muted/50 -mx-4 sm:-mx-5 px-4 sm:px-5 -my-4 py-4 rounded-none"

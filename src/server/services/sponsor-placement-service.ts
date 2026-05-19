@@ -3,6 +3,7 @@ import { getDodoClient } from "@/server/dodo";
 import { sendSponsorPlacementRenewalReminderEmailMessage } from "@/server/email/transactional";
 import { getEnv } from "@/server/env";
 import { AppError } from "@/server/http/app-error";
+import { capturePostHogEventSafely } from "@/server/posthog";
 import { getSponsorSlotConfig } from "@/server/services/sponsor-pricing";
 import type { SponsorSlot } from "@prisma/client";
 
@@ -47,6 +48,59 @@ function getDodoSponsorPlacementReturnUrl(placementId: string) {
   url.searchParams.set("sponsor_placement_id", placementId);
 
   return url.toString();
+}
+
+async function createDodoSponsorPlacementCheckout(input: {
+  placementId: string;
+  toolId: string;
+  slot: SponsorSlot;
+  founder: FounderLike;
+}) {
+  const slotConfig = getSponsorSlotConfig(input.slot);
+
+  if (!slotConfig.dodoProductId) {
+    throw new AppError(
+      500,
+      `Dodo product for ${input.slot} sponsor placement is not configured.`,
+    );
+  }
+
+  const checkout = await getDodoClient().checkoutSessions.create({
+    product_cart: [
+      {
+        product_id: slotConfig.dodoProductId,
+        quantity: 1,
+      },
+    ],
+    customer: {
+      email: input.founder.email,
+      name: input.founder.name ?? undefined,
+    },
+    return_url: getDodoSponsorPlacementReturnUrl(input.placementId),
+    metadata: {
+      shipboostProduct: "sponsor_placement",
+      shipboostToolId: input.toolId,
+      shipboostSponsorPlacementId: input.placementId,
+      shipboostSponsorSlot: input.slot,
+    },
+  });
+
+  if (!checkout.checkout_url || !checkout.session_id) {
+    throw new AppError(
+      500,
+      "Dodo checkout url or session id is missing from the session response.",
+    );
+  }
+
+  await prisma.sponsorPlacement.update({
+    where: { id: input.placementId },
+    data: { checkoutSessionId: checkout.session_id },
+  });
+
+  return {
+    checkoutUrl: checkout.checkout_url,
+    checkoutId: checkout.session_id,
+  };
 }
 
 export async function countActiveSponsorPlacements(
@@ -227,29 +281,12 @@ export async function createSponsorPlacementCheckout(
     select: { id: true },
   });
 
-  let checkout: Awaited<
-    ReturnType<ReturnType<typeof getDodoClient>["checkoutSessions"]["create"]>
-  >;
-
   try {
-    checkout = await getDodoClient().checkoutSessions.create({
-      product_cart: [
-        {
-          product_id: slotConfig.dodoProductId,
-          quantity: 1,
-        },
-      ],
-      customer: {
-        email: founder.email,
-        name: founder.name ?? undefined,
-      },
-      return_url: getDodoSponsorPlacementReturnUrl(placement.id),
-      metadata: {
-        shipboostProduct: "sponsor_placement",
-        shipboostToolId: tool.id,
-        shipboostSponsorPlacementId: placement.id,
-        shipboostSponsorSlot: slot,
-      },
+    return await createDodoSponsorPlacementCheckout({
+      placementId: placement.id,
+      toolId: tool.id,
+      slot,
+      founder,
     });
   } catch (error) {
     await prisma.sponsorPlacement.update({
@@ -261,23 +298,55 @@ export async function createSponsorPlacementCheckout(
     });
     throw error;
   }
+}
 
-  if (!checkout.checkout_url || !checkout.session_id) {
-    throw new AppError(
-      500,
-      "Dodo checkout url or session id is missing from the session response.",
-    );
-  }
-
-  await prisma.sponsorPlacement.update({
-    where: { id: placement.id },
-    data: { checkoutSessionId: checkout.session_id },
+export async function createPendingSponsorPlacementCheckout(
+  placementId: string,
+  founder: FounderLike,
+) {
+  const placement = await prisma.sponsorPlacement.findUnique({
+    where: { id: placementId },
+    select: {
+      id: true,
+      slot: true,
+      status: true,
+      disabledAt: true,
+      tool: {
+        select: {
+          id: true,
+          ownerUserId: true,
+          sponsorPlacements: {
+            where: getActivePlacementWhere(new Date()),
+            select: { slot: true },
+          },
+        },
+      },
+    },
   });
 
-  return {
-    checkoutUrl: checkout.checkout_url,
-    checkoutId: checkout.session_id,
-  };
+  if (!placement || placement.tool.ownerUserId !== founder.id) {
+    throw new AppError(404, "Sponsor placement not found.");
+  }
+
+  if (placement.disabledAt || placement.status !== "PENDING_PAYMENT") {
+    throw new AppError(409, "This sponsor placement is not awaiting payment.");
+  }
+
+  const slotConfig = getSponsorSlotConfig(placement.slot);
+  if ((await countActiveSponsorPlacements(new Date(), placement.slot)) >= slotConfig.inventoryCap) {
+    throw new AppError(409, `${slotConfig.label} sponsor placements are sold out.`);
+  }
+
+  if (placement.tool.sponsorPlacements.some((entry) => entry.slot === placement.slot)) {
+    throw new AppError(409, `Tool already has an active ${slotConfig.label} sponsor placement.`);
+  }
+
+  return createDodoSponsorPlacementCheckout({
+    placementId: placement.id,
+    toolId: placement.tool.id,
+    slot: placement.slot,
+    founder,
+  });
 }
 
 export async function reconcileSponsorPlacementPayment(input: {
@@ -405,11 +474,16 @@ export async function handleSponsorPlacementPaymentSucceeded(input: {
         where: { id: placementId },
         select: {
           id: true,
+          toolId: true,
           slot: true,
           status: true,
           startsAt: true,
           tool: {
             select: {
+              id: true,
+              ownerUserId: true,
+              slug: true,
+              name: true,
               launches: {
                 select: {
                   status: true,
@@ -425,11 +499,16 @@ export async function handleSponsorPlacementPaymentSucceeded(input: {
           where: { checkoutSessionId: input.checkoutSessionId },
           select: {
             id: true,
+            toolId: true,
             slot: true,
             status: true,
             startsAt: true,
             tool: {
               select: {
+                id: true,
+                ownerUserId: true,
+                slug: true,
+                name: true,
                 launches: {
                   select: {
                     status: true,
@@ -455,7 +534,7 @@ export async function handleSponsorPlacementPaymentSucceeded(input: {
 
   const slotConfig = getSponsorSlotConfig(placement.slot);
   if ((await countActiveSponsorPlacements(now, placement.slot)) >= slotConfig.inventoryCap) {
-    return prisma.sponsorPlacement.update({
+    const updatedPlacement = await prisma.sponsorPlacement.update({
       where: { id: placement.id },
       data: {
         status: "PAID_WAITLISTED",
@@ -464,9 +543,27 @@ export async function handleSponsorPlacementPaymentSucceeded(input: {
         checkoutSessionId: input.checkoutSessionId ?? undefined,
       },
     });
+    await capturePostHogEventSafely(
+      {
+        distinctId: placement.tool.ownerUserId ?? placement.toolId,
+        event: "sponsor_placement_paid",
+        properties: {
+          sponsor_placement_id: placement.id,
+          sponsor_slot: placement.slot,
+          tool_id: placement.toolId,
+          tool_slug: placement.tool.slug,
+          tool_name: placement.tool.name,
+          payment_id: input.paymentId,
+          checkout_session_id: input.checkoutSessionId ?? null,
+          sponsor_placement_status: "PAID_WAITLISTED",
+        },
+      },
+      "sponsor-placement-paid-waitlisted",
+    );
+    return updatedPlacement;
   }
 
-  return prisma.sponsorPlacement.update({
+  const updatedPlacement = await prisma.sponsorPlacement.update({
     where: { id: placement.id },
     data: {
       status: "ACTIVE",
@@ -477,6 +574,24 @@ export async function handleSponsorPlacementPaymentSucceeded(input: {
       checkoutSessionId: input.checkoutSessionId ?? undefined,
     },
   });
+  await capturePostHogEventSafely(
+    {
+      distinctId: placement.tool.ownerUserId ?? placement.toolId,
+      event: "sponsor_placement_paid",
+      properties: {
+        sponsor_placement_id: placement.id,
+        sponsor_slot: placement.slot,
+        tool_id: placement.toolId,
+        tool_slug: placement.tool.slug,
+        tool_name: placement.tool.name,
+        payment_id: input.paymentId,
+        checkout_session_id: input.checkoutSessionId ?? null,
+        sponsor_placement_status: "ACTIVE",
+      },
+    },
+    "sponsor-placement-paid-active",
+  );
+  return updatedPlacement;
 }
 
 export async function listAdminSponsorPlacements() {

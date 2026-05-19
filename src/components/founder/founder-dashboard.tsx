@@ -265,6 +265,7 @@ export function FounderDashboard({
   const [successMessage, setSuccessMessage] = useState<string | null>(initialSuccessMessage ?? null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingCheckoutId, setPendingCheckoutId] = useState<string | null>(null);
+  const [pendingSponsorCheckoutId, setPendingSponsorCheckoutId] = useState<string | null>(null);
 
   const pendingCount = submissions.filter(s => getSubmissionState(s).label === "Pending review").length;
   const awaitingPaymentCount = submissions.filter(s => getSubmissionState(s).label === "Awaiting payment").length;
@@ -359,6 +360,30 @@ export function FounderDashboard({
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : "Unable to start checkout.");
         setPendingCheckoutId(null);
+      }
+    })();
+  }
+
+  function beginSponsorCheckout(placement: FounderSponsorPlacement) {
+    if (pendingSponsorCheckoutId) return;
+    setPendingSponsorCheckoutId(placement.id);
+    void (async () => {
+      try {
+        setErrorMessage(null);
+        const result = await apiRequest<{ checkoutUrl: string }>("/api/dodo/checkout/sponsor-placement", {
+          method: "POST",
+          body: JSON.stringify({ placementId: placement.id }),
+        });
+        captureBrowserPostHogEvent("sponsor_placement_checkout_started", {
+          sponsor_placement_id: placement.id,
+          tool_id: placement.tool.id,
+          sponsor_slot: placement.slot,
+          source_surface: "founder_dashboard",
+        });
+        window.location.href = result.checkoutUrl;
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Unable to start checkout.");
+        setPendingSponsorCheckoutId(null);
       }
     })();
   }
@@ -558,6 +583,19 @@ export function FounderDashboard({
                           label={sponsorStatusLabel(placement.status)}
                           tone={sponsorStatusTone(placement.status)}
                         />
+                        {placement.status === "PENDING_PAYMENT" ? (
+                          <button
+                            type="button"
+                            onClick={() => beginSponsorCheckout(placement)}
+                            disabled={pendingSponsorCheckoutId === placement.id}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-2.5 py-1.5 text-[10px] font-black text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                          >
+                            <CreditCard size={12} />
+                            {pendingSponsorCheckoutId === placement.id
+                              ? "Opening..."
+                              : "Complete payment"}
+                          </button>
+                        ) : null}
                         <Link
                           href={placement.tool.websiteUrl}
                           target="_blank"
@@ -653,10 +691,19 @@ export function FounderDashboard({
                             <Edit size={14} /> Continue Submission
                           </Link>
                         ) : null}
-                        {sub && sub.reviewStatus !== "DRAFT" && sub.submissionType === "FEATURED_LAUNCH" && sub.paymentStatus !== "PAID" && (
+                        {sub && sub.submissionType === "FEATURED_LAUNCH" && sub.paymentStatus !== "PAID" && (
                           premiumLaunchAvailable ? (
-                            <button onClick={() => beginPremiumCheckout(sub.id)} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90">
-                              <Star size={14} /> Reserve Premium Launch
+                            <button
+                              onClick={() => beginPremiumCheckout(sub.id)}
+                              disabled={pendingCheckoutId === sub.id}
+                              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-black/10 hover:opacity-90 disabled:opacity-50"
+                            >
+                              <Star size={14} />
+                              {pendingCheckoutId === sub.id
+                                ? "Opening checkout..."
+                                : sub.paymentStatus === "PENDING"
+                                  ? "Complete payment"
+                                  : "Reserve Premium Launch"}
                             </button>
                           ) : (
                             <span className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-4 py-2 text-xs font-black text-muted-foreground/70">

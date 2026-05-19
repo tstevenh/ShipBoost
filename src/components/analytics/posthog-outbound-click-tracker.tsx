@@ -10,6 +10,7 @@ import {
 import {
   type OutboundLinkContext,
   type OutboundLinkSurface,
+  type SponsorAdSlot,
   isTrackableOutboundHttpUrl,
 } from "@/lib/outbound-link";
 import { isPrivateRoutePathname } from "@/lib/route-groups";
@@ -152,6 +153,9 @@ export function PostHogOutboundClickTracker({ apiKey }: { apiKey?: string }) {
         (anchor.dataset
           .shipboostOutboundContext as OutboundLinkContext | undefined) ??
         metadata.linkContext;
+      const sponsorSlot =
+        (anchor.dataset.shipboostSponsorSlot as SponsorAdSlot | undefined) ??
+        undefined;
       const sourcePath = `${window.location.pathname}${window.location.search}`;
       const linkText = getAnchorLinkText(anchor);
 
@@ -167,6 +171,7 @@ export function PostHogOutboundClickTracker({ apiKey }: { apiKey?: string }) {
           toolId: toolMetadata?.toolId,
           toolSlug: toolMetadata?.toolSlug,
           toolName: toolMetadata?.toolName,
+          sponsorSlot,
         });
       }
 
@@ -175,6 +180,7 @@ export function PostHogOutboundClickTracker({ apiKey }: { apiKey?: string }) {
           href: anchor.href,
           sourcePath,
           sourceSurface,
+          sponsorSlot,
           ...toolMetadata,
         });
       }

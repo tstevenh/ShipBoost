@@ -120,6 +120,44 @@ describe("PostHogOutboundClickTracker", () => {
     );
   });
 
+  it("captures sponsor slot metadata on sponsor ad clicks", () => {
+    usePathnameMock.mockReturnValue("/");
+    window.history.replaceState({}, "", "/");
+
+    render(
+      <>
+        <PostHogOutboundClickTracker apiKey="phc_test" />
+        <a
+          href="https://acme.com"
+          data-shipboost-outbound-source="sponsor_slot"
+          data-shipboost-outbound-context="inline_product"
+          data-shipboost-sponsor-slot="INLINE_PRODUCT"
+          data-shipboost-tool-id="tool_123"
+          data-shipboost-tool-slug="acme"
+          data-shipboost-tool-name="Acme"
+        >
+          Visit sponsor
+        </a>
+      </>,
+    );
+
+    fireEvent.click(screen.getByRole("link", { name: "Visit sponsor" }));
+
+    expect(captureBrowserOutboundLinkClickedMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceSurface: "sponsor_slot",
+        linkContext: "inline_product",
+        sponsorSlot: "INLINE_PRODUCT",
+      }),
+    );
+    expect(captureBrowserToolOutboundClickMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceSurface: "sponsor_slot",
+        sponsorSlot: "INLINE_PRODUCT",
+      }),
+    );
+  });
+
   it("does not duplicate links handled by TrackedExternalLink", () => {
     render(
       <>

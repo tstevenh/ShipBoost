@@ -223,6 +223,42 @@ describe("submit-product-form scheduling helpers", () => {
     expect(findActiveScheduledLaunch(draft, now)?.id).toBe("launch_1");
     expect(findPublishedLaunch(draft, now)).toBeNull();
   });
+
+  it("does not treat an unpaid premium launch date as scheduled", () => {
+    const draft: TestDraft = {
+      id: "submission_1",
+      submissionType: "FEATURED_LAUNCH",
+      reviewStatus: "PENDING",
+      paymentStatus: "PENDING",
+      badgeVerification: "NOT_REQUIRED",
+      preferredLaunchDate: "2026-05-25T00:00:00.000Z",
+      tool: {
+        id: "tool_1",
+        slug: "premium-tool",
+        name: "Premium Tool",
+        tagline: "Launching soon",
+        websiteUrl: "https://example.com",
+        richDescription: "A premium product awaiting payment.",
+        pricingModel: "FREE",
+        affiliateUrl: null,
+        affiliateSource: null,
+        hasAffiliateProgram: false,
+        founderXUrl: null,
+        founderGithubUrl: null,
+        founderLinkedinUrl: null,
+        founderFacebookUrl: null,
+        logoMedia: null,
+        screenshots: [],
+        categoryIds: [],
+        tagIds: [],
+        launches: [],
+      },
+    };
+
+    const now = new Date("2026-05-16T00:00:00.000Z");
+
+    expect(findActiveScheduledLaunch(draft, now)).toBeNull();
+  });
 });
 
 describe("SubmitProductForm", () => {
