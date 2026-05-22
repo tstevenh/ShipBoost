@@ -312,10 +312,10 @@ export function ToolPageContent({
                     <Newspaper size={20} className="mt-0.5 shrink-0 text-primary" />
                     <div>
                       <h3 className="text-sm font-black text-foreground">
-                        Premium Launch Spotlight
+                        Editorial article
                       </h3>
                       <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
-                        Read ShipBoost&apos;s editorial spotlight on {tool.name}:
+                        Read ShipBoost&apos;s hand-written editorial article on {tool.name}:
                         what it does, who it helps, and why it stands out
                         among {spotlightCategoryPhrase}.
                       </p>
@@ -325,7 +325,7 @@ export function ToolPageContent({
                     href={`/blog/${tool.spotlight.slug}`}
                     className="mt-5 inline-flex items-center gap-2 text-sm font-black text-primary transition hover:underline"
                   >
-                    Read the {tool.name} spotlight
+                    Read the {tool.name} article
                     <ArrowRight size={14} />
                   </Link>
                 </div>

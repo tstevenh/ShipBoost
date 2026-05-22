@@ -27,8 +27,8 @@ import { buildPricingPageSchema } from "@/server/seo/page-schema";
 export function generateMetadata(): Metadata {
   const isPrelaunch = getEnv().NEXT_PUBLIC_PRELAUNCH_MODE === "true";
   const description = isPrelaunch
-    ? "Launch your product and stay visible. Compare Free Launch, Premium Launch with editorial spotlight, and ShipBoost's partner submission support."
-    : "Launch your product and stay visible. Free Launch for launch-day exposure, Premium Launch with an editorial spotlight that keeps working long after.";
+    ? "Free Launch gets your product a listing on ShipBoost. Premium Launch adds a hand-written editorial article on the ShipBoost blog — a permanent asset you can share, link to, and rank for."
+    : "Free Launch gets your product a listing on ShipBoost. Premium Launch adds a hand-written editorial article on the ShipBoost blog — a permanent asset you can share, link to, and rank for.";
 
   return buildPublicPageMetadata({
     title: "ShipBoost Pricing | Free and Premium Launches",
@@ -71,17 +71,18 @@ export default async function PricingPage() {
       <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-32">
 
         {/* Page header */}
-        <div className="max-w-2xl">
+        <div>
           <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40 mb-4">
             Pricing
           </p>
           <h1 className="text-5xl font-black tracking-tight text-foreground sm:text-6xl">
-            Launch your product. Stay visible.
+            <span className="block">Your launch.</span>
+            <span className="block whitespace-nowrap">Plus a story that keeps working.</span>
           </h1>
-          <p className="mt-5 text-lg font-medium leading-relaxed text-muted-foreground/80">
-            Anyone can get a launch day. ShipBoost gives you the visibility that
-            compounds after it — through permanent listings, ranked categories,
-            and editorial coverage that keeps working for months.
+          <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-muted-foreground/80">
+            Free Launch gets your product a listing on ShipBoost. Premium Launch
+            adds a hand-written editorial article on the ShipBoost blog — a
+            permanent asset you can share, link to, and rank for.
           </p>
         </div>
 
@@ -110,8 +111,8 @@ export default async function PricingPage() {
               <ul className="mt-6 flex-1 space-y-3">
                 <CheckItem text="One week on the launchboard" />
                 <CheckItem text="Permanent public listing" />
-                <CheckItem text="Indexed in categories, tags &amp; alternatives pages" />
-                <CheckItem text="Backlink to your site once your badge is verified" />
+                <CheckItem text="Indexed in category and tag pages" />
+                <CheckItem text="Website link (nofollow by default; add the badge to upgrade to dofollow)" />
               </ul>
               <Link
                 href="/submit"
@@ -148,18 +149,17 @@ export default async function PricingPage() {
                 {foundingSpotsLeft} of {foundingPremiumLaunchLimit} founding spots left
               </p>
               <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
-                Reserve your launch week and get a hand-written editorial spotlight published on our blog — an asset that keeps sending you visitors long after launch day.
+                A hand-written editorial article about your product, published on the ShipBoost blog. A permanent asset you can share, link to, and rank for — plus a reserved launch week and featured placement.
               </p>
               {!premiumLaunchAvailable && (
                 <p className="mt-2 text-xs font-bold text-amber-700">{premiumLaunchUnavailableMessage}</p>
               )}
               <ul className="mt-6 flex-1 space-y-3">
+                <CheckItem text="Hand-written editorial article about your product on the ShipBoost blog" />
                 <CheckItem text="Reserve a specific launch week (you pick the date)" />
                 <CheckItem text="Featured placement on the launchboard that week" />
-                <CheckItem text="Hand-written editorial spotlight on our blog" />
-                <CheckItem text="Long-term discovery through search and category pages" />
-                <CheckItem text="Skip the badge verification step" />
-                <CheckItem text="Guaranteed high quality dofollow backlink" />
+                <CheckItem text="Indexed in category and tag pages" />
+                <CheckItem text="Guaranteed dofollow link from your listing and editorial article" />
               </ul>
               {premiumLaunchAvailable ? (
                 <Link

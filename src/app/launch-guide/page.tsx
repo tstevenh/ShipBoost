@@ -167,7 +167,7 @@ export default function LaunchGuidePage() {
           {
             title: "When Premium Launch makes sense",
             body:
-              "Use Premium Launch when timing matters, you want to reserve a specific week, you want stronger baseline placement in the board, or you want a guaranteed dofollow backlink.",
+              "Use Premium Launch when you want a hand-written editorial article about your product on the ShipBoost blog — a permanent asset you can share and link to. Premium also lets you reserve a specific week, gets stronger baseline placement on the board, and includes a guaranteed dofollow link.",
           },
         ].map((item) => (
           <article

@@ -44,22 +44,22 @@ const groups: FaqGroup[] = [
       {
         question: "What is the difference between Free Launch and Premium Launch?",
         answer:
-          "Free Launch goes through manual review and is queued into the next available weekly cohort with a nofollow website link by default. Founders can add and verify the ShipBoost badge to unlock a dofollow backlink. Premium Launch lets you reserve a launch week, gets stronger baseline placement, and includes a guaranteed dofollow backlink.",
+          "The biggest difference is the editorial article. Premium Launch includes a hand-written article about your product, published on the ShipBoost blog — a permanent asset you can share, link to, and rank for. Premium also lets you reserve a specific launch week, gets featured placement on the launchboard that week, and includes a guaranteed dofollow link. Free Launch is reviewed and queued into the next available weekly cohort with a nofollow website link by default; founders can add the ShipBoost badge to upgrade the link to dofollow.",
       },
       {
-        question: "Do I need badge verification for Premium Launch?",
+        question: "What is the editorial article?",
         answer:
-          "No. The badge is optional for Free Launch and not part of the Premium Launch flow.",
-      },
-      {
-        question: "What is the editorial launch spotlight?",
-        answer:
-          "For the first 100 Premium Launches, ShipBoost includes one hand-written editorial spotlight published during launch week. Our editor writes it from your brief — lives permanently on /blog with a do-follow backlink. Standardized format (consistent house style), not a custom commissioned piece.",
+          "For the first 100 Premium Launches, ShipBoost includes one hand-written editorial article published during launch week. Our editor writes it from your brief — it lives permanently on /blog with a dofollow link back to your site. Standardized format (consistent house style), not a custom commissioned piece.",
       },
       {
         question: "Why add the ShipBoost badge?",
         answer:
-          "The badge helps visitors see where you launched, adds a simple trust signal to your site, and lets ShipBoost verify your free launch for a dofollow backlink.",
+          "The badge is optional. It helps visitors see where you launched, adds a simple trust signal to your site, and lets ShipBoost verify your free launch — which upgrades your listing's link from nofollow to dofollow.",
+      },
+      {
+        question: "Do I need badge verification for Premium Launch?",
+        answer:
+          "No. The badge is optional for Free Launch and not part of the Premium Launch flow — Premium includes a guaranteed dofollow link by default.",
       },
     ],
   },
@@ -99,7 +99,7 @@ const groups: FaqGroup[] = [
       {
         question: "Do I keep my public listing after launch?",
         answer:
-          "Yes. The goal is not just launch-day visibility. ShipBoost keeps the public listing available so it can continue working through categories, tags, and alternatives pages after launch week ends.",
+          "Yes. The goal is not just launch-day visibility. ShipBoost keeps the public listing available so it can continue working through category and tag pages after launch week ends. Premium launches also keep working through their editorial article on the blog.",
       },
       {
         question: "Can I launch on ShipBoost even if I launch elsewhere too?",

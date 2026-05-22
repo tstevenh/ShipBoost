@@ -558,6 +558,58 @@ export function getPublishedBlogArticleBySlug(slug: string) {
   });
 }
 
+export async function listLatestSpotlightArticles(limit = 2) {
+  const articles = await prisma.blogArticle.findMany({
+    where: {
+      status: "PUBLISHED",
+      primaryCategory: { isActive: true },
+      author: { isActive: true },
+      spotlightBrief: { isNot: null },
+    },
+    include: {
+      ...publicBlogArticleInclude,
+      spotlightBrief: {
+        include: {
+          submission: {
+            select: {
+              tool: {
+                select: {
+                  slug: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
+    take: limit,
+  });
+
+  return articles.map((article) => {
+    const tool = article.spotlightBrief?.submission?.tool ?? null;
+    return {
+      slug: article.slug,
+      title: article.title,
+      coverImageUrl: article.coverImageUrl,
+      coverImageAlt: article.coverImageAlt,
+      publishedAt: article.publishedAt,
+      category: { name: article.primaryCategory.name, slug: article.primaryCategory.slug },
+      tool: tool
+        ? {
+            slug: tool.slug,
+            name: tool.name,
+          }
+        : null,
+    };
+  });
+}
+
+export type LatestSpotlightArticleSidebar = Awaited<
+  ReturnType<typeof listLatestSpotlightArticles>
+>[number];
+
 export function listPublicBlogCategories() {
   return prisma.blogCategory.findMany({
     where: {

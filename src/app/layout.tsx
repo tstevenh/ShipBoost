@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and discovery paths that outlive launch day.",
+    "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and hand-written editorial articles that keep working in search.",
   applicationName: "ShipBoost",
   icons: {
     icon: [
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     url: env.NEXT_PUBLIC_APP_URL,
     title: "ShipBoost | Launch once. Keep getting discovered.",
     description:
-      "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and discovery paths that outlive launch day.",
+      "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and hand-written editorial articles that keep working in search.",
     images: [
       {
         url: defaultSocialImage,
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ShipBoost | Launch once. Keep getting discovered.",
     description:
-      "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and discovery paths that outlive launch day.",
+      "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and hand-written editorial articles that keep working in search.",
     images: [defaultSocialImage],
   },
 };

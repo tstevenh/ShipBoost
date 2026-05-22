@@ -46,9 +46,10 @@ const rules = [
   {
     title: "Premium Launch",
     points: [
+      "Hand-written editorial article on the ShipBoost blog",
       "Choose a launch week",
-      "Guaranteed dofollow backlink",
-      "No badge step required",
+      "Featured placement on the launchboard that week",
+      "Guaranteed dofollow link",
       "Starts ahead of free launches outside the top vote slots",
     ],
   },
@@ -190,7 +191,7 @@ export default function HowItWorksPage() {
             },
             {
               title: "Choose Premium Launch if…",
-              body: "Timing matters, you want less submission friction, you want stronger baseline placement, and you want a guaranteed dofollow backlink.",
+              body: "You want a hand-written editorial article about your product on the ShipBoost blog — a permanent asset you can share and link to. Premium also lets you reserve a specific week, gets stronger baseline placement, and includes a guaranteed dofollow link.",
             },
             {
               title: "Use partner submissions if…",

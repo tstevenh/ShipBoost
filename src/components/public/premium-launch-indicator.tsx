@@ -7,11 +7,11 @@ import { BadgeCheck, Check, X } from "lucide-react";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 
 const premiumFeatures = [
+  "Hand-written editorial article on the ShipBoost blog",
   "Reserve a specific launch week",
-  "Guaranteed dofollow backlink",
-  "No badge verification needed",
-  "Stronger baseline board placement",
-  "Editorial launch spotlight during launch period",
+  "Featured placement on the launchboard that week",
+  "Indexed in category and tag pages",
+  "Guaranteed dofollow link",
   "Priority support",
 ];
 

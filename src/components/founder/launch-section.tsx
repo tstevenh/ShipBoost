@@ -48,25 +48,24 @@ export type LaunchSectionProps = {
 };
 
 const PREMIUM_FEATURES = [
+  "Hand-written editorial article about your product on the ShipBoost blog",
   "Reserve a specific launch week (you pick the date)",
   "Featured placement on the launchboard that week",
-  "Hand-written editorial spotlight on our blog",
-  "Long-term discovery through search and category pages",
-  "Skip the badge verification step",
-  "Guaranteed high quality dofollow backlink",
+  "Indexed in category and tag pages",
+  "Guaranteed dofollow link from your listing and editorial article",
 ];
 
 const FREE_FEATURES = [
   "One week on the launchboard",
   "Permanent public listing",
-  "Indexed in categories, tags & alternatives pages",
-  "Backlink to your site once your badge is verified",
+  "Indexed in category and tag pages",
+  "Website link (nofollow by default; add the badge to upgrade to dofollow)",
 ];
 
 const FREE_NOT_INCLUDED = [
   "Reserved launch week",
-  "Editorial spotlight that keeps sending visitors",
-  "Guaranteed high quality dofollow backlink",
+  "Hand-written editorial article on the ShipBoost blog",
+  "Guaranteed dofollow link",
 ];
 
 const SLOT_FEATURES: Record<string, string[]> = {

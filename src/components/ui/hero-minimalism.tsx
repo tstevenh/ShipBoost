@@ -257,7 +257,7 @@ export default function MinimalHero() {
           <div className="hero-kicker">Founder-first launch distribution</div>
           <h1 className="hero-title">Launch once.<br/>Keep getting discovered.</h1>
           <p className="hero-subtitle">
-            ShipBoost helps bootstrapped SaaS founders turn a launch into ongoing distribution with weekly launch boards, founder-ready listings, and long-tail discovery pages.
+            ShipBoost helps bootstrapped SaaS founders turn a launch into ongoing distribution with weekly launch boards, founder-ready listings, and hand-written editorial articles that keep working in search.
           </p>
         </div>
       </main>

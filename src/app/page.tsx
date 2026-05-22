@@ -12,7 +12,11 @@ import {
 import { LaunchpadShowcase } from "@/components/public/launchpad-showcase";
 import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { getEnv } from "@/server/env";
-import { getCachedHomePageData } from "@/server/cache/public-content";
+import {
+  getCachedHomePageData,
+  getCachedLatestSpotlightArticles,
+} from "@/server/cache/public-content";
+import { LatestEditorialSidebar } from "@/components/public/latest-editorial-sidebar";
 import { buildHomePageSchema } from "@/server/seo/page-schema";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { getServerSession } from "@/server/auth/session";
@@ -22,7 +26,7 @@ export const revalidate = 300;
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "ShipBoost | Launch once. Keep getting discovered.",
   description:
-    "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, clean public listings, and discovery paths that outlive launch day.",
+    "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, clean public listings, and hand-written editorial articles that keep working in search.",
   url: "/",
   twitterCard: "summary_large_image",
 });
@@ -34,8 +38,11 @@ export default async function Home() {
   const showLaunchpadCountdown =
     Date.now() < new Date(env.LAUNCHPAD_GO_LIVE_AT).getTime();
   const currentPeriod = "weekly";
-  const { launches, previousWeeklyTopWinner } =
-    await getCachedHomePageData(currentPeriod, false);
+  const [{ launches, previousWeeklyTopWinner }, latestSpotlightArticles] =
+    await Promise.all([
+      getCachedHomePageData(currentPeriod, false),
+      getCachedLatestSpotlightArticles(),
+    ]);
   const schemaItems = launches.map((launch) => ({
     name: launch.tool.name,
     url: `${env.NEXT_PUBLIC_APP_URL}/tools/${launch.tool.slug}`,
@@ -43,7 +50,7 @@ export default async function Home() {
   const homeSchema = buildHomePageSchema({
     title: "ShipBoost | Launch once. Keep getting discovered.",
     description:
-      "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and post-launch discovery paths.",
+      "ShipBoost helps bootstrapped SaaS founders turn a launch into long-tail distribution with weekly launch boards, founder-ready listings, and hand-written editorial articles that keep working in search.",
     url: env.NEXT_PUBLIC_APP_URL,
     items: schemaItems,
   });
@@ -68,6 +75,9 @@ export default async function Home() {
           isHomePage
           topWinner={previousWeeklyTopWinner}
           showMobileFollowup={false}
+          rightSidebarContent={
+            <LatestEditorialSidebar articles={latestSpotlightArticles} />
+          }
         >
           <div className="space-y-10 min-h-[600px]">
             <LaunchpadShowcase
@@ -101,7 +111,7 @@ export default async function Home() {
                   },
                   {
                     title: "ShipBoost",
-                    body: "Weekly launch visibility, cleaner public listings, and discovery surfaces that keep working through categories and alternatives.",
+                    body: "A weekly launch board for the spike, plus a permanent listing — and for Premium, a hand-written editorial article on our blog that keeps working in search after the board resets.",
                   },
                 ].map((item) => (
                   <article
@@ -127,12 +137,14 @@ export default async function Home() {
               <div className="mt-6 space-y-4 text-base font-medium leading-relaxed text-muted-foreground/80">
                 <p>
                   ShipBoost is designed to help founders do more than chase a short-lived spike.
-                  A launch becomes a public asset: something buyers can discover, compare, and
-                  come back to after the launch week rotates.
+                  A launch becomes a set of public assets — a listing, category placement, and
+                  for Premium, a hand-written editorial article on the ShipBoost blog — that
+                  buyers can discover, compare, and come back to after the launch week rotates.
                 </p>
                 <p>
                   For founders, that means clearer launch placement, a stronger public listing,
-                  and discovery paths that keep working after the initial launch window ends.
+                  and (for Premium) a permanent editorial article you can share, link to, and
+                  rank for long after launch week ends.
                 </p>
               </div>
               <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -147,7 +159,7 @@ export default async function Home() {
                   },
                   {
                     title: "Long-tail discovery",
-                    body: "Keep showing up through categories, tags, and alternatives pages when the right buyer is still searching later.",
+                    body: "Keep showing up through category and tag pages — and for Premium, through your editorial article on the blog — when the right buyer is searching later.",
                   },
                 ].map((item) => (
                   <article
@@ -175,8 +187,13 @@ export default async function Home() {
                 surfaces founders can use and buyers can browse. That matters more than abstract
                 positioning on its own.
               </p>
-              <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+              <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {[
+                  {
+                    title: "Editorial blog",
+                    body: "Hand-written articles about Premium launches — the durable asset that keeps working in search.",
+                    href: "/blog",
+                  },
                   {
                     title: "Weekly board",
                     body: "Launch visibility in a cleaner cohort-based surface.",
@@ -189,7 +206,7 @@ export default async function Home() {
                   },
                   {
                     title: "Alternatives",
-                    body: "Comparison-driven pages built for higher-intent discovery.",
+                    body: "Editor-curated comparison pages built for higher-intent search traffic.",
                     href: "/alternatives",
                   },
                   {

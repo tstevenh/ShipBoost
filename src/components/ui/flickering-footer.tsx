@@ -88,6 +88,23 @@ type FeaturedBadge = {
 
 const featuredBadges: FeaturedBadge[] = [
   {
+    id: "geoly",
+    href: "https://geoly.net/item/shipboost",
+    src: "https://geoly.net/badge-light.svg",
+    alt: "Featured on geoly.net",
+    rel: "noopener noreferrer",
+    imageStyle: { height: 54, width: "auto" },
+  },
+  {
+    id: "postyourstartup",
+    href: "https://postyourstartup.co/startup/shipboost-1?ref=badge",
+    src: "https://postyourstartup.co/api/badge/shipboost-1?theme=light",
+    alt: "Featured on PostYourStartup",
+    width: 212,
+    height: 55,
+    rel: "noopener noreferrer",
+  },
+  {
     id: "saaspa",
     href: "https://saaspa.ge/product/cmo13x4mv000el104b3hzaxrt",
     src: "https://saaspa.ge/api/embed/product/cmo13x4mv000el104b3hzaxrt/badge.png?theme=orange",

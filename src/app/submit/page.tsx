@@ -24,7 +24,7 @@ type SubmitPageProps = {
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Submit Your SaaS Product | ShipBoost",
   description:
-    "Submit your SaaS product to ShipBoost. Free Launch for launch-day exposure, Premium Launch with a hand-written editorial spotlight that keeps sending you visitors long after launch day.",
+    "Submit your SaaS product to ShipBoost. Free Launch gets a listing on ShipBoost; Premium Launch adds a hand-written editorial article on the ShipBoost blog — a permanent asset you can share, link to, and rank for.",
   url: "/submit",
 });
 
@@ -66,8 +66,8 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
             {[
               "Weekly launch board placement",
               "Founder-ready public listing",
-              "Category and alternatives discovery over time",
-              "Dashboard control over your launch and listing",
+              "Category and tag discovery over time",
+              "Editorial article on the ShipBoost blog (Premium)",
             ].map((item) => (
               <div
                 key={item}

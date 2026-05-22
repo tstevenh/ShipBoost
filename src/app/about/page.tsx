@@ -49,7 +49,7 @@ export default function AboutPage() {
                 "Weekly launch board visibility",
                 "Founder-ready public listings",
                 "Category and tag discovery paths",
-                "Alternatives pages built for comparison intent",
+                "Hand-written editorial articles for Premium launches",
               ].map((item) => (
                 <div
                   key={item}

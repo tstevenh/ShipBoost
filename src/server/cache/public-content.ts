@@ -3,6 +3,7 @@ import { cache } from "react";
 
 import { prisma } from "@/server/db/client";
 import {
+  listLatestSpotlightArticles,
   getPublicBlogCategoryPage,
   getPublicBlogIndexPage,
   getPublicBlogTagPage,
@@ -293,6 +294,19 @@ export const getCachedLaunchBoard = cache(
 
 export const getCachedPreviousWeeklyTopWinner = cache(
   async () => getCachedPreviousWeeklyTopWinnerLoader(),
+);
+
+const getCachedLatestSpotlightArticlesLoader = unstable_cache(
+  () => listLatestSpotlightArticles(2),
+  ["public-home", "v4", "latest-spotlight-articles", "2"],
+  {
+    revalidate: PUBLIC_BLOG_INDEX_REVALIDATE,
+    tags: [PUBLIC_CACHE_TAGS.home, PUBLIC_CACHE_TAGS.blogArticles],
+  },
+);
+
+export const getCachedLatestSpotlightArticles = cache(
+  async () => getCachedLatestSpotlightArticlesLoader(),
 );
 
 export const getCachedCategoryPage = cache(
