@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -43,9 +43,10 @@ const tags = [
   },
 ];
 
-function renderSubmitProductForm() {
+function renderSubmitProductForm(mode: "submission" | "listing-edit" = "submission") {
   return render(
     <SubmitProductForm
+      mode={mode}
       categories={categories}
       tags={tags}
       appUrl="https://shipboost.test"
@@ -91,6 +92,7 @@ function renderSubmitProductForm() {
 }
 
 beforeEach(() => {
+  vi.unstubAllGlobals();
   Object.defineProperty(URL, "createObjectURL", {
     configurable: true,
     value: vi.fn(() => "blob:preview"),
@@ -270,6 +272,108 @@ describe("SubmitProductForm", () => {
     expect(
       screen.queryByRole("button", { name: "Remove AI tag" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("saves approved listing edits through the founder listing endpoint", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          id: "tool_1",
+          slug: "acme",
+          logoMedia: {
+            id: "logo_media_1",
+            url: "https://cdn.test/logo.png",
+            format: "png",
+            width: 128,
+            height: 128,
+          },
+          screenshots: [],
+        },
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderSubmitProductForm("listing-edit");
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/founder/tools/tool_1",
+        expect.objectContaining({ method: "PATCH" }),
+      );
+    });
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/submissions",
+      expect.anything(),
+    );
+  });
+
+  it("does not overwrite text typed while autosave is in flight", async () => {
+    vi.useFakeTimers();
+
+    let resolveFirstSave!: (value: Response) => void;
+    const listingResponse = {
+      ok: true,
+      json: async () => ({
+        data: {
+          id: "tool_1",
+          slug: "acme",
+          logoMedia: {
+            id: "logo_media_1",
+            url: "https://cdn.test/logo.png",
+            format: "png",
+            width: 128,
+            height: 128,
+          },
+          screenshots: [],
+        },
+      }),
+    } as Response;
+    const firstSaveRequest = new Promise<Response>((resolve) => {
+      resolveFirstSave = resolve;
+    });
+    const fetchMock = vi
+      .fn()
+      .mockImplementationOnce(() => firstSaveRequest)
+      .mockResolvedValue(listingResponse);
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      renderSubmitProductForm("listing-edit");
+
+      await act(async () => {
+        fireEvent.change(screen.getByDisplayValue("Acme"), {
+          target: { value: "te" },
+        });
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(800);
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        fireEvent.change(screen.getByDisplayValue("te"), {
+          target: { value: "test" },
+        });
+      });
+      await act(async () => {
+        resolveFirstSave(listingResponse);
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(600);
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      const secondPayload = JSON.parse(fetchMock.mock.calls[1]?.[1]?.body as string);
+
+      expect(secondPayload.name).toBe("test");
+      expect(screen.getByDisplayValue("test")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("adds dropped product images to the screenshots preview", () => {

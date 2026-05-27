@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
@@ -49,6 +49,7 @@ type LaunchType = "FREE" | "FEATURED" | "RELAUNCH";
 type LaunchStatus = "PENDING" | "APPROVED" | "LIVE" | "ENDED" | "REJECTED";
 
 type SubmitProductFormProps = {
+  mode?: "submission" | "listing-edit";
   categories: CategoryOption[];
   tags: TagOption[];
   appUrl: string;
@@ -113,6 +114,7 @@ type FormState = {
 };
 
 type UploadedMediaAsset = {
+  id?: string;
   url: string;
   publicId?: string;
   format?: string;
@@ -237,7 +239,7 @@ function createDraftImage(file: File): DraftImage {
 
 function createDraftImageFromAsset(asset: UploadedMediaAsset): DraftImage {
   return {
-    id: crypto.randomUUID(),
+    id: asset.id ?? crypto.randomUUID(),
     previewUrl: asset.url,
     asset,
   };
@@ -276,6 +278,36 @@ function buildSubmissionPayload(
     founderFacebookUrl: ensureHttps(form.founderFacebookUrl) || undefined,
     logo,
     screenshots,
+  };
+}
+
+function buildListingUpdatePayload(
+  form: FormState,
+  logo: DraftImage | null,
+  screenshots: DraftImage[],
+) {
+  const nextLogo = logo?.asset && !logo.asset.id ? logo.asset : undefined;
+  return {
+    slug: form.requestedSlug || undefined,
+    name: form.name,
+    tagline: form.tagline,
+    websiteUrl: ensureHttps(form.websiteUrl),
+    richDescription: form.richDescription,
+    pricingModel: form.pricingModel,
+    categoryIds: form.categoryIds,
+    tagIds: form.tagIds,
+    hasAffiliateProgram: form.hasAffiliateProgram,
+    founderXUrl: ensureHttps(form.founderXUrl) || undefined,
+    founderGithubUrl: ensureHttps(form.founderGithubUrl) || undefined,
+    founderLinkedinUrl: ensureHttps(form.founderLinkedinUrl) || undefined,
+    founderFacebookUrl: ensureHttps(form.founderFacebookUrl) || undefined,
+    existingScreenshotIds: screenshots.flatMap((image) =>
+      image.asset?.id && !image.file ? [image.asset.id] : [],
+    ),
+    logo: nextLogo,
+    screenshots: screenshots.flatMap((image) =>
+      image.asset && !image.asset.id ? [image.asset] : [],
+    ),
   };
 }
 
@@ -431,6 +463,7 @@ export function getPremiumLaunchMonthIndexForDate(
 }
 
 export function SubmitProductForm({
+  mode = "submission",
   categories,
   tags,
   appUrl,
@@ -441,6 +474,7 @@ export function SubmitProductForm({
   estimatedFreeLaunchDate = null,
   initialDraft = null,
 }: SubmitProductFormProps) {
+  const isListingEditMode = mode === "listing-edit";
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeSection = searchParams.get("section");
@@ -662,6 +696,30 @@ export function SubmitProductForm({
     }
   }
 
+
+  // Auto-save refs (debounced, only when logo is uploaded)
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveDraftFnRef = useRef<
+    ((overrides?: Partial<FormState>) => Promise<SavedSubmission | null>) | null
+  >(null);
+  const formRef = useRef(form);
+  const logoAssetRef = useRef(logo?.asset);
+  const isBusyRef = useRef(isBusy);
+  const hasFormChangedRef = useRef(false);
+  const isFirstFormEffectRef = useRef(true);
+
+  const queueAutoSave = useCallback(function scheduleAutoSave(delay = 800) {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      if (!logoAssetRef.current) return;
+      if (isBusyRef.current) {
+        scheduleAutoSave(300);
+        return;
+      }
+      saveDraftFnRef.current?.().catch(() => {});
+    }, delay);
+  }, []);
+
   async function uploadPendingMedia(currentLogo: DraftImage | null, currentScreenshots: DraftImage[]) {
     const pendingLogo = currentLogo?.file && !currentLogo.asset ? currentLogo : null;
     const pendingScreenshots = currentScreenshots.filter(
@@ -687,7 +745,10 @@ export function SubmitProductForm({
       }
     });
 
-    const response = await fetch("/api/submissions/media", {
+    const mediaUploadUrl = isListingEditMode && toolId
+      ? "/api/founder/tools/" + toolId + "/media"
+      : "/api/submissions/media";
+    const response = await fetch(mediaUploadUrl, {
       method: "POST",
       body: formData,
     });
@@ -755,7 +816,10 @@ export function SubmitProductForm({
 
   async function saveDraft(overrides: Partial<FormState> = {}) {
     if (!logo) throw new Error("Please upload a logo first.");
-    const nextForm = { ...form, ...overrides };
+    const nextForm = { ...formRef.current, ...overrides };
+    const savedFormSignature = JSON.stringify(nextForm);
+    const hasOverrides = Object.keys(overrides).length > 0;
+    let shouldQueueFollowUpSave = false;
     setIsSavingDraft(true);
 
     try {
@@ -763,6 +827,71 @@ export function SubmitProductForm({
 
       if (!uploadedMedia.logo?.asset) {
         throw new Error("Please upload a logo first.");
+      }
+
+      if (isListingEditMode) {
+        if (!toolId) {
+          throw new Error("Tool not found.");
+        }
+
+        const listingPayload = buildListingUpdatePayload(
+          nextForm,
+          uploadedMedia.logo,
+          uploadedMedia.screenshots,
+        );
+        const listingSignature = JSON.stringify(listingPayload);
+
+        if (listingSignature === lastSavedPayloadSignature && lastSavedDraft) {
+          if (hasOverrides) {
+            setForm((current) => ({ ...current, ...overrides }));
+          }
+          shouldQueueFollowUpSave =
+            JSON.stringify(formRef.current) !== savedFormSignature;
+          hasFormChangedRef.current = shouldQueueFollowUpSave;
+          return lastSavedDraft;
+        }
+
+        const response = await fetch("/api/founder/tools/" + toolId, {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: listingSignature,
+        });
+        const payload = await response.json().catch(() => null) as
+          | {
+              data?: {
+                id: string;
+                slug: string;
+                logoMedia: UploadedMediaAsset | null;
+                screenshots: UploadedMediaAsset[];
+              };
+              error?: string;
+            }
+          | null;
+
+        if (!response.ok || !payload?.data) {
+          throw new Error(payload?.error || "Save failed.");
+        }
+
+        const savedListing = payload.data;
+        setForm((current) => {
+          const requestedSlug = savedListing.slug ?? current.requestedSlug;
+          return requestedSlug === current.requestedSlug
+            ? current
+            : { ...current, requestedSlug };
+        });
+        setLogo(
+          savedListing.logoMedia
+            ? createDraftImageFromAsset(savedListing.logoMedia)
+            : null,
+        );
+        setScreenshots(savedListing.screenshots.map(createDraftImageFromAsset));
+        setLastSavedPayloadSignature(listingSignature);
+        shouldQueueFollowUpSave =
+          JSON.stringify(formRef.current) !== savedFormSignature;
+        hasFormChangedRef.current = shouldQueueFollowUpSave;
+        return lastSavedDraft;
       }
 
       const payloadBody = buildSubmissionPayload(
@@ -780,7 +909,12 @@ export function SubmitProductForm({
         payloadSignature === lastSavedPayloadSignature &&
         lastSavedDraft
       ) {
-        setForm(nextForm);
+        if (hasOverrides) {
+          setForm((current) => ({ ...current, ...overrides }));
+        }
+        shouldQueueFollowUpSave =
+          JSON.stringify(formRef.current) !== savedFormSignature;
+        hasFormChangedRef.current = shouldQueueFollowUpSave;
         setDraftBadgeVerification(lastSavedDraft.badgeVerification);
         return lastSavedDraft;
       }
@@ -796,7 +930,9 @@ export function SubmitProductForm({
       if (!response.ok) throw new Error(payload.error || "Save failed.");
       const savedDraft = payload.data as SavedSubmission;
 
-      setForm(nextForm);
+      if (hasOverrides) {
+        setForm((current) => ({ ...current, ...overrides }));
+      }
       setDraftSubmissionId(savedDraft.id);
       if (savedDraft.toolId) {
         setToolId(savedDraft.toolId);
@@ -809,10 +945,15 @@ export function SubmitProductForm({
           submissionId: savedDraft.id,
         }),
       );
-      hasFormChangedRef.current = false;
+      shouldQueueFollowUpSave =
+        JSON.stringify(formRef.current) !== savedFormSignature;
+      hasFormChangedRef.current = shouldQueueFollowUpSave;
       return savedDraft;
     } finally {
       setIsSavingDraft(false);
+      if (shouldQueueFollowUpSave && logoAssetRef.current) {
+        queueAutoSave(300);
+      }
     }
   }
 
@@ -1038,15 +1179,8 @@ export function SubmitProductForm({
     }
   }
 
-  // Auto-save refs (debounced, only when logo is uploaded)
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const saveDraftFnRef = useRef(saveDraft);
-  const logoAssetRef = useRef(logo?.asset);
-  const isBusyRef = useRef(isBusy);
-  const hasFormChangedRef = useRef(false);
-  const isFirstFormEffectRef = useRef(true);
-
   useEffect(() => { saveDraftFnRef.current = saveDraft; });
+  useEffect(() => { formRef.current = form; }, [form]);
   useEffect(() => { logoAssetRef.current = logo?.asset; });
   useEffect(() => { isBusyRef.current = isBusy; });
 
@@ -1057,17 +1191,13 @@ export function SubmitProductForm({
     }
     hasFormChangedRef.current = true;
     if (!logoAssetRef.current) return;
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    autoSaveTimerRef.current = setTimeout(() => {
-      if (!logoAssetRef.current || isBusyRef.current) return;
-      saveDraftFnRef.current().catch(() => {});
-    }, 800);
+    queueAutoSave(800);
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [form]);
+  }, [form, queueAutoSave]);
 
-  if (activeSection === "launch" && draftSubmissionId) {
+  if (!isListingEditMode && activeSection === "launch" && draftSubmissionId) {
     return (
       <LaunchSection
         submissionId={draftSubmissionId}
@@ -1290,7 +1420,27 @@ export function SubmitProductForm({
       <div className="grid w-full items-start gap-8 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1120px)_320px]">
         <aside className="order-2 space-y-4 xl:sticky xl:top-28 xl:self-start">
           <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-            {hasIncompletePremiumPayment ? (
+            {isListingEditMode ? (
+              <>
+                <h3 className="text-lg font-black text-foreground">
+                  {currentScheduledLaunch ? "Launch Scheduled" : publishedLaunch ? "Launch Published" : "Listing"}
+                </h3>
+                <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                  {currentScheduledLaunch
+                    ? "Your product is scheduled for the week of " + getLaunchWeekCopyDate(scheduledLaunchDate) + ". You can keep the listing details current before launch."
+                    : publishedLaunch
+                      ? "Your product launched on " + getLaunchWeekCopyDate(publishedLaunchDate) + ". Keep your listing current so visitors get the best version of your product."
+                      : "Keep your listing details current so visitors get the best version of your product."}
+                </p>
+                <Link
+                  href={"/tools/" + form.requestedSlug}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+                >
+                  View public listing
+                  <ArrowRight size={14} />
+                </Link>
+              </>
+            ) : hasIncompletePremiumPayment ? (
               <>
                 <h3 className="text-lg font-black text-foreground">
                   Payment incomplete
@@ -1478,7 +1628,9 @@ export function SubmitProductForm({
                 </span>
               </div>
               <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
-                Complete your product before scheduling it.
+                {isListingEditMode
+                  ? "Complete the required fields before saving changes."
+                  : "Complete your product before scheduling it."}
               </p>
               <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2">
                 {submissionChecklist.map((item) => (
@@ -1511,7 +1663,7 @@ export function SubmitProductForm({
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm font-black text-foreground transition hover:bg-muted disabled:opacity-50"
             >
               {isSavingDraft ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-              {isSavingDraft ? "Saving..." : successMessage === "Product saved." ? "Saved" : "Save your product"}
+              {isSavingDraft ? "Saving..." : successMessage === "Product saved." ? "Saved" : isListingEditMode ? "Save changes" : "Save your product"}
             </button>
             {toolId ? (
               <button

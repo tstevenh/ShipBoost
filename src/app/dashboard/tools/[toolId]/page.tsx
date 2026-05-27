@@ -25,6 +25,14 @@ type RouteContext = {
   params: Promise<{ toolId: string }>;
 };
 
+function canEditFromSubmissionForm(reviewStatus: string) {
+  return (
+    reviewStatus === "DRAFT" ||
+    reviewStatus === "PENDING" ||
+    reviewStatus === "REJECTED"
+  );
+}
+
 export default async function FounderToolEditorPage(context: RouteContext) {
   const session = await getServerSession();
 
@@ -90,6 +98,7 @@ export default async function FounderToolEditorPage(context: RouteContext) {
           founderFacebookUrl: tool.founderFacebookUrl,
           logoMedia: tool.logoMedia
             ? {
+                id: tool.logoMedia.id,
                 url: tool.logoMedia.url,
                 publicId: tool.logoMedia.publicId ?? undefined,
                 format: tool.logoMedia.format ?? undefined,
@@ -100,6 +109,7 @@ export default async function FounderToolEditorPage(context: RouteContext) {
           screenshots: tool.media
             .filter((media) => media.type === "SCREENSHOT")
             .map((media) => ({
+              id: media.id,
               url: media.url,
               publicId: media.publicId ?? undefined,
               format: media.format ?? undefined,
@@ -162,6 +172,7 @@ export default async function FounderToolEditorPage(context: RouteContext) {
       <section className="mx-auto mb-32 flex w-full max-w-[1500px] flex-1 flex-col px-4 sm:px-6">
         {initialDraft ? (
           <SubmitProductForm
+            mode={canEditFromSubmissionForm(initialDraft.reviewStatus) ? "submission" : "listing-edit"}
             categories={categories}
             tags={tags}
             appUrl={env.NEXT_PUBLIC_APP_URL}
