@@ -84,6 +84,7 @@ type FeaturedBadge = {
   rel?: string;
   title?: string;
   imageStyle?: React.CSSProperties;
+  kittyLaunchBadge?: boolean;
 };
 
 const featuredBadges: FeaturedBadge[] = [
@@ -1161,6 +1162,15 @@ const featuredBadges: FeaturedBadge[] = [
     alt: "AI Directories Badge",
     rel: "noopener noreferrer",
   },
+  {
+    id: "kittylaunch",
+    href: "https://kittylaunch.com/p/shipboost",
+    src: "https://kittylaunch.com/api/public/badges/launch_badge.svg?theme=light&name=ShipBoost",
+    alt: "ShipBoost on KittyLaunch",
+    width: 280,
+    rel: "noopener",
+    kittyLaunchBadge: true,
+  },
 ];
 
 function FeaturedBadgeRail() {
@@ -1206,6 +1216,7 @@ function FeaturedBadgeRail() {
                       width={badge.width}
                       height={badge.height}
                       style={badge.imageStyle}
+                      data-kittylaunch-badge={badge.kittyLaunchBadge ? "1" : undefined}
                       className="max-h-[30px] w-auto shrink-0 object-contain"
                       loading="lazy"
                       decoding="async"

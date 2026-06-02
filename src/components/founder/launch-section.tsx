@@ -225,6 +225,7 @@ export function LaunchSection({
     .reduce((sum, s) => sum + s.priceUsd, 0);
 
   const premiumPrice = foundingPremiumSpotsLeft > 0 ? 9 : 19;
+  const premiumCompareAt = foundingPremiumSpotsLeft > 0 ? 19 : 29;
   const totalPrice =
     selectedLaunch === "FEATURED"
       ? premiumPrice + selectedSponsorPrice
@@ -277,7 +278,7 @@ export function LaunchSection({
   const spotsLabel =
     foundingPremiumSpotsLeft > 0
       ? `${foundingPremiumSpotsLeft} of ${foundingPremiumLaunchLimit} founding spots left`
-      : null;
+      : "Early access pricing — rising to $29 soon";
 
   const isConfirmDisabled =
     isLoading || (selectedLaunch === "FEATURED" && !preferredDate);
@@ -331,9 +332,7 @@ export function LaunchSection({
               </p>
             </div>
             <div className="mt-5 flex items-end gap-3">
-              {foundingPremiumSpotsLeft > 0 && (
-                <span className="text-xl font-black text-muted-foreground line-through">$19</span>
-              )}
+              <span className="text-xl font-black text-muted-foreground line-through">${premiumCompareAt}</span>
               <span className="text-5xl font-black tracking-tighter text-foreground">
                 ${premiumPrice}
               </span>

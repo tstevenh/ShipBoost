@@ -406,6 +406,28 @@ function getLaunchWeekCopyDate(value: string | null | undefined) {
   return value ? formatLaunchDate(value) : "your scheduled launch week";
 }
 
+/**
+ * A stored premium-launch preference becomes unusable once its week passes:
+ * the server (correctly) rejects a past date at checkout. When that happens —
+ * or when no week was ever stored — the founder must reselect a future week
+ * before they can pay, instead of being dead-ended on "Complete payment".
+ */
+export function needsLaunchWeekReselection(
+  preferredLaunchDate: string | null | undefined,
+  now = new Date(),
+) {
+  if (!preferredLaunchDate) {
+    return true;
+  }
+
+  const parsed = new Date(preferredLaunchDate);
+  if (Number.isNaN(parsed.getTime())) {
+    return true;
+  }
+
+  return parsed.getTime() <= now.getTime();
+}
+
 type PremiumLaunchWeekOption = SubmitProductFormProps["premiumLaunchWeeks"][number];
 
 export function groupPremiumLaunchWeeksByMonth(weeks: PremiumLaunchWeekOption[]) {
@@ -1072,6 +1094,15 @@ export function SubmitProductForm({
 
   async function handleCompletePremiumPayment() {
     if (!draftSubmissionId) return;
+
+    // If the stored launch week has passed (or was never set), the server will
+    // reject checkout with "Choose a future launch week." Route the founder to
+    // the launch-week picker to (re)select a valid week instead of dead-ending.
+    if (needsLaunchWeekReselection(form.preferredLaunchDate)) {
+      await handleNavigateToLaunch();
+      return;
+    }
+
     setErrorMessage(null);
     setSuccessMessage(null);
     setIsSubmittingDraft(true);
@@ -1446,7 +1477,9 @@ export function SubmitProductForm({
                   Payment incomplete
                 </h3>
                 <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
-                  Complete your Premium Launch payment to reserve the week of {getLaunchWeekCopyDate(form.preferredLaunchDate)}.
+                  {needsLaunchWeekReselection(form.preferredLaunchDate)
+                    ? "Your reserved launch week has passed. Choose a new launch week to complete your Premium Launch payment."
+                    : `Complete your Premium Launch payment to reserve the week of ${getLaunchWeekCopyDate(form.preferredLaunchDate)}.`}
                 </p>
                 <button
                   type="button"
@@ -1459,7 +1492,9 @@ export function SubmitProductForm({
                   ) : (
                     <ArrowRight size={14} />
                   )}
-                  Complete payment
+                  {needsLaunchWeekReselection(form.preferredLaunchDate)
+                    ? "Choose launch week"
+                    : "Complete payment"}
                 </button>
               </>
             ) : currentScheduledLaunch ? (

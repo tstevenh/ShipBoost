@@ -73,8 +73,14 @@ export const PUBLIC_CACHE_TAGS = {
   sponsorPlacements: "public:sponsor-placements",
 } as const;
 
+function revalidatePublicLlmsIndexes() {
+  revalidatePath("/llms.txt");
+  revalidatePath("/llms-full.txt");
+}
+
 export function revalidatePublicToolContent() {
   revalidateTag(PUBLIC_CACHE_TAGS.tools, "max");
+  revalidatePublicLlmsIndexes();
 }
 
 export function revalidatePublicVoteContent() {
@@ -106,6 +112,7 @@ export function revalidatePublicBlogContent(input?: {
   revalidateTag(PUBLIC_CACHE_TAGS.blogCategories, "max");
   revalidateTag(PUBLIC_CACHE_TAGS.blogTags, "max");
   revalidatePath("/blog");
+  revalidatePublicLlmsIndexes();
 
   if (input?.articleSlug) {
     revalidatePath(`/blog/${input.articleSlug}`);
@@ -144,6 +151,7 @@ export function revalidateAllPublicContent() {
   revalidatePath("/blog/category/[slug]", "page");
   revalidatePath("/blog/tag/[slug]", "page");
   revalidatePath("/tools/[slug]", "page");
+  revalidatePublicLlmsIndexes();
 }
 
 type PrelaunchToolPreview = {

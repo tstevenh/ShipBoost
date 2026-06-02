@@ -6,6 +6,7 @@ import {
   findPublishedLaunch,
   getPremiumLaunchMonthIndexForDate,
   groupPremiumLaunchWeeksByMonth,
+  needsLaunchWeekReselection,
   SubmitProductForm,
 } from "@/components/founder/submit-product-form";
 
@@ -224,6 +225,22 @@ describe("submit-product-form scheduling helpers", () => {
 
     expect(findActiveScheduledLaunch(draft, now)?.id).toBe("launch_1");
     expect(findPublishedLaunch(draft, now)).toBeNull();
+  });
+
+  it("flags a missing or past preferred launch week for reselection", () => {
+    const now = new Date("2026-06-01T00:00:00.000Z");
+
+    // Past date: founder's reserved week has already gone by → must reselect.
+    expect(needsLaunchWeekReselection("2026-05-25T00:00:00.000Z", now)).toBe(true);
+    // Missing date entirely → must reselect.
+    expect(needsLaunchWeekReselection(null, now)).toBe(true);
+    expect(needsLaunchWeekReselection("", now)).toBe(true);
+  });
+
+  it("keeps a still-future preferred launch week on the fast payment path", () => {
+    const now = new Date("2026-06-01T00:00:00.000Z");
+
+    expect(needsLaunchWeekReselection("2026-06-08T00:00:00.000Z", now)).toBe(false);
   });
 
   it("does not treat an unpaid premium launch date as scheduled", () => {

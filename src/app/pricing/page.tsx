@@ -18,9 +18,20 @@ import { TrackedExternalLink } from "@/components/analytics/tracked-external-lin
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
 import { AdPreviewButton } from "@/components/public/ad-preview-modal";
+import { unstable_cache } from "next/cache";
+
 import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
-import { getPremiumLaunchPriceCard } from "@/server/services/dodo-product-service";
 import { getEnv } from "@/server/env";
+
+// Marketing page only: the founding-spots count drives the Founding → Early
+// Access flip. Cache it for 5 minutes so we hit the DB ~once per window
+// instead of once per visitor. The submit/checkout flow stays uncached, where
+// an accurate live count matters for the genuine last spot.
+const getCachedFoundingSpotsLeft = unstable_cache(
+  getRemainingFoundingPremiumLaunchSpots,
+  ["pricing-founding-spots", "v1"],
+  { revalidate: 300 },
+);
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildPricingPageSchema } from "@/server/seo/page-schema";
 
@@ -52,10 +63,19 @@ export default async function PricingPage() {
   const env = getEnv();
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
   const foundingPremiumLaunchLimit = env.FOUNDING_PREMIUM_LAUNCH_LIMIT;
-  const [foundingSpotsLeft, foundingPremiumPrice] = await Promise.all([
-    getRemainingFoundingPremiumLaunchSpots(),
-    getPremiumLaunchPriceCard(),
-  ]);
+  const foundingSpotsLeft = await getCachedFoundingSpotsLeft();
+
+  // Premium Launch pricing flips automatically when founding sells out.
+  // Founding: $19 → $9. Early Access: $29 → $19. Display is derived from
+  // spots-left so the transition needs no redeploy — the only manual step at
+  // sellout is updating the Dodo product price ($9 → $19) so the charge matches.
+  const isFoundingActive = foundingSpotsLeft > 0;
+  const premiumBadge = isFoundingActive ? "Founding offer" : "Early access";
+  const premiumCompareAt = isFoundingActive ? "$19" : "$29";
+  const premiumCurrentPrice = isFoundingActive ? "$9" : "$19";
+  const premiumSpotsLabel = isFoundingActive
+    ? `${foundingSpotsLeft} of ${foundingPremiumLaunchLimit} founding spots left`
+    : "Early access pricing — rising to $29 soon";
 
   const schema = buildPricingPageSchema({
     title: "Pricing",
@@ -126,7 +146,7 @@ export default async function PricingPage() {
             {/* Premium Launch */}
             <article className="relative flex flex-col rounded-3xl border border-primary bg-card p-7 shadow-sm ring-4 ring-primary/5">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-[10px] font-black tracking-widest whitespace-nowrap shadow-lg shadow-black/20">
-                Founding offer
+                {premiumBadge}
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black tracking-[0.2em] text-primary">
@@ -135,18 +155,16 @@ export default async function PricingPage() {
                 <Star size={18} className="text-primary" />
               </div>
               <div className="mt-5 flex items-end gap-3">
-                {foundingPremiumPrice.compareAtPrice ? (
-                  <span className="text-xl font-black text-muted-foreground line-through">
-                    {foundingPremiumPrice.compareAtPrice}
-                  </span>
-                ) : null}
+                <span className="text-xl font-black text-muted-foreground line-through">
+                  {premiumCompareAt}
+                </span>
                 <span className="text-5xl font-black tracking-tighter text-foreground">
-                  {foundingPremiumPrice.currentPrice}
+                  {premiumCurrentPrice}
                 </span>
                 <span className="pb-1 text-sm font-bold text-muted-foreground">/ launch</span>
               </div>
               <p className="mt-1.5 text-[10px] font-black tracking-widest text-primary">
-                {foundingSpotsLeft} of {foundingPremiumLaunchLimit} founding spots left
+                {premiumSpotsLabel}
               </p>
               <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
                 A hand-written editorial article about your product, published on the ShipBoost blog. A permanent asset you can share, link to, and rank for — plus a reserved launch week and featured placement.
