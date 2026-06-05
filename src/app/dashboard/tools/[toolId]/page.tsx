@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
+import { FounderLaunchKitCard } from "@/components/founder/founder-launch-kit-card";
 import { FounderToolEditor } from "@/components/founder/founder-tool-editor";
 import { SubmitProductForm } from "@/components/founder/submit-product-form";
+import { buildLaunchKit } from "@/lib/distribution/launch-kit";
 import { getServerSession } from "@/server/auth/session";
 import { getCachedCatalogOptions } from "@/server/cache/catalog-options";
 import { getEnv } from "@/server/env";
@@ -191,6 +193,28 @@ export default async function FounderToolEditorPage(context: RouteContext) {
             tags={tags}
           />
         )}
+        {tool.slug ? (
+          (() => {
+            const kit = buildLaunchKit({
+              appUrl: env.NEXT_PUBLIC_APP_URL,
+              slug: tool.slug,
+              toolId: tool.id,
+              name: tool.name,
+              tagline: tool.tagline ?? "",
+            });
+            return (
+              <div className="mt-8">
+                <FounderLaunchKitCard
+                  listingUrl={kit.listingUrl}
+                  badgeSnippetLight={kit.badgeSnippetLight}
+                  badgeSnippetDark={kit.badgeSnippetDark}
+                  twitterText={kit.shareTexts.twitter}
+                  linkedinText={kit.shareTexts.linkedin}
+                />
+              </div>
+            );
+          })()
+        ) : null}
       </section>
       <Footer className="mt-auto" />
     </main>
