@@ -132,7 +132,8 @@ export default async function PricingPage() {
                 <CheckItem text="One week on the launchboard" />
                 <CheckItem text="Permanent public listing" />
                 <CheckItem text="Indexed in category and tag pages" />
-                <CheckItem text="Website link (nofollow by default; add the badge to upgrade to dofollow)" />
+                <CheckItem text="Public listing with a link to your site" />
+                <CheckItem text="Verified ShipBoost badge required" />
               </ul>
               <Link
                 href="/submit"

@@ -19,7 +19,7 @@ const steps = [
   {
     title: "1. Submit your product",
     body:
-      "Founders submit their product, listing details, and launch preference. Free launches use a nofollow website link by default and can add an optional ShipBoost badge to unlock a dofollow backlink.",
+      "Founders submit their product, listing details, and launch preference. Free launches require a verified ShipBoost badge on your site and include a public listing with a link to your product.",
   },
   {
     title: "2. Enter the right launch flow",
@@ -38,8 +38,8 @@ const rules = [
     title: "Free Launch",
     points: [
       "Reviewed before approval",
-      "Nofollow website link by default",
-      "Verified badge unlocks a dofollow backlink",
+      "Public listing with a link to your site",
+      "Verified ShipBoost badge required",
       "Queued into the next available weekly cohort",
     ],
   },
@@ -187,7 +187,7 @@ export default function HowItWorksPage() {
           {[
             {
               title: "Choose Free Launch if…",
-              body: "You want a credible public listing and weekly board visibility, with a nofollow website link by default and the option to add a badge for a dofollow backlink.",
+              body: "You want a credible public listing and weekly board visibility. A verified ShipBoost badge is required for free launches.",
             },
             {
               title: "Choose Premium Launch if…",
