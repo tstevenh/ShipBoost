@@ -206,10 +206,14 @@ export default async function FounderToolEditorPage(context: RouteContext) {
               <div className="mt-8">
                 <FounderLaunchKitCard
                   listingUrl={kit.listingUrl}
+                  badgeImageUrlLight={kit.badgeImageUrlLight}
+                  badgeImageUrlDark={kit.badgeImageUrlDark}
                   badgeSnippetLight={kit.badgeSnippetLight}
                   badgeSnippetDark={kit.badgeSnippetDark}
                   twitterText={kit.shareTexts.twitter}
                   linkedinText={kit.shareTexts.linkedin}
+                  twitterUrl={kit.shareUrls.twitter}
+                  linkedinUrl={kit.shareUrls.linkedin}
                 />
               </div>
             );
