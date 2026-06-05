@@ -1374,9 +1374,8 @@ export function SubmitProductForm({
 
             <div className="p-6">
               <p className="text-sm font-medium leading-relaxed text-muted-foreground">
-                Your free launch is scheduled with a nofollow website link by
-                default. Add a small ShipBoost badge to your homepage or footer,
-                then verify it to unlock a dofollow backlink.
+                A verified ShipBoost badge is required for your free launch. Add
+                the badge to your homepage or footer, then verify it.
               </p>
 
               {errorMessage ? (
@@ -1577,7 +1576,7 @@ export function SubmitProductForm({
                 Add the ShipBoost badge
               </h3>
               <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
-                Add the badge to your homepage or footer, then verify it to upgrade your backlink to dofollow.
+                A verified ShipBoost badge is required for free launches. Add the badge to your homepage or footer, then verify it.
               </p>
               <div className="mt-5 space-y-3">
                 {(["light", "dark"] as const).map((theme) => (
