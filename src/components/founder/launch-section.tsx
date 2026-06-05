@@ -12,7 +12,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdPreviewButton } from "@/components/public/ad-preview-modal";
-import { FreeLaunchRequirementsPanel } from "@/components/founder/free-launch-requirements-panel";
+import {
+  FreeLaunchRequirementsPanel,
+  type BadgePreviewOption,
+} from "@/components/founder/free-launch-requirements-panel";
 import type { SponsorEligibilitySlot } from "@/app/api/sponsor/eligibility/route";
 import type { SponsorSlot } from "@prisma/client";
 import type { FreeLaunchRequirements } from "@/server/services/free-launch-requirements";
@@ -47,10 +50,7 @@ export type LaunchSectionProps = {
   isFreeScheduled: boolean;
   onBack: () => void;
   onFreeScheduled: (launch: ScheduledLaunch, submission: SavedSubmission) => void;
-  appUrl: string;
-  toolSlug: string;
-  badgeSnippet: string;
-  badgePreviewSrc: string;
+  badges: BadgePreviewOption[];
   freeLaunchRequirements: FreeLaunchRequirements | null;
 };
 
@@ -200,12 +200,7 @@ export function LaunchSection({
   isFreeScheduled: _isFreeScheduled,
   onBack,
   onFreeScheduled,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  appUrl: _appUrl,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  toolSlug: _toolSlug,
-  badgeSnippet,
-  badgePreviewSrc,
+  badges,
   freeLaunchRequirements,
 }: LaunchSectionProps) {
   const [selectedLaunch, setSelectedLaunch] = useState<"FREE" | "FEATURED">("FEATURED");
@@ -218,6 +213,8 @@ export function LaunchSection({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [freeRequirementsMet, setFreeRequirementsMet] = useState(false);
+  const requirementsRef = useRef<HTMLDivElement>(null);
+  const [shakeRequirements, setShakeRequirements] = useState(false);
 
   useEffect(() => {
     if (!toolId) return;
@@ -296,9 +293,20 @@ export function LaunchSection({
       : "Early access pricing — rising to $29 soon";
 
   const isConfirmDisabled =
-    isLoading ||
-    (selectedLaunch === "FEATURED" && !preferredDate) ||
-    (selectedLaunch === "FREE" && !freeRequirementsMet);
+    isLoading || (selectedLaunch === "FEATURED" && !preferredDate);
+
+  const freeBlocked =
+    selectedLaunch === "FREE" && !!freeLaunchRequirements && !freeRequirementsMet;
+
+  function handleScheduleClick() {
+    if (freeBlocked) {
+      requirementsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setShakeRequirements(true);
+      window.setTimeout(() => setShakeRequirements(false), 700);
+      return;
+    }
+    void handleConfirm();
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 py-6">
@@ -425,19 +433,6 @@ export function LaunchSection({
         </div>
       </div>
 
-      {selectedLaunch === "FREE" && freeLaunchRequirements ? (
-        <FreeLaunchRequirementsPanel
-          submissionId={submissionId}
-          badgeSnippet={badgeSnippet}
-          badgePreviewSrc={badgePreviewSrc}
-          initialBadgeVerification={freeLaunchRequirements.badgeVerification}
-          tools={freeLaunchRequirements.boardTools}
-          initialEligibleCount={freeLaunchRequirements.eligibleCount}
-          requiredCount={freeLaunchRequirements.requiredCount}
-          onRequirementsMet={setFreeRequirementsMet}
-        />
-      ) : null}
-
       {/* Premium date picker — always show when FEATURED selected */}
       {selectedLaunch === "FEATURED" && (
         <div className="rounded-2xl border border-border bg-card p-5">
@@ -563,6 +558,21 @@ export function LaunchSection({
         </div>
       )}
 
+      {/* Free-launch requirements — below sponsor so founders see placements first */}
+      {selectedLaunch === "FREE" && freeLaunchRequirements ? (
+        <div ref={requirementsRef} className={shakeRequirements ? "sb-shake" : undefined}>
+          <FreeLaunchRequirementsPanel
+            submissionId={submissionId}
+            badges={badges}
+            initialBadgeVerification={freeLaunchRequirements.badgeVerification}
+            tools={freeLaunchRequirements.boardTools}
+            initialEligibleCount={freeLaunchRequirements.eligibleCount}
+            requiredCount={freeLaunchRequirements.requiredCount}
+            onRequirementsMet={setFreeRequirementsMet}
+          />
+        </div>
+      ) : null}
+
       {/* Total + CTA */}
       <div className="sticky bottom-0 rounded-2xl border border-border bg-card/95 p-4 shadow-lg backdrop-blur">
         <div className="mb-3 flex items-center justify-between">
@@ -578,7 +588,7 @@ export function LaunchSection({
         </div>
         <button
           type="button"
-          onClick={() => void handleConfirm()}
+          onClick={handleScheduleClick}
           disabled={isConfirmDisabled}
           className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-black text-primary-foreground shadow-xl shadow-black/20 transition hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
         >

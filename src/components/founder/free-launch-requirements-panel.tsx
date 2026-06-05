@@ -7,10 +7,16 @@ import { UpvoteRequirementModal, type RequirementBoardTool } from "./upvote-requ
 
 type BadgeVerification = "NOT_REQUIRED" | "PENDING" | "VERIFIED" | "FAILED";
 
+export type BadgePreviewOption = {
+  theme: "light" | "dark";
+  label: string;
+  previewSrc: string;
+  snippet: string;
+};
+
 type Props = {
   submissionId: string;
-  badgeSnippet: string;
-  badgePreviewSrc: string;
+  badges: BadgePreviewOption[];
   initialBadgeVerification: BadgeVerification;
   tools: RequirementBoardTool[];
   initialEligibleCount: number;
@@ -20,8 +26,7 @@ type Props = {
 
 export function FreeLaunchRequirementsPanel({
   submissionId,
-  badgeSnippet,
-  badgePreviewSrc,
+  badges,
   initialBadgeVerification,
   tools,
   initialEligibleCount,
@@ -32,11 +37,12 @@ export function FreeLaunchRequirementsPanel({
   const [eligibleCount, setEligibleCount] = useState(initialEligibleCount);
   const [modalOpen, setModalOpen] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedTheme, setCopiedTheme] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const badgeOk = badge === "VERIFIED";
   const votesOk = eligibleCount >= requiredCount;
+  const shownCount = Math.min(eligibleCount, requiredCount);
 
   useEffect(() => {
     onRequirementsMet(badgeOk && votesOk);
@@ -59,10 +65,10 @@ export function FreeLaunchRequirementsPanel({
     }
   }
 
-  function copySnippet() {
-    if (typeof navigator !== "undefined" && navigator.clipboard) void navigator.clipboard.writeText(badgeSnippet);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
+  function copySnippet(theme: string, snippet: string) {
+    if (typeof navigator !== "undefined" && navigator.clipboard) void navigator.clipboard.writeText(snippet);
+    setCopiedTheme(theme);
+    window.setTimeout(() => setCopiedTheme(null), 1600);
   }
 
   return (
@@ -72,6 +78,7 @@ export function FreeLaunchRequirementsPanel({
 
       {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
 
+      {/* Step 1: badge — light + dark side by side */}
       <div className="mt-4 rounded-xl border border-border p-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold">
@@ -85,22 +92,38 @@ export function FreeLaunchRequirementsPanel({
         </div>
         {!badgeOk ? (
           <div className="mt-3 flex flex-col gap-3">
-            <div className="flex items-center justify-center rounded-lg border border-dashed border-border bg-muted/40 px-4 py-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={badgePreviewSrc} alt="ShipBoost badge" className="h-12 w-auto" />
+            <p className="text-xs text-muted-foreground">Pick the badge that fits your site, paste it on your homepage or footer, then verify.</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {badges.map((b) => (
+                <div key={b.theme} className="flex flex-col gap-2 rounded-lg border border-border p-3">
+                  <div className="flex min-h-16 items-center justify-center rounded-md border border-dashed border-border bg-muted/40 px-3 py-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={b.previewSrc} alt={`ShipBoost ${b.label} badge`} className="h-10 w-auto" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copySnippet(b.theme, b.snippet)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                  >
+                    {copiedTheme === b.theme ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                    {copiedTheme === b.theme ? "Copied" : `Copy ${b.label}`}
+                  </button>
+                </div>
+              ))}
             </div>
-            <div className="flex gap-2">
-              <button type="button" onClick={copySnippet} className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted">
-                {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} {copied ? "Copied" : "Copy snippet"}
-              </button>
-              <button type="button" disabled={verifying} onClick={() => void verifyBadge()} className="inline-flex items-center gap-1.5 rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium text-background hover:opacity-90 disabled:opacity-50">
-                {verifying ? "Verifying..." : "Verify badge now"}
-              </button>
-            </div>
+            <button
+              type="button"
+              disabled={verifying}
+              onClick={() => void verifyBadge()}
+              className="inline-flex items-center justify-center gap-1.5 self-start rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90 disabled:opacity-50"
+            >
+              {verifying ? "Verifying..." : "Verify badge now"}
+            </button>
           </div>
         ) : null}
       </div>
 
+      {/* Step 2: upvotes */}
       <div className="mt-3 rounded-xl border border-border p-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold">
@@ -115,7 +138,7 @@ export function FreeLaunchRequirementsPanel({
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
               <div className="h-full bg-foreground transition-all" style={{ width: `${Math.min(100, (eligibleCount / requiredCount) * 100)}%` }} />
             </div>
-            <span className="text-xs font-medium text-muted-foreground">{eligibleCount} / {requiredCount}</span>
+            <span className="text-xs font-medium text-muted-foreground">{shownCount} / {requiredCount}</span>
             {!votesOk ? (
               <button type="button" onClick={() => setModalOpen(true)} className="rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium text-background hover:opacity-90">
                 Upvote now

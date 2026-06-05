@@ -1206,10 +1206,20 @@ export function SubmitProductForm({
         currentScheduledLaunch={currentScheduledLaunch as never}
         isPremiumScheduled={isPremiumScheduled}
         isFreeScheduled={isFreeScheduled}
-        appUrl={appUrl}
-        toolSlug={form.requestedSlug}
-        badgeSnippet={getFreeLaunchBadgeSnippet(badgeTheme)}
-        badgePreviewSrc={getBadgePreviewSrc(badgeTheme)}
+        badges={[
+          {
+            theme: "light",
+            label: "Light",
+            previewSrc: getBadgePreviewSrc("light"),
+            snippet: getFreeLaunchBadgeSnippet("light"),
+          },
+          {
+            theme: "dark",
+            label: "Dark",
+            previewSrc: getBadgePreviewSrc("dark"),
+            snippet: getFreeLaunchBadgeSnippet("dark"),
+          },
+        ]}
         freeLaunchRequirements={freeLaunchRequirements}
         onBack={() => {
           const params = new URLSearchParams(searchParams.toString());
