@@ -38,15 +38,21 @@ Node scripts that need `.env.local` are wrapped via `scripts/run-with-env.mjs` (
 
 ### Local cron testing
 
-Scheduled launch publishing runs at `GET /api/cron/launches/publish-due`. In dev, if `CRON_SECRET` is empty the route is unauthenticated; otherwise pass `x-cron-secret: $CRON_SECRET`.
+All cron routes share the same auth: in dev, if `CRON_SECRET` is empty they are unauthenticated; otherwise pass `x-cron-secret: $CRON_SECRET`. The routes:
 
-### Local Polar webhook testing
+- `GET /api/cron/launches/publish-due` — publish due `Launch` rows
+- `GET /api/cron/launches/send-prelaunch-reminders` — launch-week traction reminders
+- `GET /api/cron/premium-launch-spotlights/remind-due` — spotlight brief reminders
+- `GET /api/cron/sponsor-placements` — sponsor placement lifecycle
+- `GET /api/cron/public-content/revalidate` — revalidate cached public content
 
-```bash
-polar listen http://localhost:3000/api/polar/webhooks
-```
+### Payments (Dodo Payments)
 
-Copy the printed secret into `POLAR_WEBHOOK_SECRET`. The listener must point at `/api/polar/webhooks`, not `/`.
+**Dodo Payments is the live provider**, not Polar. The empty `src/app/api/polar/webhooks/` route and the `polarOrderId`/`polarCheckoutId` DB columns are legacy from a prior Polar integration — leave them unless migrating the schema, but new payment work goes through Dodo. Code lives in `src/server/dodo.ts` (client) and `src/server/services/submission-payment-service.ts` / `dodo-product-service.ts` / `streak-rewards-dodo.ts`. Env is `DODO_PAYMENTS_*` and per-product IDs (`DODO_PREMIUM_LAUNCH_PRODUCT_ID`, `DODO_SPONSOR_*_PRODUCT_ID`).
+
+- Webhook: `POST /api/dodo/webhooks`, verified with `standardwebhooks` (`webhook-id`/`webhook-signature`/`webhook-timestamp` headers) against `DODO_PAYMENTS_WEBHOOK_SECRET`.
+- Events handled: `payment.succeeded` and refund. The handler branches on `data.metadata.shipboostProduct` to route between premium launch and sponsor placement.
+- Checkout routes live under `src/app/api/dodo/checkout/*` (premium-launch, sponsor-placement, launch-bundle).
 
 ## Architecture
 
@@ -70,10 +76,10 @@ App Router code in `src/app/` should stay thin: validate with `validators/`, cal
 
 ### Submissions and launches (the core domain)
 
-A `Submission` is the founder's draft. It has a `kind` of `LISTING_ONLY`, `FREE_LAUNCH`, or `FEATURED_LAUNCH`, and progresses through draft → submitted → approved/rejected. Approval (or successful Polar payment for `FEATURED_LAUNCH`) materializes a `Tool` and, for launches, schedules a `Launch` row.
+A `Submission` is the founder's draft. It has a `kind` of `LISTING_ONLY`, `FREE_LAUNCH`, or `FEATURED_LAUNCH`, and progresses through draft → submitted → approved/rejected. Approval (or successful Dodo payment for `FEATURED_LAUNCH`) materializes a `Tool` and, for launches, schedules a `Launch` row.
 
 - Free launches: gated by **badge verification**. The verifier fetches the founder's submitted website and looks for `data-shipboost-badge="free-launch"` (also checked in same-origin scripts — see commit `9486df4`). They land in the next available daily slot.
-- Featured launches: founder picks a preferred date, app creates a Polar checkout, `order.paid` webhook auto-approves and schedules.
+- Featured launches: founder picks a preferred date, app creates a Dodo checkout, the `payment.succeeded` webhook auto-approves and schedules (see Payments above).
 - Publishing: `Launch` rows go live through the cron route, not on a timer in-process.
 - Launch boards are **gated by go-live countdown** (commit `bcebf06`); when reading/altering board logic, check the gate.
 
