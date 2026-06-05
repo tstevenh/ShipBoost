@@ -59,7 +59,7 @@ const FREE_FEATURES = [
   "One week on the launchboard",
   "Permanent public listing",
   "Indexed in category and tag pages",
-  "Website link (nofollow by default; add the badge to upgrade to dofollow)",
+  "Public listing with a link to your site",
 ];
 
 const FREE_NOT_INCLUDED = [
@@ -399,6 +399,10 @@ export function LaunchSection({
                   {f}
                 </li>
               ))}
+            </ul>
+            <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+              <li>• Add the ShipBoost badge to your site and verify it</li>
+              <li>• Upvote 3 launches on this week&apos;s board</li>
             </ul>
           </button>
         </div>
