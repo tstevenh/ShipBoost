@@ -15,11 +15,14 @@ import {
 } from "@/server/repositories/tool-repository";
 import { capturePostHogEventSafely } from "@/server/posthog";
 import { assertCatalogAssignments } from "@/server/services/catalog";
+import { assertFreeLaunchGate } from "@/server/services/free-launch-gate";
+import { listCurrentWeekBoardToolIds } from "@/server/services/launch-service";
 import {
   scheduleNextFreeLaunchDate,
   UTC_WEEK_IN_DAYS,
 } from "@/server/services/launch-scheduling";
 import { createUniqueToolSlug } from "@/server/services/slug";
+import { listUserUpvotedToolIds } from "@/server/services/upvote-service";
 import { addUtcDays } from "@/server/services/time";
 import {
   buildDuplicateSubmissionDetails,
@@ -777,6 +780,18 @@ export async function scheduleFreeSubmissionLaunch(
   if (submission.paymentStatus === "PAID") {
     throw new AppError(400, "Paid launches cannot join the free queue.");
   }
+
+  const boardToolIds = (await listCurrentWeekBoardToolIds()).filter(
+    (toolId) => toolId !== submission.toolId,
+  );
+  const eligibleBoardUpvoteCount = (
+    await listUserUpvotedToolIds(boardToolIds, founder.id)
+  ).length;
+
+  assertFreeLaunchGate({
+    badgeVerification: submission.badgeVerification,
+    eligibleBoardUpvoteCount,
+  });
 
   const existingFreeLaunch = getActiveLaunchForType(
     submission.tool.launches,
