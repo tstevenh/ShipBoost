@@ -17,8 +17,10 @@ import {
   X,
 } from "lucide-react";
 
+import { FounderLaunchKitCard } from "@/components/founder/founder-launch-kit-card";
 import { LaunchSection } from "@/components/founder/launch-section";
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
+import type { LaunchKit } from "@/lib/distribution/launch-kit";
 import { NativeSelect } from "@/components/forms/native-select";
 import { cn } from "@/lib/utils";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
@@ -90,6 +92,7 @@ type SubmitProductFormProps = {
       launches?: ScheduledLaunch[];
     };
   } | null;
+  launchKit?: LaunchKit | null;
   isPrelaunch?: boolean;
 };
 
@@ -495,6 +498,7 @@ export function SubmitProductForm({
   foundingPremiumLaunchLimit = 20,
   estimatedFreeLaunchDate = null,
   initialDraft = null,
+  launchKit = null,
 }: SubmitProductFormProps) {
   const isListingEditMode = mode === "listing-edit";
   const router = useRouter();
@@ -1716,6 +1720,20 @@ export function SubmitProductForm({
               </button>
             ) : null}
           </div>
+
+          {launchKit ? (
+            <FounderLaunchKitCard
+              listingUrl={launchKit.listingUrl}
+              badgeImageUrlLight={launchKit.badgeImageUrlLight}
+              badgeImageUrlDark={launchKit.badgeImageUrlDark}
+              badgeSnippetLight={launchKit.badgeSnippetLight}
+              badgeSnippetDark={launchKit.badgeSnippetDark}
+              twitterText={launchKit.shareTexts.twitter}
+              linkedinText={launchKit.shareTexts.linkedin}
+              twitterUrl={launchKit.shareUrls.twitter}
+              linkedinUrl={launchKit.shareUrls.linkedin}
+            />
+          ) : null}
         </aside>
 
         <div className="order-1 min-w-0 rounded-xl border border-border bg-card shadow-sm">

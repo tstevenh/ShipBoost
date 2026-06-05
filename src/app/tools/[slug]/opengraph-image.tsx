@@ -19,6 +19,15 @@ const logoDataUrl = `data:image/png;base64,${readFileSync(
   join(process.cwd(), "public/logo/black-logo.png"),
 ).toString("base64")}`;
 
+// Site fonts (Manrope headings, Inter body) so the card matches the homepage OG.
+const fontDir = join(process.cwd(), "public/fonts");
+const fonts = [
+  { name: "Manrope", data: readFileSync(join(fontDir, "Manrope-700.ttf")), weight: 700 as const, style: "normal" as const },
+  { name: "Manrope", data: readFileSync(join(fontDir, "Manrope-800.ttf")), weight: 800 as const, style: "normal" as const },
+  { name: "Inter", data: readFileSync(join(fontDir, "Inter-400.ttf")), weight: 400 as const, style: "normal" as const },
+  { name: "Inter", data: readFileSync(join(fontDir, "Inter-600.ttf")), weight: 600 as const, style: "normal" as const },
+];
+
 const GRID = "#1c1c1f";
 
 // Decorative corner grid lines, matching the homepage OG image.
@@ -81,7 +90,7 @@ export default async function Image(context: OgContext) {
           backgroundColor: "#0A0A0A",
           color: "#FAFAFA",
           padding: "80px 96px",
-          fontFamily: "sans-serif",
+          fontFamily: "Inter",
           textAlign: "center",
         }}
       >
@@ -103,7 +112,7 @@ export default async function Image(context: OgContext) {
           >
             <img src={logoDataUrl} width={40} height={40} alt="" />
           </div>
-          <span style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.5px" }}>ShipBoost</span>
+          <span style={{ fontFamily: "Manrope", fontSize: 34, fontWeight: 700, letterSpacing: "-0.5px" }}>ShipBoost</span>
         </div>
 
         {/* Eyebrow + name + tagline */}
@@ -118,7 +127,7 @@ export default async function Image(context: OgContext) {
           >
             LAUNCHING ON SHIPBOOST
           </span>
-          <div style={{ display: "flex", fontSize: 82, fontWeight: 800, lineHeight: 1.02, maxWidth: 1000 }}>
+          <div style={{ display: "flex", fontFamily: "Manrope", fontSize: 82, fontWeight: 800, lineHeight: 1.02, maxWidth: 1000 }}>
             {name}
           </div>
           {tagline ? (
@@ -129,6 +138,6 @@ export default async function Image(context: OgContext) {
         </div>
       </div>
     ),
-    { ...size },
+    { ...size, fonts },
   );
 }

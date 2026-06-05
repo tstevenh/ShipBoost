@@ -155,7 +155,7 @@ export function FounderLaunchKitCard({
           </div>
 
           {/* share actions */}
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="mt-3 grid gap-3">
             <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold">Post on X</span>

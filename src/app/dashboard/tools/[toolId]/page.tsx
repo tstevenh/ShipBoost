@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { FounderLaunchKitCard } from "@/components/founder/founder-launch-kit-card";
 import { FounderToolEditor } from "@/components/founder/founder-tool-editor";
 import { SubmitProductForm } from "@/components/founder/submit-product-form";
 import { buildLaunchKit } from "@/lib/distribution/launch-kit";
@@ -169,6 +168,16 @@ export default async function FounderToolEditorPage(context: RouteContext) {
     })),
   };
 
+  const launchKit = tool.slug
+    ? buildLaunchKit({
+        appUrl: env.NEXT_PUBLIC_APP_URL,
+        slug: tool.slug,
+        toolId: tool.id,
+        name: tool.name,
+        tagline: tool.tagline ?? "",
+      })
+    : null;
+
   return (
     <main className="flex flex-1 flex-col overflow-x-hidden bg-muted/20 pt-32">
       <section className="mx-auto mb-32 flex w-full max-w-[1500px] flex-1 flex-col px-4 sm:px-6">
@@ -185,6 +194,7 @@ export default async function FounderToolEditorPage(context: RouteContext) {
             estimatedFreeLaunchDate={estimatedFreeLaunchDate.toISOString()}
             initialDraft={initialDraft}
             isPrelaunch={isPrelaunch}
+            launchKit={launchKit}
           />
         ) : (
           <FounderToolEditor
@@ -193,32 +203,6 @@ export default async function FounderToolEditorPage(context: RouteContext) {
             tags={tags}
           />
         )}
-        {tool.slug ? (
-          (() => {
-            const kit = buildLaunchKit({
-              appUrl: env.NEXT_PUBLIC_APP_URL,
-              slug: tool.slug,
-              toolId: tool.id,
-              name: tool.name,
-              tagline: tool.tagline ?? "",
-            });
-            return (
-              <div className="mt-8">
-                <FounderLaunchKitCard
-                  listingUrl={kit.listingUrl}
-                  badgeImageUrlLight={kit.badgeImageUrlLight}
-                  badgeImageUrlDark={kit.badgeImageUrlDark}
-                  badgeSnippetLight={kit.badgeSnippetLight}
-                  badgeSnippetDark={kit.badgeSnippetDark}
-                  twitterText={kit.shareTexts.twitter}
-                  linkedinText={kit.shareTexts.linkedin}
-                  twitterUrl={kit.shareUrls.twitter}
-                  linkedinUrl={kit.shareUrls.linkedin}
-                />
-              </div>
-            );
-          })()
-        ) : null}
       </section>
       <Footer className="mt-auto" />
     </main>
