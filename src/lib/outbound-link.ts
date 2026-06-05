@@ -57,11 +57,9 @@ export type ToolWebsiteRelPolicyInput = {
 };
 
 export function resolveToolWebsiteRel(input: ToolWebsiteRelPolicyInput) {
+  // Dofollow is a premium-only benefit. Free launches (even badge-verified) get a
+  // nofollow link; the badge is required for verification, not for follow status.
   if (input.isFeatured || input.currentLaunchType === "FEATURED") {
-    return "noopener";
-  }
-
-  if (input.badgeVerification === "VERIFIED") {
     return "noopener";
   }
 
