@@ -176,6 +176,22 @@ export async function listLaunchBoard(
   return listRankedLaunchesForWindow({ windowStart, windowEnd, now });
 }
 
+export async function listCurrentWeekBoardToolIds(
+  now = new Date(),
+): Promise<string[]> {
+  const { windowStart, windowEnd } = getLaunchBoardWindow("weekly", now);
+
+  const launches = await prisma.launch.findMany({
+    where: {
+      launchDate: { gte: windowStart, lte: windowEnd },
+      ...getPublicLaunchBoardWhere(now),
+    },
+    select: { toolId: true },
+  });
+
+  return [...new Set(launches.map((launch) => launch.toolId))];
+}
+
 export async function getPreviousWeeklyTopWinner(now = new Date()) {
   const goLiveAt = getLaunchpadGoLiveAtUtc();
   const currentWeekStart = getLaunchWeekStart(now, { goLiveAt });
