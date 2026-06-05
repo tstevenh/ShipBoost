@@ -1333,10 +1333,10 @@ export function SubmitProductForm({
               <div>
                 <p className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.18em] text-primary">
                   <ShieldCheck size={13} />
-                  Badge backlink verification
+                  ShipBoost badge verification
                 </p>
                 <h3 id="badge-priority-title" className="mt-2 text-xl font-black tracking-tight text-foreground">
-                  Unlock your dofollow backlink
+                  Verify your ShipBoost badge
                 </h3>
               </div>
               <button
@@ -1559,7 +1559,7 @@ export function SubmitProductForm({
                     Badge verified
                   </h3>
                   <p className="mt-1 text-xs font-medium leading-relaxed text-muted-foreground">
-                    Your backlink on ShipBoost is now dofollow. Keep the badge installed to maintain it.
+                    Your ShipBoost badge is verified. Keep it installed on your site to keep your free launch eligible.
                   </p>
                 </div>
               </div>
