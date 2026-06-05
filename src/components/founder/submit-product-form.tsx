@@ -590,14 +590,6 @@ export function SubmitProductForm({
     const tag = tags.find((item) => item.id === tagId);
     return tag ? [tag] : [];
   });
-  const isFreeLaunchSubmission =
-    Boolean(lastSavedDraft) &&
-    lastSavedDraft?.submissionType === "FREE_LAUNCH" &&
-    !isPremiumScheduled;
-  const currentBadgeVerification =
-    lastSavedDraft?.badgeVerification ?? "PENDING";
-  const isBadgeVerified = currentBadgeVerification === "VERIFIED";
-  const showBadgeVerifiedCard = isFreeLaunchSubmission && isBadgeVerified;
   const shipboostUrl = appUrl.replace(/\/$/, "");
   const shipboostHost = shipboostUrl.replace(/^https?:\/\//, "");
   const shipboostToolUrl = `${shipboostUrl}/tools/${encodeURIComponent(
@@ -1547,24 +1539,6 @@ export function SubmitProductForm({
             )}
           </div>
 
-
-          {showBadgeVerifiedCard ? (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
-                  <Check size={14} strokeWidth={3} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-foreground">
-                    Badge verified
-                  </h3>
-                  <p className="mt-1 text-xs font-medium leading-relaxed text-muted-foreground">
-                    Your ShipBoost badge is verified. Keep it installed on your site to keep your free launch eligible.
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : null}
 
           {!requiredFieldsComplete ? (
             <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
