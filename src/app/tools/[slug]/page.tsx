@@ -60,20 +60,11 @@ export async function generateMetadata(
         url: canonical,
         siteName: "ShipBoost",
         type: "website",
-        images: tool.logoMedia
-          ? [
-              {
-                url: tool.logoMedia.url,
-                alt: `${tool.name} logo`,
-              },
-            ]
-          : undefined,
       },
       twitter: {
-        card: tool.logoMedia ? "summary_large_image" : "summary",
+        card: "summary_large_image",
         title: `${tool.name} is launching soon | ShipBoost`,
         description: `${tool.name}: ${tool.tagline}`,
-        images: tool.logoMedia ? [tool.logoMedia.url] : undefined,
       },
     };
   }
@@ -98,20 +89,11 @@ export async function generateMetadata(
       url: canonical,
       siteName: "ShipBoost",
       type: "website",
-      images: tool.logoMedia
-        ? [
-            {
-              url: tool.logoMedia.url,
-              alt: `${tool.name} logo`,
-            },
-          ]
-        : undefined,
     },
     twitter: {
-      card: tool.logoMedia ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
-      images: tool.logoMedia ? [tool.logoMedia.url] : undefined,
     },
   };
 
