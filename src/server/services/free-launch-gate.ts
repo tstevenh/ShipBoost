@@ -13,6 +13,12 @@ export type FreeLaunchGateInput = {
   eligibleBoardUpvoteCount: number;
 };
 
+export function computeRequiredBoardUpvotes(
+  availableNonOwnBoardToolCount: number,
+): number {
+  return Math.max(0, Math.min(FREE_LAUNCH_REQUIRED_BOARD_UPVOTES, availableNonOwnBoardToolCount));
+}
+
 export function assertFreeLaunchGate({
   badgeVerification,
   eligibleBoardUpvoteCount,

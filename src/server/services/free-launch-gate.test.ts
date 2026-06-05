@@ -4,6 +4,7 @@ import { AppError } from "@/server/http/app-error";
 import {
   FREE_LAUNCH_REQUIRED_BOARD_UPVOTES,
   assertFreeLaunchGate,
+  computeRequiredBoardUpvotes,
 } from "./free-launch-gate";
 
 describe("assertFreeLaunchGate", () => {
@@ -26,5 +27,15 @@ describe("assertFreeLaunchGate", () => {
         eligibleBoardUpvoteCount: FREE_LAUNCH_REQUIRED_BOARD_UPVOTES,
       }),
     ).not.toThrow();
+  });
+});
+
+describe("computeRequiredBoardUpvotes", () => {
+  it("caps the requirement at 3 but never exceeds available board tools", () => {
+    expect(computeRequiredBoardUpvotes(0)).toBe(0);
+    expect(computeRequiredBoardUpvotes(2)).toBe(2);
+    expect(computeRequiredBoardUpvotes(3)).toBe(3);
+    expect(computeRequiredBoardUpvotes(10)).toBe(3);
+    expect(computeRequiredBoardUpvotes(-1)).toBe(0);
   });
 });
