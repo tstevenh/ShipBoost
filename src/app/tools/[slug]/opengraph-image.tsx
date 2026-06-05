@@ -13,10 +13,10 @@ type OgContext = {
   params: Promise<{ slug: string }>;
 };
 
-// Black logo mark, inlined (sits inside a white rounded square, matching the
-// homepage OG lockup). No network fetch at render time.
+// White logo mark, inlined (shown directly on the dark background). No network
+// fetch at render time.
 const logoDataUrl = `data:image/png;base64,${readFileSync(
-  join(process.cwd(), "public/logo/black-logo.png"),
+  join(process.cwd(), "public/logo/white-logo.png"),
 ).toString("base64")}`;
 
 // Site fonts (Manrope headings, Inter body) so the card matches the homepage OG.
@@ -28,7 +28,7 @@ const fonts = [
   { name: "Inter", data: readFileSync(join(fontDir, "Inter-600.ttf")), weight: 600 as const, style: "normal" as const },
 ];
 
-const GRID = "#1c1c1f";
+const GRID = "#3f3f46";
 
 // Decorative corner grid lines, matching the homepage OG image.
 function gridLines(corner: "tl" | "br") {
@@ -44,8 +44,8 @@ function gridLines(corner: "tl" | "br") {
             position: "absolute",
             ...anchor,
             [corner === "tl" ? "left" : "right"]: o,
-            width: 1,
-            height: 220,
+            width: 2,
+            height: 240,
             backgroundColor: GRID,
           }}
         />
@@ -57,8 +57,8 @@ function gridLines(corner: "tl" | "br") {
             position: "absolute",
             ...anchor,
             [corner === "tl" ? "top" : "bottom"]: o,
-            height: 1,
-            width: 220,
+            height: 2,
+            width: 240,
             backgroundColor: GRID,
           }}
         />
@@ -97,22 +97,10 @@ export default async function Image(context: OgContext) {
         {gridLines("tl")}
         {gridLines("br")}
 
-        {/* Logo lockup — white rounded square + wordmark */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 56,
-              height: 56,
-              borderRadius: 14,
-              backgroundColor: "#FFFFFF",
-            }}
-          >
-            <img src={logoDataUrl} width={40} height={40} alt="" />
-          </div>
-          <span style={{ fontFamily: "Manrope", fontSize: 34, fontWeight: 700, letterSpacing: "-0.5px" }}>ShipBoost</span>
+        {/* Logo lockup — white mark + wordmark, directly on the dark bg */}
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <img src={logoDataUrl} width={96} height={96} alt="" />
+          <span style={{ fontFamily: "Manrope", fontSize: 42, fontWeight: 700, letterSpacing: "-0.5px" }}>ShipBoost</span>
         </div>
 
         {/* Eyebrow + name + tagline */}

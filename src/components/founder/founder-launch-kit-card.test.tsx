@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { FounderLaunchKitCard } from "./founder-launch-kit-card";
@@ -16,11 +16,16 @@ const props = {
 };
 
 describe("FounderLaunchKitCard", () => {
-  it("renders the listing url, a dark-theme badge snippet by default, and share text", () => {
+  it("renders the listing url and share text, and reveals the dark snippet via View code", () => {
     render(<FounderLaunchKitCard {...props} />);
 
     expect(screen.getByText(/shipboost.com\/tools\/acme/)).toBeInTheDocument();
     expect(screen.getByText(/Acme is live/)).toBeInTheDocument();
+
+    // code is hidden by default
+    expect(screen.queryByRole("textbox", { name: /badge embed code/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /view code/i }));
     expect(
       screen.getByRole("textbox", { name: /badge embed code/i }),
     ).toHaveValue('<a data-theme="dark"></a>');

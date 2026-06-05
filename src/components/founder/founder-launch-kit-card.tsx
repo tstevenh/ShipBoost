@@ -67,6 +67,7 @@ export function FounderLaunchKitCard({
   linkedinUrl,
 }: FounderLaunchKitCardProps) {
   const [theme, setTheme] = useState<Theme>("dark");
+  const [showCode, setShowCode] = useState(false);
   const snippet = theme === "dark" ? badgeSnippetDark : badgeSnippetLight;
   const badgeImageUrl = theme === "dark" ? badgeImageUrlDark : badgeImageUrlLight;
 
@@ -112,34 +113,43 @@ export function FounderLaunchKitCard({
             </div>
           </div>
 
+          {/* embed code (above the preview; raw code hidden by default) */}
+          <div className="mt-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Embed code</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-expanded={showCode}
+                  onClick={() => setShowCode((v) => !v)}
+                  className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                >
+                  {showCode ? "Hide code" : "View code"}
+                </button>
+                <CopyButton value={snippet} label="Copy code" />
+              </div>
+            </div>
+            {showCode ? (
+              <textarea
+                aria-label="Badge embed code"
+                readOnly
+                value={snippet}
+                rows={3}
+                spellCheck={false}
+                onFocus={(e) => e.currentTarget.select()}
+                className="resize-none rounded-lg border border-border bg-muted/50 p-3 font-mono text-xs leading-relaxed text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            ) : null}
+          </div>
+
           {/* live preview */}
-          <div className="mt-3 flex items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 px-4 py-6">
+          <div className="mt-3 flex items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 px-4 py-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={badgeImageUrl} alt="Your live ShipBoost badge preview" height={56} className="h-14 w-auto" />
           </div>
-
-          {/* embed code */}
-          <div className="mt-3 flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <label htmlFor="badge-embed" className="text-xs font-medium text-muted-foreground">
-                Embed code
-              </label>
-              <CopyButton value={snippet} label="Copy code" />
-            </div>
-            <textarea
-              id="badge-embed"
-              aria-label="Badge embed code"
-              readOnly
-              value={snippet}
-              rows={3}
-              spellCheck={false}
-              onFocus={(e) => e.currentTarget.select()}
-              className="resize-none rounded-lg border border-border bg-muted/50 p-3 font-mono text-xs leading-relaxed text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <p className="text-xs text-muted-foreground">
-              The upvote count updates automatically. Paste it in your site footer or a “launches” section.
-            </p>
-          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            The upvote count updates automatically. Paste it in your site footer.
+          </p>
         </div>
 
         {/* Step 2 — share */}
