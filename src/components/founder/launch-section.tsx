@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdPreviewButton } from "@/components/public/ad-preview-modal";
+import { FreeLaunchRequirementsPanel } from "@/components/founder/free-launch-requirements-panel";
 import type { SponsorEligibilitySlot } from "@/app/api/sponsor/eligibility/route";
 import type { SponsorSlot } from "@prisma/client";
+import type { FreeLaunchRequirements } from "@/server/services/free-launch-requirements";
 
 type PremiumLaunchWeek = { value: string; label: string };
 
@@ -45,6 +47,11 @@ export type LaunchSectionProps = {
   isFreeScheduled: boolean;
   onBack: () => void;
   onFreeScheduled: (launch: ScheduledLaunch, submission: SavedSubmission) => void;
+  appUrl: string;
+  toolSlug: string;
+  badgeSnippet: string;
+  badgePreviewSrc: string;
+  freeLaunchRequirements: FreeLaunchRequirements | null;
 };
 
 const PREMIUM_FEATURES = [
@@ -193,6 +200,13 @@ export function LaunchSection({
   isFreeScheduled: _isFreeScheduled,
   onBack,
   onFreeScheduled,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  appUrl: _appUrl,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  toolSlug: _toolSlug,
+  badgeSnippet,
+  badgePreviewSrc,
+  freeLaunchRequirements,
 }: LaunchSectionProps) {
   const [selectedLaunch, setSelectedLaunch] = useState<"FREE" | "FEATURED">("FEATURED");
   const [preferredDate, setPreferredDate] = useState<string>(
@@ -203,6 +217,7 @@ export function LaunchSection({
   const [slots, setSlots] = useState<SponsorEligibilitySlot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [freeRequirementsMet, setFreeRequirementsMet] = useState(false);
 
   useEffect(() => {
     if (!toolId) return;
@@ -281,7 +296,9 @@ export function LaunchSection({
       : "Early access pricing — rising to $29 soon";
 
   const isConfirmDisabled =
-    isLoading || (selectedLaunch === "FEATURED" && !preferredDate);
+    isLoading ||
+    (selectedLaunch === "FEATURED" && !preferredDate) ||
+    (selectedLaunch === "FREE" && !freeRequirementsMet);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 py-6">
@@ -407,6 +424,19 @@ export function LaunchSection({
           </button>
         </div>
       </div>
+
+      {selectedLaunch === "FREE" && freeLaunchRequirements ? (
+        <FreeLaunchRequirementsPanel
+          submissionId={submissionId}
+          badgeSnippet={badgeSnippet}
+          badgePreviewSrc={badgePreviewSrc}
+          initialBadgeVerification={freeLaunchRequirements.badgeVerification}
+          tools={freeLaunchRequirements.boardTools}
+          initialEligibleCount={freeLaunchRequirements.eligibleCount}
+          requiredCount={freeLaunchRequirements.requiredCount}
+          onRequirementsMet={setFreeRequirementsMet}
+        />
+      ) : null}
 
       {/* Premium date picker — always show when FEATURED selected */}
       {selectedLaunch === "FEATURED" && (
@@ -560,6 +590,11 @@ export function LaunchSection({
             `Continue to checkout — ${totalPrice === 0 ? "Free" : `$${totalPrice}`}`
           )}
         </button>
+        {selectedLaunch === "FREE" && !freeRequirementsMet && freeLaunchRequirements ? (
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Verify your badge and upvote {freeLaunchRequirements.requiredCount} launches to continue.
+          </p>
+        ) : null}
       </div>
     </div>
   );
