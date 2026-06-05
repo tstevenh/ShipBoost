@@ -215,6 +215,27 @@ export function LaunchSection({
   const [freeRequirementsMet, setFreeRequirementsMet] = useState(false);
   const requirementsRef = useRef<HTMLDivElement>(null);
   const [shakeRequirements, setShakeRequirements] = useState(false);
+  // The server only passes requirements when the draft id is in the URL. During
+  // the fresh submit flow the id lives in client state, so fetch them by id.
+  const [requirements, setRequirements] = useState(freeLaunchRequirements);
+
+  useEffect(() => {
+    if (selectedLaunch !== "FREE" || !submissionId || requirements) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/submissions/${submissionId}/requirements`);
+        if (!res.ok) return;
+        const payload = await res.json();
+        if (!cancelled) setRequirements(payload.data);
+      } catch {
+        // Panel stays hidden; the server-side schedule gate still enforces the rules.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedLaunch, submissionId, requirements]);
 
   useEffect(() => {
     if (!toolId) return;
@@ -295,8 +316,7 @@ export function LaunchSection({
   const isConfirmDisabled =
     isLoading || (selectedLaunch === "FEATURED" && !preferredDate);
 
-  const freeBlocked =
-    selectedLaunch === "FREE" && !!freeLaunchRequirements && !freeRequirementsMet;
+  const freeBlocked = selectedLaunch === "FREE" && !freeRequirementsMet;
 
   function handleScheduleClick() {
     if (freeBlocked) {
@@ -559,15 +579,15 @@ export function LaunchSection({
       )}
 
       {/* Free-launch requirements — below sponsor so founders see placements first */}
-      {selectedLaunch === "FREE" && freeLaunchRequirements ? (
+      {selectedLaunch === "FREE" && requirements ? (
         <div ref={requirementsRef} className={shakeRequirements ? "sb-shake" : undefined}>
           <FreeLaunchRequirementsPanel
             submissionId={submissionId}
             badges={badges}
-            initialBadgeVerification={freeLaunchRequirements.badgeVerification}
-            tools={freeLaunchRequirements.boardTools}
-            initialEligibleCount={freeLaunchRequirements.eligibleCount}
-            requiredCount={freeLaunchRequirements.requiredCount}
+            initialBadgeVerification={requirements.badgeVerification}
+            tools={requirements.boardTools}
+            initialEligibleCount={requirements.eligibleCount}
+            requiredCount={requirements.requiredCount}
             onRequirementsMet={setFreeRequirementsMet}
           />
         </div>
@@ -600,9 +620,9 @@ export function LaunchSection({
             `Continue to checkout — ${totalPrice === 0 ? "Free" : `$${totalPrice}`}`
           )}
         </button>
-        {selectedLaunch === "FREE" && !freeRequirementsMet && freeLaunchRequirements ? (
+        {selectedLaunch === "FREE" && !freeRequirementsMet ? (
           <p className="mt-2 text-center text-xs text-muted-foreground">
-            Verify your badge and upvote {freeLaunchRequirements.requiredCount} launches to continue.
+            Verify your badge and upvote {requirements?.requiredCount ?? 3} launches to continue.
           </p>
         ) : null}
       </div>
