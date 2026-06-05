@@ -14,17 +14,37 @@ describe("assertFreeLaunchGate", () => {
     ).toThrowError(AppError);
   });
 
-  it("throws when fewer than the required board upvotes", () => {
+  it("throws when fewer than the required board upvotes (default 3)", () => {
     expect(() =>
       assertFreeLaunchGate({ badgeVerification: "VERIFIED", eligibleBoardUpvoteCount: 2 }),
     ).toThrowError(AppError);
   });
 
-  it("passes when badge verified and upvote requirement met", () => {
+  it("passes when badge verified and the default upvote requirement is met", () => {
     expect(() =>
       assertFreeLaunchGate({
         badgeVerification: "VERIFIED",
         eligibleBoardUpvoteCount: FREE_LAUNCH_REQUIRED_BOARD_UPVOTES,
+      }),
+    ).not.toThrow();
+  });
+
+  it("honors a dynamic requiredBoardUpvotes (thin board)", () => {
+    expect(() =>
+      assertFreeLaunchGate({
+        badgeVerification: "VERIFIED",
+        eligibleBoardUpvoteCount: 2,
+        requiredBoardUpvotes: 2,
+      }),
+    ).not.toThrow();
+  });
+
+  it("waives the upvote requirement when requiredBoardUpvotes is 0", () => {
+    expect(() =>
+      assertFreeLaunchGate({
+        badgeVerification: "VERIFIED",
+        eligibleBoardUpvoteCount: 0,
+        requiredBoardUpvotes: 0,
       }),
     ).not.toThrow();
   });

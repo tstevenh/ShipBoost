@@ -11,6 +11,8 @@ export type FreeLaunchGateInput = {
     | null
     | undefined;
   eligibleBoardUpvoteCount: number;
+  /** Defaults to FREE_LAUNCH_REQUIRED_BOARD_UPVOTES; pass min(3, available) for thin boards. */
+  requiredBoardUpvotes?: number;
 };
 
 export function computeRequiredBoardUpvotes(
@@ -22,6 +24,7 @@ export function computeRequiredBoardUpvotes(
 export function assertFreeLaunchGate({
   badgeVerification,
   eligibleBoardUpvoteCount,
+  requiredBoardUpvotes = FREE_LAUNCH_REQUIRED_BOARD_UPVOTES,
 }: FreeLaunchGateInput): void {
   if (badgeVerification !== "VERIFIED") {
     throw new AppError(
@@ -30,10 +33,10 @@ export function assertFreeLaunchGate({
     );
   }
 
-  if (eligibleBoardUpvoteCount < FREE_LAUNCH_REQUIRED_BOARD_UPVOTES) {
+  if (eligibleBoardUpvoteCount < requiredBoardUpvotes) {
     throw new AppError(
       400,
-      `Upvote at least ${FREE_LAUNCH_REQUIRED_BOARD_UPVOTES} launches on this week's board before scheduling your free launch.`,
+      `Upvote at least ${requiredBoardUpvotes} launches on this week's board before scheduling your free launch.`,
     );
   }
 }
