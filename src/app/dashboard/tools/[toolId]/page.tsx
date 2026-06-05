@@ -13,6 +13,7 @@ import {
 } from "@/server/services/launch-scheduling";
 import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
 import { getFounderToolById } from "@/server/services/tool-service";
+import { getFreeLaunchRequirements } from "@/server/services/free-launch-requirements";
 import { Footer } from "@/components/ui/footer";
 
 export const metadata: Metadata = {
@@ -178,6 +179,11 @@ export default async function FounderToolEditorPage(context: RouteContext) {
       })
     : null;
 
+  const freeLaunchRequirements =
+    initialDraft && initialDraft.submissionType !== "FEATURED_LAUNCH"
+      ? await getFreeLaunchRequirements(initialDraft.id, { id: session.user.id })
+      : null;
+
   return (
     <main className="flex flex-1 flex-col overflow-x-hidden bg-muted/20 pt-32">
       <section className="mx-auto mb-32 flex w-full max-w-[1500px] flex-1 flex-col px-4 sm:px-6">
@@ -195,6 +201,7 @@ export default async function FounderToolEditorPage(context: RouteContext) {
             initialDraft={initialDraft}
             isPrelaunch={isPrelaunch}
             launchKit={launchKit}
+            freeLaunchRequirements={freeLaunchRequirements}
           />
         ) : (
           <FounderToolEditor

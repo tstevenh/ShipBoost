@@ -11,6 +11,7 @@ import {
 } from "@/server/services/launch-scheduling";
 import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
 import { getFounderSubmissionDraft } from "@/server/services/submission-service";
+import { getFreeLaunchRequirements } from "@/server/services/free-launch-requirements";
 import { Footer } from "@/components/ui/footer";
 import { ArrowRight } from "lucide-react";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
@@ -188,6 +189,11 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
     }
   }
 
+  const freeLaunchRequirements =
+    initialDraft && initialDraft.submissionType !== "FEATURED_LAUNCH"
+      ? await getFreeLaunchRequirements(initialDraft.id, { id: session.user.id })
+      : null;
+
   const [
     catalogOptions,
     estimatedFreeLaunchDate,
@@ -213,6 +219,7 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
           estimatedFreeLaunchDate={estimatedFreeLaunchDate.toISOString()}
           initialDraft={initialDraft}
           isPrelaunch={isPrelaunch}
+          freeLaunchRequirements={freeLaunchRequirements}
         />
       </section>
       <Footer className="mt-auto" />

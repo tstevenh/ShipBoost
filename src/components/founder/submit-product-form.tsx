@@ -94,6 +94,7 @@ type SubmitProductFormProps = {
   } | null;
   launchKit?: LaunchKit | null;
   isPrelaunch?: boolean;
+  freeLaunchRequirements?: import("@/server/services/free-launch-requirements").FreeLaunchRequirements | null;
 };
 
 type FormState = {
@@ -499,6 +500,7 @@ export function SubmitProductForm({
   estimatedFreeLaunchDate = null,
   initialDraft = null,
   launchKit = null,
+  freeLaunchRequirements = null,
 }: SubmitProductFormProps) {
   const isListingEditMode = mode === "listing-edit";
   const router = useRouter();
@@ -556,9 +558,8 @@ export function SubmitProductForm({
     findPublishedLaunch(initialDraft),
   );
   const [lastSavedPayloadSignature, setLastSavedPayloadSignature] = useState<string | null>(null);
-  const [badgeTheme, setBadgeTheme] = useState<BadgeTheme>("light");
+  const [badgeTheme] = useState<BadgeTheme>("light");
   const [copiedBadgeTheme, setCopiedBadgeTheme] = useState<BadgeTheme | null>(null);
-  const [sidebarBadgeError, setSidebarBadgeError] = useState<string | null>(null);
   const [catSearch, setCatSearch] = useState("");
   const [tagSearch, setTagSearch] = useState("");
   const [isCatOpen, setIsCatOpen] = useState(false);
@@ -596,7 +597,6 @@ export function SubmitProductForm({
   const currentBadgeVerification =
     lastSavedDraft?.badgeVerification ?? "PENDING";
   const isBadgeVerified = currentBadgeVerification === "VERIFIED";
-  const showBadgeVerifyCard = isFreeLaunchSubmission && !isBadgeVerified;
   const showBadgeVerifiedCard = isFreeLaunchSubmission && isBadgeVerified;
   const shipboostUrl = appUrl.replace(/\/$/, "");
   const shipboostHost = shipboostUrl.replace(/^https?:\/\//, "");
@@ -1176,44 +1176,6 @@ export function SubmitProductForm({
     setSuccessMessage("Launch scheduled.");
   }
 
-  async function handleVerifyBadgeFromSidebar() {
-    if (!draftSubmissionId) return;
-    setIsVerifyingBadge(true);
-    setSidebarBadgeError(null);
-
-    try {
-      const response = await fetch(
-        `/api/submissions/${draftSubmissionId}/verify-badge`,
-        { method: "POST" },
-      );
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Verification failed.");
-      }
-
-      const nextBadgeVerification = payload.data.submission.badgeVerification;
-      setDraftBadgeVerification(nextBadgeVerification);
-      setLastSavedDraft((current) =>
-        current
-          ? { ...current, badgeVerification: nextBadgeVerification }
-          : current,
-      );
-      if (payload.data.verified) {
-        setSuccessMessage(payload.data.message || "Badge verified.");
-      } else {
-        setSidebarBadgeError(
-          payload.data.message ||
-            "Badge not found. Make sure it is on your homepage or footer.",
-        );
-      }
-    } catch (error) {
-      setSidebarBadgeError(getErrorMessage(error, "Verification failed."));
-    } finally {
-      setIsVerifyingBadge(false);
-    }
-  }
-
   useEffect(() => { saveDraftFnRef.current = saveDraft; });
   useEffect(() => { formRef.current = form; }, [form]);
   useEffect(() => { logoAssetRef.current = logo?.asset; });
@@ -1244,6 +1206,11 @@ export function SubmitProductForm({
         currentScheduledLaunch={currentScheduledLaunch as never}
         isPremiumScheduled={isPremiumScheduled}
         isFreeScheduled={isFreeScheduled}
+        appUrl={appUrl}
+        toolSlug={form.requestedSlug}
+        badgeSnippet={getFreeLaunchBadgeSnippet(badgeTheme)}
+        badgePreviewSrc={getBadgePreviewSrc(badgeTheme)}
+        freeLaunchRequirements={freeLaunchRequirements}
         onBack={() => {
           const params = new URLSearchParams(searchParams.toString());
           params.delete("section");
@@ -1570,72 +1537,6 @@ export function SubmitProductForm({
             )}
           </div>
 
-          {showBadgeVerifyCard ? (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-              <h3 className="text-lg font-black text-foreground">
-                Add the ShipBoost badge
-              </h3>
-              <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
-                A verified ShipBoost badge is required for free launches. Add the badge to your homepage or footer, then verify it.
-              </p>
-              <div className="mt-5 space-y-3">
-                {(["light", "dark"] as const).map((theme) => (
-                  <div
-                    key={theme}
-                    className={cn(
-                      "relative rounded-lg border p-3 pt-9 transition",
-                      theme === "dark" ? "bg-white" : "bg-background",
-                      badgeTheme === theme ? "border-primary" : "border-border",
-                    )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => void handleCopyBadgeSnippet(theme)}
-                      className={cn(
-                        "absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-black transition",
-                        theme === "dark"
-                          ? "border-slate-200 bg-slate-50 text-slate-700"
-                          : "border-border bg-card text-foreground",
-                      )}
-                    >
-                      <Copy size={11} />
-                      {copiedBadgeTheme === theme ? "Copied" : "Copy"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBadgeTheme(theme)}
-                      className="block w-full"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={getBadgePreviewSrc(theme)}
-                        alt={`${theme} ShipBoost badge`}
-                        className="h-auto w-40 max-w-full"
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => void handleVerifyBadgeFromSidebar()}
-                disabled={isVerifyingBadge || !isValidUrl(form.websiteUrl)}
-                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-              >
-                {isVerifyingBadge ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <ShieldCheck size={14} />
-                )}
-                {isVerifyingBadge ? "Verifying..." : "Verify badge now"}
-              </button>
-              {sidebarBadgeError ? (
-                <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
-                  {sidebarBadgeError}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
 
           {showBadgeVerifiedCard ? (
             <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
