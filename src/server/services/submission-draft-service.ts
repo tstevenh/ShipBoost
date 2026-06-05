@@ -15,7 +15,7 @@ import {
 } from "@/server/repositories/tool-repository";
 import { capturePostHogEventSafely } from "@/server/posthog";
 import { assertCatalogAssignments } from "@/server/services/catalog";
-import { assertFreeLaunchGate } from "@/server/services/free-launch-gate";
+import { assertFreeLaunchGate, computeRequiredBoardUpvotes } from "@/server/services/free-launch-gate";
 import { listCurrentWeekBoardToolIds } from "@/server/services/launch-service";
 import {
   scheduleNextFreeLaunchDate,
@@ -791,6 +791,7 @@ export async function scheduleFreeSubmissionLaunch(
   assertFreeLaunchGate({
     badgeVerification: submission.badgeVerification,
     eligibleBoardUpvoteCount,
+    requiredBoardUpvotes: computeRequiredBoardUpvotes(boardToolIds.length),
   });
 
   const existingFreeLaunch = getActiveLaunchForType(
