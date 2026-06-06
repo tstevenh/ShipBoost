@@ -7,7 +7,6 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
-  Copy,
   Image as ImageIcon,
   Layout,
   Loader2,
@@ -157,8 +156,6 @@ type ScheduledLaunch = {
   status: LaunchStatus;
   launchDate: string;
 };
-
-const BADGE_SUPPORT_EMAIL = "support@shipboost.io";
 
 const pricingModels: PricingModel[] = [
   "FREE",
@@ -527,12 +524,10 @@ export function SubmitProductForm({
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
-  const [isVerifyingBadge, setIsVerifyingBadge] = useState(false);
-  const [isBadgePromptOpen, setIsBadgePromptOpen] = useState(false);
+  const [isVerifyingBadge] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  useBodyScrollLock(isDeleteModalOpen || isBadgePromptOpen);
-  const [badgePromptSubmissionId, setBadgePromptSubmissionId] = useState<string | null>(null);
+  useBodyScrollLock(isDeleteModalOpen);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [slugStatus, setSlugStatus] = useState<string>("");
   const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(
@@ -562,8 +557,6 @@ export function SubmitProductForm({
     findPublishedLaunch(initialDraft),
   );
   const [lastSavedPayloadSignature, setLastSavedPayloadSignature] = useState<string | null>(null);
-  const [badgeTheme] = useState<BadgeTheme>("light");
-  const [copiedBadgeTheme, setCopiedBadgeTheme] = useState<BadgeTheme | null>(null);
   const [catSearch, setCatSearch] = useState("");
   const [tagSearch, setTagSearch] = useState("");
   const [isCatOpen, setIsCatOpen] = useState(false);
@@ -708,15 +701,6 @@ export function SubmitProductForm({
     };
   }, [draftSubmissionId, form.name]);
 
-  async function handleCopyBadgeSnippet(theme: BadgeTheme = badgeTheme) {
-    try {
-      await navigator.clipboard.writeText(getFreeLaunchBadgeSnippet(theme));
-      setCopiedBadgeTheme(theme);
-      window.setTimeout(() => setCopiedBadgeTheme(null), 1500);
-    } catch {
-      setErrorMessage("Unable to copy the badge snippet.");
-    }
-  }
 
 
   // Auto-save refs (debounced, only when logo is uploaded)
@@ -1127,51 +1111,6 @@ export function SubmitProductForm({
     }
   }
 
-  async function handleVerifyBadge() {
-    if (!badgePromptSubmissionId && !draftSubmissionId) return;
-    setIsVerifyingBadge(true);
-    setErrorMessage(null);
-
-    try {
-      const submissionId = badgePromptSubmissionId ?? draftSubmissionId;
-      const response = await fetch(`/api/submissions/${submissionId}/verify-badge`, {
-        method: "POST",
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Verification failed.");
-      }
-
-      const nextBadgeVerification = payload.data.submission.badgeVerification;
-      setDraftBadgeVerification(nextBadgeVerification);
-      setLastSavedDraft((current) =>
-        current
-          ? {
-              ...current,
-              badgeVerification: nextBadgeVerification,
-            }
-          : current,
-      );
-      if (payload.data.verified) {
-        setSuccessMessage(payload.data.message);
-        setIsBadgePromptOpen(false);
-      } else {
-        setErrorMessage(payload.data.message || "Badge not found. Make sure it is in your footer.");
-      }
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Verification failed."));
-    } finally {
-      setIsVerifyingBadge(false);
-    }
-  }
-
-  async function handleContinueWithoutBadge() {
-    setIsBadgePromptOpen(false);
-    setBadgePromptSubmissionId(null);
-    setSuccessMessage("Launch scheduled.");
-  }
-
   useEffect(() => { saveDraftFnRef.current = saveDraft; });
   useEffect(() => { formRef.current = form; }, [form]);
   useEffect(() => { logoAssetRef.current = logo?.asset; });
@@ -1250,8 +1189,6 @@ export function SubmitProductForm({
           const params = new URLSearchParams(searchParams.toString());
           params.delete("section");
           router.push(`?${params.toString()}`);
-          setBadgePromptSubmissionId(submission.id);
-          setIsBadgePromptOpen(true);
         }}
       />
     );
@@ -1332,112 +1269,6 @@ export function SubmitProductForm({
         </div>
       ) : null}
 
-      {isBadgePromptOpen ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 px-4 py-8 backdrop-blur-sm">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="badge-priority-title"
-            className="w-full max-w-lg rounded-2xl border border-border bg-background shadow-2xl"
-          >
-            <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">
-              <div>
-                <p className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.18em] text-primary">
-                  <ShieldCheck size={13} />
-                  ShipBoost badge verification
-                </p>
-                <h3 id="badge-priority-title" className="mt-2 text-xl font-black tracking-tight text-foreground">
-                  Verify your ShipBoost badge
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsBadgePromptOpen(false)}
-                className="rounded-xl border border-border bg-card p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                aria-label="Close badge prompt"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <p className="text-sm font-medium leading-relaxed text-muted-foreground">
-                A verified ShipBoost badge is required for your free launch. Add
-                the badge to your homepage or footer, then verify it.
-              </p>
-
-              {errorMessage ? (
-                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-                  <p>{errorMessage}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-rose-700/80">
-                    Already added the badge? Email{" "}
-                    <a
-                      href={`mailto:${BADGE_SUPPORT_EMAIL}`}
-                      className="underline underline-offset-2"
-                    >
-                      {BADGE_SUPPORT_EMAIL}
-                    </a>{" "}
-                    and we can help verify it manually.
-                  </p>
-                </div>
-              ) : null}
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {(["light", "dark"] as const).map((theme) => (
-                  <div
-                    key={theme}
-                    className={cn(
-                      "relative rounded-xl border border-border p-3 pt-9",
-                      theme === "dark" ? "bg-white" : "bg-muted/20",
-                    )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => void handleCopyBadgeSnippet(theme)}
-                      className={cn(
-                        "absolute right-2 top-2 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-black transition",
-                        theme === "dark"
-                          ? "border-slate-200 bg-slate-50 text-slate-700"
-                          : "border-border bg-card text-foreground",
-                      )}
-                    >
-                      <Copy size={12} />
-                      {copiedBadgeTheme === theme ? "Copied" : "Copy"}
-                    </button>
-                    <a href={shipboostUrl} target="_blank" rel="noopener">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={getBadgePreviewSrc(theme)}
-                        alt={`${theme} ShipBoost badge preview`}
-                        className="h-auto w-44 max-w-full"
-                      />
-                    </a>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => void handleVerifyBadge()}
-                  disabled={isVerifyingBadge || !isValidUrl(form.websiteUrl)}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-                >
-                  {isVerifyingBadge ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
-                  {isVerifyingBadge ? "Verifying..." : "I added it, verify now"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleContinueWithoutBadge()}
-                  className="rounded-xl border border-border bg-background px-4 py-3 text-sm font-black text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                >
-                  Continue without badge
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <div className="grid w-full items-start gap-8 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1120px)_320px]">
         <aside className="order-2 space-y-4 xl:sticky xl:top-28 xl:self-start">
