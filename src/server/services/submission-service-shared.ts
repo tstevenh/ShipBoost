@@ -21,14 +21,19 @@ export type SavedSubmissionDraft = {
 
 export type DeferredEmailTask = () => Promise<void>;
 
-export const shipBoostBacklinkPattern =
-  /href\s*[:=]\s*["']https?:\/\/(?:www\.)?shipboost\.io(?:\/[^"']*)?["']/i;
+// The ShipBoost badge carries an explicit marker. Verification requires THIS
+// marker — not merely any link to shipboost.io (which would let any site pass,
+// and would fail legit badges whose href points at a non-prod host like
+// localhost). Matches both the HTML form (data-shipboost-badge="free-launch")
+// and the JSX-compiled form ("data-shipboost-badge":"free-launch").
+export const shipBoostBadgeMarkerPattern =
+  /["']?data-shipboost-badge["']?\s*[:=]\s*["']free-launch["']/i;
 
 const scriptSrcPattern =
   /<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
 
 function hasRecognizedFreeLaunchBadge(value: string) {
-  return shipBoostBacklinkPattern.test(value);
+  return shipBoostBadgeMarkerPattern.test(value);
 }
 
 export function getSameOriginScriptUrls(html: string, pageUrl: string) {

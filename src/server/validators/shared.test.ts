@@ -31,8 +31,9 @@ describe("normalizeHttpUrl", () => {
 });
 
 describe("hasFreeLaunchBadgeInHtmlOrScripts", () => {
-  it("finds a shipboost.io backlink directly in HTML", async () => {
-    const html = '<a href="https://shipboost.io">Featured on ShipBoost</a>';
+  it("finds the badge marker directly in HTML", async () => {
+    const html =
+      '<a href="https://shipboost.io/tools/acme" data-shipboost-badge="free-launch">Featured on ShipBoost</a>';
 
     await expect(
       hasFreeLaunchBadgeInHtmlOrScripts(
@@ -41,6 +42,18 @@ describe("hasFreeLaunchBadgeInHtmlOrScripts", () => {
         async () => "",
       ),
     ).resolves.toBe(true);
+  });
+
+  it("does NOT pass on a bare shipboost.io backlink without the badge marker", async () => {
+    const html = '<a href="https://shipboost.io">Featured on ShipBoost</a>';
+
+    await expect(
+      hasFreeLaunchBadgeInHtmlOrScripts(
+        html,
+        "https://interview-prep.io/",
+        async () => "",
+      ),
+    ).resolves.toBe(false);
   });
 
   it("finds a shipboost.io backlink inside a JSX-compiled JS bundle", async () => {

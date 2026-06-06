@@ -55,7 +55,7 @@ export function FreeLaunchRequirementsPanel({
       const res = await fetch(`/api/submissions/${submissionId}/verify-badge`, { method: "POST" });
       const payload = await res.json();
       if (!res.ok) throw new Error(payload?.error?.message ?? "Verification failed.");
-      const status: BadgeVerification = payload.data?.badgeVerification ?? "VERIFIED";
+      const status: BadgeVerification = payload.data?.badgeVerification ?? "FAILED";
       setBadge(status);
       if (status !== "VERIFIED") setError("We couldn't find the badge on your site yet.");
     } catch (e) {

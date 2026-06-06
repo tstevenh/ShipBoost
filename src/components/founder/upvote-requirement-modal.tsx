@@ -40,12 +40,12 @@ export function UpvoteRequirementModal({
     () => Object.fromEntries(tools.map((t) => [t.id, t.upvoteCount])),
   );
   const [count, setCount] = useState(eligibleCount);
-  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const done = count >= requiredCount;
 
   async function upvote(toolId: string) {
-    setPendingId(toolId);
+    setPendingIds((prev) => new Set(prev).add(toolId));
     setError(null);
     try {
       const res = await fetch(`/api/submissions/${submissionId}/requirement-vote`, {
@@ -62,7 +62,12 @@ export function UpvoteRequirementModal({
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not record your upvote.");
     } finally {
-      setPendingId(null);
+      // Keep this tool's loader until ITS own request settles, regardless of other clicks.
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(toolId);
+        return next;
+      });
     }
   }
 
@@ -101,7 +106,7 @@ export function UpvoteRequirementModal({
         <div className="flex flex-col gap-3 overflow-y-auto px-6 py-4">
           {tools.map((tool) => {
             const isVoted = voted.has(tool.id);
-            const isPending = pendingId === tool.id;
+            const isPending = pendingIds.has(tool.id);
             return (
               <article
                 key={tool.id}

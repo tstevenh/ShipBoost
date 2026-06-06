@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { prisma } from "@/server/db/client";
-import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
 import { getToolUpvoteCount } from "@/server/services/upvote-service";
 import {
   buildBadgeSvg,
@@ -30,8 +29,11 @@ export async function GET(request: Request, context: RouteContext) {
   const themeParam = new URL(request.url).searchParams.get("theme");
   const theme: BadgeTheme = themeParam === "light" ? "light" : "dark";
 
-  const tool = await prisma.tool.findFirst({
-    where: { id: toolId, ...getPubliclyVisibleToolWhere() },
+  // Serve the badge for ANY existing tool (not just publicly-visible ones), so it
+  // renders while a draft is still unpublished and never shows broken if a listing
+  // is later unpublished. The count (and the marker on the embed) aren't sensitive.
+  const tool = await prisma.tool.findUnique({
+    where: { id: toolId },
     select: { id: true },
   });
 

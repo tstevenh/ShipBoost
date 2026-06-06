@@ -20,7 +20,11 @@ import {
 import { FounderLaunchKitCard } from "@/components/founder/founder-launch-kit-card";
 import { LaunchSection } from "@/components/founder/launch-section";
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
-import type { LaunchKit } from "@/lib/distribution/launch-kit";
+import {
+  buildBadgeEmbedSnippet,
+  buildBadgeImageUrl,
+  type LaunchKit,
+} from "@/lib/distribution/launch-kit";
 import { NativeSelect } from "@/components/forms/native-select";
 import { cn } from "@/lib/utils";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
@@ -1198,20 +1202,35 @@ export function SubmitProductForm({
         currentScheduledLaunch={currentScheduledLaunch as never}
         isPremiumScheduled={isPremiumScheduled}
         isFreeScheduled={isFreeScheduled}
-        badges={[
-          {
-            theme: "light",
-            label: "Light",
-            previewSrc: getBadgePreviewSrc("light"),
-            snippet: getFreeLaunchBadgeSnippet("light"),
-          },
-          {
-            theme: "dark",
-            label: "Dark",
-            previewSrc: getBadgePreviewSrc("dark"),
-            snippet: getFreeLaunchBadgeSnippet("dark"),
-          },
-        ]}
+        badges={
+          toolId
+            ? (["light", "dark"] as const).map((theme) => ({
+                theme,
+                label: theme === "light" ? "Light" : "Dark",
+                // The combined badge with the live upvote count (served per tool).
+                previewSrc: buildBadgeImageUrl({ appUrl, toolId, theme }),
+                snippet: buildBadgeEmbedSnippet({
+                  appUrl,
+                  slug: form.requestedSlug,
+                  toolId,
+                  theme,
+                }),
+              }))
+            : [
+                {
+                  theme: "light" as const,
+                  label: "Light",
+                  previewSrc: getBadgePreviewSrc("light"),
+                  snippet: getFreeLaunchBadgeSnippet("light"),
+                },
+                {
+                  theme: "dark" as const,
+                  label: "Dark",
+                  previewSrc: getBadgePreviewSrc("dark"),
+                  snippet: getFreeLaunchBadgeSnippet("dark"),
+                },
+              ]
+        }
         freeLaunchRequirements={freeLaunchRequirements}
         onBack={() => {
           const params = new URLSearchParams(searchParams.toString());
