@@ -15,6 +15,7 @@ export type RequirementBoardTool = {
   logoUrl: string | null;
   upvoteCount: number;
   hasUpvoted: boolean;
+  isPremium: boolean;
 };
 
 export type FreeLaunchRequirements = {
@@ -43,22 +44,21 @@ async function loadRequirementState(
   founder: Founder,
 ): Promise<FreeLaunchRequirements> {
   const launches = await listLaunchBoard("weekly");
-  const nonOwn = launches
-    .map((launch) => launch.tool)
-    .filter((tool) => tool.id !== submission.toolId);
+  const nonOwn = launches.filter((launch) => launch.tool.id !== submission.toolId);
 
   const upvotedIds = new Set(
-    await listUserUpvotedToolIds(nonOwn.map((t) => t.id), founder.id),
+    await listUserUpvotedToolIds(nonOwn.map((l) => l.tool.id), founder.id),
   );
 
-  const boardTools: RequirementBoardTool[] = nonOwn.map((tool) => ({
-    id: tool.id,
-    slug: tool.slug,
-    name: tool.name,
-    tagline: tool.tagline,
-    logoUrl: tool.logoMedia?.url ?? null,
-    upvoteCount: tool.upvoteCount ?? 0,
-    hasUpvoted: upvotedIds.has(tool.id),
+  const boardTools: RequirementBoardTool[] = nonOwn.map((launch) => ({
+    id: launch.tool.id,
+    slug: launch.tool.slug,
+    name: launch.tool.name,
+    tagline: launch.tool.tagline,
+    logoUrl: launch.tool.logoMedia?.url ?? null,
+    upvoteCount: launch.tool.upvoteCount ?? 0,
+    hasUpvoted: upvotedIds.has(launch.tool.id),
+    isPremium: launch.launchType === "FEATURED",
   }));
 
   return {

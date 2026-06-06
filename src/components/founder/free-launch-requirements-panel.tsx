@@ -73,8 +73,10 @@ export function FreeLaunchRequirementsPanel({
 
   return (
     <section className="rounded-2xl border border-border bg-card p-6">
-      <h3 className="font-heading text-base font-semibold">Before you can schedule</h3>
-      <p className="mt-1 text-sm text-muted-foreground">Two quick steps to join this week&apos;s board.</p>
+      <h3 className="font-heading text-base font-semibold">Before you publish your launch</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Verify your badge and support a few fellow founders launching this week.
+      </p>
 
       {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
 
@@ -111,14 +113,22 @@ export function FreeLaunchRequirementsPanel({
                 </div>
               ))}
             </div>
-            <button
-              type="button"
-              disabled={verifying}
-              onClick={() => void verifyBadge()}
-              className="inline-flex items-center justify-center gap-1.5 self-start rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90 disabled:opacity-50"
-            >
-              {verifying ? "Verifying..." : "Verify badge now"}
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                disabled={verifying}
+                onClick={() => void verifyBadge()}
+                className="inline-flex items-center justify-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90 disabled:opacity-50"
+              >
+                {verifying ? "Verifying..." : "Verify badge now"}
+              </button>
+              <a
+                href="mailto:support@shipboost.io?subject=ShipBoost%20badge%20verification%20help"
+                className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              >
+                Can&apos;t verify? Contact support
+              </a>
+            </div>
           </div>
         ) : null}
       </div>
@@ -127,13 +137,17 @@ export function FreeLaunchRequirementsPanel({
       <div className="mt-3 rounded-xl border border-border p-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold">
-            <span className="text-muted-foreground">2 ·</span> Upvote launches this week
+            <span className="text-muted-foreground">2 ·</span> Support fellow founders launching this week
           </span>
           {votesOk ? <Check className="size-4 text-emerald-600" /> : null}
         </div>
         {requiredCount === 0 ? (
-          <p className="mt-2 text-xs text-muted-foreground">Waived — no other launches to upvote yet.</p>
+          <p className="mt-2 text-xs text-muted-foreground">Waived — no other launches to support yet.</p>
         ) : (
+          <>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Upvote {requiredCount} {requiredCount === 1 ? "launch" : "launches"} on this week&apos;s board before you publish — pay it forward.
+          </p>
           <div className="mt-3 flex items-center gap-3">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
               <div className="h-full bg-foreground transition-all" style={{ width: `${Math.min(100, (eligibleCount / requiredCount) * 100)}%` }} />
@@ -145,6 +159,7 @@ export function FreeLaunchRequirementsPanel({
               </button>
             ) : null}
           </div>
+          </>
         )}
       </div>
 

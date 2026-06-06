@@ -14,6 +14,7 @@ export type RequirementBoardTool = {
   logoUrl: string | null;
   upvoteCount: number;
   hasUpvoted: boolean;
+  isPremium: boolean;
 };
 
 type Props = {
@@ -121,7 +122,14 @@ export function UpvoteRequirementModal({
                     textClassName="text-base"
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-base font-black">{tool.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-base font-black">{tool.name}</p>
+                      {tool.isPremium ? (
+                        <span className="inline-flex shrink-0 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-black tracking-widest text-amber-700">
+                          Premium
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="mt-0.5 line-clamp-1 text-sm font-medium text-muted-foreground">{tool.tagline}</p>
                   </div>
                 </div>

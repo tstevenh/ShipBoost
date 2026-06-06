@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { FreeLaunchRequirementsPanel } from "./free-launch-requirements-panel";
 
 const tools = [
-  { id: "a", slug: "a", name: "Acme", tagline: "ta", logoUrl: null, upvoteCount: 3, hasUpvoted: false },
-  { id: "b", slug: "b", name: "Beta", tagline: "tb", logoUrl: null, upvoteCount: 1, hasUpvoted: false },
+  { id: "a", slug: "a", name: "Acme", tagline: "ta", logoUrl: null, upvoteCount: 3, hasUpvoted: false, isPremium: false },
+  { id: "b", slug: "b", name: "Beta", tagline: "tb", logoUrl: null, upvoteCount: 1, hasUpvoted: false, isPremium: false },
 ];
 
 const badges = [
@@ -64,6 +64,6 @@ describe("FreeLaunchRequirementsPanel", () => {
       />,
     );
     expect(onMet).toHaveBeenLastCalledWith(true);
-    expect(screen.getByText(/no other launches to upvote/i)).toBeInTheDocument();
+    expect(screen.getByText(/no other launches to support/i)).toBeInTheDocument();
   });
 });

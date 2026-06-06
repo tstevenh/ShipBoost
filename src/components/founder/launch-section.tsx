@@ -622,7 +622,7 @@ export function LaunchSection({
         </button>
         {selectedLaunch === "FREE" && !freeRequirementsMet ? (
           <p className="mt-2 text-center text-xs text-muted-foreground">
-            Verify your badge and upvote {requirements?.requiredCount ?? 3} launches to continue.
+            Verify your badge and support {requirements?.requiredCount ?? 3} fellow founders to continue.
           </p>
         ) : null}
       </div>

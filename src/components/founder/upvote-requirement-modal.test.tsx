@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { UpvoteRequirementModal } from "./upvote-requirement-modal";
 
 const baseTools = [
-  { id: "a", slug: "a", name: "Acme", tagline: "ta", logoUrl: null, upvoteCount: 3, hasUpvoted: false },
-  { id: "b", slug: "b", name: "Beta", tagline: "tb", logoUrl: null, upvoteCount: 1, hasUpvoted: false },
+  { id: "a", slug: "a", name: "Acme", tagline: "ta", logoUrl: null, upvoteCount: 3, hasUpvoted: false, isPremium: false },
+  { id: "b", slug: "b", name: "Beta", tagline: "tb", logoUrl: null, upvoteCount: 1, hasUpvoted: false, isPremium: false },
 ];
 
 afterEach(() => vi.restoreAllMocks());
@@ -33,5 +33,19 @@ describe("UpvoteRequirementModal", () => {
     fireEvent.click(screen.getAllByRole("button", { name: /upvote/i })[0]);
 
     await waitFor(() => expect(onProgress).toHaveBeenCalledWith(1, 2));
+  });
+
+  it("shows a Premium pill for premium board tools", () => {
+    render(
+      <UpvoteRequirementModal
+        submissionId="s1"
+        tools={[{ ...baseTools[0], isPremium: true }]}
+        eligibleCount={0}
+        requiredCount={1}
+        onProgress={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getByText("Premium")).toBeInTheDocument();
   });
 });
