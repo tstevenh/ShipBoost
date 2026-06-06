@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Check, ChevronUp, Loader2, X } from "lucide-react";
 
 import { LogoFallback } from "@/components/ui/logo-fallback";
+import { PremiumLaunchIndicator } from "@/components/public/premium-launch-indicator";
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
 
 export type RequirementBoardTool = {
@@ -44,6 +46,9 @@ export function UpvoteRequirementModal({
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const done = count >= requiredCount;
+
+  // Lock background scroll while the modal is open (it only mounts when open).
+  useBodyScrollLock();
 
   async function upvote(toolId: string) {
     setPendingIds((prev) => new Set(prev).add(toolId));
@@ -111,9 +116,22 @@ export function UpvoteRequirementModal({
             return (
               <article
                 key={tool.id}
-                className="group flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 transition-all hover:border-foreground/20"
+                className="group relative flex items-center justify-between gap-4 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-all hover:border-foreground/20"
               >
-                <div className="flex min-w-0 items-center gap-4">
+                {/* Premium gold shimmer (matches the launchpad card) */}
+                {tool.isPremium ? (
+                  <div aria-hidden className="pointer-events-none absolute inset-0 z-[1] overflow-hidden">
+                    <div
+                      className="premium-shimmer-track absolute left-0 top-0 h-full w-[60%]"
+                      style={{
+                        background:
+                          "linear-gradient(115deg, rgba(255,255,255,0) 0%, rgba(255,215,0,0.10) 35%, rgba(255,196,40,0.28) 50%, rgba(255,215,0,0.10) 65%, rgba(255,255,255,0) 100%)",
+                      }}
+                    />
+                  </div>
+                ) : null}
+
+                <div className="relative z-[2] flex min-w-0 items-center gap-4">
                   <LogoFallback
                     name={tool.name}
                     src={tool.logoUrl ?? undefined}
@@ -122,13 +140,9 @@ export function UpvoteRequirementModal({
                     textClassName="text-base"
                   />
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <p className="truncate text-base font-black">{tool.name}</p>
-                      {tool.isPremium ? (
-                        <span className="inline-flex shrink-0 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-black tracking-widest text-amber-700">
-                          Premium
-                        </span>
-                      ) : null}
+                      {tool.isPremium ? <PremiumLaunchIndicator /> : null}
                     </div>
                     <p className="mt-0.5 line-clamp-1 text-sm font-medium text-muted-foreground">{tool.tagline}</p>
                   </div>
@@ -140,7 +154,7 @@ export function UpvoteRequirementModal({
                   disabled={isVoted || isPending || done}
                   onClick={() => void upvote(tool.id)}
                   className={cn(
-                    "flex h-14 min-w-[56px] shrink-0 flex-col items-center justify-center rounded-xl border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed",
+                    "relative z-[2] flex h-14 min-w-[56px] shrink-0 flex-col items-center justify-center rounded-xl border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed",
                     isVoted
                       ? "border-foreground bg-foreground text-background"
                       : "border-border bg-background text-muted-foreground hover:border-foreground hover:text-foreground disabled:opacity-50",

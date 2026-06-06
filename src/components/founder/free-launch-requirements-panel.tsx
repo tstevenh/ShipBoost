@@ -146,7 +146,7 @@ export function FreeLaunchRequirementsPanel({
         ) : (
           <>
           <p className="mt-2 text-xs text-muted-foreground">
-            Upvote {requiredCount} {requiredCount === 1 ? "launch" : "launches"} on this week&apos;s board before you publish — pay it forward.
+            Upvote {requiredCount} other {requiredCount === 1 ? "launch" : "launches"} this week before you publish — pay it forward.
           </p>
           <div className="mt-3 flex items-center gap-3">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">

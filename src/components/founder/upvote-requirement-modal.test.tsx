@@ -35,7 +35,7 @@ describe("UpvoteRequirementModal", () => {
     await waitFor(() => expect(onProgress).toHaveBeenCalledWith(1, 2));
   });
 
-  it("shows a Premium pill for premium board tools", () => {
+  it("shows the verified premium indicator for premium board tools", () => {
     render(
       <UpvoteRequirementModal
         submissionId="s1"
@@ -46,6 +46,6 @@ describe("UpvoteRequirementModal", () => {
         onClose={() => {}}
       />,
     );
-    expect(screen.getByText("Premium")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /verified premium launch/i })).toBeInTheDocument();
   });
 });

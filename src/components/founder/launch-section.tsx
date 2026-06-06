@@ -447,7 +447,7 @@ export function LaunchSection({
             </ul>
             <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
               <li>• Add the ShipBoost badge to your site and verify it</li>
-              <li>• Upvote 3 launches on this week&apos;s board</li>
+              <li>• Upvote 3 other launches this week</li>
             </ul>
           </button>
         </div>
