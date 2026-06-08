@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { FreeLaunchRequirementsPanel } from "./free-launch-requirements-panel";
 
@@ -12,6 +12,8 @@ const badges = [
   { theme: "light" as const, label: "Light", previewSrc: "/badge/featured-light.svg", snippet: '<a data-theme="light"></a>' },
   { theme: "dark" as const, label: "Dark", previewSrc: "/badge/featured-dark.svg", snippet: '<a data-theme="dark"></a>' },
 ];
+
+afterEach(() => vi.restoreAllMocks());
 
 describe("FreeLaunchRequirementsPanel", () => {
   it("reports not-met when badge unverified, shows both badges, and the upvote progress", () => {
@@ -65,5 +67,45 @@ describe("FreeLaunchRequirementsPanel", () => {
     );
     expect(onMet).toHaveBeenLastCalledWith(true);
     expect(screen.getByText(/no other launches to support/i)).toBeInTheDocument();
+  });
+
+  it("marks the badge verified from the verify-badge response submission state", async () => {
+    const onMet = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            verified: true,
+            submission: {
+              badgeVerification: "VERIFIED",
+            },
+          },
+        }),
+      }),
+    );
+
+    render(
+      <FreeLaunchRequirementsPanel
+        submissionId="s1"
+        badges={badges}
+        initialBadgeVerification="PENDING"
+        tools={tools}
+        initialEligibleCount={2}
+        requiredCount={2}
+        onRequirementsMet={onMet}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /verify badge now/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/verified/i)).toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByText(/we couldn't find the badge on your site yet/i),
+    ).not.toBeInTheDocument();
+    expect(onMet).toHaveBeenLastCalledWith(true);
   });
 });

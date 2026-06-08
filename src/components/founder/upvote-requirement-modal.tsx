@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronUp, Loader2, X } from "lucide-react";
+import Link from "next/link";
+import { ChevronUp, Loader2, X } from "lucide-react";
 
 import { LogoFallback } from "@/components/ui/logo-fallback";
 import { PremiumLaunchIndicator } from "@/components/public/premium-launch-indicator";
@@ -109,69 +110,99 @@ export function UpvoteRequirementModal({
 
         {error ? <p className="px-6 pt-3 text-sm font-bold text-destructive">{error}</p> : null}
 
-        <div className="flex flex-col gap-3 overflow-y-auto px-6 py-4">
-          {tools.map((tool) => {
-            const isVoted = voted.has(tool.id);
-            const isPending = pendingIds.has(tool.id);
-            return (
-              <article
-                key={tool.id}
-                className="group relative flex items-center justify-between gap-4 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-all hover:border-foreground/20"
-              >
-                {/* Premium gold shimmer (matches the launchpad card) */}
-                {tool.isPremium ? (
-                  <div aria-hidden className="pointer-events-none absolute inset-0 z-[1] overflow-hidden">
-                    <div
-                      className="premium-shimmer-track absolute left-0 top-0 h-full w-[60%]"
-                      style={{
-                        background:
-                          "linear-gradient(115deg, rgba(255,255,255,0) 0%, rgba(255,215,0,0.10) 35%, rgba(255,196,40,0.28) 50%, rgba(255,215,0,0.10) 65%, rgba(255,255,255,0) 100%)",
-                      }}
-                    />
-                  </div>
-                ) : null}
-
-                <div className="relative z-[2] flex min-w-0 items-center gap-4">
-                  <LogoFallback
-                    name={tool.name}
-                    src={tool.logoUrl ?? undefined}
-                    sizes="48px"
-                    className="h-12 w-12 shrink-0 rounded-xl border border-border"
-                    textClassName="text-base"
-                  />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="truncate text-base font-black">{tool.name}</p>
-                      {tool.isPremium ? <PremiumLaunchIndicator /> : null}
-                    </div>
-                    <p className="mt-0.5 line-clamp-1 text-sm font-medium text-muted-foreground">{tool.tagline}</p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  aria-label={`Upvote ${tool.name}`}
-                  disabled={isVoted || isPending || done}
-                  onClick={() => void upvote(tool.id)}
-                  className={cn(
-                    "relative z-[2] flex h-14 min-w-[56px] shrink-0 flex-col items-center justify-center rounded-xl border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed",
-                    isVoted
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border bg-background text-muted-foreground hover:border-foreground hover:text-foreground disabled:opacity-50",
-                  )}
+        <div className="overflow-y-auto px-6 py-4">
+          <div className="overflow-hidden rounded-xl border border-border/60 bg-card [&>article:last-child]:border-b-0">
+            {tools.map((tool) => {
+              const isVoted = voted.has(tool.id);
+              const isPending = pendingIds.has(tool.id);
+              return (
+                <article
+                  key={tool.id}
+                  className="group relative flex min-w-0 cursor-pointer items-center gap-3 overflow-hidden border-b border-border/60 px-4 py-4 transition-colors duration-200 hover:bg-muted sm:px-5 md:gap-4"
                 >
-                  {isPending ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : isVoted ? (
-                    <Check size={18} />
-                  ) : (
-                    <ChevronUp size={18} />
-                  )}
-                  <span className="text-sm font-black leading-none">{counts[tool.id] ?? 0}</span>
-                </button>
-              </article>
-            );
-          })}
+                  <Link
+                    href={`/tools/${tool.slug}`}
+                    aria-label={`View ${tool.name} details`}
+                    className="absolute inset-0 z-[1]"
+                  />
+
+                  {tool.isPremium ? (
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 z-[2] overflow-hidden"
+                    >
+                      <div
+                        className="premium-shimmer-track absolute left-0 top-0 h-full w-[60%]"
+                        style={{
+                          background:
+                            "linear-gradient(115deg, rgba(255,255,255,0) 0%, rgba(255,215,0,0.10) 35%, rgba(255,196,40,0.28) 50%, rgba(255,215,0,0.10) 65%, rgba(255,255,255,0) 100%)",
+                        }}
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className="pointer-events-none relative z-[3] flex min-w-0 flex-1 items-center gap-3 md:gap-4">
+                    <div className="shrink-0">
+                      <LogoFallback
+                        name={tool.name}
+                        src={tool.logoUrl ?? undefined}
+                        sizes="56px"
+                        className="h-14 w-14 rounded-lg border border-border/60"
+                        textClassName="text-lg"
+                      />
+                    </div>
+
+                    <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-0.5">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <span className="truncate text-lg font-bold tracking-tight text-foreground">
+                          {tool.name}
+                        </span>
+                        <span className="pointer-events-auto">
+                          {tool.isPremium ? <PremiumLaunchIndicator /> : null}
+                        </span>
+                      </div>
+
+                      <p className="line-clamp-1 text-sm font-normal leading-snug text-muted-foreground">
+                        {tool.tagline}
+                      </p>
+                    </div>
+
+                    <div className="pointer-events-auto shrink-0 self-center">
+                      <button
+                        type="button"
+                        aria-label={`Upvote ${tool.name}`}
+                        disabled={isVoted || isPending || done}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void upvote(tool.id);
+                        }}
+                        className={cn(
+                          "flex h-14 min-w-[56px] flex-col items-center justify-center rounded-lg border transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50",
+                          isVoted
+                            ? "border-foreground bg-foreground text-background shadow-sm shadow-black/10"
+                            : "border-border bg-background text-muted-foreground hover:border-foreground hover:text-foreground",
+                        )}
+                      >
+                        {isPending ? (
+                          <Loader2 size={18} className="mb-0.5 animate-spin" />
+                        ) : (
+                          <ChevronUp
+                            className={cn(
+                              "mb-0.5 size-5 transition-transform",
+                              isVoted && "scale-110",
+                            )}
+                          />
+                        )}
+                        <span className="text-sm font-black leading-none">
+                          {counts[tool.id] ?? 0}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import {
   alternativesSeoRegistry,
   bestTagSeoRegistry,
 } from "@/server/seo/registry";
+import { isTagPageIndexable } from "@/server/seo/tag-indexing";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
 import { applyWeightedUpvoteCounts } from "@/server/services/upvote-service";
 import type {
@@ -202,5 +203,6 @@ export async function getBestTagSeoPage(
     },
     tag,
     tools: sortedTools,
+    isIndexable: isTagPageIndexable(sortedTools.length),
   };
 }

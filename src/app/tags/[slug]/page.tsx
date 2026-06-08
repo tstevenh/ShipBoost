@@ -139,11 +139,20 @@ export async function generateMetadata(
 
   const canonical = `${getEnv().NEXT_PUBLIC_APP_URL}/tags/${slug}`;
 
-  return buildPublicPageMetadata({
+  const metadata = buildPublicPageMetadata({
     title: page.entry.metaTitle,
     description: page.entry.metaDescription,
     url: canonical,
   });
+
+  if (!page.isIndexable) {
+    metadata.robots = {
+      index: false,
+      follow: true,
+    };
+  }
+
+  return metadata;
 }
 
 export default async function TagPage(context: RouteContext) {

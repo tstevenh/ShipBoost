@@ -30,13 +30,29 @@ type Founder = { id: string };
 async function getOwnedFreeSubmission(submissionId: string, founder: Founder) {
   const submission = await prisma.submission.findFirst({
     where: { id: submissionId, userId: founder.id },
-    select: { id: true, toolId: true, submissionType: true, badgeVerification: true },
+    select: {
+      id: true,
+      toolId: true,
+      submissionType: true,
+      paymentStatus: true,
+      badgeVerification: true,
+    },
   });
   if (!submission) throw new AppError(404, "Submission not found.");
-  if (submission.submissionType === "FEATURED_LAUNCH") {
+  if (
+    submission.submissionType === "FEATURED_LAUNCH" &&
+    submission.paymentStatus === "PAID"
+  ) {
     throw new AppError(400, "Premium launches do not use the free-launch requirements.");
   }
-  return submission;
+  return {
+    ...submission,
+    badgeVerification:
+      submission.submissionType === "FEATURED_LAUNCH" &&
+      submission.badgeVerification === "NOT_REQUIRED"
+        ? ("PENDING" as const)
+        : submission.badgeVerification,
+  };
 }
 
 async function loadRequirementState(

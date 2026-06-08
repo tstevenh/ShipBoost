@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/server/seo/registry", () => ({
   alternativesSeoRegistry: {
@@ -68,6 +68,9 @@ vi.mock("@/server/db/client", () => ({
     tag: {
       findFirst: vi.fn(),
     },
+    toolVote: {
+      groupBy: vi.fn(),
+    },
   },
 }));
 
@@ -81,6 +84,10 @@ import {
 } from "@/server/services/seo-service";
 
 describe("seo-service", () => {
+  beforeEach(() => {
+    vi.mocked(prisma.toolVote.groupBy).mockResolvedValue([]);
+  });
+
   it("returns null for missing alternatives registry entries", async () => {
     await expect(getAlternativesSeoPage("missing-tool")).resolves.toBeNull();
   });
@@ -120,6 +127,7 @@ describe("seo-service", () => {
 
     expect(page?.tools.map((tool) => tool.slug)).toEqual(["tool-one"]);
     expect(page?.entry.title).toBe("Best AI tools");
+    expect(page?.isIndexable).toBe(false);
   });
 
   it("uses generated copy when no tag override exists", async () => {
@@ -154,6 +162,65 @@ describe("seo-service", () => {
     expect(page?.entry.metaDescription).toBe(
       "Browse the best SEO tools on ShipBoost. Compare curated products, discover alternatives, and find founder-friendly picks.",
     );
+    expect(page?.isIndexable).toBe(false);
+  });
+
+  it("marks best-tag pages indexable when they have at least three public tools", async () => {
+    vi.mocked(prisma.tag.findFirst).mockResolvedValueOnce({
+      id: "tag_3",
+      slug: "analytics",
+      name: "Analytics",
+      description: null,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as never);
+    vi.mocked(prisma.tool.findMany).mockResolvedValueOnce([
+      {
+        id: "tool_3",
+        slug: "analytics-one",
+        name: "Analytics One",
+        tagline: "Analytics workflows",
+        isFeatured: false,
+        logoMedia: null,
+        media: [],
+        toolCategories: [],
+        toolTags: [],
+        submissions: [],
+        launches: [],
+      },
+      {
+        id: "tool_4",
+        slug: "analytics-two",
+        name: "Analytics Two",
+        tagline: "Analytics dashboards",
+        isFeatured: false,
+        logoMedia: null,
+        media: [],
+        toolCategories: [],
+        toolTags: [],
+        submissions: [],
+        launches: [],
+      },
+      {
+        id: "tool_5",
+        slug: "analytics-three",
+        name: "Analytics Three",
+        tagline: "Analytics reports",
+        isFeatured: false,
+        logoMedia: null,
+        media: [],
+        toolCategories: [],
+        toolTags: [],
+        submissions: [],
+        launches: [],
+      },
+    ] as never);
+
+    const page = await getBestTagSeoPage("analytics");
+
+    expect(page?.tools).toHaveLength(3);
+    expect(page?.isIndexable).toBe(true);
   });
 
   it("exposes link helpers for configured alternatives pages", () => {

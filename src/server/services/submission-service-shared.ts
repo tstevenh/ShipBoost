@@ -27,13 +27,112 @@ export type DeferredEmailTask = () => Promise<void>;
 // localhost). Matches both the HTML form (data-shipboost-badge="free-launch")
 // and the JSX-compiled form ("data-shipboost-badge":"free-launch").
 export const shipBoostBadgeMarkerPattern =
-  /["']?data-shipboost-badge["']?\s*[:=]\s*["']free-launch["']/i;
+  /\\?["']?data-shipboost-badge\\?["']?\s*[:=]\s*\\?["']free-launch\\?["']/i;
 
 const scriptSrcPattern =
   /<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
+const anchorTagPattern = /<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>[\s\S]*?<\/a>/gi;
+const imageTagPattern = /<img\b[^>]*>/gi;
+
+function normalizeUrlForComparison(value: string) {
+  const url = new URL(value);
+  url.hash = "";
+  url.search = "";
+
+  if (url.pathname !== "/") {
+    url.pathname = url.pathname.replace(/\/+$/, "");
+  }
+
+  return url.toString();
+}
+
+function getAttributeValue(tag: string, attribute: string) {
+  const pattern = new RegExp(
+    String.raw`\b${attribute}\s*=\s*["']([^"']+)["']`,
+    "i",
+  );
+  return pattern.exec(tag)?.[1] ?? null;
+}
+
+function stripHtmlTags(value: string) {
+  return value.replace(/<[^>]+>/g, " ");
+}
+
+function hasBadgeContext(anchorHtml: string, nearbyHtml: string) {
+  const anchorText = stripHtmlTags(anchorHtml);
+
+  if (/shipboost/i.test(anchorText)) {
+    return true;
+  }
+
+  if (/featured\s+on\s+shipboost/i.test(nearbyHtml)) {
+    return true;
+  }
+
+  for (const match of anchorHtml.matchAll(imageTagPattern)) {
+    const imageTag = match[0];
+    const alt = getAttributeValue(imageTag, "alt") ?? "";
+    const src = getAttributeValue(imageTag, "src") ?? "";
+
+    if (/shipboost/i.test(alt)) {
+      return true;
+    }
+
+    if (/\/badge\//i.test(src) || /shipboost-badge/i.test(src)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 function hasRecognizedFreeLaunchBadge(value: string) {
   return shipBoostBadgeMarkerPattern.test(value);
+}
+
+export function hasExpectedShipBoostBadgeLink(
+  html: string,
+  pageUrl: string,
+  expectedListingUrl: string,
+) {
+  let expected: string;
+
+  try {
+    expected = normalizeUrlForComparison(expectedListingUrl);
+  } catch {
+    return false;
+  }
+
+  for (const match of html.matchAll(anchorTagPattern)) {
+    const href = match[1];
+    const anchorHtml = match[0];
+
+    if (!href || match.index === undefined) {
+      continue;
+    }
+
+    let resolvedHref: string;
+
+    try {
+      resolvedHref = normalizeUrlForComparison(new URL(href, pageUrl).toString());
+    } catch {
+      continue;
+    }
+
+    if (resolvedHref !== expected) {
+      continue;
+    }
+
+    const contextStart = Math.max(0, match.index - 250);
+    const contextEnd = Math.min(html.length, match.index + anchorHtml.length + 250);
+    const nearbyHtml = html.slice(contextStart, contextEnd);
+
+    if (hasBadgeContext(anchorHtml, nearbyHtml)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export function getSameOriginScriptUrls(html: string, pageUrl: string) {
@@ -64,8 +163,16 @@ export async function hasFreeLaunchBadgeInHtmlOrScripts(
   html: string,
   pageUrl: string,
   fetchScriptText: (url: string) => Promise<string>,
+  expectedListingUrl?: string,
 ) {
   if (hasRecognizedFreeLaunchBadge(html)) {
+    return true;
+  }
+
+  if (
+    expectedListingUrl &&
+    hasExpectedShipBoostBadgeLink(html, pageUrl, expectedListingUrl)
+  ) {
     return true;
   }
 
@@ -75,6 +182,13 @@ export async function hasFreeLaunchBadgeInHtmlOrScripts(
     const scriptText = await fetchScriptText(scriptUrl);
 
     if (hasRecognizedFreeLaunchBadge(scriptText)) {
+      return true;
+    }
+
+    if (
+      expectedListingUrl &&
+      hasExpectedShipBoostBadgeLink(scriptText, scriptUrl, expectedListingUrl)
+    ) {
       return true;
     }
   }

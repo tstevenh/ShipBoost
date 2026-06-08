@@ -40,6 +40,37 @@ describe("getFreeLaunchRequirements", () => {
     expect(r.eligibleCount).toBe(1);
     expect(r.badgeVerification).toBe("PENDING");
   });
+
+  it("allows an unpaid premium checkout draft to switch back to free requirements", async () => {
+    prismaMock.submission.findFirst.mockResolvedValueOnce({
+      id: "s1",
+      toolId: "own",
+      submissionType: "FEATURED_LAUNCH",
+      paymentStatus: "PENDING",
+      badgeVerification: "NOT_REQUIRED",
+    });
+    listLaunchBoard.mockResolvedValueOnce(board);
+    listUserUpvotedToolIds.mockResolvedValueOnce([]);
+
+    const r = await getFreeLaunchRequirements("s1", { id: "u1" });
+
+    expect(r.badgeVerification).toBe("PENDING");
+    expect(r.requiredCount).toBe(2);
+  });
+
+  it("rejects a paid premium launch from free requirements", async () => {
+    prismaMock.submission.findFirst.mockResolvedValueOnce({
+      id: "s1",
+      toolId: "own",
+      submissionType: "FEATURED_LAUNCH",
+      paymentStatus: "PAID",
+      badgeVerification: "NOT_REQUIRED",
+    });
+
+    await expect(getFreeLaunchRequirements("s1", { id: "u1" })).rejects.toThrow(
+      "Premium launches do not use the free-launch requirements.",
+    );
+  });
 });
 
 describe("castLaunchRequirementVote", () => {
