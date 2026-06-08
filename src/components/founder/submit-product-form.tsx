@@ -7,7 +7,6 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
-  Copy,
   Image as ImageIcon,
   Layout,
   Loader2,
@@ -17,8 +16,14 @@ import {
   X,
 } from "lucide-react";
 
+import { FounderLaunchKitCard } from "@/components/founder/founder-launch-kit-card";
 import { LaunchSection } from "@/components/founder/launch-section";
 import { MarkdownTextarea } from "@/components/forms/markdown-textarea";
+import {
+  buildBadgeEmbedSnippet,
+  buildBadgeImageUrl,
+  type LaunchKit,
+} from "@/lib/distribution/launch-kit";
 import { NativeSelect } from "@/components/forms/native-select";
 import { cn } from "@/lib/utils";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
@@ -60,6 +65,7 @@ type SubmitProductFormProps = {
   }>;
   foundingPremiumLaunchSpotsLeft?: number;
   foundingPremiumLaunchLimit?: number;
+  paidPremiumLaunchCount?: number;
   estimatedFreeLaunchDate?: string | null;
   initialDraft?: {
     id: string;
@@ -90,7 +96,9 @@ type SubmitProductFormProps = {
       launches?: ScheduledLaunch[];
     };
   } | null;
+  launchKit?: LaunchKit | null;
   isPrelaunch?: boolean;
+  freeLaunchRequirements?: import("@/server/services/free-launch-requirements").FreeLaunchRequirements | null;
 };
 
 type FormState = {
@@ -149,8 +157,6 @@ type ScheduledLaunch = {
   status: LaunchStatus;
   launchDate: string;
 };
-
-const BADGE_SUPPORT_EMAIL = "support@shipboost.io";
 
 const pricingModels: PricingModel[] = [
   "FREE",
@@ -493,8 +499,11 @@ export function SubmitProductForm({
   premiumLaunchWeeks,
   foundingPremiumLaunchSpotsLeft = 0,
   foundingPremiumLaunchLimit = 20,
+  paidPremiumLaunchCount = 0,
   estimatedFreeLaunchDate = null,
   initialDraft = null,
+  launchKit = null,
+  freeLaunchRequirements = null,
 }: SubmitProductFormProps) {
   const isListingEditMode = mode === "listing-edit";
   const router = useRouter();
@@ -517,12 +526,10 @@ export function SubmitProductForm({
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
-  const [isVerifyingBadge, setIsVerifyingBadge] = useState(false);
-  const [isBadgePromptOpen, setIsBadgePromptOpen] = useState(false);
+  const [isVerifyingBadge] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  useBodyScrollLock(isDeleteModalOpen || isBadgePromptOpen);
-  const [badgePromptSubmissionId, setBadgePromptSubmissionId] = useState<string | null>(null);
+  useBodyScrollLock(isDeleteModalOpen);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [slugStatus, setSlugStatus] = useState<string>("");
   const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(
@@ -552,9 +559,6 @@ export function SubmitProductForm({
     findPublishedLaunch(initialDraft),
   );
   const [lastSavedPayloadSignature, setLastSavedPayloadSignature] = useState<string | null>(null);
-  const [badgeTheme, setBadgeTheme] = useState<BadgeTheme>("light");
-  const [copiedBadgeTheme, setCopiedBadgeTheme] = useState<BadgeTheme | null>(null);
-  const [sidebarBadgeError, setSidebarBadgeError] = useState<string | null>(null);
   const [catSearch, setCatSearch] = useState("");
   const [tagSearch, setTagSearch] = useState("");
   const [isCatOpen, setIsCatOpen] = useState(false);
@@ -585,15 +589,6 @@ export function SubmitProductForm({
     const tag = tags.find((item) => item.id === tagId);
     return tag ? [tag] : [];
   });
-  const isFreeLaunchSubmission =
-    Boolean(lastSavedDraft) &&
-    lastSavedDraft?.submissionType === "FREE_LAUNCH" &&
-    !isPremiumScheduled;
-  const currentBadgeVerification =
-    lastSavedDraft?.badgeVerification ?? "PENDING";
-  const isBadgeVerified = currentBadgeVerification === "VERIFIED";
-  const showBadgeVerifyCard = isFreeLaunchSubmission && !isBadgeVerified;
-  const showBadgeVerifiedCard = isFreeLaunchSubmission && isBadgeVerified;
   const shipboostUrl = appUrl.replace(/\/$/, "");
   const shipboostHost = shipboostUrl.replace(/^https?:\/\//, "");
   const shipboostToolUrl = `${shipboostUrl}/tools/${encodeURIComponent(
@@ -708,15 +703,6 @@ export function SubmitProductForm({
     };
   }, [draftSubmissionId, form.name]);
 
-  async function handleCopyBadgeSnippet(theme: BadgeTheme = badgeTheme) {
-    try {
-      await navigator.clipboard.writeText(getFreeLaunchBadgeSnippet(theme));
-      setCopiedBadgeTheme(theme);
-      window.setTimeout(() => setCopiedBadgeTheme(null), 1500);
-    } catch {
-      setErrorMessage("Unable to copy the badge snippet.");
-    }
-  }
 
 
   // Auto-save refs (debounced, only when logo is uploaded)
@@ -1127,89 +1113,6 @@ export function SubmitProductForm({
     }
   }
 
-  async function handleVerifyBadge() {
-    if (!badgePromptSubmissionId && !draftSubmissionId) return;
-    setIsVerifyingBadge(true);
-    setErrorMessage(null);
-
-    try {
-      const submissionId = badgePromptSubmissionId ?? draftSubmissionId;
-      const response = await fetch(`/api/submissions/${submissionId}/verify-badge`, {
-        method: "POST",
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Verification failed.");
-      }
-
-      const nextBadgeVerification = payload.data.submission.badgeVerification;
-      setDraftBadgeVerification(nextBadgeVerification);
-      setLastSavedDraft((current) =>
-        current
-          ? {
-              ...current,
-              badgeVerification: nextBadgeVerification,
-            }
-          : current,
-      );
-      if (payload.data.verified) {
-        setSuccessMessage(payload.data.message);
-        setIsBadgePromptOpen(false);
-      } else {
-        setErrorMessage(payload.data.message || "Badge not found. Make sure it is in your footer.");
-      }
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Verification failed."));
-    } finally {
-      setIsVerifyingBadge(false);
-    }
-  }
-
-  async function handleContinueWithoutBadge() {
-    setIsBadgePromptOpen(false);
-    setBadgePromptSubmissionId(null);
-    setSuccessMessage("Launch scheduled.");
-  }
-
-  async function handleVerifyBadgeFromSidebar() {
-    if (!draftSubmissionId) return;
-    setIsVerifyingBadge(true);
-    setSidebarBadgeError(null);
-
-    try {
-      const response = await fetch(
-        `/api/submissions/${draftSubmissionId}/verify-badge`,
-        { method: "POST" },
-      );
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Verification failed.");
-      }
-
-      const nextBadgeVerification = payload.data.submission.badgeVerification;
-      setDraftBadgeVerification(nextBadgeVerification);
-      setLastSavedDraft((current) =>
-        current
-          ? { ...current, badgeVerification: nextBadgeVerification }
-          : current,
-      );
-      if (payload.data.verified) {
-        setSuccessMessage(payload.data.message || "Badge verified.");
-      } else {
-        setSidebarBadgeError(
-          payload.data.message ||
-            "Badge not found. Make sure it is on your homepage or footer.",
-        );
-      }
-    } catch (error) {
-      setSidebarBadgeError(getErrorMessage(error, "Verification failed."));
-    } finally {
-      setIsVerifyingBadge(false);
-    }
-  }
-
   useEffect(() => { saveDraftFnRef.current = saveDraft; });
   useEffect(() => { formRef.current = form; }, [form]);
   useEffect(() => { logoAssetRef.current = logo?.asset; });
@@ -1237,9 +1140,40 @@ export function SubmitProductForm({
         premiumLaunchWeeks={premiumLaunchWeeks}
         foundingPremiumSpotsLeft={foundingPremiumLaunchSpotsLeft}
         foundingPremiumLaunchLimit={foundingPremiumLaunchLimit}
+        paidPremiumLaunchCount={paidPremiumLaunchCount}
         currentScheduledLaunch={currentScheduledLaunch as never}
         isPremiumScheduled={isPremiumScheduled}
         isFreeScheduled={isFreeScheduled}
+        badges={
+          toolId
+            ? (["light", "dark"] as const).map((theme) => ({
+                theme,
+                label: theme === "light" ? "Light" : "Dark",
+                // The combined badge with the live upvote count (served per tool).
+                previewSrc: buildBadgeImageUrl({ appUrl, toolId, theme }),
+                snippet: buildBadgeEmbedSnippet({
+                  appUrl,
+                  slug: form.requestedSlug,
+                  toolId,
+                  theme,
+                }),
+              }))
+            : [
+                {
+                  theme: "light" as const,
+                  label: "Light",
+                  previewSrc: getBadgePreviewSrc("light"),
+                  snippet: getFreeLaunchBadgeSnippet("light"),
+                },
+                {
+                  theme: "dark" as const,
+                  label: "Dark",
+                  previewSrc: getBadgePreviewSrc("dark"),
+                  snippet: getFreeLaunchBadgeSnippet("dark"),
+                },
+              ]
+        }
+        freeLaunchRequirements={freeLaunchRequirements}
         onBack={() => {
           const params = new URLSearchParams(searchParams.toString());
           params.delete("section");
@@ -1258,8 +1192,6 @@ export function SubmitProductForm({
           const params = new URLSearchParams(searchParams.toString());
           params.delete("section");
           router.push(`?${params.toString()}`);
-          setBadgePromptSubmissionId(submission.id);
-          setIsBadgePromptOpen(true);
         }}
       />
     );
@@ -1340,113 +1272,6 @@ export function SubmitProductForm({
         </div>
       ) : null}
 
-      {isBadgePromptOpen ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 px-4 py-8 backdrop-blur-sm">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="badge-priority-title"
-            className="w-full max-w-lg rounded-2xl border border-border bg-background shadow-2xl"
-          >
-            <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">
-              <div>
-                <p className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.18em] text-primary">
-                  <ShieldCheck size={13} />
-                  Badge backlink verification
-                </p>
-                <h3 id="badge-priority-title" className="mt-2 text-xl font-black tracking-tight text-foreground">
-                  Unlock your dofollow backlink
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsBadgePromptOpen(false)}
-                className="rounded-xl border border-border bg-card p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                aria-label="Close badge prompt"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <p className="text-sm font-medium leading-relaxed text-muted-foreground">
-                Your free launch is scheduled with a nofollow website link by
-                default. Add a small ShipBoost badge to your homepage or footer,
-                then verify it to unlock a dofollow backlink.
-              </p>
-
-              {errorMessage ? (
-                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-                  <p>{errorMessage}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-rose-700/80">
-                    Already added the badge? Email{" "}
-                    <a
-                      href={`mailto:${BADGE_SUPPORT_EMAIL}`}
-                      className="underline underline-offset-2"
-                    >
-                      {BADGE_SUPPORT_EMAIL}
-                    </a>{" "}
-                    and we can help verify it manually.
-                  </p>
-                </div>
-              ) : null}
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {(["light", "dark"] as const).map((theme) => (
-                  <div
-                    key={theme}
-                    className={cn(
-                      "relative rounded-xl border border-border p-3 pt-9",
-                      theme === "dark" ? "bg-white" : "bg-muted/20",
-                    )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => void handleCopyBadgeSnippet(theme)}
-                      className={cn(
-                        "absolute right-2 top-2 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-black transition",
-                        theme === "dark"
-                          ? "border-slate-200 bg-slate-50 text-slate-700"
-                          : "border-border bg-card text-foreground",
-                      )}
-                    >
-                      <Copy size={12} />
-                      {copiedBadgeTheme === theme ? "Copied" : "Copy"}
-                    </button>
-                    <a href={shipboostUrl} target="_blank" rel="noopener">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={getBadgePreviewSrc(theme)}
-                        alt={`${theme} ShipBoost badge preview`}
-                        className="h-auto w-44 max-w-full"
-                      />
-                    </a>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => void handleVerifyBadge()}
-                  disabled={isVerifyingBadge || !isValidUrl(form.websiteUrl)}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-                >
-                  {isVerifyingBadge ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
-                  {isVerifyingBadge ? "Verifying..." : "I added it, verify now"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleContinueWithoutBadge()}
-                  className="rounded-xl border border-border bg-background px-4 py-3 text-sm font-black text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                >
-                  Continue without badge
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <div className="grid w-full items-start gap-8 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1120px)_320px]">
         <aside className="order-2 space-y-4 xl:sticky xl:top-28 xl:self-start">
@@ -1567,90 +1392,6 @@ export function SubmitProductForm({
             )}
           </div>
 
-          {showBadgeVerifyCard ? (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-              <h3 className="text-lg font-black text-foreground">
-                Add the ShipBoost badge
-              </h3>
-              <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
-                Add the badge to your homepage or footer, then verify it to upgrade your backlink to dofollow.
-              </p>
-              <div className="mt-5 space-y-3">
-                {(["light", "dark"] as const).map((theme) => (
-                  <div
-                    key={theme}
-                    className={cn(
-                      "relative rounded-lg border p-3 pt-9 transition",
-                      theme === "dark" ? "bg-white" : "bg-background",
-                      badgeTheme === theme ? "border-primary" : "border-border",
-                    )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => void handleCopyBadgeSnippet(theme)}
-                      className={cn(
-                        "absolute right-2 top-2 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-black transition",
-                        theme === "dark"
-                          ? "border-slate-200 bg-slate-50 text-slate-700"
-                          : "border-border bg-card text-foreground",
-                      )}
-                    >
-                      <Copy size={11} />
-                      {copiedBadgeTheme === theme ? "Copied" : "Copy"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBadgeTheme(theme)}
-                      className="block w-full"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={getBadgePreviewSrc(theme)}
-                        alt={`${theme} ShipBoost badge`}
-                        className="h-auto w-40 max-w-full"
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => void handleVerifyBadgeFromSidebar()}
-                disabled={isVerifyingBadge || !isValidUrl(form.websiteUrl)}
-                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-              >
-                {isVerifyingBadge ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <ShieldCheck size={14} />
-                )}
-                {isVerifyingBadge ? "Verifying..." : "Verify badge now"}
-              </button>
-              {sidebarBadgeError ? (
-                <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
-                  {sidebarBadgeError}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {showBadgeVerifiedCard ? (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
-                  <Check size={14} strokeWidth={3} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-foreground">
-                    Badge verified
-                  </h3>
-                  <p className="mt-1 text-xs font-medium leading-relaxed text-muted-foreground">
-                    Your backlink on ShipBoost is now dofollow. Keep the badge installed to maintain it.
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : null}
 
           {!requiredFieldsComplete ? (
             <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
@@ -1716,6 +1457,20 @@ export function SubmitProductForm({
               </button>
             ) : null}
           </div>
+
+          {launchKit ? (
+            <FounderLaunchKitCard
+              listingUrl={launchKit.listingUrl}
+              badgeImageUrlLight={launchKit.badgeImageUrlLight}
+              badgeImageUrlDark={launchKit.badgeImageUrlDark}
+              badgeSnippetLight={launchKit.badgeSnippetLight}
+              badgeSnippetDark={launchKit.badgeSnippetDark}
+              twitterText={launchKit.shareTexts.twitter}
+              linkedinText={launchKit.shareTexts.linkedin}
+              twitterUrl={launchKit.shareUrls.twitter}
+              linkedinUrl={launchKit.shareUrls.linkedin}
+            />
+          ) : null}
         </aside>
 
         <div className="order-1 min-w-0 rounded-xl border border-border bg-card shadow-sm">

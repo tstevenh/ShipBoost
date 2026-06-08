@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { deleteImageFromCloudinary } from "@/server/cloudinary";
 import { prisma } from "@/server/db/client";
 import { toolDetailsInclude } from "@/server/db/includes";
+import { getEnv } from "@/server/env";
 import { AppError } from "@/server/http/app-error";
 import {
   getSubmissionByIdForFounder,
@@ -15,11 +16,14 @@ import {
 } from "@/server/repositories/tool-repository";
 import { capturePostHogEventSafely } from "@/server/posthog";
 import { assertCatalogAssignments } from "@/server/services/catalog";
+import { assertFreeLaunchGate, computeRequiredBoardUpvotes } from "@/server/services/free-launch-gate";
+import { listCurrentWeekBoardToolIds } from "@/server/services/launch-service";
 import {
   scheduleNextFreeLaunchDate,
   UTC_WEEK_IN_DAYS,
 } from "@/server/services/launch-scheduling";
 import { createUniqueToolSlug } from "@/server/services/slug";
+import { listUserUpvotedToolIds } from "@/server/services/upvote-service";
 import { addUtcDays } from "@/server/services/time";
 import {
   buildDuplicateSubmissionDetails,
@@ -66,6 +70,16 @@ function buildSavedSubmissionDraft(input: {
 
 function isEditableFounderSubmissionStatus(status: string) {
   return status === "DRAFT" || status === "PENDING" || status === "REJECTED";
+}
+
+function isPaidPremiumSubmission(submission: {
+  submissionType: string;
+  paymentStatus: string;
+}) {
+  return (
+    submission.submissionType === "FEATURED_LAUNCH" &&
+    submission.paymentStatus === "PAID"
+  );
 }
 
 function serializeFounderLaunch(launch: FounderLaunchSummary) {
@@ -770,13 +784,26 @@ export async function scheduleFreeSubmissionLaunch(
     throw new AppError(409, "This submission can no longer be scheduled.");
   }
 
-  if (submission.submissionType === "FEATURED_LAUNCH") {
+  if (isPaidPremiumSubmission(submission)) {
     throw new AppError(400, "Premium launches must go through checkout.");
   }
 
   if (submission.paymentStatus === "PAID") {
     throw new AppError(400, "Paid launches cannot join the free queue.");
   }
+
+  const boardToolIds = (await listCurrentWeekBoardToolIds()).filter(
+    (toolId) => toolId !== submission.toolId,
+  );
+  const eligibleBoardUpvoteCount = (
+    await listUserUpvotedToolIds(boardToolIds, founder.id)
+  ).size;
+
+  assertFreeLaunchGate({
+    badgeVerification: submission.badgeVerification,
+    eligibleBoardUpvoteCount,
+    requiredBoardUpvotes: computeRequiredBoardUpvotes(boardToolIds.length),
+  });
 
   const existingFreeLaunch = getActiveLaunchForType(
     submission.tool.launches,
@@ -799,6 +826,9 @@ export async function scheduleFreeSubmissionLaunch(
               submissionType: "FREE_LAUNCH",
               reviewStatus: "PENDING",
               paymentStatus: "NOT_REQUIRED",
+              polarCheckoutId: null,
+              polarOrderId: null,
+              paidAt: null,
               preferredLaunchDate: launchDate,
               badgeFooterUrl: submission.tool.websiteUrl,
               badgeVerification: nextBadgeVerification,
@@ -847,6 +877,9 @@ export async function scheduleFreeSubmissionLaunch(
           submissionType: "FREE_LAUNCH",
           reviewStatus: "PENDING",
           paymentStatus: "NOT_REQUIRED",
+          polarCheckoutId: null,
+          polarOrderId: null,
+          paidAt: null,
           preferredLaunchDate: existingFreeLaunch.launchDate,
           badgeFooterUrl: submission.tool.websiteUrl,
           badgeVerification:
@@ -1037,7 +1070,13 @@ export async function verifyFreeLaunchBadge(
     throw new AppError(404, "Submission not found.");
   }
 
-  if (submission.submissionType !== "FREE_LAUNCH") {
+  if (
+    submission.submissionType !== "FREE_LAUNCH" &&
+    !(
+      submission.submissionType === "FEATURED_LAUNCH" &&
+      submission.paymentStatus !== "PAID"
+    )
+  ) {
     throw new AppError(400, "Badge verification only applies to free launches.");
   }
 
@@ -1055,6 +1094,9 @@ export async function verifyFreeLaunchBadge(
   } catch {
     websiteUrl = submission.tool.websiteUrl;
   }
+
+  const appUrl = getEnv().NEXT_PUBLIC_APP_URL.replace(/\/+$/, "");
+  const expectedListingUrl = `${appUrl}/tools/${submission.tool.slug}`;
 
   try {
     const response = await fetch(websiteUrl, {
@@ -1080,6 +1122,7 @@ export async function verifyFreeLaunchBadge(
 
         return scriptResponse.text();
       },
+      expectedListingUrl,
     );
   } catch (error) {
     message =
@@ -1092,6 +1135,11 @@ export async function verifyFreeLaunchBadge(
     await tx.submission.update({
       where: { id: submission.id },
       data: {
+        submissionType: "FREE_LAUNCH",
+        paymentStatus: "NOT_REQUIRED",
+        polarCheckoutId: null,
+        polarOrderId: null,
+        paidAt: null,
         badgeFooterUrl: websiteUrl,
         badgeVerification: verified ? "VERIFIED" : "FAILED",
       },
@@ -1101,6 +1149,7 @@ export async function verifyFreeLaunchBadge(
       where: { id: submission.toolId },
       data: {
         websiteUrl,
+        isFeatured: false,
         badgeVerification: verified ? "VERIFIED" : "FAILED",
       },
     });
@@ -1109,11 +1158,14 @@ export async function verifyFreeLaunchBadge(
   const nextBadgeVerification = verified ? ("VERIFIED" as const) : ("FAILED" as const);
   const updated = {
     ...submission,
+    submissionType: "FREE_LAUNCH" as const,
+    paymentStatus: "NOT_REQUIRED" as const,
     badgeFooterUrl: websiteUrl,
     badgeVerification: nextBadgeVerification,
     tool: {
       ...submission.tool,
       websiteUrl,
+      isFeatured: false,
       badgeVerification: nextBadgeVerification,
     },
   };

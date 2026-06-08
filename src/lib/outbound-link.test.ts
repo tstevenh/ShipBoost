@@ -81,14 +81,14 @@ describe("resolveToolWebsiteRel", () => {
     ).toBe("nofollow noopener");
   });
 
-  it("follows links for badge-verified free launches", () => {
+  it("nofollow links for badge-verified free launches (dofollow is premium-only)", () => {
     expect(
       resolveToolWebsiteRel({
         badgeVerification: "VERIFIED",
         currentLaunchType: "FREE",
         isFeatured: false,
       }),
-    ).toBe("noopener");
+    ).toBe("nofollow noopener");
   });
 
   it("follows links for premium launches by default", () => {

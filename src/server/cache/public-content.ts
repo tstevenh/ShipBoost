@@ -34,6 +34,7 @@ import { listActiveSponsorPlacements } from "@/server/services/sponsor-placement
 import { alternativesSeoRegistry } from "@/server/seo/registry";
 import { bestPagesRegistry } from "@/server/seo/best-pages";
 import { getPubliclyVisibleToolWhere } from "@/server/services/public-tool-visibility";
+import { MIN_INDEXABLE_TAG_TOOL_COUNT } from "@/server/seo/tag-indexing";
 
 export const PUBLIC_HOME_REVALIDATE = 300;
 export const PUBLIC_LAUNCH_BOARD_REVALIDATE = 300;
@@ -337,7 +338,7 @@ export const getCachedBestTagPage = cache(
   async (slug: string, sort: PublicCatalogSort = "newest") =>
     unstable_cache(
       () => getBestTagSeoPage(slug, sort),
-      ["public-best-tag-page", "v3", slug, sort],
+      ["public-best-tag-page", "v4", slug, sort],
       {
         revalidate: PUBLIC_BEST_TAG_REVALIDATE,
         tags: [
@@ -527,15 +528,35 @@ export const getCachedCategoryStaticParams = cache(async () =>
 
 export const getCachedBestTagStaticParams = cache(async () =>
   unstable_cache(
-    async () =>
-      prisma.tag.findMany({
+    async () => {
+      const tagToolCounts = await prisma.toolTag.groupBy({
+        by: ["tagId"],
         where: {
-          isActive: true,
-          toolTags: {
-            some: {
-              tool: getPubliclyVisibleToolWhere(),
-            },
+          tag: {
+            isActive: true,
           },
+          tool: {
+            ...getPubliclyVisibleToolWhere(),
+          },
+        },
+        _count: {
+          toolId: true,
+        },
+      });
+      const indexableTagIds = tagToolCounts
+        .filter((item) => item._count.toolId >= MIN_INDEXABLE_TAG_TOOL_COUNT)
+        .map((item) => item.tagId);
+
+      if (indexableTagIds.length === 0) {
+        return [];
+      }
+
+      return prisma.tag.findMany({
+        where: {
+          id: {
+            in: indexableTagIds,
+          },
+          isActive: true,
         },
         orderBy: {
           name: "asc",
@@ -543,8 +564,9 @@ export const getCachedBestTagStaticParams = cache(async () =>
         select: {
           slug: true,
         },
-      }),
-    ["public-best-tag-static-params", "v2"],
+      });
+    },
+    ["public-best-tag-static-params", "v3"],
     {
       revalidate: PUBLIC_BEST_TAG_REVALIDATE,
       tags: [PUBLIC_CACHE_TAGS.bestTags],

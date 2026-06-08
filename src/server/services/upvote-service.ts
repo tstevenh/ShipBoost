@@ -193,6 +193,30 @@ async function getToolVoteState(toolId: string, userId: string, now: Date) {
   };
 }
 
+export async function recordUpvoteWithoutDailyLimit(
+  toolId: string,
+  userId: string,
+): Promise<void> {
+  const role = await getUserVoteRole(userId);
+  await ensurePublicTool(toolId);
+  const weight = await resolveVoteWeight(userId, role);
+
+  try {
+    await prisma.toolVote.create({
+      data: { toolId, userId, weight },
+    });
+  } catch (error) {
+    // Idempotent: an existing vote (unique toolId+userId) is fine.
+    if (!isUniqueConstraintError(error)) {
+      throw error;
+    }
+  }
+
+  void recordStreakActivity(userId).catch((err) => {
+    console.error("[shipboost streak] record activity (requirement vote) failed", err);
+  });
+}
+
 export async function toggleToolUpvote(
   toolId: string,
   userId: string,

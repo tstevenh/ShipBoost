@@ -1,6 +1,7 @@
 import { prisma } from "@/server/db/client";
 import { sendLaunchPrepEmailMessage } from "@/server/email/transactional";
 import { getEnv } from "@/server/env";
+import { buildLaunchKit } from "@/lib/distribution/launch-kit";
 
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -56,6 +57,7 @@ export async function sendDueLaunchPrepReminders(now = new Date()) {
 
   let sentCount = 0;
   const launchBoardUrl = getLaunchBoardUrl();
+  const appUrl = getEnv().NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
 
   for (const launch of launches) {
     const recipient = launch.tool.owner?.email ? launch.tool.owner : launch.createdBy;
@@ -64,6 +66,14 @@ export async function sendDueLaunchPrepReminders(now = new Date()) {
       continue;
     }
 
+    const kit = buildLaunchKit({
+      appUrl,
+      slug: launch.tool.slug,
+      toolId: launch.toolId,
+      name: launch.tool.name,
+      tagline: launch.tool.tagline ?? "",
+    });
+
     try {
       await sendLaunchPrepEmailMessage({
         to: recipient.email,
@@ -71,6 +81,12 @@ export async function sendDueLaunchPrepReminders(now = new Date()) {
         launchBoardUrl,
         toolName: launch.tool.name,
         launchDate: formatLaunchWeekForEmail(launch.launchDate),
+        launchKit: {
+          listingUrl: kit.listingUrl,
+          twitterShareUrl: kit.shareUrls.twitter,
+          linkedinShareUrl: kit.shareUrls.linkedin,
+          launchKitUrl: `${appUrl}/dashboard/tools/${launch.toolId}`,
+        },
       });
     } catch (error) {
       console.error("[shipboost launch prep reminder:error]", {

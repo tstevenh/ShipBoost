@@ -162,7 +162,7 @@ export default function LaunchGuidePage() {
           {
             title: "When free launch is enough",
             body:
-              "Use the free option when you want visibility, are comfortable with a nofollow website link by default, and can add the ShipBoost badge if you want to unlock a dofollow backlink.",
+              "Use the free option when you want visibility and can add the required ShipBoost badge to your site.",
           },
           {
             title: "When Premium Launch makes sense",

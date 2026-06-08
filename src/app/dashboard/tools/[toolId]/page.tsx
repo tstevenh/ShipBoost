@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { FounderToolEditor } from "@/components/founder/founder-tool-editor";
 import { SubmitProductForm } from "@/components/founder/submit-product-form";
+import { buildLaunchKit } from "@/lib/distribution/launch-kit";
 import { getServerSession } from "@/server/auth/session";
 import { getCachedCatalogOptions } from "@/server/cache/catalog-options";
 import { getEnv } from "@/server/env";
@@ -10,8 +11,12 @@ import {
   listSelectableLaunchWeeks,
   scheduleNextFreeLaunchDate,
 } from "@/server/services/launch-scheduling";
-import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
+import {
+  getPaidPremiumLaunchCount,
+  getRemainingFoundingPremiumLaunchSpots,
+} from "@/server/services/founding-offer-service";
 import { getFounderToolById } from "@/server/services/tool-service";
+import { getFreeLaunchRequirements } from "@/server/services/free-launch-requirements";
 import { Footer } from "@/components/ui/footer";
 
 export const metadata: Metadata = {
@@ -60,11 +65,13 @@ export default async function FounderToolEditorPage(context: RouteContext) {
     catalogOptions,
     estimatedFreeLaunchDate,
     foundingPremiumLaunchSpotsLeft,
+    paidPremiumLaunchCount,
   ] = await Promise.all([
     getFounderToolById(session.user.id, toolId),
     getCachedCatalogOptions(),
     scheduleNextFreeLaunchDate(),
     getRemainingFoundingPremiumLaunchSpots(),
+    getPaidPremiumLaunchCount(),
   ]);
   const { categories, tags } = catalogOptions;
 
@@ -167,6 +174,21 @@ export default async function FounderToolEditorPage(context: RouteContext) {
     })),
   };
 
+  const launchKit = tool.slug
+    ? buildLaunchKit({
+        appUrl: env.NEXT_PUBLIC_APP_URL,
+        slug: tool.slug,
+        toolId: tool.id,
+        name: tool.name,
+        tagline: tool.tagline ?? "",
+      })
+    : null;
+
+  const freeLaunchRequirements =
+    initialDraft && initialDraft.submissionType !== "FEATURED_LAUNCH"
+      ? await getFreeLaunchRequirements(initialDraft.id, { id: session.user.id })
+      : null;
+
   return (
     <main className="flex flex-1 flex-col overflow-x-hidden bg-muted/20 pt-32">
       <section className="mx-auto mb-32 flex w-full max-w-[1500px] flex-1 flex-col px-4 sm:px-6">
@@ -179,10 +201,13 @@ export default async function FounderToolEditorPage(context: RouteContext) {
             supportEmail={env.RESEND_REPLY_TO_TRANSACTIONAL ?? session.user.email}
             premiumLaunchWeeks={premiumLaunchWeeks}
             foundingPremiumLaunchSpotsLeft={foundingPremiumLaunchSpotsLeft}
+            paidPremiumLaunchCount={paidPremiumLaunchCount}
             foundingPremiumLaunchLimit={env.FOUNDING_PREMIUM_LAUNCH_LIMIT}
             estimatedFreeLaunchDate={estimatedFreeLaunchDate.toISOString()}
             initialDraft={initialDraft}
             isPrelaunch={isPrelaunch}
+            launchKit={launchKit}
+            freeLaunchRequirements={freeLaunchRequirements}
           />
         ) : (
           <FounderToolEditor

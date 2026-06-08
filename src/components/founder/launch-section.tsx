@@ -12,8 +12,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdPreviewButton } from "@/components/public/ad-preview-modal";
+import {
+  FreeLaunchRequirementsPanel,
+  type BadgePreviewOption,
+} from "@/components/founder/free-launch-requirements-panel";
+import { PremiumPricingLadder } from "@/components/founder/premium-pricing-ladder";
+import { resolveCurrentPremiumLaunchTier } from "@/lib/premium-pricing";
 import type { SponsorEligibilitySlot } from "@/app/api/sponsor/eligibility/route";
 import type { SponsorSlot } from "@prisma/client";
+import type { FreeLaunchRequirements } from "@/server/services/free-launch-requirements";
 
 type PremiumLaunchWeek = { value: string; label: string };
 
@@ -40,11 +47,14 @@ export type LaunchSectionProps = {
   premiumLaunchWeeks: PremiumLaunchWeek[];
   foundingPremiumSpotsLeft: number;
   foundingPremiumLaunchLimit: number;
+  paidPremiumLaunchCount: number;
   currentScheduledLaunch: ScheduledLaunch | null;
   isPremiumScheduled: boolean;
   isFreeScheduled: boolean;
   onBack: () => void;
   onFreeScheduled: (launch: ScheduledLaunch, submission: SavedSubmission) => void;
+  badges: BadgePreviewOption[];
+  freeLaunchRequirements: FreeLaunchRequirements | null;
 };
 
 const PREMIUM_FEATURES = [
@@ -59,7 +69,7 @@ const FREE_FEATURES = [
   "One week on the launchboard",
   "Permanent public listing",
   "Indexed in category and tag pages",
-  "Website link (nofollow by default; add the badge to upgrade to dofollow)",
+  "Public listing with a link to your site",
 ];
 
 const FREE_NOT_INCLUDED = [
@@ -178,13 +188,32 @@ function formatEstimatedSlot(dateStr: string): string {
   return `~${days} days from now · ${formatted}`;
 }
 
+function areFreeLaunchRequirementsMet(requirements: FreeLaunchRequirements | null) {
+  return Boolean(
+    requirements &&
+      requirements.badgeVerification === "VERIFIED" &&
+      requirements.eligibleCount >= requirements.requiredCount,
+  );
+}
+
+function readApiErrorMessage(payload: unknown, fallback: string) {
+  if (!payload || typeof payload !== "object" || !("error" in payload)) return fallback;
+  const error = (payload as { error?: unknown }).error;
+  if (typeof error === "string") return error;
+  if (!error || typeof error !== "object" || !("message" in error)) return fallback;
+  const message = (error as { message?: unknown }).message;
+  return typeof message === "string" ? message : fallback;
+}
+
 export function LaunchSection({
   submissionId,
   toolId,
   freeLaunchEstimateDate,
   premiumLaunchWeeks,
-  foundingPremiumSpotsLeft,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  foundingPremiumSpotsLeft: _foundingPremiumSpotsLeft,
   foundingPremiumLaunchLimit,
+  paidPremiumLaunchCount,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   currentScheduledLaunch: _currentScheduledLaunch,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -193,6 +222,8 @@ export function LaunchSection({
   isFreeScheduled: _isFreeScheduled,
   onBack,
   onFreeScheduled,
+  badges,
+  freeLaunchRequirements,
 }: LaunchSectionProps) {
   const [selectedLaunch, setSelectedLaunch] = useState<"FREE" | "FEATURED">("FEATURED");
   const [preferredDate, setPreferredDate] = useState<string>(
@@ -203,6 +234,53 @@ export function LaunchSection({
   const [slots, setSlots] = useState<SponsorEligibilitySlot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const requirementsRef = useRef<HTMLDivElement>(null);
+  const [shakeRequirements, setShakeRequirements] = useState(false);
+  // The server only passes requirements when the draft id is in the URL. During
+  // the fresh submit flow the id lives in client state, so fetch them by id.
+  const [requirements, setRequirements] = useState(freeLaunchRequirements);
+  const [requirementsError, setRequirementsError] = useState<string | null>(null);
+  const [requirementsFetchAttempt, setRequirementsFetchAttempt] = useState(0);
+  const [freeRequirementsMet, setFreeRequirementsMet] = useState(() =>
+    areFreeLaunchRequirementsMet(freeLaunchRequirements),
+  );
+
+  useEffect(() => {
+    if (selectedLaunch !== "FREE" || !submissionId || requirements) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/submissions/${submissionId}/requirements`);
+        const payload: unknown = await res.json().catch(() => null);
+        if (!res.ok) {
+          if (!cancelled) {
+            setRequirementsError(
+              readApiErrorMessage(payload, "Could not load free launch requirements."),
+            );
+          }
+          return;
+        }
+        const nextRequirements =
+          payload && typeof payload === "object" && "data" in payload
+            ? ((payload as { data?: FreeLaunchRequirements | null }).data ?? null)
+            : null;
+        if (!cancelled) {
+          setRequirements(nextRequirements);
+          setRequirementsError(
+            nextRequirements ? null : "Could not load free launch requirements.",
+          );
+          setFreeRequirementsMet(areFreeLaunchRequirementsMet(nextRequirements));
+        }
+      } catch {
+        if (!cancelled) {
+          setRequirementsError("Could not load free launch requirements. Refresh and try again.");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedLaunch, submissionId, requirements, requirementsFetchAttempt]);
 
   useEffect(() => {
     if (!toolId) return;
@@ -224,8 +302,13 @@ export function LaunchSection({
     .filter((s) => selectedSlots.includes(s.slot))
     .reduce((sum, s) => sum + s.priceUsd, 0);
 
-  const premiumPrice = foundingPremiumSpotsLeft > 0 ? 9 : 19;
-  const premiumCompareAt = foundingPremiumSpotsLeft > 0 ? 19 : 29;
+  // The founding ($9) phase is complete — shown as a passed tier; the ladder
+  // lands on the current early-access ($19) tier.
+  const premiumTier = resolveCurrentPremiumLaunchTier(
+    paidPremiumLaunchCount,
+    foundingPremiumLaunchLimit,
+  );
+  const premiumPrice = premiumTier.price;
   const totalPrice =
     selectedLaunch === "FEATURED"
       ? premiumPrice + selectedSponsorPrice
@@ -275,13 +358,23 @@ export function LaunchSection({
     }
   }
 
-  const spotsLabel =
-    foundingPremiumSpotsLeft > 0
-      ? `${foundingPremiumSpotsLeft} of ${foundingPremiumLaunchLimit} founding spots left`
-      : "Early access pricing — rising to $29 soon";
-
   const isConfirmDisabled =
     isLoading || (selectedLaunch === "FEATURED" && !preferredDate);
+
+  const freeBlocked = selectedLaunch === "FREE" && !freeRequirementsMet;
+
+  function handleScheduleClick() {
+    if (freeBlocked) {
+      if (!requirements) {
+        setRequirementsFetchAttempt((attempt) => attempt + 1);
+      }
+      requirementsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setShakeRequirements(true);
+      window.setTimeout(() => setShakeRequirements(false), 700);
+      return;
+    }
+    void handleConfirm();
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 py-6">
@@ -332,17 +425,12 @@ export function LaunchSection({
               </p>
             </div>
             <div className="mt-5 flex items-end gap-3">
-              <span className="text-xl font-black text-muted-foreground line-through">${premiumCompareAt}</span>
               <span className="text-5xl font-black tracking-tighter text-foreground">
                 ${premiumPrice}
               </span>
               <span className="pb-1 text-sm font-bold text-muted-foreground">/ launch</span>
             </div>
-            {spotsLabel && (
-              <p className="mt-1.5 text-[10px] font-black tracking-widest text-primary">
-                {spotsLabel}
-              </p>
-            )}
+            <PremiumPricingLadder tier={premiumTier} />
             <ul className="mt-6 flex-1 space-y-3">
               {PREMIUM_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm font-medium text-foreground/70">
@@ -399,6 +487,10 @@ export function LaunchSection({
                   {f}
                 </li>
               ))}
+            </ul>
+            <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+              <li>• Add the ShipBoost badge to your site and verify it</li>
+              <li>• Upvote 3 other launches this week</li>
             </ul>
           </button>
         </div>
@@ -529,6 +621,51 @@ export function LaunchSection({
         </div>
       )}
 
+      {/* Free-launch requirements — below sponsor so founders see placements first */}
+      {selectedLaunch === "FREE" ? (
+        <div ref={requirementsRef} className={shakeRequirements ? "sb-shake" : undefined}>
+          {requirements ? (
+            <FreeLaunchRequirementsPanel
+              submissionId={submissionId}
+              badges={badges}
+              initialBadgeVerification={requirements.badgeVerification}
+              tools={requirements.boardTools}
+              initialEligibleCount={requirements.eligibleCount}
+              requiredCount={requirements.requiredCount}
+              onRequirementsMet={setFreeRequirementsMet}
+            />
+          ) : (
+            <div className="rounded-2xl border border-border bg-card p-5">
+              <p className="text-sm font-black text-foreground">
+                Free launch requirements
+              </p>
+              {requirementsError ? (
+                <div className="mt-3 space-y-3">
+                  <p className="text-sm font-medium text-destructive">
+                    {requirementsError}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRequirementsError(null);
+                      setRequirementsFetchAttempt((attempt) => attempt + 1);
+                    }}
+                    className="inline-flex items-center justify-center rounded-xl border border-border px-4 py-2 text-xs font-black text-foreground transition hover:bg-muted/70"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Loader2 size={14} className="animate-spin" />
+                  Loading badge and upvote requirements...
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : null}
+
       {/* Total + CTA */}
       <div className="sticky bottom-0 rounded-2xl border border-border bg-card/95 p-4 shadow-lg backdrop-blur">
         <div className="mb-3 flex items-center justify-between">
@@ -544,7 +681,7 @@ export function LaunchSection({
         </div>
         <button
           type="button"
-          onClick={() => void handleConfirm()}
+          onClick={handleScheduleClick}
           disabled={isConfirmDisabled}
           className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-black text-primary-foreground shadow-xl shadow-black/20 transition hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
         >
@@ -556,6 +693,11 @@ export function LaunchSection({
             `Continue to checkout — ${totalPrice === 0 ? "Free" : `$${totalPrice}`}`
           )}
         </button>
+        {selectedLaunch === "FREE" && !freeRequirementsMet ? (
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Verify your badge and support {requirements?.requiredCount ?? 3} fellow founders to continue.
+          </p>
+        ) : null}
       </div>
     </div>
   );

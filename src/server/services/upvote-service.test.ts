@@ -39,6 +39,7 @@ import {
   getToolUpvoteCount,
   hasUserUpvotedTool,
   listToolUpvoteCounts,
+  recordUpvoteWithoutDailyLimit,
   toggleToolUpvote,
 } from "@/server/services/upvote-service";
 
@@ -260,5 +261,44 @@ describe("upvote-service", () => {
         weight: 2,
       },
     });
+  });
+});
+
+describe("recordUpvoteWithoutDailyLimit", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    prismaMock.user.findUnique.mockResolvedValue({ role: "FOUNDER" });
+    getVoteMultiplierMock.mockResolvedValue(1);
+    recordStreakActivityMock.mockResolvedValue({ recorded: true, streakCount: 1, crossedMilestone: null });
+  });
+
+  it("creates a vote for a public tool without checking the daily limit", async () => {
+    prismaMock.tool.findFirst.mockResolvedValueOnce({ id: "tool_1" });
+    prismaMock.toolVote.create.mockResolvedValueOnce({ id: "v1" });
+
+    await recordUpvoteWithoutDailyLimit("tool_1", "user_1");
+
+    expect(prismaMock.toolVote.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ toolId: "tool_1", userId: "user_1" }) }),
+    );
+    expect(prismaMock.toolVote.count).not.toHaveBeenCalled();
+  });
+
+  it("throws when the tool is not public", async () => {
+    prismaMock.tool.findFirst.mockResolvedValueOnce(null);
+    await expect(recordUpvoteWithoutDailyLimit("nope", "user_1")).rejects.toThrow();
+  });
+
+  it("is idempotent when a vote already exists (unique constraint)", async () => {
+    prismaMock.tool.findFirst.mockResolvedValueOnce({ id: "tool_1" });
+    const uniqueError = Object.assign(
+      new Error("Unique constraint failed"),
+      { code: "P2002", clientVersion: "5.0.0" },
+    );
+    // Make it look like a PrismaClientKnownRequestError
+    Object.setPrototypeOf(uniqueError, require("@prisma/client").Prisma.PrismaClientKnownRequestError.prototype);
+    prismaMock.toolVote.create.mockRejectedValueOnce(uniqueError);
+
+    await expect(recordUpvoteWithoutDailyLimit("tool_1", "user_1")).resolves.toBeUndefined();
   });
 });

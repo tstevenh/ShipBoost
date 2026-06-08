@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getSameOriginScriptUrls,
+  hasExpectedShipBoostBadgeLink,
   hasFreeLaunchBadgeInHtmlOrScripts,
 } from "@/server/services/submission-service-shared";
 import { normalizeHttpUrl, websiteUrlSchema } from "@/server/validators/shared";
@@ -31,8 +32,11 @@ describe("normalizeHttpUrl", () => {
 });
 
 describe("hasFreeLaunchBadgeInHtmlOrScripts", () => {
-  it("finds a shipboost.io backlink directly in HTML", async () => {
-    const html = '<a href="https://shipboost.io">Featured on ShipBoost</a>';
+  const expectedListingUrl = "https://shipboost.io/tools/acme";
+
+  it("finds the badge marker directly in HTML", async () => {
+    const html =
+      '<a href="https://shipboost.io/tools/acme" data-shipboost-badge="free-launch">Featured on ShipBoost</a>';
 
     await expect(
       hasFreeLaunchBadgeInHtmlOrScripts(
@@ -41,6 +45,108 @@ describe("hasFreeLaunchBadgeInHtmlOrScripts", () => {
         async () => "",
       ),
     ).resolves.toBe(true);
+  });
+
+  it("finds the badge marker when Next RSC escapes JSX props", async () => {
+    const html =
+      '<script>self.__next_f.push([1,"\\"data-shipboost-badge\\":\\"free-launch\\""])</script>';
+
+    await expect(
+      hasFreeLaunchBadgeInHtmlOrScripts(
+        html,
+        "https://interview-prep.io/",
+        async () => "",
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it("does NOT pass on a bare shipboost.io backlink without the badge marker", async () => {
+    const html = '<a href="https://shipboost.io">Featured on ShipBoost</a>';
+
+    await expect(
+      hasFreeLaunchBadgeInHtmlOrScripts(
+        html,
+        "https://interview-prep.io/",
+        async () => "",
+      ),
+    ).resolves.toBe(false);
+  });
+
+  it("passes on the expected listing link when anchor text contains ShipBoost", async () => {
+    const html = '<a href="https://shipboost.io/tools/acme">ShipBoost</a>';
+
+    await expect(
+      hasFreeLaunchBadgeInHtmlOrScripts(
+        html,
+        "https://interview-prep.io/",
+        async () => "",
+        expectedListingUrl,
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it("passes on the expected listing link when nearby HTML says Featured on ShipBoost", () => {
+    const html =
+      '<div>Featured on ShipBoost</div><a href="https://shipboost.io/tools/acme">View listing</a>';
+
+    expect(
+      hasExpectedShipBoostBadgeLink(
+        html,
+        "https://interview-prep.io/",
+        expectedListingUrl,
+      ),
+    ).toBe(true);
+  });
+
+  it("passes on the expected listing link when a nested image alt contains ShipBoost", () => {
+    const html =
+      '<a href="https://shipboost.io/tools/acme"><img src="/badges/free.svg" alt="Featured on ShipBoost" /></a>';
+
+    expect(
+      hasExpectedShipBoostBadgeLink(
+        html,
+        "https://interview-prep.io/",
+        expectedListingUrl,
+      ),
+    ).toBe(true);
+  });
+
+  it("passes on the expected listing link when a nested image src points to a badge path", () => {
+    const html =
+      '<a href="https://shipboost.io/tools/acme"><img src="https://shipboost.io/badge/tool_1?theme=light" alt="Featured badge" /></a>';
+
+    expect(
+      hasExpectedShipBoostBadgeLink(
+        html,
+        "https://interview-prep.io/",
+        expectedListingUrl,
+      ),
+    ).toBe(true);
+  });
+
+  it("does NOT pass on the expected listing link without badge context", () => {
+    const html = '<a href="https://shipboost.io/tools/acme">Launch profile</a>';
+
+    expect(
+      hasExpectedShipBoostBadgeLink(
+        html,
+        "https://interview-prep.io/",
+        expectedListingUrl,
+      ),
+    ).toBe(false);
+  });
+
+  it("does NOT pass on a different ShipBoost tool link with badge context", () => {
+    const html =
+      '<a href="https://shipboost.io/tools/other-tool"><img src="https://shipboost.io/badge/tool_1?theme=light" alt="Featured on ShipBoost" /></a>';
+
+    expect(
+      hasExpectedShipBoostBadgeLink(
+        html,
+        "https://interview-prep.io/",
+        expectedListingUrl,
+      ),
+    ).toBe(false);
   });
 
   it("finds a shipboost.io backlink inside a JSX-compiled JS bundle", async () => {

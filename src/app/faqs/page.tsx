@@ -44,7 +44,7 @@ const groups: FaqGroup[] = [
       {
         question: "What is the difference between Free Launch and Premium Launch?",
         answer:
-          "The biggest difference is the editorial article. Premium Launch includes a hand-written article about your product, published on the ShipBoost blog — a permanent asset you can share, link to, and rank for. Premium also lets you reserve a specific launch week, gets featured placement on the launchboard that week, and includes a guaranteed dofollow link. Free Launch is reviewed and queued into the next available weekly cohort with a nofollow website link by default; founders can add the ShipBoost badge to upgrade the link to dofollow.",
+          "The biggest difference is the editorial article. Premium Launch includes a hand-written article about your product, published on the ShipBoost blog — a permanent asset you can share, link to, and rank for. Premium also lets you reserve a specific launch week, gets featured placement on the launchboard that week, and includes a guaranteed dofollow link. Free Launch is reviewed and queued into the next available weekly cohort. Free Launch requires a verified ShipBoost badge on your site.",
       },
       {
         question: "What is the editorial article?",
@@ -54,12 +54,12 @@ const groups: FaqGroup[] = [
       {
         question: "Why add the ShipBoost badge?",
         answer:
-          "The badge is optional. It helps visitors see where you launched, adds a simple trust signal to your site, and lets ShipBoost verify your free launch — which upgrades your listing's link from nofollow to dofollow.",
+          "The badge is required for Free Launch. It shows visitors where you launched, adds a trust signal to your site, and lets ShipBoost verify your launch.",
       },
       {
         question: "Do I need badge verification for Premium Launch?",
         answer:
-          "No. The badge is optional for Free Launch and not part of the Premium Launch flow — Premium includes a guaranteed dofollow link by default.",
+          "The badge is required for Free Launch so ShipBoost can verify it. It is not part of the Premium Launch flow — Premium includes a guaranteed dofollow link by default.",
       },
     ],
   },
