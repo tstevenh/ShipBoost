@@ -9,7 +9,10 @@ import {
   listSelectableLaunchWeeks,
   scheduleNextFreeLaunchDate,
 } from "@/server/services/launch-scheduling";
-import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
+import {
+  getPaidPremiumLaunchCount,
+  getRemainingFoundingPremiumLaunchSpots,
+} from "@/server/services/founding-offer-service";
 import { getFounderSubmissionDraft } from "@/server/services/submission-service";
 import { getFreeLaunchRequirements } from "@/server/services/free-launch-requirements";
 import { Footer } from "@/components/ui/footer";
@@ -198,10 +201,12 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
     catalogOptions,
     estimatedFreeLaunchDate,
     foundingPremiumLaunchSpotsLeft,
+    paidPremiumLaunchCount,
   ] = await Promise.all([
     getCachedCatalogOptions(),
     scheduleNextFreeLaunchDate(),
     getRemainingFoundingPremiumLaunchSpots(),
+    getPaidPremiumLaunchCount(),
   ]);
   const { categories, tags } = catalogOptions;
 
@@ -216,6 +221,7 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
           premiumLaunchWeeks={premiumLaunchWeeks}
           foundingPremiumLaunchSpotsLeft={foundingPremiumLaunchSpotsLeft}
           foundingPremiumLaunchLimit={env.FOUNDING_PREMIUM_LAUNCH_LIMIT}
+          paidPremiumLaunchCount={paidPremiumLaunchCount}
           estimatedFreeLaunchDate={estimatedFreeLaunchDate.toISOString()}
           initialDraft={initialDraft}
           isPrelaunch={isPrelaunch}

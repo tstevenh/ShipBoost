@@ -16,6 +16,8 @@ import {
   FreeLaunchRequirementsPanel,
   type BadgePreviewOption,
 } from "@/components/founder/free-launch-requirements-panel";
+import { PremiumPricingLadder } from "@/components/founder/premium-pricing-ladder";
+import { resolvePremiumLaunchTier } from "@/lib/premium-pricing";
 import type { SponsorEligibilitySlot } from "@/app/api/sponsor/eligibility/route";
 import type { SponsorSlot } from "@prisma/client";
 import type { FreeLaunchRequirements } from "@/server/services/free-launch-requirements";
@@ -45,6 +47,7 @@ export type LaunchSectionProps = {
   premiumLaunchWeeks: PremiumLaunchWeek[];
   foundingPremiumSpotsLeft: number;
   foundingPremiumLaunchLimit: number;
+  paidPremiumLaunchCount: number;
   currentScheduledLaunch: ScheduledLaunch | null;
   isPremiumScheduled: boolean;
   isFreeScheduled: boolean;
@@ -185,13 +188,33 @@ function formatEstimatedSlot(dateStr: string): string {
   return `~${days} days from now · ${formatted}`;
 }
 
+function areFreeLaunchRequirementsMet(requirements: FreeLaunchRequirements | null) {
+  return Boolean(
+    requirements &&
+      requirements.badgeVerification === "VERIFIED" &&
+      requirements.eligibleCount >= requirements.requiredCount,
+  );
+}
+
+function readApiErrorMessage(payload: unknown, fallback: string) {
+  if (!payload || typeof payload !== "object" || !("error" in payload)) return fallback;
+  const error = (payload as { error?: unknown }).error;
+  if (typeof error === "string") return error;
+  if (!error || typeof error !== "object" || !("message" in error)) return fallback;
+  const message = (error as { message?: unknown }).message;
+  return typeof message === "string" ? message : fallback;
+}
+
 export function LaunchSection({
   submissionId,
   toolId,
   freeLaunchEstimateDate,
   premiumLaunchWeeks,
-  foundingPremiumSpotsLeft,
-  foundingPremiumLaunchLimit,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  foundingPremiumSpotsLeft: _foundingPremiumSpotsLeft,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  foundingPremiumLaunchLimit: _foundingPremiumLaunchLimit,
+  paidPremiumLaunchCount,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   currentScheduledLaunch: _currentScheduledLaunch,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -212,12 +235,16 @@ export function LaunchSection({
   const [slots, setSlots] = useState<SponsorEligibilitySlot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [freeRequirementsMet, setFreeRequirementsMet] = useState(false);
   const requirementsRef = useRef<HTMLDivElement>(null);
   const [shakeRequirements, setShakeRequirements] = useState(false);
   // The server only passes requirements when the draft id is in the URL. During
   // the fresh submit flow the id lives in client state, so fetch them by id.
   const [requirements, setRequirements] = useState(freeLaunchRequirements);
+  const [requirementsError, setRequirementsError] = useState<string | null>(null);
+  const [requirementsFetchAttempt, setRequirementsFetchAttempt] = useState(0);
+  const [freeRequirementsMet, setFreeRequirementsMet] = useState(() =>
+    areFreeLaunchRequirementsMet(freeLaunchRequirements),
+  );
 
   useEffect(() => {
     if (selectedLaunch !== "FREE" || !submissionId || requirements) return;
@@ -225,17 +252,36 @@ export function LaunchSection({
     void (async () => {
       try {
         const res = await fetch(`/api/submissions/${submissionId}/requirements`);
-        if (!res.ok) return;
-        const payload = await res.json();
-        if (!cancelled) setRequirements(payload.data);
+        const payload: unknown = await res.json().catch(() => null);
+        if (!res.ok) {
+          if (!cancelled) {
+            setRequirementsError(
+              readApiErrorMessage(payload, "Could not load free launch requirements."),
+            );
+          }
+          return;
+        }
+        const nextRequirements =
+          payload && typeof payload === "object" && "data" in payload
+            ? ((payload as { data?: FreeLaunchRequirements | null }).data ?? null)
+            : null;
+        if (!cancelled) {
+          setRequirements(nextRequirements);
+          setRequirementsError(
+            nextRequirements ? null : "Could not load free launch requirements.",
+          );
+          setFreeRequirementsMet(areFreeLaunchRequirementsMet(nextRequirements));
+        }
       } catch {
-        // Panel stays hidden; the server-side schedule gate still enforces the rules.
+        if (!cancelled) {
+          setRequirementsError("Could not load free launch requirements. Refresh and try again.");
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [selectedLaunch, submissionId, requirements]);
+  }, [selectedLaunch, submissionId, requirements, requirementsFetchAttempt]);
 
   useEffect(() => {
     if (!toolId) return;
@@ -257,8 +303,8 @@ export function LaunchSection({
     .filter((s) => selectedSlots.includes(s.slot))
     .reduce((sum, s) => sum + s.priceUsd, 0);
 
-  const premiumPrice = foundingPremiumSpotsLeft > 0 ? 9 : 19;
-  const premiumCompareAt = foundingPremiumSpotsLeft > 0 ? 19 : 29;
+  const premiumTier = resolvePremiumLaunchTier(paidPremiumLaunchCount);
+  const premiumPrice = premiumTier.price;
   const totalPrice =
     selectedLaunch === "FEATURED"
       ? premiumPrice + selectedSponsorPrice
@@ -308,11 +354,6 @@ export function LaunchSection({
     }
   }
 
-  const spotsLabel =
-    foundingPremiumSpotsLeft > 0
-      ? `${foundingPremiumSpotsLeft} of ${foundingPremiumLaunchLimit} founding spots left`
-      : "Early access pricing — rising to $29 soon";
-
   const isConfirmDisabled =
     isLoading || (selectedLaunch === "FEATURED" && !preferredDate);
 
@@ -320,6 +361,9 @@ export function LaunchSection({
 
   function handleScheduleClick() {
     if (freeBlocked) {
+      if (!requirements) {
+        setRequirementsFetchAttempt((attempt) => attempt + 1);
+      }
       requirementsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       setShakeRequirements(true);
       window.setTimeout(() => setShakeRequirements(false), 700);
@@ -377,17 +421,14 @@ export function LaunchSection({
               </p>
             </div>
             <div className="mt-5 flex items-end gap-3">
-              <span className="text-xl font-black text-muted-foreground line-through">${premiumCompareAt}</span>
               <span className="text-5xl font-black tracking-tighter text-foreground">
                 ${premiumPrice}
               </span>
               <span className="pb-1 text-sm font-bold text-muted-foreground">/ launch</span>
             </div>
-            {spotsLabel && (
-              <p className="mt-1.5 text-[10px] font-black tracking-widest text-primary">
-                {spotsLabel}
-              </p>
-            )}
+            <div className="mt-3">
+              <PremiumPricingLadder tier={premiumTier} />
+            </div>
             <ul className="mt-6 flex-1 space-y-3">
               {PREMIUM_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm font-medium text-foreground/70">
@@ -579,17 +620,47 @@ export function LaunchSection({
       )}
 
       {/* Free-launch requirements — below sponsor so founders see placements first */}
-      {selectedLaunch === "FREE" && requirements ? (
+      {selectedLaunch === "FREE" ? (
         <div ref={requirementsRef} className={shakeRequirements ? "sb-shake" : undefined}>
-          <FreeLaunchRequirementsPanel
-            submissionId={submissionId}
-            badges={badges}
-            initialBadgeVerification={requirements.badgeVerification}
-            tools={requirements.boardTools}
-            initialEligibleCount={requirements.eligibleCount}
-            requiredCount={requirements.requiredCount}
-            onRequirementsMet={setFreeRequirementsMet}
-          />
+          {requirements ? (
+            <FreeLaunchRequirementsPanel
+              submissionId={submissionId}
+              badges={badges}
+              initialBadgeVerification={requirements.badgeVerification}
+              tools={requirements.boardTools}
+              initialEligibleCount={requirements.eligibleCount}
+              requiredCount={requirements.requiredCount}
+              onRequirementsMet={setFreeRequirementsMet}
+            />
+          ) : (
+            <div className="rounded-2xl border border-border bg-card p-5">
+              <p className="text-sm font-black text-foreground">
+                Free launch requirements
+              </p>
+              {requirementsError ? (
+                <div className="mt-3 space-y-3">
+                  <p className="text-sm font-medium text-destructive">
+                    {requirementsError}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRequirementsError(null);
+                      setRequirementsFetchAttempt((attempt) => attempt + 1);
+                    }}
+                    className="inline-flex items-center justify-center rounded-xl border border-border px-4 py-2 text-xs font-black text-foreground transition hover:bg-muted/70"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Loader2 size={14} className="animate-spin" />
+                  Loading badge and upvote requirements...
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ) : null}
 

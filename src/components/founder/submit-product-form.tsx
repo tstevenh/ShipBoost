@@ -65,6 +65,7 @@ type SubmitProductFormProps = {
   }>;
   foundingPremiumLaunchSpotsLeft?: number;
   foundingPremiumLaunchLimit?: number;
+  paidPremiumLaunchCount?: number;
   estimatedFreeLaunchDate?: string | null;
   initialDraft?: {
     id: string;
@@ -498,6 +499,7 @@ export function SubmitProductForm({
   premiumLaunchWeeks,
   foundingPremiumLaunchSpotsLeft = 0,
   foundingPremiumLaunchLimit = 20,
+  paidPremiumLaunchCount = 0,
   estimatedFreeLaunchDate = null,
   initialDraft = null,
   launchKit = null,
@@ -1138,6 +1140,7 @@ export function SubmitProductForm({
         premiumLaunchWeeks={premiumLaunchWeeks}
         foundingPremiumSpotsLeft={foundingPremiumLaunchSpotsLeft}
         foundingPremiumLaunchLimit={foundingPremiumLaunchLimit}
+        paidPremiumLaunchCount={paidPremiumLaunchCount}
         currentScheduledLaunch={currentScheduledLaunch as never}
         isPremiumScheduled={isPremiumScheduled}
         isFreeScheduled={isFreeScheduled}
