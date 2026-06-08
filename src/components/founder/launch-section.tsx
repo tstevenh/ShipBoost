@@ -17,7 +17,7 @@ import {
   type BadgePreviewOption,
 } from "@/components/founder/free-launch-requirements-panel";
 import { PremiumPricingLadder } from "@/components/founder/premium-pricing-ladder";
-import { resolvePremiumLaunchTier } from "@/lib/premium-pricing";
+import { resolveCurrentPremiumLaunchTier } from "@/lib/premium-pricing";
 import type { SponsorEligibilitySlot } from "@/app/api/sponsor/eligibility/route";
 import type { SponsorSlot } from "@prisma/client";
 import type { FreeLaunchRequirements } from "@/server/services/free-launch-requirements";
@@ -302,10 +302,12 @@ export function LaunchSection({
     .filter((s) => selectedSlots.includes(s.slot))
     .reduce((sum, s) => sum + s.priceUsd, 0);
 
-  // The founding ($9) phase is complete; count launches sold *beyond* it so the
-  // ladder lands on the current early-access tier instead of jumping ahead.
-  const earlyAccessPaidCount = Math.max(0, paidPremiumLaunchCount - foundingPremiumLaunchLimit);
-  const premiumTier = resolvePremiumLaunchTier(earlyAccessPaidCount);
+  // The founding ($9) phase is complete — shown as a passed tier; the ladder
+  // lands on the current early-access ($19) tier.
+  const premiumTier = resolveCurrentPremiumLaunchTier(
+    paidPremiumLaunchCount,
+    foundingPremiumLaunchLimit,
+  );
   const premiumPrice = premiumTier.price;
   const totalPrice =
     selectedLaunch === "FEATURED"

@@ -9,6 +9,7 @@ export type PremiumLaunchTierConfig = {
 };
 
 export const PREMIUM_LAUNCH_TIERS: PremiumLaunchTierConfig[] = [
+  { price: 9, capacity: 20, label: "Founding" },
   { price: 19, capacity: 20, label: "Early access" },
   { price: 29, capacity: 20, label: "Growth" },
   { price: 39, capacity: Infinity, label: "Standard" },
@@ -72,4 +73,18 @@ export function resolvePremiumLaunchTier(
     nextPrice: next ? next.price : null,
     steps,
   };
+}
+
+/**
+ * Resolve the current tier treating the founding ($9) phase as already complete.
+ * `foundingConsumed` is the number of founding launches sold (defaults to the
+ * first tier's capacity) — we floor the count past it so the ladder never shows
+ * the retired founding price as current.
+ */
+export function resolveCurrentPremiumLaunchTier(
+  paidCount: number,
+  foundingConsumed: number = PREMIUM_LAUNCH_TIERS[0].capacity,
+): ResolvedPremiumLaunchTier {
+  const safePaid = Math.max(0, Math.floor(Number.isFinite(paidCount) ? paidCount : 0));
+  return resolvePremiumLaunchTier(Math.max(safePaid, foundingConsumed));
 }

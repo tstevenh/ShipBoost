@@ -11,7 +11,7 @@ export function PremiumPricingLadder({ tier }: { tier: ResolvedPremiumLaunchTier
   const fillPct = steps.length > 1 ? (tierIndex / (steps.length - 1)) * 100 : 0;
 
   return (
-    <div className="mt-5 border-t border-border/70 pt-4">
+    <div className="mt-2">
       <p className="text-xs font-medium leading-relaxed text-muted-foreground">
         {spotsLeftInTier !== null ? (
           <>

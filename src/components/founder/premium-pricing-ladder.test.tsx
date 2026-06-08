@@ -15,7 +15,7 @@ describe("PremiumPricingLadder", () => {
   });
 
   it("shows the final tier with no next price", () => {
-    render(<PremiumPricingLadder tier={resolvePremiumLaunchTier(40)} />);
+    render(<PremiumPricingLadder tier={resolvePremiumLaunchTier(60)} />);
     expect(screen.getByText(/Final tier/)).toBeInTheDocument();
     expect(screen.queryByText(/then/)).not.toBeInTheDocument();
   });

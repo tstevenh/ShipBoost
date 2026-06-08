@@ -20,16 +20,17 @@ import { Footer } from "@/components/ui/footer";
 import { AdPreviewButton } from "@/components/public/ad-preview-modal";
 import { unstable_cache } from "next/cache";
 
-import { getRemainingFoundingPremiumLaunchSpots } from "@/server/services/founding-offer-service";
+import { getPaidPremiumLaunchCount } from "@/server/services/founding-offer-service";
 import { getEnv } from "@/server/env";
+import { PremiumPricingLadder } from "@/components/founder/premium-pricing-ladder";
+import { resolveCurrentPremiumLaunchTier } from "@/lib/premium-pricing";
 
-// Marketing page only: the founding-spots count drives the Founding → Early
-// Access flip. Cache it for 5 minutes so we hit the DB ~once per window
-// instead of once per visitor. The submit/checkout flow stays uncached, where
-// an accurate live count matters for the genuine last spot.
-const getCachedFoundingSpotsLeft = unstable_cache(
-  getRemainingFoundingPremiumLaunchSpots,
-  ["pricing-founding-spots", "v1"],
+// Marketing page only: the paid-premium count drives the price ladder. Cache it
+// for 5 minutes so we hit the DB ~once per window instead of once per visitor.
+// The submit/checkout flow stays uncached, where an accurate live count matters.
+const getCachedPaidPremiumLaunchCount = unstable_cache(
+  getPaidPremiumLaunchCount,
+  ["pricing-paid-premium-count", "v1"],
   { revalidate: 300 },
 );
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
@@ -62,20 +63,15 @@ function CheckItem({ text }: { text: string }) {
 export default async function PricingPage() {
   const env = getEnv();
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
-  const foundingPremiumLaunchLimit = env.FOUNDING_PREMIUM_LAUNCH_LIMIT;
-  const foundingSpotsLeft = await getCachedFoundingSpotsLeft();
+  const paidPremiumLaunchCount = await getCachedPaidPremiumLaunchCount();
 
-  // Premium Launch pricing flips automatically when founding sells out.
-  // Founding: $19 → $9. Early Access: $29 → $19. Display is derived from
-  // spots-left so the transition needs no redeploy — the only manual step at
-  // sellout is updating the Dodo product price ($9 → $19) so the charge matches.
-  const isFoundingActive = foundingSpotsLeft > 0;
-  const premiumBadge = isFoundingActive ? "Founding offer" : "Early access";
-  const premiumCompareAt = isFoundingActive ? "$19" : "$29";
-  const premiumCurrentPrice = isFoundingActive ? "$9" : "$19";
-  const premiumSpotsLabel = isFoundingActive
-    ? `${foundingSpotsLeft} of ${foundingPremiumLaunchLimit} founding spots left`
-    : "Early access pricing — rising to $29 soon";
+  // Founding ($9) is complete (shown as a passed tier); the ladder lands on the
+  // current early-access price. The charged Dodo price is updated manually per band.
+  const premiumTier = resolveCurrentPremiumLaunchTier(
+    paidPremiumLaunchCount,
+    env.FOUNDING_PREMIUM_LAUNCH_LIMIT,
+  );
+  const premiumBadge = premiumTier.label;
 
   const schema = buildPricingPageSchema({
     title: "Pricing",
@@ -156,17 +152,12 @@ export default async function PricingPage() {
                 <Star size={18} className="text-primary" />
               </div>
               <div className="mt-5 flex items-end gap-3">
-                <span className="text-xl font-black text-muted-foreground line-through">
-                  {premiumCompareAt}
-                </span>
                 <span className="text-5xl font-black tracking-tighter text-foreground">
-                  {premiumCurrentPrice}
+                  ${premiumTier.price}
                 </span>
                 <span className="pb-1 text-sm font-bold text-muted-foreground">/ launch</span>
               </div>
-              <p className="mt-1.5 text-[10px] font-black tracking-widest text-primary">
-                {premiumSpotsLabel}
-              </p>
+              <PremiumPricingLadder tier={premiumTier} />
               <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
                 A hand-written editorial article about your product, published on the ShipBoost blog. A permanent asset you can share, link to, and rank for — plus a reserved launch week and featured placement.
               </p>
