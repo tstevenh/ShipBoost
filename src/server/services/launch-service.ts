@@ -4,6 +4,7 @@ import { prisma } from "@/server/db/client";
 import { publicLaunchCardSelect } from "@/server/db/public-selects";
 import { sendLaunchLiveEmailMessage } from "@/server/email/transactional";
 import { getEnv } from "@/server/env";
+import { buildLaunchKit } from "@/lib/distribution/launch-kit";
 import {
   getLaunchBoardWindow,
   getLaunchpadGoLiveAtUtc,
@@ -264,57 +265,38 @@ export async function publishDueLaunches(now = new Date()) {
     orderBy: [{ priorityWeight: "desc" }, { launchDate: "asc" }],
   });
 
-  if (dueLaunches.length === 0) {
-    return {
-      publishedCount: 0,
-      launches: [],
-      processedAt: now.toISOString(),
-    };
+  if (dueLaunches.length > 0) {
+    await prisma.$transaction(async (tx) => {
+      for (const launch of dueLaunches) {
+        await tx.launch.update({
+          where: { id: launch.id },
+          data: {
+            status: "LIVE",
+          },
+        });
+
+        await tx.tool.update({
+          where: { id: launch.toolId },
+          data: {
+            moderationStatus: "APPROVED",
+            publicationStatus: "PUBLISHED",
+            currentLaunchType: launch.launchType,
+          },
+        });
+      }
+    });
   }
 
-  await prisma.$transaction(async (tx) => {
-    for (const launch of dueLaunches) {
-      await tx.launch.update({
-        where: { id: launch.id },
-        data: {
-          status: "LIVE",
-        },
-      });
-
-      await tx.tool.update({
-        where: { id: launch.toolId },
-        data: {
-          moderationStatus: "APPROVED",
-          publicationStatus: "PUBLISHED",
-          currentLaunchType: launch.launchType,
-        },
-      });
-    }
-  });
-
-  const dashboardUrl = `${getEnv().NEXT_PUBLIC_APP_URL}/dashboard`;
-
-  await Promise.allSettled(
-    dueLaunches.map(async (launch) => {
-      if (!launch.tool.owner?.email) {
-        return;
-      }
-
-      await sendLaunchLiveEmailMessage({
-        to: launch.tool.owner.email,
-        name: launch.tool.owner.name,
-        dashboardUrl,
-        toolName: launch.tool.name,
-        launchDate: new Intl.DateTimeFormat("en", {
-          dateStyle: "medium",
-          timeStyle: "short",
-        }).format(launch.launchDate),
-      });
-    }),
-  );
+  // Send the "launch is live" email to every LIVE launch that hasn't been
+  // emailed yet (the ones just flipped + any whose send previously failed).
+  // Sequential + per-launch flag so a failed send is logged and retried on the
+  // next run instead of being silently lost (the old allSettled burst dropped
+  // sends when many launches went live on the same day).
+  const emailedCount = await sendPendingLaunchLiveEmails(now);
 
   return {
     publishedCount: dueLaunches.length,
+    emailedCount,
     launches: dueLaunches.map((launch) => ({
       id: launch.id,
       toolId: launch.toolId,
@@ -325,6 +307,75 @@ export async function publishDueLaunches(now = new Date()) {
     })),
     processedAt: now.toISOString(),
   };
+}
+
+async function sendPendingLaunchLiveEmails(now: Date) {
+  const pending = await prisma.launch.findMany({
+    where: { status: "LIVE", liveEmailSentAt: null },
+    include: {
+      tool: {
+        include: { owner: { select: { email: true, name: true } } },
+      },
+    },
+    orderBy: [{ launchDate: "asc" }],
+  });
+
+  if (pending.length === 0) {
+    return 0;
+  }
+
+  const appUrl = getEnv().NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  const dashboardUrl = `${appUrl}/dashboard`;
+  let emailed = 0;
+
+  for (const launch of pending) {
+    const email = launch.tool.owner?.email;
+    if (!email) {
+      continue;
+    }
+
+    try {
+      const kit = buildLaunchKit({
+        appUrl,
+        slug: launch.tool.slug,
+        toolId: launch.toolId,
+        name: launch.tool.name,
+        tagline: launch.tool.tagline ?? "",
+      });
+
+      await sendLaunchLiveEmailMessage({
+        to: email,
+        name: launch.tool.owner?.name,
+        dashboardUrl,
+        toolName: launch.tool.name,
+        launchDate: new Intl.DateTimeFormat("en", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }).format(launch.launchDate),
+        launchKit: {
+          listingUrl: kit.listingUrl,
+          twitterShareUrl: kit.shareUrls.twitter,
+          linkedinShareUrl: kit.shareUrls.linkedin,
+          launchKitUrl: `${appUrl}/dashboard/tools/${launch.toolId}`,
+        },
+      });
+    } catch (error) {
+      console.error("[shipboost launch live email:error]", {
+        launchId: launch.id,
+        toolId: launch.toolId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      continue; // leave liveEmailSentAt null so the next run retries this one
+    }
+
+    await prisma.launch.update({
+      where: { id: launch.id },
+      data: { liveEmailSentAt: now },
+    });
+    emailed += 1;
+  }
+
+  return emailed;
 }
 
 export type LaunchBoardEntry = Awaited<ReturnType<typeof listLaunchBoard>>[number];

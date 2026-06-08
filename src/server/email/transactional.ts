@@ -69,6 +69,46 @@ function linkParagraph(href: string) {
   );
 }
 
+export type LaunchKitEmailLinks = {
+  listingUrl: string;
+  twitterShareUrl: string;
+  linkedinShareUrl: string;
+  launchKitUrl: string;
+};
+
+function launchKitSectionHtml(kit: LaunchKitEmailLinks) {
+  return [
+    paragraph(
+      `<strong>Rally your audience.</strong> One tap to share your launch:<br />` +
+        `<a href="${escapeHtml(
+          kit.twitterShareUrl,
+        )}" style="color:#fafafa;font-weight:800;text-decoration:underline;">Share on X</a>` +
+        ` &nbsp;·&nbsp; ` +
+        `<a href="${escapeHtml(
+          kit.linkedinShareUrl,
+        )}" style="color:#fafafa;font-weight:800;text-decoration:underline;">Share on LinkedIn</a>`,
+    ),
+    paragraph(
+      `Your listing: <a href="${escapeHtml(
+        kit.listingUrl,
+      )}" style="color:#fafafa;font-weight:700;word-break:break-word;">${escapeHtml(
+        kit.listingUrl,
+      )}</a>`,
+    ),
+    ctaButton(kit.launchKitUrl, "Open your launch kit"),
+  ].join("");
+}
+
+function launchKitSectionText(kit: LaunchKitEmailLinks) {
+  return [
+    "Rally your audience — share your launch:",
+    `Share on X: ${kit.twitterShareUrl}`,
+    `Share on LinkedIn: ${kit.linkedinShareUrl}`,
+    `Your listing: ${kit.listingUrl}`,
+    `Your launch kit (badge + posts): ${kit.launchKitUrl}`,
+  ].join("\n");
+}
+
 function getEmailAddress(value: string) {
   const angleAddress = value.match(/<([^>]+)>/);
 
@@ -652,6 +692,7 @@ export async function sendLaunchLiveEmailMessage(input: {
   dashboardUrl: string;
   toolName: string;
   launchDate: string;
+  launchKit?: LaunchKitEmailLinks;
 }) {
   const subject = `${input.toolName} is live on ShipBoost`;
   const preview = "Your launch is on the weekly board. The next 7 days decide your position.";
@@ -673,6 +714,7 @@ export async function sendLaunchLiveEmailMessage(input: {
       paragraph(
         "The #1 product of the week wins the homepage featured spot for the following week.",
       ),
+      input.launchKit ? launchKitSectionHtml(input.launchKit) : "",
       ctaButton(input.dashboardUrl, "Open the launch board"),
     ].join(""),
   });
@@ -687,6 +729,7 @@ export async function sendLaunchLiveEmailMessage(input: {
       `${input.toolName} is live on ShipBoost as of ${input.launchDate}.`,
       "The next 7 days decide your weekly board position. Bring your supporters, share your listing link, and watch the board.",
       "The #1 product of the week wins the homepage featured spot for the following week.",
+      ...(input.launchKit ? ["", launchKitSectionText(input.launchKit)] : []),
       `Launch board: ${input.dashboardUrl}`,
     ].join("\n"),
   });
@@ -698,6 +741,7 @@ export async function sendLaunchPrepEmailMessage(input: {
   launchBoardUrl: string;
   toolName: string;
   launchDate: string;
+  launchKit?: LaunchKitEmailLinks;
 }) {
   const subject = `${input.toolName} launches on ShipBoost in 24 hours`;
   const preview = "Launch is tomorrow. Today is the prep window.";
@@ -724,6 +768,7 @@ export async function sendLaunchPrepEmailMessage(input: {
       paragraph(
         "Bring your supporters. Compete for the top spot.",
       ),
+      input.launchKit ? launchKitSectionHtml(input.launchKit) : "",
       ctaButton(input.launchBoardUrl, "Open the weekly board"),
       linkParagraph(input.launchBoardUrl),
     ].join(""),
@@ -741,6 +786,7 @@ export async function sendLaunchPrepEmailMessage(input: {
       "Use today to get ready: schedule your posts, line up your founder communities, prep your newsletter, and make sure the people who already follow your work know when to support the launch.",
       "Why it matters: the #1 product of the week wins the homepage featured spot for the following week — a $59 visibility slot. More upvotes means more board position, more clicks, more launch-week signal.",
       "Bring your supporters. Compete for the top spot.",
+      ...(input.launchKit ? ["", launchKitSectionText(input.launchKit)] : []),
       `Weekly board: ${input.launchBoardUrl}`,
       "",
       "Tim from ShipBoost",

@@ -46,6 +46,8 @@ describe("launch-prep-reminder-service", () => {
         },
         tool: {
           name: "Acme",
+          slug: "acme",
+          tagline: "Ship faster",
           owner: {
             email: "owner@example.com",
             name: "Owner",
@@ -68,13 +70,19 @@ describe("launch-prep-reminder-service", () => {
         }),
       }),
     );
-    expect(sendLaunchPrepEmailMessageMock).toHaveBeenCalledWith({
-      to: "owner@example.com",
-      name: "Owner",
-      launchBoardUrl: "https://shipboost.io/launches/weekly",
-      toolName: "Acme",
-      launchDate: "May 4, 2026",
-    });
+    expect(sendLaunchPrepEmailMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "owner@example.com",
+        name: "Owner",
+        launchBoardUrl: "https://shipboost.io/launches/weekly",
+        toolName: "Acme",
+        launchDate: "May 4, 2026",
+        launchKit: expect.objectContaining({
+          listingUrl: "https://shipboost.io/tools/acme",
+          launchKitUrl: "https://shipboost.io/dashboard/tools/tool_1",
+        }),
+      }),
+    );
     expect(prismaMock.launch.update).toHaveBeenCalledWith({
       where: { id: "launch_1" },
       data: { preLaunchEmailSentAt: now },
