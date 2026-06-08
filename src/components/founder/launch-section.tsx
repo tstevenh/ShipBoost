@@ -212,8 +212,7 @@ export function LaunchSection({
   premiumLaunchWeeks,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   foundingPremiumSpotsLeft: _foundingPremiumSpotsLeft,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  foundingPremiumLaunchLimit: _foundingPremiumLaunchLimit,
+  foundingPremiumLaunchLimit,
   paidPremiumLaunchCount,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   currentScheduledLaunch: _currentScheduledLaunch,
@@ -303,7 +302,10 @@ export function LaunchSection({
     .filter((s) => selectedSlots.includes(s.slot))
     .reduce((sum, s) => sum + s.priceUsd, 0);
 
-  const premiumTier = resolvePremiumLaunchTier(paidPremiumLaunchCount);
+  // The founding ($9) phase is complete; count launches sold *beyond* it so the
+  // ladder lands on the current early-access tier instead of jumping ahead.
+  const earlyAccessPaidCount = Math.max(0, paidPremiumLaunchCount - foundingPremiumLaunchLimit);
+  const premiumTier = resolvePremiumLaunchTier(earlyAccessPaidCount);
   const premiumPrice = premiumTier.price;
   const totalPrice =
     selectedLaunch === "FEATURED"
@@ -426,9 +428,7 @@ export function LaunchSection({
               </span>
               <span className="pb-1 text-sm font-bold text-muted-foreground">/ launch</span>
             </div>
-            <div className="mt-3">
-              <PremiumPricingLadder tier={premiumTier} />
-            </div>
+            <PremiumPricingLadder tier={premiumTier} />
             <ul className="mt-6 flex-1 space-y-3">
               {PREMIUM_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm font-medium text-foreground/70">

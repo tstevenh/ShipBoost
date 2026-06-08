@@ -1,58 +1,68 @@
 import { cn } from "@/lib/utils";
 import type { ResolvedPremiumLaunchTier } from "@/lib/premium-pricing";
 
+/**
+ * Refined, monochrome tier stepper for the premium launch card.
+ * Sold-out tiers are solid foreground dots, the live tier is the single amber
+ * node, upcoming tiers are hollow. One quiet scarcity line — no alert box.
+ */
 export function PremiumPricingLadder({ tier }: { tier: ResolvedPremiumLaunchTier }) {
-  const { price, spotsLeftInTier, nextPrice, steps, tierIndex } = tier;
-  const fillPct = ((tierIndex + 0.5) / steps.length) * 100;
+  const { spotsLeftInTier, nextPrice, steps, tierIndex } = tier;
+  const fillPct = steps.length > 1 ? (tierIndex / (steps.length - 1)) * 100 : 0;
 
   return (
-    <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-3.5">
-      <p className="flex items-center gap-1.5 text-sm font-black text-foreground">
-        <span aria-hidden>🔥</span>
+    <div className="mt-5 border-t border-border/70 pt-4">
+      <p className="text-xs font-medium leading-relaxed text-muted-foreground">
         {spotsLeftInTier !== null ? (
-          <span>
-            Only{" "}
-            <span className="text-amber-600 dark:text-amber-500">
-              {spotsLeftInTier} {spotsLeftInTier === 1 ? "spot" : "spots"}
-            </span>{" "}
-            left at <span className="text-amber-600 dark:text-amber-500">${price}</span>
-          </span>
+          <>
+            <span className="font-black tabular-nums text-foreground">{spotsLeftInTier}</span>{" "}
+            {spotsLeftInTier === 1 ? "spot" : "spots"} left at this price
+            {nextPrice !== null ? (
+              <>
+                {" "}
+                · then <span className="font-bold text-foreground">${nextPrice}</span>
+              </>
+            ) : null}
+          </>
         ) : (
-          <span>
-            Now <span className="text-amber-600 dark:text-amber-500">${price}</span> / launch
-          </span>
+          <>Final tier — locked at the current rate</>
         )}
       </p>
 
-      {nextPrice !== null ? (
-        <p className="mt-0.5 text-xs font-medium text-muted-foreground">
-          Catch yours — price increases to{" "}
-          <span className="font-bold text-foreground">${nextPrice}</span> next.
-        </p>
-      ) : null}
-
-      <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-amber-500/15">
-        <div
-          className="absolute left-0 top-0 h-full rounded-full bg-amber-500 transition-all"
-          style={{ width: `${fillPct}%` }}
+      <div className="relative mt-4 flex items-start justify-between px-1">
+        {/* track */}
+        <span aria-hidden className="absolute inset-x-2 top-[5px] h-px bg-border" />
+        <span
+          aria-hidden
+          className="absolute left-2 top-[5px] h-px bg-foreground transition-all duration-500"
+          style={{ width: `calc(${fillPct}% - 8px)` }}
         />
-      </div>
 
-      <div className="mt-2 flex items-center justify-between">
         {steps.map((step, i) => (
-          <span
-            key={i}
-            className={cn(
-              "text-[11px] font-black",
-              step.state === "current"
-                ? "text-amber-600 dark:text-amber-500"
-                : step.state === "sold-out"
-                  ? "text-muted-foreground/40 line-through"
-                  : "text-muted-foreground/50",
-            )}
-          >
-            ${step.price}
-          </span>
+          <div key={i} className="relative z-[1] flex flex-col items-center gap-2">
+            <span
+              className={cn(
+                "h-2.5 w-2.5 rounded-full transition-colors",
+                step.state === "current"
+                  ? "bg-amber-500 ring-4 ring-amber-500/15"
+                  : step.state === "sold-out"
+                    ? "bg-foreground"
+                    : "border border-border bg-card",
+              )}
+            />
+            <span
+              className={cn(
+                "text-[11px] font-black tabular-nums",
+                step.state === "current"
+                  ? "text-foreground"
+                  : step.state === "sold-out"
+                    ? "text-muted-foreground/40 line-through"
+                    : "text-muted-foreground/50",
+              )}
+            >
+              ${step.price}
+            </span>
+          </div>
         ))}
       </div>
     </div>
