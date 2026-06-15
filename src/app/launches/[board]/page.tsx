@@ -13,7 +13,6 @@ import {
 import { ViewerVoteStateProvider } from "@/components/public/viewer-vote-state-provider";
 import { Footer } from "@/components/ui/footer";
 import MinimalHero from "@/components/ui/hero-minimalism";
-import { getServerSession } from "@/server/auth/session";
 import { getEnv } from "@/server/env";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildCollectionListingSchema } from "@/server/seo/page-schema";
@@ -79,16 +78,11 @@ export async function generateMetadata(
 export default async function LaunchBoardPage(context: RouteContext) {
   const { board } = await context.params;
   const env = getEnv();
-  const session = await getServerSession();
-  const isSignedIn = Boolean(session?.user);
 
   if (!isPublicLaunchBoard(board)) {
     notFound();
   }
 
-  const requestTime = new Date();
-  const showLaunchpadCountdown =
-    requestTime.getTime() < new Date(env.LAUNCHPAD_GO_LIVE_AT).getTime();
   const [launches, previousWeeklyTopWinner] = await Promise.all([
     getCachedLaunchBoard(board),
     getCachedPreviousWeeklyTopWinner(),
@@ -149,9 +143,7 @@ export default async function LaunchBoardPage(context: RouteContext) {
   return (
     <main className="flex-1">
       <JsonLdScript data={schema} />
-      {isSignedIn ? null : <MinimalHero />}
-
-      {isSignedIn ? <div aria-hidden className="h-20 lg:h-24" /> : null}
+      <MinimalHero />
 
       <Suspense
         fallback={<div className="h-[73px] border-b border-border bg-background" />}
@@ -168,7 +160,7 @@ export default async function LaunchBoardPage(context: RouteContext) {
             <LaunchpadShowcase
               board={board}
               launches={launches}
-              emptyState={showLaunchpadCountdown ? "prelaunch-countdown" : "default"}
+              emptyState="default"
               launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT}
             />
             <MobileSidebarFollowup topWinner={previousWeeklyTopWinner} />
@@ -253,7 +245,7 @@ export default async function LaunchBoardPage(context: RouteContext) {
           </div>
         </ShowcaseLayout>
       </ViewerVoteStateProvider>
-      <Footer hideFeaturedBadgeRail={isSignedIn} />
+      <Footer />
     </main>
   );
 }

@@ -339,6 +339,10 @@ export function LaunchSection({
     selectedLaunch === "FEATURED"
       ? premiumPrice + selectedSponsorPrice
       : selectedSponsorPrice;
+  const displayedTotalPrice =
+    selectedLaunch === "FEATURED" && appliedDiscountCode === FREE_UPGRADE_DISCOUNT_CODE
+      ? 9 + selectedSponsorPrice
+      : totalPrice;
 
   async function handleConfirm(
     launchType: "FREE" | "FEATURED" = selectedLaunch,
@@ -758,9 +762,20 @@ export function LaunchSection({
               ? ` + ${selectedSlots.length} placement${selectedSlots.length > 1 ? "s" : ""}`
               : ""}
           </span>
-          <span className="text-lg font-black text-foreground">
-            {totalPrice === 0 ? "Free" : `$${totalPrice}`}
-          </span>
+          {displayedTotalPrice !== totalPrice ? (
+            <span className="flex items-baseline gap-2 text-right">
+              <span className="text-sm font-black text-muted-foreground line-through">
+                ${totalPrice}
+              </span>
+              <span className="text-lg font-black text-foreground">
+                ${displayedTotalPrice}
+              </span>
+            </span>
+          ) : (
+            <span className="text-lg font-black text-foreground">
+              {totalPrice === 0 ? "Free" : `$${totalPrice}`}
+            </span>
+          )}
         </div>
         {selectedLaunch === "FEATURED" && appliedDiscountCode ? (
           <div className="mb-3 flex items-center justify-between border border-border bg-muted/35 px-3 py-2 text-xs">
@@ -790,7 +805,7 @@ export function LaunchSection({
           ) : selectedLaunch === "FREE" && selectedSlots.length === 0 ? (
             "Schedule free launch"
           ) : (
-            `Continue to checkout — ${totalPrice === 0 ? "Free" : `$${totalPrice}`}`
+            `Continue to checkout — ${displayedTotalPrice === 0 ? "Free" : `$${displayedTotalPrice}`}`
           )}
         </button>
         {selectedLaunch === "FREE" && !freeRequirementsMet ? (

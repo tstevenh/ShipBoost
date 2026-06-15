@@ -139,8 +139,9 @@ describe("LaunchSection", () => {
 
     expect(screen.getByText("LAUNCH9")).toBeInTheDocument();
     expect(screen.getByText(/applied at checkout/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue to checkout — $9" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue to checkout — $19" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue to checkout — $9" }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(

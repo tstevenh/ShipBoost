@@ -19,7 +19,6 @@ import {
 import { LatestEditorialSidebar } from "@/components/public/latest-editorial-sidebar";
 import { buildHomePageSchema } from "@/server/seo/page-schema";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
-import { getServerSession } from "@/server/auth/session";
 
 export const revalidate = 300;
 
@@ -33,10 +32,6 @@ export const metadata: Metadata = buildPublicPageMetadata({
 
 export default async function Home() {
   const env = getEnv();
-  const session = await getServerSession();
-  const isSignedIn = Boolean(session?.user);
-  const showLaunchpadCountdown =
-    Date.now() < new Date(env.LAUNCHPAD_GO_LIVE_AT).getTime();
   const currentPeriod = "weekly";
   const [{ launches, previousWeeklyTopWinner }, latestSpotlightArticles] =
     await Promise.all([
@@ -60,11 +55,7 @@ export default async function Home() {
   return (
     <main className="flex-1">
       <JsonLdScript data={homeSchema} />
-      {/* Hero shown only to signed-out visitors */}
-      {isSignedIn ? null : <MinimalHero />}
-
-      {/* Spacer to clear the fixed header when the hero is hidden */}
-      {isSignedIn ? <div aria-hidden className="h-20 lg:h-24" /> : null}
+      <MinimalHero />
 
       <Suspense fallback={<div className="h-[73px] border-b border-border bg-background" />}>
         <FilterBar launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT} />
@@ -83,7 +74,7 @@ export default async function Home() {
             <LaunchpadShowcase
               board={currentPeriod}
               launches={launches}
-              emptyState={showLaunchpadCountdown ? "prelaunch-countdown" : "default"}
+              emptyState="default"
               launchpadGoLiveAt={env.LAUNCHPAD_GO_LIVE_AT}
             />
             <MobileSidebarFollowup topWinner={previousWeeklyTopWinner} />
@@ -267,7 +258,7 @@ export default async function Home() {
         </ShowcaseLayout>
       </ViewerVoteStateProvider>
       
-      <Footer hideFeaturedBadgeRail={isSignedIn} />
+      <Footer />
     </main>
   );
 }
