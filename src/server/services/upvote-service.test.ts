@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Prisma } from "@prisma/client";
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
@@ -296,7 +297,7 @@ describe("recordUpvoteWithoutDailyLimit", () => {
       { code: "P2002", clientVersion: "5.0.0" },
     );
     // Make it look like a PrismaClientKnownRequestError
-    Object.setPrototypeOf(uniqueError, require("@prisma/client").Prisma.PrismaClientKnownRequestError.prototype);
+    Object.setPrototypeOf(uniqueError, Prisma.PrismaClientKnownRequestError.prototype);
     prismaMock.toolVote.create.mockRejectedValueOnce(uniqueError);
 
     await expect(recordUpvoteWithoutDailyLimit("tool_1", "user_1")).resolves.toBeUndefined();

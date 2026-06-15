@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
       submissionId: body.submissionId,
       launchType: body.launchType,
       preferredLaunchDate: body.preferredLaunchDate,
+      discountCode: body.discountCode,
       sponsorSlots: body.sponsorSlots,
       founder: {
         id: session.user.id,

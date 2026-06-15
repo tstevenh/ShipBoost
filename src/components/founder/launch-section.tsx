@@ -78,6 +78,8 @@ const FREE_NOT_INCLUDED = [
   "Guaranteed dofollow link",
 ];
 
+const FREE_UPGRADE_DISCOUNT_CODE = "LAUNCH9";
+
 const SLOT_FEATURES: Record<string, string[]> = {
   SIDEBAR: [
     "Highest impression rate of any slot",
@@ -234,8 +236,14 @@ export function LaunchSection({
   const [slots, setSlots] = useState<SponsorEligibilitySlot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const premiumDatePickerRef = useRef<HTMLDivElement>(null);
   const requirementsRef = useRef<HTMLDivElement>(null);
   const [shakeRequirements, setShakeRequirements] = useState(false);
+  const [hasSeenFreeRequirements, setHasSeenFreeRequirements] = useState(false);
+  const [appliedDiscountCode, setAppliedDiscountCode] = useState<
+    typeof FREE_UPGRADE_DISCOUNT_CODE | null
+  >(null);
+  const [discountCopyLabel, setDiscountCopyLabel] = useState("Copy code");
   // The server only passes requirements when the draft id is in the URL. During
   // the fresh submit flow the id lives in client state, so fetch them by id.
   const [requirements, setRequirements] = useState(freeLaunchRequirements);
@@ -283,6 +291,24 @@ export function LaunchSection({
   }, [selectedLaunch, submissionId, requirements, requirementsFetchAttempt]);
 
   useEffect(() => {
+    if (selectedLaunch !== "FREE" || hasSeenFreeRequirements) return;
+    const node = requirementsRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        setHasSeenFreeRequirements(true);
+        observer.disconnect();
+      },
+      { rootMargin: "0px 0px -20% 0px", threshold: 0.2 },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [selectedLaunch, hasSeenFreeRequirements, requirements]);
+
+  useEffect(() => {
     if (!toolId) return;
     fetch("/api/sponsor/eligibility")
       .then((r) => r.json())
@@ -314,7 +340,10 @@ export function LaunchSection({
       ? premiumPrice + selectedSponsorPrice
       : selectedSponsorPrice;
 
-  async function handleConfirm() {
+  async function handleConfirm(
+    launchType: "FREE" | "FEATURED" = selectedLaunch,
+    discountCode?: typeof FREE_UPGRADE_DISCOUNT_CODE,
+  ) {
     setErrorMessage(null);
     setIsLoading(true);
 
@@ -324,8 +353,9 @@ export function LaunchSection({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           submissionId,
-          launchType: selectedLaunch,
-          preferredLaunchDate: selectedLaunch === "FEATURED" ? preferredDate : undefined,
+          launchType,
+          preferredLaunchDate: launchType === "FEATURED" ? preferredDate : undefined,
+          discountCode,
           sponsorSlots: selectedSlots,
         }),
       });
@@ -358,6 +388,28 @@ export function LaunchSection({
     }
   }
 
+  function handleDiscountUpgrade() {
+    setSelectedLaunch("FEATURED");
+    setAppliedDiscountCode(FREE_UPGRADE_DISCOUNT_CODE);
+    window.requestAnimationFrame(() => {
+      premiumDatePickerRef.current?.scrollIntoView?.({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  }
+
+  async function handleCopyDiscountCode() {
+    try {
+      await navigator.clipboard.writeText(FREE_UPGRADE_DISCOUNT_CODE);
+      setDiscountCopyLabel("Copied");
+      window.setTimeout(() => setDiscountCopyLabel("Copy code"), 1400);
+    } catch {
+      setDiscountCopyLabel("Copy failed");
+      window.setTimeout(() => setDiscountCopyLabel("Copy code"), 1800);
+    }
+  }
+
   const isConfirmDisabled =
     isLoading || (selectedLaunch === "FEATURED" && !preferredDate);
 
@@ -373,7 +425,10 @@ export function LaunchSection({
       window.setTimeout(() => setShakeRequirements(false), 700);
       return;
     }
-    void handleConfirm();
+    void handleConfirm(
+      selectedLaunch,
+      selectedLaunch === "FEATURED" ? appliedDiscountCode ?? undefined : undefined,
+    );
   }
 
   return (
@@ -405,7 +460,11 @@ export function LaunchSection({
           {/* Premium card */}
           <button
             type="button"
-            onClick={() => setSelectedLaunch("FEATURED")}
+            onClick={() => {
+              setSelectedLaunch("FEATURED");
+              setHasSeenFreeRequirements(false);
+              setAppliedDiscountCode(null);
+            }}
             className={cn(
               "relative flex flex-col rounded-3xl border bg-card p-7 text-left transition-all",
               selectedLaunch === "FEATURED"
@@ -444,7 +503,11 @@ export function LaunchSection({
           {/* Free card */}
           <button
             type="button"
-            onClick={() => setSelectedLaunch("FREE")}
+            onClick={() => {
+              setSelectedLaunch("FREE");
+              setHasSeenFreeRequirements(false);
+              setAppliedDiscountCode(null);
+            }}
             className={cn(
               "relative flex flex-col rounded-3xl border bg-card p-7 text-left transition-all",
               selectedLaunch === "FREE"
@@ -498,7 +561,7 @@ export function LaunchSection({
 
       {/* Premium date picker — always show when FEATURED selected */}
       {selectedLaunch === "FEATURED" && (
-        <div className="rounded-2xl border border-border bg-card p-5">
+        <div ref={premiumDatePickerRef} className="rounded-2xl border border-border bg-card p-5">
           <p className="mb-3 text-[10px] font-black tracking-[0.2em] text-foreground/40">
             Launch week
           </p>
@@ -668,6 +731,26 @@ export function LaunchSection({
 
       {/* Total + CTA */}
       <div className="sticky bottom-0 rounded-2xl border border-border bg-card/95 p-4 shadow-lg backdrop-blur">
+        {selectedLaunch === "FREE" && hasSeenFreeRequirements ? (
+          <div className="mb-4 border-l-4 border-primary bg-primary/5 px-3 py-2.5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <p className="min-w-0 text-sm font-black leading-tight text-foreground">
+                Unlock Premium Launch for $9
+              </p>
+              <button
+                type="button"
+                onClick={() => void handleDiscountUpgrade()}
+                disabled={isLoading || !preferredDate}
+                className="inline-flex shrink-0 items-center justify-center border-2 border-foreground bg-foreground px-3 py-2 font-mono text-xs font-black tracking-wider text-background shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
+              >
+                Choose week
+              </button>
+            </div>
+            <p className="mt-0.5 text-xs font-medium text-muted-foreground">
+              Use LAUNCH9 for an editorial article, dofollow backlink, reserved week, and no badge verification.
+            </p>
+          </div>
+        ) : null}
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">
             {selectedLaunch === "FEATURED" ? "Premium Launch" : "Free Launch"}
@@ -679,6 +762,23 @@ export function LaunchSection({
             {totalPrice === 0 ? "Free" : `$${totalPrice}`}
           </span>
         </div>
+        {selectedLaunch === "FEATURED" && appliedDiscountCode ? (
+          <div className="mb-3 flex items-center justify-between border border-border bg-muted/35 px-3 py-2 text-xs">
+            <span className="font-medium text-muted-foreground">
+              <span className="font-mono font-black text-foreground">
+                {appliedDiscountCode}
+              </span>{" "}
+              applied at checkout
+            </span>
+            <button
+              type="button"
+              onClick={() => void handleCopyDiscountCode()}
+              className="border border-foreground px-2 py-1 font-black text-foreground transition hover:bg-foreground hover:text-background"
+            >
+              {discountCopyLabel}
+            </button>
+          </div>
+        ) : null}
         <button
           type="button"
           onClick={handleScheduleClick}

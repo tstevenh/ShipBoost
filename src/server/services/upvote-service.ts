@@ -212,7 +212,7 @@ export async function recordUpvoteWithoutDailyLimit(
     }
   }
 
-  void recordStreakActivity(userId).catch((err) => {
+  await recordStreakActivity(userId).catch((err) => {
     console.error("[shipboost streak] record activity (requirement vote) failed", err);
   });
 }
@@ -275,7 +275,7 @@ export async function toggleToolUpvote(
     }
   }
 
-  void recordStreakActivity(userId).catch((err) => {
+  await recordStreakActivity(userId).catch((err) => {
     console.error("[shipboost streak] record activity (vote) failed", err);
   });
 

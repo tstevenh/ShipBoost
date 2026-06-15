@@ -6,6 +6,7 @@ export const launchBundleCheckoutSchema = z.object({
   submissionId: cuidSchema,
   launchType: z.enum(["FREE", "FEATURED"]),
   preferredLaunchDate: z.string().optional(),
+  discountCode: z.literal("LAUNCH9").optional(),
   sponsorSlots: z
     .array(z.enum(["SIDEBAR", "INLINE_BANNER", "INLINE_PRODUCT"]))
     .default([]),

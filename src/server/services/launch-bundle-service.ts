@@ -34,10 +34,18 @@ export async function createLaunchBundleCheckout(input: {
   submissionId: string;
   launchType: "FREE" | "FEATURED";
   preferredLaunchDate?: string;
+  discountCode?: "LAUNCH9";
   sponsorSlots: SponsorSlot[];
   founder: FounderLike;
 }) {
-  const { submissionId, launchType, preferredLaunchDate, sponsorSlots, founder } = input;
+  const {
+    submissionId,
+    launchType,
+    preferredLaunchDate,
+    discountCode,
+    sponsorSlots,
+    founder,
+  } = input;
 
   const submission = await getSubmissionByIdForFounder(
     prisma,
@@ -89,6 +97,7 @@ export async function createLaunchBundleCheckout(input: {
   const checkoutUrl = await createPremiumBundleCheckout({
     submissionId,
     preferredLaunchDate,
+    discountCode,
     founder,
     placements,
   });
@@ -152,6 +161,7 @@ async function createSponsorOnlyCheckout(opts: {
 async function createPremiumBundleCheckout(opts: {
   submissionId: string;
   preferredLaunchDate: string;
+  discountCode?: "LAUNCH9";
   founder: FounderLike;
   placements: Array<{ slot: SponsorSlot; placementId: string }>;
 }): Promise<string> {
@@ -197,6 +207,7 @@ async function createPremiumBundleCheckout(opts: {
     checkout = await getDodoClient().checkoutSessions.create({
       product_cart: productCart,
       customer: { email: opts.founder.email, name: opts.founder.name ?? undefined },
+      discount_code: opts.discountCode,
       return_url: returnUrl,
       metadata: {
         shipboostProduct: "launch_bundle",
