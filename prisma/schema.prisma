@@ -320,6 +320,7 @@ model Submission {
   @@index([userId, reviewStatus])
   @@index([userId, createdAt])
   @@index([toolId])
+  @@index([submissionType, paymentStatus, paidAt])
 }
 
 model SubmissionSpotlightBrief {
@@ -370,6 +371,8 @@ model Launch {
   @@index([toolId, status])
   @@index([launchDate])
   @@index([status, launchDate, priorityWeight])
+  @@index([status, preLaunchEmailSentAt, launchDate])
+  @@index([launchType, status, launchDate])
 }
 
 model ListingClaim {
@@ -416,6 +419,7 @@ model SponsorPlacement {
   @@index([status, startsAt, endsAt])
   @@index([slot, status, startsAt, endsAt])
   @@index([toolId, status])
+  @@index([paidAt])
 }
 
 model ToolVote {
@@ -432,6 +436,7 @@ model ToolVote {
   @@unique([toolId, userId])
   @@index([toolId])
   @@index([userId, createdAt])
+  @@index([toolId, createdAt])
 }
 
 model Lead {

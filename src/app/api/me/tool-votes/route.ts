@@ -27,9 +27,12 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireSession(request);
     const toolIds = getRequestedToolIds(request);
+    // Role is already on the session — pass it so getDailyVotesRemaining skips
+    // its own `user` lookup on this per-page-load endpoint.
+    const role = session.user.role === "ADMIN" ? "ADMIN" : "FOUNDER";
     const [dailyVotesRemaining, upvotedToolIds, upvoteCountByToolId] =
       await Promise.all([
-        getDailyVotesRemaining(session.user.id),
+        getDailyVotesRemaining(session.user.id, undefined, role),
         listUserUpvotedToolIds(toolIds, session.user.id),
         listToolUpvoteCounts(toolIds),
       ]);

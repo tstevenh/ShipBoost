@@ -69,8 +69,10 @@ export async function listPaidConversions(
     }),
   );
 
+  // Ad pricing is per-slot and independent of rank, so (unlike premium launches)
+  // the `since` window can be pushed into the query instead of filtered in memory.
   const paidAds = await prisma.sponsorPlacement.findMany({
-    where: { paidAt: { not: null } },
+    where: { paidAt: since ? { not: null, gt: since } : { not: null } },
     orderBy: { paidAt: "asc" },
     select: {
       id: true,
@@ -93,12 +95,17 @@ export async function listPaidConversions(
     currency: "USD",
   }));
 
-  const all = [...premiumRecords, ...adRecords];
-  const filtered = since
-    ? all.filter((record) => new Date(record.paidAt).getTime() > since.getTime())
-    : all;
+  // Premium launches were fetched in full (for the founding-price boundary), so
+  // their `since` window is applied here; ads were already windowed in the query.
+  const premiumFiltered = since
+    ? premiumRecords.filter(
+        (record) => new Date(record.paidAt).getTime() > since.getTime(),
+      )
+    : premiumRecords;
 
-  return filtered.sort(
+  const all = [...premiumFiltered, ...adRecords];
+
+  return all.sort(
     (a, b) => new Date(a.paidAt).getTime() - new Date(b.paidAt).getTime(),
   );
 }

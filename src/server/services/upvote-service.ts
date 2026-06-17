@@ -160,8 +160,12 @@ export async function listUserUpvotedToolIds(
 export async function getDailyVotesRemaining(
   userId: string,
   now = new Date(),
+  knownRole?: UserRole,
 ) {
-  const role = await getUserVoteRole(userId);
+  // Callers that already hold the user's role (from the session or a prior
+  // lookup) can pass it to avoid a redundant `user` round-trip — this path runs
+  // on every logged-in page load via /api/me/tool-votes.
+  const role = knownRole ?? (await getUserVoteRole(userId));
 
   if (role === "ADMIN") {
     return ADMIN_DAILY_VOTES_REMAINING;
@@ -179,11 +183,16 @@ export async function getDailyVotesRemaining(
   return Math.max(0, DAILY_UPVOTE_LIMIT - activeVotesToday);
 }
 
-async function getToolVoteState(toolId: string, userId: string, now: Date) {
+async function getToolVoteState(
+  toolId: string,
+  userId: string,
+  now: Date,
+  role: UserRole,
+) {
   const [upvoteCount, hasUpvoted, dailyVotesRemaining] = await Promise.all([
     getToolUpvoteCount(toolId),
     hasUserUpvotedTool(toolId, userId),
-    getDailyVotesRemaining(userId, now),
+    getDailyVotesRemaining(userId, now, role),
   ]);
 
   return {
@@ -245,7 +254,7 @@ export async function toggleToolUpvote(
       },
     });
 
-    return getToolVoteState(toolId, userId, now);
+    return getToolVoteState(toolId, userId, now, role);
   }
 
   await ensurePublicTool(toolId);
@@ -253,7 +262,7 @@ export async function toggleToolUpvote(
   const dailyVotesRemaining =
     role === "ADMIN"
       ? ADMIN_DAILY_VOTES_REMAINING
-      : await getDailyVotesRemaining(userId, now);
+      : await getDailyVotesRemaining(userId, now, role);
 
   if (dailyVotesRemaining <= 0) {
     throw new AppError(409, "Daily upvote limit reached.");
@@ -279,5 +288,5 @@ export async function toggleToolUpvote(
     console.error("[shipboost streak] record activity (vote) failed", err);
   });
 
-  return getToolVoteState(toolId, userId, now);
+  return getToolVoteState(toolId, userId, now, role);
 }
