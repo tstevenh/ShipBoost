@@ -19,6 +19,7 @@ type DodoWebhookPayload = {
     metadata?: Record<string, unknown>;
     discount_id?: string | null;
     discount_code?: string | null;
+    total_amount?: number | null;
   };
 };
 
@@ -81,6 +82,8 @@ export async function POST(request: Request) {
               paymentId,
               checkoutSessionId: payload.data.checkout_session_id ?? null,
               metadata: payload.data.metadata ?? {},
+              amountCents: payload.data.total_amount ?? null,
+              discountCode: payload.data.discount_code ?? null,
             }),
             ...placementHandlers,
           ]);
@@ -92,6 +95,8 @@ export async function POST(request: Request) {
           paymentId,
           checkoutSessionId: payload.data.checkout_session_id ?? null,
           metadata: payload.data.metadata ?? {},
+          amountCents: payload.data.total_amount ?? null,
+          discountCode: payload.data.discount_code ?? null,
         });
       }
 

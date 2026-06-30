@@ -20,7 +20,10 @@ import { LatestEditorialSidebar } from "@/components/public/latest-editorial-sid
 import { buildHomePageSchema } from "@/server/seo/page-schema";
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 
-export const revalidate = 300;
+// 30 min: votes/launches revalidate on-demand (revalidatePublicVoteContent),
+// so this is only the idle-refresh ceiling. Kept well above Neon's 5-min
+// scale-to-zero so background regeneration doesn't keep the compute awake.
+export const revalidate = 1800;
 
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "ShipBoost | Launch once. Keep getting discovered.",

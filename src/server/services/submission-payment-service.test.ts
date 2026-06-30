@@ -327,6 +327,7 @@ describe("submission-payment-service", () => {
       payment_id: "pay_1",
       status: "succeeded",
       checkout_session_id: "cs_test_1",
+      total_amount: 900,
       metadata: {
         shipboostSubmissionId: "submission_1",
       },
@@ -337,13 +338,14 @@ describe("submission-payment-service", () => {
       },
     });
 
+    const reconcileUpdateMock = vi.fn();
     prismaMock.$transaction.mockImplementationOnce(
       async (callback: (tx: PaymentTx) => Promise<unknown>) => {
         const tx: PaymentTx = {
           submission: {
             findUnique: vi.fn().mockResolvedValue(submission),
             findFirst: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
+            update: reconcileUpdateMock,
           },
           submissionSpotlightBrief: {
             upsert: vi.fn(),
@@ -371,9 +373,79 @@ describe("submission-payment-service", () => {
     });
 
     expect(retrieveMock).toHaveBeenCalledWith("pay_1");
+    expect(reconcileUpdateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ amountCents: 900 }),
+      }),
+    );
     expect(result).toMatchObject({
       id: "submission_1",
       paymentStatus: "PAID",
+    });
+  });
+
+  it("persists amountCents and discountCode from a premium launch payment", async () => {
+    const submission = {
+      id: "submission_amt_1",
+      toolId: "tool_amt_1",
+      userId: "founder_amt_1",
+      submissionType: "FEATURED_LAUNCH",
+      preferredLaunchDate: new Date("2026-05-11T00:00:00.000Z"),
+      paymentStatus: "PENDING",
+      polarCheckoutId: "cs_amt_1",
+      user: {
+        id: "founder_amt_1",
+        email: "founder@acme.com",
+        name: "Founder",
+      },
+      tool: {
+        id: "tool_amt_1",
+        name: "Acme",
+        launches: [],
+      },
+    };
+
+    prismaMock.$transaction.mockImplementationOnce(
+      async (callback: (tx: PaymentTx) => Promise<unknown>) => {
+        const submissionUpdateMock = vi.fn();
+        const tx: PaymentTx = {
+          submission: {
+            findUnique: vi.fn().mockResolvedValue(submission),
+            findFirst: vi.fn().mockResolvedValue(null),
+            update: submissionUpdateMock,
+          },
+          submissionSpotlightBrief: {
+            upsert: vi.fn(),
+          },
+          tool: {
+            update: vi.fn(),
+          },
+          launch: {
+            create: vi.fn(),
+            deleteMany: vi.fn(),
+            update: vi.fn(),
+          },
+        };
+        const result = await callback(tx);
+        expect(submissionUpdateMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              paymentStatus: "PAID",
+              amountCents: 900,
+              discountCode: "LAUNCH9",
+            }),
+          }),
+        );
+        return result;
+      },
+    );
+
+    await handlePremiumLaunchPaymentSucceeded({
+      paymentId: "pay_amt_1",
+      checkoutSessionId: "cs_amt_1",
+      metadata: { shipboostSubmissionId: "submission_amt_1" },
+      amountCents: 900,
+      discountCode: "LAUNCH9",
     });
   });
 

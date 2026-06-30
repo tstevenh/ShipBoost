@@ -16,8 +16,6 @@ import {
   FreeLaunchRequirementsPanel,
   type BadgePreviewOption,
 } from "@/components/founder/free-launch-requirements-panel";
-import { PremiumPricingLadder } from "@/components/founder/premium-pricing-ladder";
-import { resolveCurrentPremiumLaunchTier } from "@/lib/premium-pricing";
 import type { SponsorEligibilitySlot } from "@/app/api/sponsor/eligibility/route";
 import type { SponsorSlot } from "@prisma/client";
 import type { FreeLaunchRequirements } from "@/server/services/free-launch-requirements";
@@ -55,6 +53,7 @@ export type LaunchSectionProps = {
   onFreeScheduled: (launch: ScheduledLaunch, submission: SavedSubmission) => void;
   badges: BadgePreviewOption[];
   freeLaunchRequirements: FreeLaunchRequirements | null;
+  listedToolCount?: number;
 };
 
 const PREMIUM_FEATURES = [
@@ -212,10 +211,10 @@ export function LaunchSection({
   toolId,
   freeLaunchEstimateDate,
   premiumLaunchWeeks,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  foundingPremiumSpotsLeft: _foundingPremiumSpotsLeft,
+  foundingPremiumSpotsLeft,
   foundingPremiumLaunchLimit,
-  paidPremiumLaunchCount,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  paidPremiumLaunchCount: _paidPremiumLaunchCount,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   currentScheduledLaunch: _currentScheduledLaunch,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -226,6 +225,7 @@ export function LaunchSection({
   onFreeScheduled,
   badges,
   freeLaunchRequirements,
+  listedToolCount,
 }: LaunchSectionProps) {
   const [selectedLaunch, setSelectedLaunch] = useState<"FREE" | "FEATURED">("FEATURED");
   const [preferredDate, setPreferredDate] = useState<string>(
@@ -328,13 +328,13 @@ export function LaunchSection({
     .filter((s) => selectedSlots.includes(s.slot))
     .reduce((sum, s) => sum + s.priceUsd, 0);
 
-  // The founding ($9) phase is complete — shown as a passed tier; the ladder
-  // lands on the current early-access ($19) tier.
-  const premiumTier = resolveCurrentPremiumLaunchTier(
-    paidPremiumLaunchCount,
-    foundingPremiumLaunchLimit,
-  );
-  const premiumPrice = premiumTier.price;
+  // Founding $9 round: $9 while spots remain, with the $19 anchor struck through.
+  const premiumPrice = foundingPremiumSpotsLeft > 0 ? 9 : 19;
+  const premiumCompareAt = foundingPremiumSpotsLeft > 0 ? 19 : 29;
+  const spotsLabel =
+    foundingPremiumSpotsLeft > 0
+      ? `${foundingPremiumSpotsLeft} of ${foundingPremiumLaunchLimit} founding spots left`
+      : "Early access pricing — rising to $29 soon";
   const totalPrice =
     selectedLaunch === "FEATURED"
       ? premiumPrice + selectedSponsorPrice
@@ -488,12 +488,22 @@ export function LaunchSection({
               </p>
             </div>
             <div className="mt-5 flex items-end gap-3">
+              <span className="text-xl font-black text-muted-foreground line-through">${premiumCompareAt}</span>
               <span className="text-5xl font-black tracking-tighter text-foreground">
                 ${premiumPrice}
               </span>
               <span className="pb-1 text-sm font-bold text-muted-foreground">/ launch</span>
             </div>
-            <PremiumPricingLadder tier={premiumTier} />
+            {spotsLabel && (
+              <p className="mt-1.5 text-[10px] font-black tracking-widest text-primary">
+                {spotsLabel}
+              </p>
+            )}
+            {listedToolCount && listedToolCount > 0 ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Join {Math.floor(listedToolCount / 50) * 50}+ founders on ShipBoost
+              </p>
+            ) : null}
             <ul className="mt-6 flex-1 space-y-3">
               {PREMIUM_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm font-medium text-foreground/70">

@@ -23,7 +23,10 @@ import {
   isPublicLaunchBoard,
 } from "@/server/cache/public-content";
 
-export const revalidate = 300;
+// 30 min idle ceiling. Votes/launches revalidate on-demand, so the board stays
+// fresh; the longer window keeps background regen from defeating Neon's
+// 5-min scale-to-zero. See homepage note.
+export const revalidate = 1800;
 export const dynamicParams = false;
 
 type RouteContext = {

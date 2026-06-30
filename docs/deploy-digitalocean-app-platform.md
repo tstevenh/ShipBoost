@@ -228,8 +228,8 @@ and replaces any DigitalOcean Worker / Scheduled Job pattern described above.
 
 | Job | Endpoint | Cadence (UTC) |
 |---|---|---|
-| `publish-due` | `/api/cron/launches/publish-due` | hourly `0 * * * *` |
-| `prelaunch-reminders` | `/api/cron/launches/send-prelaunch-reminders` | hourly `0 * * * *` |
+| `publish-due` | `/api/cron/launches/publish-due` | every 4h `0 */4 * * *` |
+| `prelaunch-reminders` | `/api/cron/launches/send-prelaunch-reminders` | every 4h `0 */4 * * *` |
 | `revalidate-cache` | `/api/cron/public-content/revalidate` | hourly `0 * * * *` |
 | `spotlight-reminders` | `/api/cron/premium-launch-spotlights/remind-due` | daily `0 9 * * *` |
 | `sponsor-renewals` | `/api/cron/sponsor-placements` | daily `0 9 * * *` |

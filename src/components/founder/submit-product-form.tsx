@@ -99,6 +99,7 @@ type SubmitProductFormProps = {
   launchKit?: LaunchKit | null;
   isPrelaunch?: boolean;
   freeLaunchRequirements?: import("@/server/services/free-launch-requirements").FreeLaunchRequirements | null;
+  listedToolCount?: number;
 };
 
 type FormState = {
@@ -504,6 +505,7 @@ export function SubmitProductForm({
   initialDraft = null,
   launchKit = null,
   freeLaunchRequirements = null,
+  listedToolCount,
 }: SubmitProductFormProps) {
   const isListingEditMode = mode === "listing-edit";
   const router = useRouter();
@@ -1174,6 +1176,7 @@ export function SubmitProductForm({
               ]
         }
         freeLaunchRequirements={freeLaunchRequirements}
+        listedToolCount={listedToolCount}
         onBack={() => {
           const params = new URLSearchParams(searchParams.toString());
           params.delete("section");

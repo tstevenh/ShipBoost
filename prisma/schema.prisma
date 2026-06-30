@@ -303,6 +303,8 @@ model Submission {
   polarCheckoutId     String?
   polarOrderId        String?
   paidAt              DateTime?
+  amountCents         Int?
+  discountCode        String?
   badgeFooterUrl      String?
   badgeVerification   BadgeVerificationStatus @default(NOT_REQUIRED)
   reviewStatus        ReviewStatus            @default(PENDING)

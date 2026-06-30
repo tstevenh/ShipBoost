@@ -12,6 +12,7 @@ import {
 import {
   getPaidPremiumLaunchCount,
   getRemainingFoundingPremiumLaunchSpots,
+  getListedToolCount,
 } from "@/server/services/founding-offer-service";
 import { getFounderSubmissionDraft } from "@/server/services/submission-service";
 import { getFreeLaunchRequirements } from "@/server/services/free-launch-requirements";
@@ -202,11 +203,13 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
     estimatedFreeLaunchDate,
     foundingPremiumLaunchSpotsLeft,
     paidPremiumLaunchCount,
+    listedToolCount,
   ] = await Promise.all([
     getCachedCatalogOptions(),
     scheduleNextFreeLaunchDate(),
     getRemainingFoundingPremiumLaunchSpots(),
     getPaidPremiumLaunchCount(),
+    getListedToolCount(),
   ]);
   const { categories, tags } = catalogOptions;
 
@@ -226,6 +229,7 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
           initialDraft={initialDraft}
           isPrelaunch={isPrelaunch}
           freeLaunchRequirements={freeLaunchRequirements}
+          listedToolCount={listedToolCount}
         />
       </section>
       <Footer className="mt-auto" />

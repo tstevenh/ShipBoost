@@ -9,8 +9,10 @@ name: ShipBoost Scheduled Crons
 
 on:
   schedule:
-    # Hourly: publish-due, prelaunch-reminders
-    - cron: "0 * * * *"
+    # Every 4 hours: publish-due, prelaunch-reminders. Lowered from hourly so the
+    # Neon compute is woken 6x/day instead of 24x — fewer wakes means more time
+    # scaled-to-zero. Launches publish on a 4h granularity instead of on-the-hour.
+    - cron: "0 */4 * * *"
     # Daily at 09:00 UTC: spotlight-reminders, sponsor-renewals
     - cron: "0 9 * * *"
   workflow_dispatch:
@@ -22,8 +24,8 @@ on:
 
 jobs:
   publish-due:
-    name: Launches publish-due (hourly)
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 * * * *') || github.event.inputs.job == 'publish-due' || github.event.inputs.job == 'all' }}
+    name: Launches publish-due (every 4h)
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 */4 * * *') || github.event.inputs.job == 'publish-due' || github.event.inputs.job == 'all' }}
     runs-on: ubuntu-latest
     env:
       SITE_URL: ${{ secrets.SITE_URL }}
@@ -36,8 +38,8 @@ jobs:
             "$SITE_URL/api/cron/launches/publish-due"
 
   prelaunch-reminders:
-    name: Launch prep 24h reminders (hourly)
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 * * * *') || github.event.inputs.job == 'prelaunch-reminders' || github.event.inputs.job == 'all' }}
+    name: Launch prep 24h reminders (every 4h)
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 */4 * * *') || github.event.inputs.job == 'prelaunch-reminders' || github.event.inputs.job == 'all' }}
     runs-on: ubuntu-latest
     env:
       SITE_URL: ${{ secrets.SITE_URL }}

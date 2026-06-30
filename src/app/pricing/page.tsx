@@ -18,21 +18,11 @@ import { TrackedExternalLink } from "@/components/analytics/tracked-external-lin
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
 import { AdPreviewButton } from "@/components/public/ad-preview-modal";
-import { unstable_cache } from "next/cache";
-
-import { getPaidPremiumLaunchCount } from "@/server/services/founding-offer-service";
+import {
+  getRemainingFoundingPremiumLaunchSpots,
+  getListedToolCount,
+} from "@/server/services/founding-offer-service";
 import { getEnv } from "@/server/env";
-import { PremiumPricingLadder } from "@/components/founder/premium-pricing-ladder";
-import { resolveCurrentPremiumLaunchTier } from "@/lib/premium-pricing";
-
-// Marketing page only: the paid-premium count drives the price ladder. Cache it
-// for 5 minutes so we hit the DB ~once per window instead of once per visitor.
-// The submit/checkout flow stays uncached, where an accurate live count matters.
-const getCachedPaidPremiumLaunchCount = unstable_cache(
-  getPaidPremiumLaunchCount,
-  ["pricing-paid-premium-count", "v1"],
-  { revalidate: 300 },
-);
 import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 import { buildPricingPageSchema } from "@/server/seo/page-schema";
 
@@ -63,15 +53,14 @@ function CheckItem({ text }: { text: string }) {
 export default async function PricingPage() {
   const env = getEnv();
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
-  const paidPremiumLaunchCount = await getCachedPaidPremiumLaunchCount();
-
-  // Founding ($9) is complete (shown as a passed tier); the ladder lands on the
-  // current early-access price. The charged Dodo price is updated manually per band.
-  const premiumTier = resolveCurrentPremiumLaunchTier(
-    paidPremiumLaunchCount,
-    env.FOUNDING_PREMIUM_LAUNCH_LIMIT,
-  );
-  const premiumBadge = premiumTier.label;
+  const [foundingPremiumLaunchSpotsLeft, listedToolCount] = await Promise.all([
+    getRemainingFoundingPremiumLaunchSpots(),
+    getListedToolCount(),
+  ]);
+  const listedToolFloor = Math.floor(listedToolCount / 50) * 50;
+  const premiumPrice = foundingPremiumLaunchSpotsLeft > 0 ? 9 : 19;
+  const premiumCompareAt = foundingPremiumLaunchSpotsLeft > 0 ? 19 : 29;
+  const premiumBadge = foundingPremiumLaunchSpotsLeft > 0 ? "Founding" : "Early access";
 
   const schema = buildPricingPageSchema({
     title: "Pricing",
@@ -152,12 +141,22 @@ export default async function PricingPage() {
                 <Star size={18} className="text-primary" />
               </div>
               <div className="mt-5 flex items-end gap-3">
+                <span className="text-xl font-black text-muted-foreground line-through">${premiumCompareAt}</span>
                 <span className="text-5xl font-black tracking-tighter text-foreground">
-                  ${premiumTier.price}
+                  ${premiumPrice}
                 </span>
                 <span className="pb-1 text-sm font-bold text-muted-foreground">/ launch</span>
               </div>
-              <PremiumPricingLadder tier={premiumTier} />
+              {foundingPremiumLaunchSpotsLeft > 0 && (
+                <p className="mt-3 text-[10px] font-black tracking-widest text-primary">
+                  {foundingPremiumLaunchSpotsLeft} of {env.FOUNDING_PREMIUM_LAUNCH_LIMIT} founding spots left
+                </p>
+              )}
+              {listedToolFloor > 0 && (
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Join {listedToolFloor}+ founders on ShipBoost
+                </p>
+              )}
               <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">
                 A hand-written editorial article about your product, published on the ShipBoost blog. A permanent asset you can share, link to, and rank for — plus a reserved launch week and featured placement.
               </p>

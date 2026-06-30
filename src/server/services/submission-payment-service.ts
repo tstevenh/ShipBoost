@@ -26,6 +26,8 @@ type PremiumLaunchPaymentLike = {
   id: string;
   checkoutSessionId: string | null;
   metadata: Record<string, unknown>;
+  amountCents?: number | null;
+  discountCode?: string | null;
 };
 
 function readSubmissionIdFromPayment(payment: PremiumLaunchPaymentLike) {
@@ -129,6 +131,8 @@ export async function applyPremiumLaunchPaymentSucceeded(
             payment.checkoutSessionId ?? submission.polarCheckoutId,
           paidAt: now,
           reviewStatus: "APPROVED",
+          amountCents: payment.amountCents ?? null,
+          discountCode: payment.discountCode ?? null,
         },
       });
 
@@ -377,11 +381,15 @@ export async function handlePremiumLaunchPaymentSucceeded(input: {
   paymentId: string;
   checkoutSessionId?: string | null;
   metadata?: Record<string, unknown>;
+  amountCents?: number | null;
+  discountCode?: string | null;
 }) {
   const payment = {
     id: input.paymentId,
     checkoutSessionId: input.checkoutSessionId ?? null,
     metadata: input.metadata ?? {},
+    amountCents: input.amountCents ?? null,
+    discountCode: input.discountCode ?? null,
   };
   const updatedSubmission = await applyPremiumLaunchPaymentSucceeded(payment);
 
@@ -554,5 +562,9 @@ export async function reconcilePremiumLaunchPayment(input: {
     id: payment.payment_id,
     checkoutSessionId: payment.checkout_session_id ?? null,
     metadata: payment.metadata ?? {},
+    // The retrieved Dodo payment carries the real charged total. (The readable
+    // discount code is only on the webhook payload, so discountCode stays for
+    // the webhook path to set.)
+    amountCents: payment.total_amount ?? null,
   });
 }

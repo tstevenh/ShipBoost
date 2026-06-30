@@ -14,6 +14,7 @@ import {
 import {
   getPaidPremiumLaunchCount,
   getRemainingFoundingPremiumLaunchSpots,
+  getListedToolCount,
 } from "@/server/services/founding-offer-service";
 import { getFounderToolById } from "@/server/services/tool-service";
 import { getFreeLaunchRequirements } from "@/server/services/free-launch-requirements";
@@ -66,12 +67,14 @@ export default async function FounderToolEditorPage(context: RouteContext) {
     estimatedFreeLaunchDate,
     foundingPremiumLaunchSpotsLeft,
     paidPremiumLaunchCount,
+    listedToolCount,
   ] = await Promise.all([
     getFounderToolById(session.user.id, toolId),
     getCachedCatalogOptions(),
     scheduleNextFreeLaunchDate(),
     getRemainingFoundingPremiumLaunchSpots(),
     getPaidPremiumLaunchCount(),
+    getListedToolCount(),
   ]);
   const { categories, tags } = catalogOptions;
 
@@ -208,6 +211,7 @@ export default async function FounderToolEditorPage(context: RouteContext) {
             isPrelaunch={isPrelaunch}
             launchKit={launchKit}
             freeLaunchRequirements={freeLaunchRequirements}
+            listedToolCount={listedToolCount}
           />
         ) : (
           <FounderToolEditor
