@@ -34,6 +34,16 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  session: {
+    // Cache the session (incl. user role) in a signed cookie so most requests
+    // resolve auth without a DB round-trip. This is the main lever keeping the
+    // Neon compute awake: ~every request hit Session/User before this. Role
+    // changes (e.g. admin promotion) take up to `maxAge` to propagate.
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
+    },
+  },
   socialProviders:
     env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? {
