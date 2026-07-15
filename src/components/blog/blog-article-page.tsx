@@ -115,6 +115,14 @@ export function BlogArticlePage({
                 </p>
               </div>
             </div>
+            <a
+              href={`/blog/${article.slug}.md`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-mono font-black text-muted-foreground hover:text-foreground"
+            >
+              .md ↗
+            </a>
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {article.articleTags.map((item) => (
