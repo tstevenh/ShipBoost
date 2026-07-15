@@ -655,6 +655,7 @@ model StreakReward {
   @@index([userId])
 }
 
+
 model LotteryRoll {
   id        String         @id @default(cuid())
   userId    String

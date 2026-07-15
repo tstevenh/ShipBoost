@@ -18,8 +18,7 @@ export function generateStaticParams() {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
-  const { slug: rawSlug } = await context.params;
-  const slug = rawSlug.replace(/\.md$/, "");
+  const { slug } = await context.params;
   const page = await getCachedAlternativesPage(slug);
 
   if (!page) {

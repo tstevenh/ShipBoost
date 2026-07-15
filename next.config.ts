@@ -47,6 +47,26 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/tools/:slug.md",
+        destination: "/tools/:slug/md",
+      },
+      {
+        source: "/best/:slug.md",
+        destination: "/best/:slug/md",
+      },
+      {
+        source: "/alternatives/:slug.md",
+        destination: "/alternatives/:slug/md",
+      },
+      {
+        source: "/blog/:slug.md",
+        destination: "/blog/:slug/md",
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
