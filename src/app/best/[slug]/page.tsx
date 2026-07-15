@@ -103,6 +103,16 @@ export default async function BestPage(context: RouteContext) {
               <h1 className="text-5xl font-black tracking-tight text-foreground mb-6">
                 {page.entry.title}
               </h1>
+              <div className="mb-6">
+                <a
+                  href={`/best/${slug}.md`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-mono font-black text-muted-foreground hover:text-foreground"
+                >
+                  .md ↗
+                </a>
+              </div>
               <p className="text-lg font-medium leading-relaxed text-muted-foreground/80 mb-6 whitespace-pre-wrap">
                 {page.entry.intro}
               </p>
