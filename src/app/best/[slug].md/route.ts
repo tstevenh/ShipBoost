@@ -30,7 +30,7 @@ export async function GET(_request: Request, context: RouteContext) {
   return new Response(markdown, {
     headers: {
       "content-type": "text/plain; charset=utf-8",
-      "cache-control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=86400",
+      "cache-control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
     },
   });
 }
