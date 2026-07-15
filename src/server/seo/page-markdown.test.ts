@@ -76,6 +76,16 @@ describe("buildToolMarkdown", () => {
       "https://shipboost.io/tools/acme-crm.md",
     );
   });
+
+  it("returns null for a tool with no launches", () => {
+    const toolWithNoLaunches = { ...tool, launches: [] };
+    expect(buildToolMarkdown(toolWithNoLaunches, APP_URL)).toBeNull();
+  });
+
+  it("formats launch date as D MMM YYYY", () => {
+    const md = buildToolMarkdown(tool, APP_URL);
+    expect(md).toContain("15 Mar 2024");
+  });
 });
 
 describe("buildBestMarkdown", () => {
@@ -211,5 +221,10 @@ describe("buildBlogMarkdown", () => {
     const md = buildBlogMarkdown(article, APP_URL);
     expect(md).toContain("https://shipboost.io/blog/how-to-launch-your-saas");
     expect(md).toContain("https://shipboost.io/blog/how-to-launch-your-saas.md");
+  });
+
+  it("formats publish date as D MMM YYYY", () => {
+    const md = buildBlogMarkdown(article, APP_URL);
+    expect(md).toContain("1 Jun 2024");
   });
 });

@@ -53,12 +53,18 @@ function formatLaunchType(launchType: string): string {
 
 function formatDate(value: Date | string | null | undefined): string {
   if (!value) return "Unknown";
-  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(
-    new Date(value),
-  );
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
-export function buildToolMarkdown(tool: ToolMarkdownInput, appUrl: string): string {
+export function buildToolMarkdown(tool: ToolMarkdownInput, appUrl: string): string | null {
+  if (tool.launches.length === 0) {
+    return null;
+  }
+
   const categories = tool.toolCategories
     .map((tc) => tc.category.name)
     .join(", ");
