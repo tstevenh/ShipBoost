@@ -86,6 +86,11 @@ describe("buildToolMarkdown", () => {
     const md = buildToolMarkdown(tool, APP_URL);
     expect(md).toContain("15 Mar 2024");
   });
+
+  it("includes alternatives link", () => {
+    const md = buildToolMarkdown(tool, APP_URL);
+    expect(md).toContain(`${APP_URL}/alternatives/acme-crm`);
+  });
 });
 
 describe("buildBestMarkdown", () => {

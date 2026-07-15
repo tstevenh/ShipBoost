@@ -101,6 +101,7 @@ export function buildToolMarkdown(tool: ToolMarkdownInput, appUrl: string): stri
     "",
     `- ShipBoost listing: ${listingUrl}`,
     `- Markdown: ${markdownUrl}`,
+    `- Alternatives: ${appUrl}/alternatives/${tool.slug}`,
   ]
     .filter((line) => line !== null)
     .join("\n");
