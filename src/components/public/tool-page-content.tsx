@@ -303,6 +303,17 @@ export function ToolPageContent({
                     <span className="font-bold text-muted-foreground">For Sale</span>
                     <span className="font-black">No</span>
                   </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-muted-foreground">Markdown</span>
+                    <a
+                      href={`/tools/${tool.slug}.md`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-black text-foreground hover:bg-muted/80 font-mono"
+                    >
+                      .md ↗
+                    </a>
+                  </div>
                 </div>
               </div>
 
