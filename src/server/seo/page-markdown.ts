@@ -5,10 +5,21 @@ export type ToolMarkdownInput = {
   richDescription: string;
   pricingModel: string;
   websiteUrl: string;
+  affiliateUrl?: string | null;
   upvoteCount: number;
+  isFeatured?: boolean;
+  badgeVerification?: string | null;
+  currentLaunchType?: string | null;
+  logoMedia?: { url: string } | null;
+  media?: Array<{ url: string }>;
+  founderXUrl?: string | null;
+  founderGithubUrl?: string | null;
+  founderLinkedinUrl?: string | null;
+  founderFacebookUrl?: string | null;
   toolCategories: Array<{ category: { name: string; slug: string } }>;
   toolTags: Array<{ tag: { name: string; slug: string; isActive: boolean } }>;
   launches: Array<{ launchType: string; launchDate: Date | string }>;
+  hasAlternativesPage?: boolean;
 };
 
 export type BestMarkdownInput = {
@@ -65,46 +76,102 @@ export function buildToolMarkdown(tool: ToolMarkdownInput, appUrl: string): stri
     return null;
   }
 
-  const categories = tool.toolCategories
-    .map((tc) => tc.category.name)
-    .join(", ");
-  const tags = tool.toolTags
-    .filter((tt) => tt.tag.isActive)
-    .map((tt) => tt.tag.name)
-    .join(", ");
+  const activeTags = tool.toolTags.filter((tt) => tt.tag.isActive);
+  const categories = tool.toolCategories.map((tc) => tc.category.name).join(", ");
+  const tags = activeTags.map((tt) => tt.tag.name).join(", ");
   const listingUrl = `${appUrl}/tools/${tool.slug}`;
   const markdownUrl = `${appUrl}/tools/${tool.slug}.md`;
+  const latestLaunch = tool.launches[0];
+
+  // YAML metadata block — machine-readable header for AI crawlers.
+  const meta: string[] = [
+    "```yaml",
+    `url: "${listingUrl}"`,
+    `website: "${tool.websiteUrl}"`,
+    `pricing: ${tool.pricingModel}`,
+    `upvotes: ${tool.upvoteCount}`,
+  ];
+  if (tool.isFeatured) meta.push("featured: true");
+  if (tool.badgeVerification === "VERIFIED") meta.push("verified: true");
+  if (tool.currentLaunchType) {
+    meta.push(`launch_type: ${formatLaunchType(tool.currentLaunchType)}`);
+  }
+  if (latestLaunch) meta.push(`launched: "${formatDate(latestLaunch.launchDate)}"`);
+  if (categories) meta.push(`categories: "${categories}"`);
+  if (tags) meta.push(`tags: "${tags}"`);
+  meta.push("```");
 
   const launchLines = tool.launches
     .map((l) => `- ${formatLaunchType(l.launchType)} — ${formatDate(l.launchDate)}`)
     .join("\n");
+
+  const screenshots = tool.media ?? [];
+  const screenshotSection =
+    screenshots.length > 0
+      ? [
+          "## Screenshots",
+          "",
+          ...screenshots.map((m, i) => `- Screenshot ${i + 1}: ${m.url}`),
+          "",
+        ]
+      : [];
+
+  const makerLinks: string[] = [];
+  if (tool.founderXUrl) makerLinks.push(`- X / Twitter: ${tool.founderXUrl}`);
+  if (tool.founderGithubUrl) makerLinks.push(`- GitHub: ${tool.founderGithubUrl}`);
+  if (tool.founderLinkedinUrl) makerLinks.push(`- LinkedIn: ${tool.founderLinkedinUrl}`);
+  if (tool.founderFacebookUrl) makerLinks.push(`- Facebook: ${tool.founderFacebookUrl}`);
+  const makerSection =
+    makerLinks.length > 0 ? ["## Maker", "", ...makerLinks, ""] : [];
+
+  const links: string[] = [
+    `- ShipBoost listing: ${listingUrl}`,
+    `- Website: ${tool.websiteUrl}`,
+  ];
+  if (tool.affiliateUrl) links.push(`- Affiliate link: ${tool.affiliateUrl}`);
+  links.push(`- Markdown: ${markdownUrl}`);
+  if (tool.hasAlternativesPage) {
+    links.push(`- Alternatives: ${appUrl}/alternatives/${tool.slug}`);
+  }
+
+  const exploreLinks = [
+    ...tool.toolCategories.map(
+      (tc) => `- More ${tc.category.name} tools: ${appUrl}/categories/${tc.category.slug}`,
+    ),
+    ...activeTags
+      .slice(0, 3)
+      .map((tt) => `- Tagged ${tt.tag.name}: ${appUrl}/tags/${tt.tag.slug}`),
+  ];
+  const exploreSection =
+    exploreLinks.length > 0 ? ["## Explore", "", ...exploreLinks, ""] : [];
 
   return [
     `# ${tool.name}`,
     "",
     `> ${tool.tagline}`,
     "",
-    `**Website:** ${tool.websiteUrl}`,
-    `**Pricing:** ${tool.pricingModel}`,
-    categories ? `**Categories:** ${categories}` : null,
-    tags ? `**Tags:** ${tags}` : null,
-    `**Upvotes:** ${tool.upvoteCount}`,
+    ...meta,
     "",
     "## Description",
     "",
     tool.richDescription,
     "",
-    ...(tool.launches.length > 0
-      ? ["## Launch History", "", launchLines, ""]
-      : []),
+    ...screenshotSection,
+    "## Launch History",
+    "",
+    launchLines,
+    "",
+    ...makerSection,
     "## Links",
     "",
-    `- ShipBoost listing: ${listingUrl}`,
-    `- Markdown: ${markdownUrl}`,
-    `- Alternatives: ${appUrl}/alternatives/${tool.slug}`,
+    ...links,
+    "",
+    ...exploreSection,
   ]
     .filter((line) => line !== null)
-    .join("\n");
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trimEnd();
 }
 
 export function buildBestMarkdown(page: BestMarkdownInput, appUrl: string): string {

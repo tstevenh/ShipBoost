@@ -6,6 +6,7 @@ import {
 } from "@/server/cache/public-content";
 import { getEnv } from "@/server/env";
 import { buildToolMarkdown } from "@/server/seo/page-markdown";
+import { hasAlternativesSeoPage } from "@/server/services/seo-service";
 
 export const revalidate = 3600;
 
@@ -25,7 +26,10 @@ export async function GET(_request: Request, context: RouteContext) {
     return notFound();
   }
 
-  const markdown = buildToolMarkdown(toolPage.tool, getEnv().NEXT_PUBLIC_APP_URL);
+  const markdown = buildToolMarkdown(
+    { ...toolPage.tool, hasAlternativesPage: hasAlternativesSeoPage(slug) },
+    getEnv().NEXT_PUBLIC_APP_URL,
+  );
 
   if (!markdown) {
     return notFound();

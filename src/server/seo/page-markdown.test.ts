@@ -87,9 +87,64 @@ describe("buildToolMarkdown", () => {
     expect(md).toContain("15 Mar 2024");
   });
 
-  it("includes alternatives link", () => {
-    const md = buildToolMarkdown(tool, APP_URL);
+  it("includes alternatives link when an alternatives page exists", () => {
+    const md = buildToolMarkdown({ ...tool, hasAlternativesPage: true }, APP_URL);
     expect(md).toContain(`${APP_URL}/alternatives/acme-crm`);
+  });
+
+  it("omits alternatives link when no alternatives page exists", () => {
+    const md = buildToolMarkdown({ ...tool, hasAlternativesPage: false }, APP_URL);
+    expect(md).not.toContain(`${APP_URL}/alternatives/acme-crm`);
+  });
+
+  it("includes a yaml metadata block", () => {
+    const md = buildToolMarkdown(tool, APP_URL);
+    expect(md).toContain("```yaml");
+    expect(md).toContain(`url: "${APP_URL}/tools/acme-crm"`);
+    expect(md).toContain(`website: "https://acme.io"`);
+  });
+
+  it("marks featured and verified tools in the metadata block", () => {
+    const md = buildToolMarkdown(
+      { ...tool, isFeatured: true, badgeVerification: "VERIFIED" },
+      APP_URL,
+    );
+    expect(md).toContain("featured: true");
+    expect(md).toContain("verified: true");
+  });
+
+  it("lists screenshots when media is present", () => {
+    const md = buildToolMarkdown(
+      {
+        ...tool,
+        media: [{ url: "https://cdn.io/1.png" }, { url: "https://cdn.io/2.png" }],
+      },
+      APP_URL,
+    );
+    expect(md).toContain("## Screenshots");
+    expect(md).toContain("https://cdn.io/1.png");
+    expect(md).toContain("https://cdn.io/2.png");
+  });
+
+  it("includes maker social links when present", () => {
+    const md = buildToolMarkdown(
+      { ...tool, founderXUrl: "https://x.com/acme", founderGithubUrl: "https://github.com/acme" },
+      APP_URL,
+    );
+    expect(md).toContain("## Maker");
+    expect(md).toContain("https://x.com/acme");
+    expect(md).toContain("https://github.com/acme");
+  });
+
+  it("includes affiliate link when present", () => {
+    const md = buildToolMarkdown({ ...tool, affiliateUrl: "https://acme.io/ref" }, APP_URL);
+    expect(md).toContain("https://acme.io/ref");
+  });
+
+  it("includes category and tag explore links", () => {
+    const md = buildToolMarkdown(tool, APP_URL);
+    expect(md).toContain(`${APP_URL}/categories/crm`);
+    expect(md).toContain(`${APP_URL}/tags/sales`);
   });
 });
 
