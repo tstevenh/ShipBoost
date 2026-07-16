@@ -4,6 +4,13 @@ import { useState } from "react";
 
 import { TrackedExternalLink } from "@/components/analytics/tracked-external-link";
 import { startupDirectories } from "@/content/resources/startup-directories";
+import { startupDirectoriesUpdatedAt } from "@/content/resources/startup-directories-updated-at";
+
+const updatedAtLabel = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+}).format(new Date(startupDirectoriesUpdatedAt));
 
 type SortKey = "name" | "domain" | "dr";
 type SortDirection = "asc" | "desc";
@@ -110,6 +117,13 @@ export function StartupDirectoriesResource({
           />
         </div>
       ) : null}
+
+      <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-2.5 py-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Domain Ratings updated {updatedAtLabel}
+        </span>
+      </div>
 
       <div className="overflow-x-auto rounded-3xl border border-border bg-card">
         <table className="min-w-full border-collapse text-left text-sm">
