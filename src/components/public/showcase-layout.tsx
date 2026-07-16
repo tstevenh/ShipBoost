@@ -14,6 +14,7 @@ import {
   getCachedActiveSponsorPlacements,
   getCachedPreviousWeeklyTopWinner,
 } from "@/server/cache/public-content";
+import { getCachedSiteDomainRating } from "@/server/ahrefs";
 import { StreakSidebar } from "@/components/streaks/streak-sidebar";
 
 type SidebarSponsorPlacement = ComponentProps<
@@ -95,6 +96,7 @@ export async function ShowcaseLayout({
   const sponsorPlacements = !isPrelaunch
     ? await getCachedActiveSponsorPlacements("SIDEBAR")
     : [];
+  const domainRating = await getCachedSiteDomainRating();
 
   return (
     <section className={cn("pb-20 bg-background min-h-screen", isHomePage ? "pt-0" : "pt-24")}>
@@ -120,7 +122,7 @@ export async function ShowcaseLayout({
                 <DeferredHomeSearchModal className="max-w-none" />
               </Suspense>
               <SidebarSubmitButton className="max-w-none" />
-              <DomainRatingBadge fullWidth />
+              <DomainRatingBadge fullWidth value={domainRating} />
               <SidebarLeadMagnet />
               <StreakSidebar />
             </aside>

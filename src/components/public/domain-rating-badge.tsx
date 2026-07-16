@@ -7,12 +7,20 @@ import { cn } from "@/lib/utils";
 type DomainRatingBadgeProps = {
   className?: string;
   fullWidth?: boolean;
+  /**
+   * Live DR value. Defaults to the last committed value in
+   * site-domain-rating.ts so the badge renders even without a fresh fetch.
+   */
+  value?: number;
 };
 
 // Domain Rating by Ahrefs — attribution is required by the DR license.
 // https://ahrefs.com/legal/domain-rating-license
-export function DomainRatingBadge({ className, fullWidth }: DomainRatingBadgeProps) {
-  const { value } = siteDomainRating;
+export function DomainRatingBadge({
+  className,
+  fullWidth,
+  value = siteDomainRating.value,
+}: DomainRatingBadgeProps) {
   const pct = Math.max(0, Math.min(100, value));
 
   return (
