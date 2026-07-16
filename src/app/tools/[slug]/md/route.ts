@@ -31,10 +31,6 @@ export async function GET(_request: Request, context: RouteContext) {
     getEnv().NEXT_PUBLIC_APP_URL,
   );
 
-  if (!markdown) {
-    return notFound();
-  }
-
   return new Response(markdown, {
     headers: {
       "content-type": "text/plain; charset=utf-8",

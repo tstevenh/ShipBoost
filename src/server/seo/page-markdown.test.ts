@@ -77,9 +77,11 @@ describe("buildToolMarkdown", () => {
     );
   });
 
-  it("returns null for a tool with no launches", () => {
+  it("renders a published listing with no launches, omitting Launch History", () => {
     const toolWithNoLaunches = { ...tool, launches: [] };
-    expect(buildToolMarkdown(toolWithNoLaunches, APP_URL)).toBeNull();
+    const md = buildToolMarkdown(toolWithNoLaunches, APP_URL);
+    expect(md).toContain("# Acme CRM");
+    expect(md).not.toContain("## Launch History");
   });
 
   it("formats launch date as D MMM YYYY", () => {

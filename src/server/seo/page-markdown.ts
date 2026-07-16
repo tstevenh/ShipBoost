@@ -71,11 +71,10 @@ function formatDate(value: Date | string | null | undefined): string {
   }).format(new Date(value));
 }
 
-export function buildToolMarkdown(tool: ToolMarkdownInput, appUrl: string): string | null {
-  if (tool.launches.length === 0) {
-    return null;
-  }
-
+export function buildToolMarkdown(tool: ToolMarkdownInput, appUrl: string): string {
+  // Prelaunch tools are 404'd upstream by the route (kind !== "public"). A
+  // published listing with no launch is still a valid public page, so it gets
+  // markdown here — just without a Launch History section.
   const activeTags = tool.toolTags.filter((tt) => tt.tag.isActive);
   const categories = tool.toolCategories.map((tc) => tc.category.name).join(", ");
   const tags = activeTags.map((tt) => tt.tag.name).join(", ");
@@ -101,9 +100,17 @@ export function buildToolMarkdown(tool: ToolMarkdownInput, appUrl: string): stri
   if (tags) meta.push(`tags: "${tags}"`);
   meta.push("```");
 
-  const launchLines = tool.launches
-    .map((l) => `- ${formatLaunchType(l.launchType)} — ${formatDate(l.launchDate)}`)
-    .join("\n");
+  const launchSection =
+    tool.launches.length > 0
+      ? [
+          "## Launch History",
+          "",
+          ...tool.launches.map(
+            (l) => `- ${formatLaunchType(l.launchType)} — ${formatDate(l.launchDate)}`,
+          ),
+          "",
+        ]
+      : [];
 
   const screenshots = tool.media ?? [];
   const screenshotSection =
@@ -157,10 +164,7 @@ export function buildToolMarkdown(tool: ToolMarkdownInput, appUrl: string): stri
     tool.richDescription,
     "",
     ...screenshotSection,
-    "## Launch History",
-    "",
-    launchLines,
-    "",
+    ...launchSection,
     ...makerSection,
     "## Links",
     "",
