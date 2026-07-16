@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Rocket } from "lucide-react";
 import { DeferredHomeSearchModal } from "@/components/public/deferred-home-search-modal";
 import { DeferredSidebarLeadMagnetForm } from "@/components/public/deferred-sidebar-lead-magnet-form";
-import { FrogDrBadge } from "@/components/public/frog-dr-badge";
+import { DomainRatingBadge } from "@/components/public/domain-rating-badge";
 import { SidebarSponsorPlacements } from "@/components/public/sidebar-sponsor-placements";
 import {
   TopWinnerSidebarSpot,
@@ -120,7 +120,7 @@ export async function ShowcaseLayout({
                 <DeferredHomeSearchModal className="max-w-none" />
               </Suspense>
               <SidebarSubmitButton className="max-w-none" />
-              <FrogDrBadge fullWidth />
+              <DomainRatingBadge fullWidth />
               <SidebarLeadMagnet />
               <StreakSidebar />
             </aside>

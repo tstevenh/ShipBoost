@@ -5,7 +5,7 @@ export type OutboundLinkSurface =
   | "blog_content"
   | "about_page"
   | "footer"
-  | "frogdr_badge"
+  | "ahrefs_dr_badge"
   | "public_page"
   | "tool_page"
   | "tool_listing"

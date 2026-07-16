@@ -203,6 +203,19 @@ export function StartupDirectoriesResource({
           </tbody>
         </table>
       </div>
+
+      <p className="text-xs font-medium text-muted-foreground">
+        DR = Domain Rating.{" "}
+        <a
+          href="https://ahrefs.com/legal/domain-rating-license"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          Domain Rating by Ahrefs
+        </a>
+        .
+      </p>
     </div>
   );
 }

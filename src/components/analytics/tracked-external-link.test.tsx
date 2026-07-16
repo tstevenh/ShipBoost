@@ -20,23 +20,23 @@ describe("TrackedExternalLink", () => {
   it("captures the master outbound event for external webpage links", () => {
     render(
       <TrackedExternalLink
-        href="https://frogdr.com/shipboost.io"
+        href="https://example.com/partner"
         sourceSurface="footer"
         linkContext="footer"
       >
-        FrogDR
+        Partner
       </TrackedExternalLink>,
     );
 
-    fireEvent.click(screen.getByRole("link", { name: "FrogDR" }));
+    fireEvent.click(screen.getByRole("link", { name: "Partner" }));
 
     expect(captureBrowserOutboundLinkClickedMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        href: "https://frogdr.com/shipboost.io?utm_source=shipboost&utm_medium=referral&utm_campaign=footer&utm_content=FrogDR",
+        href: "https://example.com/partner?utm_source=shipboost&utm_medium=referral&utm_campaign=footer&utm_content=Partner",
         sourcePath: "/about?from=footer",
         sourceSurface: "footer",
         linkContext: "footer",
-        linkText: "FrogDR",
+        linkText: "Partner",
         trackingMethod: "browser",
         isToolLink: false,
       }),

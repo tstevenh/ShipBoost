@@ -10,7 +10,7 @@ describe("outbound-link", () => {
   it("accepts external http and https links", () => {
     expect(
       isTrackableOutboundHttpUrl({
-        href: "https://frogdr.com/shipboost.io",
+        href: "https://ahrefs.com/shipboost.io",
         siteOrigin: "https://shipboost.io",
       }),
     ).toBe(true);
@@ -47,22 +47,22 @@ describe("outbound-link", () => {
   it("builds normalized master outbound properties", () => {
     expect(
       buildOutboundLinkClickedProperties({
-        href: "https://frogdr.com/shipboost.io?via=ShipBoost",
+        href: "https://ahrefs.com/shipboost.io?via=ShipBoost",
         sourcePath: "/about?from=footer",
         sourceSurface: "footer",
         linkContext: "footer",
-        linkText: "FrogDR",
+        linkText: "Ahrefs",
         trackingMethod: "browser",
         isToolLink: false,
       }),
     ).toEqual(
       expect.objectContaining({
-        href: "https://frogdr.com/shipboost.io?via=ShipBoost",
-        destination_domain: "frogdr.com",
+        href: "https://ahrefs.com/shipboost.io?via=ShipBoost",
+        destination_domain: "ahrefs.com",
         source_path: "/about?from=footer",
         source_surface: "footer",
         link_context: "footer",
-        link_text: "FrogDR",
+        link_text: "Ahrefs",
         tracking_method: "browser",
         is_tool_link: false,
       }),

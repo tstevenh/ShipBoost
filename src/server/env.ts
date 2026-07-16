@@ -54,6 +54,9 @@ const envSchema = z.object({
   ADMIN_EMAIL: z.email().optional(),
   ADMIN_NAME: z.string().trim().min(1).optional(),
   NEXT_PUBLIC_PRELAUNCH_MODE: optionalEnvString,
+  // Ahrefs free Domain Rating API. Used only by scripts/refresh-domain-ratings.mjs.
+  // Optional until 2026-09-01, required by Ahrefs thereafter.
+  AHREFS_API_TOKEN: optionalEnvString,
 });
 
 let cachedEnv: z.infer<typeof envSchema> | null = null;
@@ -79,6 +82,7 @@ export function getEnv() {
       RESEND_REPLY_TO_TRANSACTIONAL: process.env.RESEND_REPLY_TO_TRANSACTIONAL,
       RESEND_FROM_MARKETING: process.env.RESEND_FROM_MARKETING,
       LAUNCHPAD_GO_LIVE_AT: process.env.LAUNCHPAD_GO_LIVE_AT,
+      AHREFS_API_TOKEN: process.env.AHREFS_API_TOKEN,
       FREE_LAUNCH_SLOTS_PER_WEEK: process.env.FREE_LAUNCH_SLOTS_PER_WEEK,
       FOUNDING_PREMIUM_LAUNCH_LIMIT: process.env.FOUNDING_PREMIUM_LAUNCH_LIMIT,
       CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
