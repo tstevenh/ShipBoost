@@ -9,17 +9,10 @@ type DomainRatingBadgeProps = {
   fullWidth?: boolean;
 };
 
-function formatUpdated(iso: string) {
-  return new Intl.DateTimeFormat("en-GB", {
-    month: "short",
-    year: "numeric",
-  }).format(new Date(iso));
-}
-
 // Domain Rating by Ahrefs — attribution is required by the DR license.
 // https://ahrefs.com/legal/domain-rating-license
 export function DomainRatingBadge({ className, fullWidth }: DomainRatingBadgeProps) {
-  const { value, updatedAt } = siteDomainRating;
+  const { value } = siteDomainRating;
   const pct = Math.max(0, Math.min(100, value));
 
   return (
@@ -49,10 +42,6 @@ export function DomainRatingBadge({ className, fullWidth }: DomainRatingBadgePro
         </span>
         <span className="text-sm font-semibold text-muted-foreground">/ 100</span>
       </div>
-
-      <p className="mt-1 text-xs font-medium text-muted-foreground">
-        Updated {formatUpdated(updatedAt)}
-      </p>
 
       <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
         <div
