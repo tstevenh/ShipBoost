@@ -122,6 +122,25 @@ describe("launch-video-brief-service", () => {
     ).rejects.toMatchObject({ statusCode: 400 });
   });
 
+  it.each([
+    "https://res.cloudinary.com/shipboost/image/upload/../../other/image/upload/x.png",
+    "https://res.cloudinary.com/shipboost/image/upload/..%2F..%2Fother/x.png".replace("%2F", "/"),
+    "https://res.cloudinary.com\\@evil.example/shipboost/image/upload/x.png",
+    "https://user:pass@res.cloudinary.com/shipboost/image/upload/x.png",
+    "https://res.cloudinary.com:8443/shipboost/image/upload/x.png",
+    "http://res.cloudinary.com/shipboost/image/upload/x.png",
+  ])("rejects a disguised screenshot URL: %s", async (url) => {
+    prismaMock.launchVideoOrder.findFirst.mockResolvedValue(order());
+
+    await expect(
+      saveFounderLaunchVideoBrief("sub_1", founder, {
+        ...input,
+        screenshots: [{ role: "after", url, publicId: "x" }],
+      }),
+    ).rejects.toMatchObject({ statusCode: 400 });
+    expect(prismaMock.launchVideoOrder.update).not.toHaveBeenCalled();
+  });
+
   it("saves the answers and stamps the brief", async () => {
     prismaMock.launchVideoOrder.findFirst.mockResolvedValue(order());
     prismaMock.launchVideoOrder.update.mockResolvedValue(

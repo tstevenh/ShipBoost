@@ -74,16 +74,39 @@ async function findPaidOrderForFounder(submissionId: string, founder: Authentica
   return order;
 }
 
-/** Screenshots must come from our own Cloudinary uploads, never an arbitrary URL. */
-function assertOwnCloudinaryUrls(screenshots: LaunchVideoScreenshot[]) {
+/**
+ * Screenshots must come from our own Cloudinary uploads, never an arbitrary URL.
+ * The URL is parsed and checked in its normalized form (so "../" or "\\" tricks
+ * cannot point it elsewhere), and the normalized form is what gets stored.
+ */
+function normalizeOwnCloudinaryScreenshots(
+  screenshots: LaunchVideoScreenshot[],
+): LaunchVideoScreenshot[] {
   const cloudName = getEnv().CLOUDINARY_CLOUD_NAME;
-  const prefix = `https://res.cloudinary.com/${cloudName}/image/upload/`;
 
-  for (const screenshot of screenshots) {
-    if (!cloudName || !screenshot.url.startsWith(prefix)) {
+  return screenshots.map((screenshot) => {
+    let parsed: URL;
+    try {
+      parsed = new URL(screenshot.url);
+    } catch {
+      parsed = new URL("invalid:");
+    }
+
+    const isOwnUpload =
+      Boolean(cloudName) &&
+      parsed.protocol === "https:" &&
+      parsed.hostname === "res.cloudinary.com" &&
+      parsed.port === "" &&
+      parsed.username === "" &&
+      parsed.password === "" &&
+      parsed.pathname.startsWith(`/${cloudName}/image/upload/`);
+
+    if (!isOwnUpload) {
       throw new AppError(400, "Upload screenshots with the uploader on this page.");
     }
-  }
+
+    return { ...screenshot, url: parsed.href };
+  });
 }
 
 export async function getFounderLaunchVideoBrief(
@@ -104,7 +127,7 @@ export async function saveFounderLaunchVideoBrief(
     throw new AppError(409, "This video has been delivered, so the brief can no longer change.");
   }
 
-  assertOwnCloudinaryUrls(input.screenshots);
+  const screenshots = normalizeOwnCloudinaryScreenshots(input.screenshots);
 
   const updated = await prisma.launchVideoOrder.update({
     where: { id: order.id },
@@ -112,7 +135,7 @@ export async function saveFounderLaunchVideoBrief(
       focusNote: input.focusNote || null,
       highlightClaim: input.highlightClaim || null,
       avoidNote: input.avoidNote || null,
-      screenshots: input.screenshots,
+      screenshots,
       briefUpdatedAt: new Date(),
     },
     include: orderWithToolInclude,
