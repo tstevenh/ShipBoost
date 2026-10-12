@@ -125,7 +125,7 @@ export function StartupDirectoriesResource({
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-3xl border border-border bg-card">
+      <div className="relative overflow-x-auto rounded-3xl border border-border bg-card">
         <table className="min-w-full border-collapse text-left text-sm">
           <thead className="bg-muted/40">
             <tr>

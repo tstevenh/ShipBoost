@@ -63,7 +63,7 @@ export default function BestIndexPage() {
         </div>
 
         <div className="grid gap-10">
-          <section className="space-y-10">
+          <section className="min-w-0 space-y-10">
             <div className="max-w-4xl">
               <h1 className="mb-6 text-5xl font-black tracking-tight text-foreground">
                 Best SaaS Software Buying Guides

@@ -86,7 +86,7 @@ export default async function PricingPage() {
           </p>
           <h1 className="text-5xl font-black tracking-tight text-foreground sm:text-6xl">
             <span className="block">Your launch.</span>
-            <span className="block whitespace-nowrap">Plus a story that keeps working.</span>
+            <span className="block lg:whitespace-nowrap">Plus a story that keeps working.</span>
           </h1>
           <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-muted-foreground/80">
             Free Launch gets your product a listing on ShipBoost. Premium Launch
