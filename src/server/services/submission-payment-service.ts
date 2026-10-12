@@ -57,6 +57,15 @@ function readPreferredLaunchDateFromPayment(payment: PremiumLaunchPaymentLike) {
   return parsed;
 }
 
+/**
+ * Free-launch bundle checkouts (sponsor slots, a standalone launch video) carry
+ * shipboostLaunchType "FREE". Those payments must never upgrade the submission
+ * to a Premium Launch.
+ */
+export function isFreeLaunchBundlePayment(metadata: Record<string, unknown> | null | undefined) {
+  return metadata?.shipboostLaunchType === "FREE";
+}
+
 function assertValidPremiumLaunchWeekStart(date: Date) {
   const goLiveFloor = getLaunchpadGoLiveAtUtc();
   const launchWeekStart = startOfUtcDay(date);
@@ -75,6 +84,10 @@ function assertValidPremiumLaunchWeekStart(date: Date) {
 export async function applyPremiumLaunchPaymentSucceeded(
   payment: PremiumLaunchPaymentLike,
 ) {
+  if (isFreeLaunchBundlePayment(payment.metadata)) {
+    return null;
+  }
+
   const txResult = await prisma.$transaction(
     async (tx) => {
       const submissionId = readSubmissionIdFromPayment(payment);
@@ -542,7 +555,7 @@ export async function reconcilePremiumLaunchPayment(input: {
   const dodo = getDodoClient();
   const payment = await dodo.payments.retrieve(normalizedPaymentId);
 
-  if (payment.status !== "succeeded") {
+  if (payment.status !== "succeeded" || isFreeLaunchBundlePayment(payment.metadata)) {
     return getSubmissionById(prisma, existingSubmission.id);
   }
 

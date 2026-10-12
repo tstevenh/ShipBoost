@@ -18,6 +18,9 @@ import { TrackedExternalLink } from "@/components/analytics/tracked-external-lin
 import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
 import { AdPreviewButton } from "@/components/public/ad-preview-modal";
+import { LaunchVideoPricing } from "@/components/public/launch-video-pricing";
+import { formatLaunchVideoPremiumPerk } from "@/lib/launch-video";
+import { getLaunchVideoOffer } from "@/server/services/launch-video-service";
 import {
   getRemainingFoundingPremiumLaunchSpots,
   getListedToolCount,
@@ -53,9 +56,10 @@ function CheckItem({ text }: { text: string }) {
 export default async function PricingPage() {
   const env = getEnv();
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";
-  const [foundingPremiumLaunchSpotsLeft, listedToolCount] = await Promise.all([
+  const [foundingPremiumLaunchSpotsLeft, listedToolCount, launchVideoOffer] = await Promise.all([
     getRemainingFoundingPremiumLaunchSpots(),
     getListedToolCount(),
+    getLaunchVideoOffer(),
   ]);
   const listedToolFloor = Math.floor(listedToolCount / 50) * 50;
   const premiumPrice = foundingPremiumLaunchSpotsLeft > 0 ? 9 : 19;
@@ -169,6 +173,9 @@ export default async function PricingPage() {
                 <CheckItem text="Featured placement on the launchboard that week" />
                 <CheckItem text="Indexed in category and tag pages" />
                 <CheckItem text="Guaranteed dofollow link from your listing and editorial article" />
+                {launchVideoOffer.available && (
+                  <CheckItem text={formatLaunchVideoPremiumPerk(launchVideoOffer)} />
+                )}
               </ul>
               {premiumLaunchAvailable ? (
                 <Link
@@ -190,6 +197,11 @@ export default async function PricingPage() {
             </article>
           </div>
         </div>
+
+        {/* ── LAUNCH VIDEO ── */}
+        {launchVideoOffer.available ? (
+          <LaunchVideoPricing offer={launchVideoOffer} premiumLaunchPrice={premiumPrice} />
+        ) : null}
 
         {/* ── SPONSOR PLACEMENTS ── */}
         <div id="advertise" className="mt-20 scroll-mt-28">

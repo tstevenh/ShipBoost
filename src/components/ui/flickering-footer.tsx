@@ -1173,7 +1173,69 @@ const featuredBadges: FeaturedBadge[] = [
   },
 ];
 
+// The rail is hidden from view, but every badge link and image stays in the
+// HTML so directories can still verify their backlink. Set to true to show it.
+const SHOW_FEATURED_BADGE_RAIL = false;
+
+function FeaturedBadgeContent({ badge }: { badge: FeaturedBadge }) {
+  if (badge.content) {
+    return badge.content;
+  }
+
+  if (badge.src) {
+    return (
+      <>
+        {/* Use plain img tags so badge crawlers can verify the original asset URLs directly. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={badge.src}
+          alt={badge.alt}
+          width={badge.width}
+          height={badge.height}
+          style={badge.imageStyle}
+          data-kittylaunch-badge={badge.kittyLaunchBadge ? "1" : undefined}
+          className="max-h-[30px] w-auto shrink-0 object-contain"
+          loading="lazy"
+          decoding="async"
+        />
+      </>
+    );
+  }
+
+  return (
+    <span className="text-[10px] font-black tracking-[0.1em] text-foreground/80">
+      {badge.label}
+    </span>
+  );
+}
+
+function HiddenFeaturedBadges() {
+  return (
+    <div className="sr-only" aria-hidden="true">
+      {featuredBadges.map((badge) => (
+        <TrackedExternalLink
+          key={badge.id}
+          href={badge.href}
+          target="_blank"
+          rel={badge.rel}
+          title={badge.title}
+          tabIndex={-1}
+          sourceSurface="footer"
+          linkContext="footer"
+          linkText={badge.title ?? badge.label ?? badge.alt}
+        >
+          <FeaturedBadgeContent badge={badge} />
+        </TrackedExternalLink>
+      ))}
+    </div>
+  );
+}
+
 function FeaturedBadgeRail() {
+  if (!SHOW_FEATURED_BADGE_RAIL) {
+    return <HiddenFeaturedBadges />;
+  }
+
   const marqueeBadges = [...featuredBadges, ...featuredBadges];
 
   return (
@@ -1204,29 +1266,7 @@ function FeaturedBadgeRail() {
                 linkText={badge.title ?? badge.label ?? badge.alt}
                 className="flex h-12 min-w-[118px] items-center justify-center rounded-lg border border-border/70 bg-background/95 px-2.5 py-1.5 shadow-[0_10px_40px_-28px_rgba(10,10,10,0.9)] transition-transform duration-300 hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-background"
               >
-                {badge.content ? (
-                  badge.content
-                ) : badge.src ? (
-                  <>
-                    {/* Use plain img tags so badge crawlers can verify the original asset URLs directly. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={badge.src}
-                      alt={badge.alt}
-                      width={badge.width}
-                      height={badge.height}
-                      style={badge.imageStyle}
-                      data-kittylaunch-badge={badge.kittyLaunchBadge ? "1" : undefined}
-                      className="max-h-[30px] w-auto shrink-0 object-contain"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </>
-                ) : (
-                  <span className="text-[10px] font-black tracking-[0.1em] text-foreground/80">
-                    {badge.label}
-                  </span>
-                )}
+                <FeaturedBadgeContent badge={badge} />
               </TrackedExternalLink>
             ))}
           </div>

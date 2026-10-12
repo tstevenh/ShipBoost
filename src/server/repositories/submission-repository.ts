@@ -53,6 +53,18 @@ export const founderSubmissionSummarySelect = {
   spotlightBrief: {
     select: founderSubmissionSpotlightSummarySelect,
   },
+  launchVideoOrders: {
+    where: { status: { in: ["PAID", "DELIVERED"] } },
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    select: {
+      status: true,
+      standalone: true,
+      launchWeekStart: true,
+      deliverBy: true,
+      briefUpdatedAt: true,
+    },
+  },
   tool: {
     select: founderSubmissionToolSummarySelect,
   },

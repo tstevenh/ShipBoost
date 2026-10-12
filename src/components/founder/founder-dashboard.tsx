@@ -28,6 +28,13 @@ type FounderSubmission = {
     publishedAt: string | null;
     publishedArticle: { slug: string; title: string } | null;
   } | null;
+  launchVideo?: {
+    status: "PAID" | "DELIVERED";
+    standalone: boolean;
+    launchWeekStart: string;
+    deliverBy: string | null;
+    briefUpdatedAt: string | null;
+  } | null;
   tool: {
     id: string;
     slug: string;
@@ -100,6 +107,16 @@ type FounderNavItem = {
   icon: LucideIcon;
   count?: number;
 };
+
+// Date only, in UTC: launch weeks and delivery deadlines are whole days.
+function formatDayUtc(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
+}
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en", {
@@ -839,6 +856,59 @@ export function FounderDashboard({
                                   : "Open spotlight brief"}
                               </Link>
                             ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                    {sub?.launchVideo ? (
+                      <div className="rounded-[1.5rem] border border-border bg-muted/20 p-4 sm:p-5">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                          <div className="space-y-2">
+                            <span
+                              className={cn(
+                                "inline-block rounded-full border px-3 py-1 text-[10px] font-black tracking-widest",
+                                sub.launchVideo.status === "DELIVERED"
+                                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                  : sub.launchVideo.briefUpdatedAt
+                                    ? "border-border bg-card text-foreground"
+                                    : "border-amber-200 bg-amber-50 text-amber-700",
+                              )}
+                            >
+                              {sub.launchVideo.status === "DELIVERED"
+                                ? "Video delivered"
+                                : sub.launchVideo.briefUpdatedAt
+                                  ? "Brief saved"
+                                  : "Brief not filled in"}
+                            </span>
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-black tracking-tight text-foreground">
+                                Launch video
+                              </h4>
+                              <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground/80">
+                                {sub.launchVideo.standalone
+                                  ? `Due by ${formatDayUtc(sub.launchVideo.deliverBy ?? sub.launchVideo.launchWeekStart)}.`
+                                  : `Delivered during your launch week of ${formatDayUtc(sub.launchVideo.launchWeekStart)}.`}{" "}
+                                The brief takes two minutes: one action, a screenshot before and after it, and one true number.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2 md:min-w-[220px]">
+                            <Link
+                              href={`/dashboard/submissions/${sub.id}/launch-video`}
+                              className={cn(
+                                "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-black",
+                                sub.launchVideo.status === "DELIVERED"
+                                  ? "border border-border bg-card hover:bg-muted"
+                                  : "bg-primary text-primary-foreground shadow-lg shadow-black/10 hover:opacity-90",
+                              )}
+                            >
+                              <Edit size={14} />
+                              {sub.launchVideo.status === "DELIVERED"
+                                ? "View video brief"
+                                : sub.launchVideo.briefUpdatedAt
+                                  ? "Edit video brief"
+                                  : "Open video brief"}
+                            </Link>
                           </div>
                         </div>
                       </div>

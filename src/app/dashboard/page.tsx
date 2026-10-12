@@ -67,9 +67,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       ? resolvedSearchParams.status &&
           resolvedSearchParams.status !== "succeeded"
         ? "Checkout did not complete. You can try again from your dashboard."
-        : reconciledCheckoutSubmission?.paymentStatus === "PAID"
-          ? "Checkout completed. ShipBoost confirmed your premium launch payment."
-          : "Checkout completed. ShipBoost is syncing your premium launch payment now."
+        : reconciledCheckoutSubmission?.submissionType !== "FEATURED_LAUNCH"
+          ? "Checkout completed. Your payment is confirmed."
+          : reconciledCheckoutSubmission.paymentStatus === "PAID"
+            ? "Checkout completed. ShipBoost confirmed your premium launch payment."
+            : "Checkout completed. ShipBoost is syncing your premium launch payment now."
       : null;
   const serializedSubmissions = submissions.map((submission) => ({
     id: submission.id,
@@ -85,6 +87,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           publishedAt:
             submission.spotlightBrief.publishedAt?.toISOString() ?? null,
           publishedArticle: submission.spotlightBrief.publishedArticle,
+        }
+      : null,
+    launchVideo: submission.launchVideoOrders[0]
+      ? {
+          status: submission.launchVideoOrders[0].status === "DELIVERED" ? "DELIVERED" as const : "PAID" as const,
+          standalone: submission.launchVideoOrders[0].standalone,
+          launchWeekStart: submission.launchVideoOrders[0].launchWeekStart.toISOString(),
+          deliverBy: submission.launchVideoOrders[0].deliverBy?.toISOString() ?? null,
+          briefUpdatedAt: submission.launchVideoOrders[0].briefUpdatedAt?.toISOString() ?? null,
         }
       : null,
     tool: {

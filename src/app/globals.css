@@ -202,3 +202,26 @@
     }
   }
 }
+
+/* Launch video pricing: the playhead sweeps the 20-second timeline in real time. */
+@keyframes sb-playhead {
+  from {
+    left: 0%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+@layer utilities {
+  .sb-playhead {
+    animation: sb-playhead 20s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sb-playhead {
+      animation: none;
+      left: 42%;
+    }
+  }
+}

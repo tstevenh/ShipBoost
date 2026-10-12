@@ -26,7 +26,31 @@ function buildFallbackPriceCard() {
   };
 }
 
-function readCurrentPrice(product: Awaited<ReturnType<ReturnType<typeof getDodoClient>["products"]["retrieve"]>>) {
+type DodoProduct = Awaited<ReturnType<ReturnType<typeof getDodoClient>["products"]["retrieve"]>>;
+
+export function readDodoProductPriceCents(product: DodoProduct) {
+  const price = product.price;
+
+  if (typeof price !== "object" || price === null) {
+    return null;
+  }
+
+  if ("price" in price && typeof price.price === "number" && price.price > 0) {
+    return price.price;
+  }
+
+  if (
+    "fixed_price" in price &&
+    typeof price.fixed_price === "number" &&
+    price.fixed_price > 0
+  ) {
+    return price.fixed_price;
+  }
+
+  return null;
+}
+
+function readCurrentPrice(product: DodoProduct) {
   const price = product.price;
 
   if (typeof price !== "object" || price === null) {
@@ -34,13 +58,7 @@ function readCurrentPrice(product: Awaited<ReturnType<ReturnType<typeof getDodoC
   }
 
   const currentPriceCents =
-    "price" in price && typeof price.price === "number" && price.price > 0
-      ? price.price
-      : "fixed_price" in price &&
-          typeof price.fixed_price === "number" &&
-          price.fixed_price > 0
-        ? price.fixed_price
-        : FALLBACK_CURRENT_PRICE_CENTS;
+    readDodoProductPriceCents(product) ?? FALLBACK_CURRENT_PRICE_CENTS;
   const currency =
     typeof price.currency === "string" && price.currency.length > 0
       ? price.currency

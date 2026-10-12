@@ -615,6 +615,147 @@ export async function sendPremiumLaunchPaidEmailMessage(input: {
   });
 }
 
+export type LaunchVideoDeliveryEmailInfo =
+  | { kind: "premium"; launchWeek: string }
+  | { kind: "standalone"; deliverBy: string };
+
+function describeLaunchVideoDelivery(delivery: LaunchVideoDeliveryEmailInfo) {
+  return delivery.kind === "premium"
+    ? `during your launch week of ${delivery.launchWeek}`
+    : `by ${delivery.deliverBy}`;
+}
+
+const LAUNCH_VIDEO_BRIEF_ASK =
+  "Two minutes in the brief makes the video sharper: the one action people should see, a screenshot before and after it, and one true number. Every field is optional. Skip it and we build the video from your site and listing.";
+
+export async function sendLaunchVideoBookedEmailMessage(input: {
+  to: string;
+  name?: string | null;
+  briefUrl: string;
+  toolName: string;
+  delivery: LaunchVideoDeliveryEmailInfo;
+}) {
+  const subject = `Launch video booked for ${input.toolName}`;
+  const deliveryText = describeLaunchVideoDelivery(input.delivery);
+  const preview = `Delivered ${deliveryText}. The brief takes two minutes.`;
+  const html = renderEmailDocument({
+    title: subject,
+    preview,
+    content: [
+      h1("Launch video booked"),
+      paragraph(
+        `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}payment is in. We'll deliver a 20-second launch video of <strong>${escapeHtml(
+          input.toolName,
+        )}</strong>, in 16:9 and 9:16, <strong>${escapeHtml(deliveryText)}</strong>.`,
+      ),
+      paragraph(escapeHtml(LAUNCH_VIDEO_BRIEF_ASK)),
+      ctaButton(input.briefUrl, "Open video brief"),
+      paragraph(
+        "Every video uses one fixed format, so there are no revision rounds. If we get a fact about your product wrong, we fix it.",
+      ),
+    ].join(""),
+  });
+
+  await sendTransactionalEmail({
+    from: getTimFromShipBoostAddress(),
+    to: input.to,
+    subject,
+    html,
+    text: [
+      input.name ? `Hi ${input.name},` : "Hi,",
+      "",
+      `Payment is in. We'll deliver a 20-second launch video of ${input.toolName}, in 16:9 and 9:16, ${deliveryText}.`,
+      LAUNCH_VIDEO_BRIEF_ASK,
+      `Video brief: ${input.briefUrl}`,
+      "Every video uses one fixed format, so there are no revision rounds. If we get a fact about your product wrong, we fix it.",
+    ].join("\n"),
+  });
+}
+
+export async function sendLaunchVideoBriefReminderEmailMessage(input: {
+  to: string;
+  name?: string | null;
+  briefUrl: string;
+  toolName: string;
+  delivery: LaunchVideoDeliveryEmailInfo;
+}) {
+  const subject = `Your ${input.toolName} launch video brief is still empty`;
+  const deliveryText = describeLaunchVideoDelivery(input.delivery);
+  const html = renderEmailDocument({
+    title: subject,
+    preview: "Two minutes now, a sharper video later.",
+    content: [
+      h1("Launch video brief"),
+      paragraph(
+        `${input.name ? `Hi ${escapeHtml(input.name)}, ` : "Hi, "}we start on the <strong>${escapeHtml(
+          input.toolName,
+        )}</strong> video soon. It is due <strong>${escapeHtml(deliveryText)}</strong>.`,
+      ),
+      paragraph(escapeHtml(LAUNCH_VIDEO_BRIEF_ASK)),
+      ctaButton(input.briefUrl, "Open video brief"),
+    ].join(""),
+  });
+
+  await sendTransactionalEmail({
+    from: getTimFromShipBoostAddress(),
+    to: input.to,
+    subject,
+    html,
+    text: [
+      input.name ? `Hi ${input.name},` : "Hi,",
+      "",
+      `We start on the ${input.toolName} video soon. It is due ${deliveryText}.`,
+      LAUNCH_VIDEO_BRIEF_ASK,
+      `Video brief: ${input.briefUrl}`,
+    ].join("\n"),
+  });
+}
+
+export async function sendLaunchVideoOrderAdminEmailMessage(input: {
+  to: string;
+  toolName: string;
+  toolUrl: string;
+  listingUrl: string;
+  founderEmail: string;
+  orderType: string;
+  deliverBy: string;
+  focusNote?: string | null;
+  amountPaid: string;
+  launchPriceSpotsLeft: number;
+  laterPrices: string;
+}) {
+  const subject = `Launch video order: ${input.toolName} (deliver by ${input.deliverBy})`;
+  const lines = [
+    `Product: ${input.toolName}`,
+    `Site: ${input.toolUrl}`,
+    `Listing: ${input.listingUrl}`,
+    `Founder: ${input.founderEmail}`,
+    `Type: ${input.orderType}`,
+    `Deliver by: ${input.deliverBy}`,
+    `Focus: ${input.focusNote || "(none given)"}`,
+    `Paid: ${input.amountPaid}`,
+    input.launchPriceSpotsLeft > 0
+      ? `Launch-price videos left: ${input.launchPriceSpotsLeft}`
+      : `That was the last launch-price video. Raise both Dodo launch video products to ${input.laterPrices}.`,
+  ];
+  const html = renderEmailDocument({
+    title: subject,
+    preview: `${input.toolName}, deliver by ${input.deliverBy}`,
+    content: [
+      eyebrow("New order"),
+      h1("Launch video order"),
+      ...lines.map((line) => paragraph(escapeHtml(line))),
+    ].join(""),
+  });
+
+  await sendTransactionalEmail({
+    to: input.to,
+    subject,
+    html,
+    text: lines.join("\n"),
+  });
+}
+
 export type SpotlightReminderStage = "THREE_DAYS_BEFORE" | "LAUNCH_WEEK_START";
 
 export async function sendPremiumLaunchSpotlightReminderEmailMessage(input: {

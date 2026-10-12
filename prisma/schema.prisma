@@ -57,6 +57,14 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum LaunchVideoOrderStatus {
+  PENDING
+  PAID
+  DELIVERED
+  REFUNDED
+  CANCELED
+}
+
 enum BadgeVerificationStatus {
   NOT_REQUIRED
   PENDING
@@ -314,7 +322,8 @@ model Submission {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   tool Tool @relation(fields: [toolId], references: [id], onDelete: Cascade)
 
-  spotlightBrief SubmissionSpotlightBrief?
+  spotlightBrief    SubmissionSpotlightBrief?
+  launchVideoOrders LaunchVideoOrder[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -349,6 +358,40 @@ model SubmissionSpotlightBrief {
   publishedArticle BlogArticle? @relation(fields: [publishedArticleId], references: [id], onDelete: SetNull)
 
   @@index([status])
+}
+
+model LaunchVideoOrder {
+  id                  String                 @id @default(cuid())
+  submissionId        String
+  status              LaunchVideoOrderStatus @default(PENDING)
+  // Bought without Premium Launch (free launch): due 7 days after payment
+  // instead of during the launch week.
+  standalone          Boolean                @default(false)
+  // The launch week for Premium orders; the week the video is due in for
+  // standalone orders. Weekly capacity is counted on this column.
+  launchWeekStart     DateTime
+  deliverBy           DateTime?
+  // The brief, filled in after payment. All optional.
+  focusNote           String?
+  highlightClaim      String?
+  avoidNote           String?
+  // Up to two screenshots, before and after the action: [{ url, publicId }]
+  screenshots         Json?
+  briefUpdatedAt      DateTime?
+  briefReminderSentAt DateTime?
+  priceCents          Int
+  checkoutSessionId   String?
+  paymentId           String?                @unique
+  paidAt              DateTime?
+  deliveredAt         DateTime?
+  refundedAt          DateTime?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([status, launchWeekStart])
+  @@index([submissionId])
 }
 
 model Launch {
@@ -638,23 +681,22 @@ model UserStreakDay {
 }
 
 model StreakReward {
-  id             String              @id @default(cuid())
+  id             String             @id @default(cuid())
   userId         String
-  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   source         StreakRewardSource
   milestoneDay   Int?
   productScope   StreakProductScope
   percentOff     Int
-  code           String              @unique
+  code           String             @unique
   dodoDiscountId String?
-  unlockedAt     DateTime            @default(now())
+  unlockedAt     DateTime           @default(now())
   redeemedAt     DateTime?
 
   rollsAwarded LotteryRoll[]
 
   @@index([userId])
 }
-
 
 model LotteryRoll {
   id        String         @id @default(cuid())

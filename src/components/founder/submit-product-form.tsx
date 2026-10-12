@@ -1177,6 +1177,7 @@ export function SubmitProductForm({
         }
         freeLaunchRequirements={freeLaunchRequirements}
         listedToolCount={listedToolCount}
+        initialLaunchVideoSelected={searchParams.get("addon") === "launch-video"}
         onBack={() => {
           const params = new URLSearchParams(searchParams.toString());
           params.delete("section");

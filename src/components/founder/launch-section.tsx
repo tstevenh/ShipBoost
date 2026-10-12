@@ -16,6 +16,12 @@ import {
   FreeLaunchRequirementsPanel,
   type BadgePreviewOption,
 } from "@/components/founder/free-launch-requirements-panel";
+import { LaunchVideoAddon } from "@/components/founder/launch-video-addon";
+import {
+  formatLaunchVideoPremiumPerk,
+  type LaunchVideoMode,
+  type LaunchVideoOffer,
+} from "@/lib/launch-video";
 import type { SponsorEligibilitySlot } from "@/app/api/sponsor/eligibility/route";
 import type { SponsorSlot } from "@prisma/client";
 import type { FreeLaunchRequirements } from "@/server/services/free-launch-requirements";
@@ -54,6 +60,8 @@ export type LaunchSectionProps = {
   badges: BadgePreviewOption[];
   freeLaunchRequirements: FreeLaunchRequirements | null;
   listedToolCount?: number;
+  /** True when the founder came from the pricing page's launch video button. */
+  initialLaunchVideoSelected?: boolean;
 };
 
 const PREMIUM_FEATURES = [
@@ -76,8 +84,6 @@ const FREE_NOT_INCLUDED = [
   "Hand-written editorial article on the ShipBoost blog",
   "Guaranteed dofollow link",
 ];
-
-const FREE_UPGRADE_DISCOUNT_CODE = "LAUNCH9";
 
 const SLOT_FEATURES: Record<string, string[]> = {
   SIDEBAR: [
@@ -226,6 +232,7 @@ export function LaunchSection({
   badges,
   freeLaunchRequirements,
   listedToolCount,
+  initialLaunchVideoSelected = false,
 }: LaunchSectionProps) {
   const [selectedLaunch, setSelectedLaunch] = useState<"FREE" | "FEATURED">("FEATURED");
   const [preferredDate, setPreferredDate] = useState<string>(
@@ -234,16 +241,13 @@ export function LaunchSection({
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [expandedSlot, setExpandedSlot] = useState<string | null>(null);
   const [slots, setSlots] = useState<SponsorEligibilitySlot[]>([]);
+  const [launchVideoOffer, setLaunchVideoOffer] = useState<LaunchVideoOffer | null>(null);
+  const [launchVideoSelected, setLaunchVideoSelected] = useState(initialLaunchVideoSelected);
+  const [launchVideoFocusNote, setLaunchVideoFocusNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const premiumDatePickerRef = useRef<HTMLDivElement>(null);
   const requirementsRef = useRef<HTMLDivElement>(null);
   const [shakeRequirements, setShakeRequirements] = useState(false);
-  const [hasSeenFreeRequirements, setHasSeenFreeRequirements] = useState(false);
-  const [appliedDiscountCode, setAppliedDiscountCode] = useState<
-    typeof FREE_UPGRADE_DISCOUNT_CODE | null
-  >(null);
-  const [discountCopyLabel, setDiscountCopyLabel] = useState("Copy code");
   // The server only passes requirements when the draft id is in the URL. During
   // the fresh submit flow the id lives in client state, so fetch them by id.
   const [requirements, setRequirements] = useState(freeLaunchRequirements);
@@ -291,24 +295,6 @@ export function LaunchSection({
   }, [selectedLaunch, submissionId, requirements, requirementsFetchAttempt]);
 
   useEffect(() => {
-    if (selectedLaunch !== "FREE" || hasSeenFreeRequirements) return;
-    const node = requirementsRef.current;
-    if (!node || typeof IntersectionObserver === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        setHasSeenFreeRequirements(true);
-        observer.disconnect();
-      },
-      { rootMargin: "0px 0px -20% 0px", threshold: 0.2 },
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [selectedLaunch, hasSeenFreeRequirements, requirements]);
-
-  useEffect(() => {
     if (!toolId) return;
     fetch("/api/sponsor/eligibility")
       .then((r) => r.json())
@@ -317,6 +303,15 @@ export function LaunchSection({
       })
       .catch(() => {});
   }, [toolId]);
+
+  useEffect(() => {
+    fetch("/api/launch-video/offer")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.data?.available) setLaunchVideoOffer(data.data as LaunchVideoOffer);
+      })
+      .catch(() => {});
+  }, []);
 
   function toggleSlot(slot: string) {
     setSelectedSlots((prev) =>
@@ -330,6 +325,25 @@ export function LaunchSection({
 
   // Founding $9 round: $9 while spots remain, with the $19 anchor struck through.
   const premiumPrice = foundingPremiumSpotsLeft > 0 ? 9 : 19;
+
+  // Launch video: cheaper with Premium (delivered in the launch week), also
+  // sold on its own to free launchers (delivered within 7 days).
+  const launchVideoMode: LaunchVideoMode =
+    selectedLaunch === "FEATURED" ? "premium" : "standalone";
+  const launchVideoBookedMessage = !launchVideoOffer
+    ? null
+    : launchVideoMode === "premium"
+      ? launchVideoOffer.bookedWeekStarts.some((week) => week.slice(0, 10) === preferredDate)
+        ? "Booked for this launch week. Pick another week to add a video."
+        : null
+      : launchVideoOffer.standaloneBooked
+        ? "Fully booked this week. Check back next week."
+        : null;
+  const launchVideoInCart =
+    launchVideoSelected && launchVideoBookedMessage === null && Boolean(launchVideoOffer);
+  const launchVideoPrice =
+    launchVideoInCart && launchVideoOffer ? launchVideoOffer.priceUsd[launchVideoMode] : 0;
+
   const premiumCompareAt = foundingPremiumSpotsLeft > 0 ? 19 : 29;
   const spotsLabel =
     foundingPremiumSpotsLeft > 0
@@ -337,17 +351,10 @@ export function LaunchSection({
       : "Early access pricing — rising to $29 soon";
   const totalPrice =
     selectedLaunch === "FEATURED"
-      ? premiumPrice + selectedSponsorPrice
-      : selectedSponsorPrice;
-  const displayedTotalPrice =
-    selectedLaunch === "FEATURED" && appliedDiscountCode === FREE_UPGRADE_DISCOUNT_CODE
-      ? 9 + selectedSponsorPrice
-      : totalPrice;
+      ? premiumPrice + selectedSponsorPrice + launchVideoPrice
+      : selectedSponsorPrice + launchVideoPrice;
 
-  async function handleConfirm(
-    launchType: "FREE" | "FEATURED" = selectedLaunch,
-    discountCode?: typeof FREE_UPGRADE_DISCOUNT_CODE,
-  ) {
+  async function handleConfirm(launchType: "FREE" | "FEATURED" = selectedLaunch) {
     setErrorMessage(null);
     setIsLoading(true);
 
@@ -359,8 +366,11 @@ export function LaunchSection({
           submissionId,
           launchType,
           preferredLaunchDate: launchType === "FEATURED" ? preferredDate : undefined,
-          discountCode,
           sponsorSlots: selectedSlots,
+          launchVideo:
+            launchVideoInCart
+              ? { focusNote: launchVideoFocusNote.trim() || undefined }
+              : undefined,
         }),
       });
 
@@ -392,28 +402,6 @@ export function LaunchSection({
     }
   }
 
-  function handleDiscountUpgrade() {
-    setSelectedLaunch("FEATURED");
-    setAppliedDiscountCode(FREE_UPGRADE_DISCOUNT_CODE);
-    window.requestAnimationFrame(() => {
-      premiumDatePickerRef.current?.scrollIntoView?.({
-        behavior: "smooth",
-        block: "center",
-      });
-    });
-  }
-
-  async function handleCopyDiscountCode() {
-    try {
-      await navigator.clipboard.writeText(FREE_UPGRADE_DISCOUNT_CODE);
-      setDiscountCopyLabel("Copied");
-      window.setTimeout(() => setDiscountCopyLabel("Copy code"), 1400);
-    } catch {
-      setDiscountCopyLabel("Copy failed");
-      window.setTimeout(() => setDiscountCopyLabel("Copy code"), 1800);
-    }
-  }
-
   const isConfirmDisabled =
     isLoading || (selectedLaunch === "FEATURED" && !preferredDate);
 
@@ -429,10 +417,7 @@ export function LaunchSection({
       window.setTimeout(() => setShakeRequirements(false), 700);
       return;
     }
-    void handleConfirm(
-      selectedLaunch,
-      selectedLaunch === "FEATURED" ? appliedDiscountCode ?? undefined : undefined,
-    );
+    void handleConfirm(selectedLaunch);
   }
 
   return (
@@ -466,8 +451,6 @@ export function LaunchSection({
             type="button"
             onClick={() => {
               setSelectedLaunch("FEATURED");
-              setHasSeenFreeRequirements(false);
-              setAppliedDiscountCode(null);
             }}
             className={cn(
               "relative flex flex-col rounded-3xl border bg-card p-7 text-left transition-all",
@@ -505,7 +488,10 @@ export function LaunchSection({
               </p>
             ) : null}
             <ul className="mt-6 flex-1 space-y-3">
-              {PREMIUM_FEATURES.map((f) => (
+              {[
+                ...PREMIUM_FEATURES,
+                ...(launchVideoOffer ? [formatLaunchVideoPremiumPerk(launchVideoOffer)] : []),
+              ].map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm font-medium text-foreground/70">
                   <Check size={13} strokeWidth={3} className="mt-0.5 shrink-0 text-primary" />
                   {f}
@@ -519,8 +505,6 @@ export function LaunchSection({
             type="button"
             onClick={() => {
               setSelectedLaunch("FREE");
-              setHasSeenFreeRequirements(false);
-              setAppliedDiscountCode(null);
             }}
             className={cn(
               "relative flex flex-col rounded-3xl border bg-card p-7 text-left transition-all",
@@ -575,7 +559,7 @@ export function LaunchSection({
 
       {/* Premium date picker — always show when FEATURED selected */}
       {selectedLaunch === "FEATURED" && (
-        <div ref={premiumDatePickerRef} className="rounded-2xl border border-border bg-card p-5">
+        <div className="rounded-2xl border border-border bg-card p-5">
           <p className="mb-3 text-[10px] font-black tracking-[0.2em] text-foreground/40">
             Launch week
           </p>
@@ -592,6 +576,21 @@ export function LaunchSection({
           )}
         </div>
       )}
+
+      {/* Launch video add-on — priced on top of either launch */}
+      {launchVideoOffer ? (
+        <LaunchVideoAddon
+          offer={launchVideoOffer}
+          mode={launchVideoMode}
+          selected={launchVideoInCart}
+          bookedMessage={launchVideoBookedMessage}
+          premiumBundleTotal={premiumPrice + launchVideoOffer.priceUsd.premium}
+          focusNote={launchVideoFocusNote}
+          onToggle={() => setLaunchVideoSelected((selected) => !selected)}
+          onFocusNoteChange={setLaunchVideoFocusNote}
+          onSwitchToPremium={() => setSelectedLaunch("FEATURED")}
+        />
+      ) : null}
 
       {/* Sponsor add-ons */}
       {slots.length > 0 && (
@@ -745,65 +744,18 @@ export function LaunchSection({
 
       {/* Total + CTA */}
       <div className="sticky bottom-0 rounded-2xl border border-border bg-card/95 p-4 shadow-lg backdrop-blur">
-        {selectedLaunch === "FREE" && hasSeenFreeRequirements ? (
-          <div className="mb-4 border-l-4 border-primary bg-primary/5 px-3 py-2.5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <p className="min-w-0 text-sm font-black leading-tight text-foreground">
-                Unlock Premium Launch for $9
-              </p>
-              <button
-                type="button"
-                onClick={() => void handleDiscountUpgrade()}
-                disabled={isLoading || !preferredDate}
-                className="inline-flex shrink-0 items-center justify-center border-2 border-foreground bg-foreground px-3 py-2 font-mono text-xs font-black tracking-wider text-background shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
-              >
-                Choose week
-              </button>
-            </div>
-            <p className="mt-0.5 text-xs font-medium text-muted-foreground">
-              Use LAUNCH9 for an editorial article, dofollow backlink, reserved week, and no badge verification.
-            </p>
-          </div>
-        ) : null}
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">
             {selectedLaunch === "FEATURED" ? "Premium Launch" : "Free Launch"}
+            {launchVideoInCart ? " + launch video" : ""}
             {selectedSlots.length > 0
               ? ` + ${selectedSlots.length} placement${selectedSlots.length > 1 ? "s" : ""}`
               : ""}
           </span>
-          {displayedTotalPrice !== totalPrice ? (
-            <span className="flex items-baseline gap-2 text-right">
-              <span className="text-sm font-black text-muted-foreground line-through">
-                ${totalPrice}
-              </span>
-              <span className="text-lg font-black text-foreground">
-                ${displayedTotalPrice}
-              </span>
-            </span>
-          ) : (
-            <span className="text-lg font-black text-foreground">
-              {totalPrice === 0 ? "Free" : `$${totalPrice}`}
-            </span>
-          )}
+          <span className="text-lg font-black text-foreground">
+            {totalPrice === 0 ? "Free" : `$${totalPrice}`}
+          </span>
         </div>
-        {selectedLaunch === "FEATURED" && appliedDiscountCode ? (
-          <div className="mb-3 flex items-center justify-between border border-border bg-muted/35 px-3 py-2 text-xs">
-            <span className="font-medium text-muted-foreground">
-              <span className="font-mono font-black text-foreground">
-                {appliedDiscountCode}
-              </span>{" "}
-              applied at checkout
-            </span>
-            <button
-              type="button"
-              onClick={() => void handleCopyDiscountCode()}
-              className="border border-foreground px-2 py-1 font-black text-foreground transition hover:bg-foreground hover:text-background"
-            >
-              {discountCopyLabel}
-            </button>
-          </div>
-        ) : null}
         <button
           type="button"
           onClick={handleScheduleClick}
@@ -812,10 +764,10 @@ export function LaunchSection({
         >
           {isLoading ? (
             <Loader2 size={14} className="animate-spin" />
-          ) : selectedLaunch === "FREE" && selectedSlots.length === 0 ? (
+          ) : selectedLaunch === "FREE" && selectedSlots.length === 0 && !launchVideoInCart ? (
             "Schedule free launch"
           ) : (
-            `Continue to checkout — ${displayedTotalPrice === 0 ? "Free" : `$${displayedTotalPrice}`}`
+            `Continue to checkout — ${totalPrice === 0 ? "Free" : `$${totalPrice}`}`
           )}
         </button>
         {selectedLaunch === "FREE" && !freeRequirementsMet ? (

@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { getEnv } from "@/server/env";
 import { AppError } from "@/server/http/app-error";
 import { errorResponse, ok } from "@/server/http/response";
+import { sendDueLaunchVideoBriefReminders } from "@/server/services/launch-video-brief-service";
 import { sendDuePremiumLaunchSpotlightReminders } from "@/server/services/premium-launch-spotlight-reminder-service";
 
 function getProvidedSecret(request: NextRequest) {
@@ -38,7 +39,12 @@ function assertCronAccess(request: NextRequest) {
 async function handleRequest(request: NextRequest) {
   try {
     assertCronAccess(request);
-    return ok(await sendDuePremiumLaunchSpotlightReminders());
+    // Launch video brief reminders ride on this existing cron schedule.
+    const [spotlights, launchVideoBriefs] = await Promise.all([
+      sendDuePremiumLaunchSpotlightReminders(),
+      sendDueLaunchVideoBriefReminders(),
+    ]);
+    return ok({ ...spotlights, ...launchVideoBriefs });
   } catch (error) {
     return errorResponse(error);
   }

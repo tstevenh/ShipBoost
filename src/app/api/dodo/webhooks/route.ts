@@ -8,6 +8,10 @@ import {
   handlePremiumLaunchPaymentSucceeded,
   handlePremiumLaunchRefundSucceeded,
 } from "@/server/services/submission-service";
+import {
+  handleLaunchVideoPaymentSucceeded,
+  handleLaunchVideoRefundSucceeded,
+} from "@/server/services/launch-video-service";
 import { handleSponsorPlacementPaymentSucceeded } from "@/server/services/sponsor-placement-service";
 
 type DodoWebhookPayload = {
@@ -20,6 +24,7 @@ type DodoWebhookPayload = {
     discount_id?: string | null;
     discount_code?: string | null;
     total_amount?: number | null;
+    is_partial?: boolean | null;
   };
 };
 
@@ -76,6 +81,13 @@ export async function POST(request: Request) {
           }),
         );
 
+        const launchVideoOrderId =
+          payload.data.metadata?.shipboostLaunchVideoOrderId;
+        const launchVideoHandlers =
+          typeof launchVideoOrderId === "string" && launchVideoOrderId.length > 0
+            ? [handleLaunchVideoPaymentSucceeded({ orderId: launchVideoOrderId, paymentId })]
+            : [];
+
         if (launchType === "FEATURED") {
           await Promise.all([
             handlePremiumLaunchPaymentSucceeded({
@@ -86,9 +98,10 @@ export async function POST(request: Request) {
               discountCode: payload.data.discount_code ?? null,
             }),
             ...placementHandlers,
+            ...launchVideoHandlers,
           ]);
         } else {
-          await Promise.all(placementHandlers);
+          await Promise.all([...placementHandlers, ...launchVideoHandlers]);
         }
       } else {
         await handlePremiumLaunchPaymentSucceeded({
@@ -124,9 +137,16 @@ export async function POST(request: Request) {
       payload.data.payment_id &&
       (!payload.data.status || payload.data.status === "succeeded")
     ) {
-      await handlePremiumLaunchRefundSucceeded({
+      const launchVideoOnlyRefund = await handleLaunchVideoRefundSucceeded({
         paymentId: payload.data.payment_id,
+        isPartial: payload.data.is_partial === true,
       });
+
+      if (!launchVideoOnlyRefund) {
+        await handlePremiumLaunchRefundSucceeded({
+          paymentId: payload.data.payment_id,
+        });
+      }
       revalidateAllPublicContent();
     }
   } catch (error) {

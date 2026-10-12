@@ -384,6 +384,47 @@ describe("submission-payment-service", () => {
     });
   });
 
+  it("never upgrades a free launch to Premium from a free-launch bundle payment", async () => {
+    const retrieveMock = vi.fn().mockResolvedValue({
+      payment_id: "pay_free_1",
+      status: "succeeded",
+      checkout_session_id: "cs_free_1",
+      total_amount: 12900,
+      metadata: {
+        shipboostProduct: "launch_bundle",
+        shipboostLaunchType: "FREE",
+        shipboostSubmissionId: "submission_free_1",
+        shipboostLaunchVideoOrderId: "lvo_1",
+      },
+    });
+    getDodoClientMock.mockReturnValue({ payments: { retrieve: retrieveMock } });
+    prismaMock.submission.findUnique.mockResolvedValue({
+      id: "submission_free_1",
+      submissionType: "FREE_LAUNCH",
+      paymentStatus: "NOT_REQUIRED",
+      polarOrderId: null,
+    });
+    getSubmissionByIdMock.mockResolvedValue({
+      id: "submission_free_1",
+      submissionType: "FREE_LAUNCH",
+      paymentStatus: "NOT_REQUIRED",
+    });
+
+    const result = await reconcilePremiumLaunchPayment({
+      submissionId: "submission_free_1",
+      paymentId: "pay_free_1",
+    });
+
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ submissionType: "FREE_LAUNCH", paymentStatus: "NOT_REQUIRED" });
+
+    await handlePremiumLaunchPaymentSucceeded({
+      paymentId: "pay_free_1",
+      metadata: { shipboostLaunchType: "FREE", shipboostSubmissionId: "submission_free_1" },
+    });
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
   it("persists amountCents and discountCode from a premium launch payment", async () => {
     const submission = {
       id: "submission_amt_1",

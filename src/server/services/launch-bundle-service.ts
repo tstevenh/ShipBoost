@@ -10,6 +10,12 @@ import {
 import { getSponsorSlotConfig } from "@/server/services/sponsor-pricing";
 import { scheduleFreeSubmissionLaunch } from "@/server/services/submission-service";
 import { applyPremiumLaunchPaymentSucceeded } from "@/server/services/submission-payment-service";
+import {
+  attachLaunchVideoCheckoutSession,
+  cancelPendingLaunchVideoOrder,
+  createPendingLaunchVideoOrder,
+  handleLaunchVideoPaymentSucceeded,
+} from "@/server/services/launch-video-service";
 import type { SponsorSlot } from "@prisma/client";
 
 type FounderLike = { id: string; email: string; name?: string | null };
@@ -34,16 +40,16 @@ export async function createLaunchBundleCheckout(input: {
   submissionId: string;
   launchType: "FREE" | "FEATURED";
   preferredLaunchDate?: string;
-  discountCode?: "LAUNCH9";
   sponsorSlots: SponsorSlot[];
+  launchVideo?: { focusNote?: string };
   founder: FounderLike;
 }) {
   const {
     submissionId,
     launchType,
     preferredLaunchDate,
-    discountCode,
     sponsorSlots,
+    launchVideo,
     founder,
   } = input;
 
@@ -62,11 +68,27 @@ export async function createLaunchBundleCheckout(input: {
   );
 
   if (launchType === "FREE") {
-    const freeResult = await scheduleFreeSubmissionLaunch(submissionId, {
-      id: founder.id,
-    });
+    // Create the video order first so a fully booked week fails before the
+    // free launch is scheduled.
+    const videoOrder = launchVideo
+      ? await createPendingLaunchVideoOrder({
+          mode: "standalone",
+          submissionId,
+          focusNote: launchVideo.focusNote,
+        })
+      : null;
 
-    if (placements.length === 0) {
+    let freeResult: Awaited<ReturnType<typeof scheduleFreeSubmissionLaunch>>;
+    try {
+      freeResult = await scheduleFreeSubmissionLaunch(submissionId, {
+        id: founder.id,
+      });
+    } catch (error) {
+      if (videoOrder) await cancelPendingLaunchVideoOrder(videoOrder.order.id);
+      throw error;
+    }
+
+    if (placements.length === 0 && !videoOrder) {
       return {
         checkoutUrl: null as null,
         launchScheduled: true,
@@ -75,11 +97,11 @@ export async function createLaunchBundleCheckout(input: {
       };
     }
 
-    const checkoutUrl = await createSponsorOnlyCheckout({
-      toolId: submission.toolId,
+    const checkoutUrl = await createFreeLaunchAddOnCheckout({
       founder,
       placements,
       submissionId,
+      videoOrder,
     });
     return {
       checkoutUrl,
@@ -97,9 +119,9 @@ export async function createLaunchBundleCheckout(input: {
   const checkoutUrl = await createPremiumBundleCheckout({
     submissionId,
     preferredLaunchDate,
-    discountCode,
     founder,
     placements,
+    launchVideo,
   });
 
   return {
@@ -110,16 +132,22 @@ export async function createLaunchBundleCheckout(input: {
   };
 }
 
-async function createSponsorOnlyCheckout(opts: {
-  toolId: string;
+type PendingLaunchVideoOrder = Awaited<ReturnType<typeof createPendingLaunchVideoOrder>>;
+
+async function createFreeLaunchAddOnCheckout(opts: {
   founder: FounderLike;
   placements: Array<{ slot: SponsorSlot; placementId: string }>;
   submissionId: string;
+  videoOrder: PendingLaunchVideoOrder | null;
 }): Promise<string> {
-  const productCart = opts.placements.map(({ slot }) => ({
-    product_id: getSponsorSlotConfig(slot).dodoProductId!,
-    quantity: 1 as const,
-  }));
+  const { videoOrder } = opts;
+  const productCart = [
+    ...opts.placements.map(({ slot }) => ({
+      product_id: getSponsorSlotConfig(slot).dodoProductId!,
+      quantity: 1 as const,
+    })),
+    ...(videoOrder ? [{ product_id: videoOrder.productId, quantity: 1 as const }] : []),
+  ];
 
   const returnUrl = getBundleReturnUrl({
     submissionId: opts.submissionId,
@@ -139,6 +167,7 @@ async function createSponsorOnlyCheckout(opts: {
         shipboostLaunchType: "FREE",
         shipboostSubmissionId: opts.submissionId,
         shipboostSponsorPlacementIds: opts.placements.map((p) => p.placementId).join(","),
+        ...(videoOrder ? { shipboostLaunchVideoOrderId: videoOrder.order.id } : {}),
       },
     });
 
@@ -146,6 +175,9 @@ async function createSponsorOnlyCheckout(opts: {
       throw new AppError(500, "Dodo checkout url or session id is missing.");
     }
   } catch (error) {
+    if (videoOrder) {
+      await cancelPendingLaunchVideoOrder(videoOrder.order.id);
+    }
     for (const { placementId } of opts.placements) {
       await prisma.sponsorPlacement.update({
         where: { id: placementId },
@@ -155,15 +187,19 @@ async function createSponsorOnlyCheckout(opts: {
     throw error;
   }
 
+  if (videoOrder) {
+    await attachLaunchVideoCheckoutSession(videoOrder.order.id, checkout.session_id);
+  }
+
   return checkout.checkout_url;
 }
 
 async function createPremiumBundleCheckout(opts: {
   submissionId: string;
   preferredLaunchDate: string;
-  discountCode?: "LAUNCH9";
   founder: FounderLike;
   placements: Array<{ slot: SponsorSlot; placementId: string }>;
+  launchVideo?: { focusNote?: string };
 }): Promise<string> {
   const env = getEnv();
 
@@ -175,6 +211,15 @@ async function createPremiumBundleCheckout(opts: {
   if (isNaN(preferredDate.getTime()) || preferredDate <= new Date()) {
     throw new AppError(400, "Choose a future launch week.");
   }
+
+  const videoOrder = opts.launchVideo
+    ? await createPendingLaunchVideoOrder({
+        mode: "premium",
+        submissionId: opts.submissionId,
+        launchWeekStart: preferredDate,
+        focusNote: opts.launchVideo.focusNote,
+      })
+    : null;
 
   await prisma.submission.update({
     where: { id: opts.submissionId },
@@ -191,6 +236,7 @@ async function createPremiumBundleCheckout(opts: {
       product_id: getSponsorSlotConfig(slot).dodoProductId!,
       quantity: 1 as const,
     })),
+    ...(videoOrder ? [{ product_id: videoOrder.productId, quantity: 1 as const }] : []),
   ];
 
   const returnUrl = getBundleReturnUrl({
@@ -207,7 +253,6 @@ async function createPremiumBundleCheckout(opts: {
     checkout = await getDodoClient().checkoutSessions.create({
       product_cart: productCart,
       customer: { email: opts.founder.email, name: opts.founder.name ?? undefined },
-      discount_code: opts.discountCode,
       return_url: returnUrl,
       metadata: {
         shipboostProduct: "launch_bundle",
@@ -215,6 +260,7 @@ async function createPremiumBundleCheckout(opts: {
         shipboostSubmissionId: opts.submissionId,
         shipboostPreferredLaunchDate: preferredDate.toISOString(),
         shipboostSponsorPlacementIds: opts.placements.map((p) => p.placementId).join(","),
+        ...(videoOrder ? { shipboostLaunchVideoOrderId: videoOrder.order.id } : {}),
       },
     });
 
@@ -222,6 +268,9 @@ async function createPremiumBundleCheckout(opts: {
       throw new AppError(500, "Dodo checkout url or session id is missing.");
     }
   } catch (error) {
+    if (videoOrder) {
+      await cancelPendingLaunchVideoOrder(videoOrder.order.id);
+    }
     await prisma.submission.update({
       where: { id: opts.submissionId },
       data: { paymentStatus: "NOT_REQUIRED", submissionType: "LISTING_ONLY" },
@@ -239,6 +288,10 @@ async function createPremiumBundleCheckout(opts: {
     where: { id: opts.submissionId },
     data: { polarCheckoutId: checkout.session_id },
   });
+
+  if (videoOrder) {
+    await attachLaunchVideoCheckoutSession(videoOrder.order.id, checkout.session_id);
+  }
 
   return checkout.checkout_url;
 }
@@ -276,6 +329,19 @@ export async function reconcileLaunchBundlePayment(input: {
       }
     } catch (error) {
       console.error("[shipboost] premium launch reconciliation failed", error);
+    }
+  }
+
+  const launchVideoOrderId = payment.metadata?.shipboostLaunchVideoOrderId;
+
+  if (typeof launchVideoOrderId === "string" && launchVideoOrderId.length > 0) {
+    try {
+      await handleLaunchVideoPaymentSucceeded({
+        orderId: launchVideoOrderId,
+        paymentId: payment.payment_id,
+      });
+    } catch (error) {
+      console.error("[shipboost] launch video reconciliation failed", error);
     }
   }
 
