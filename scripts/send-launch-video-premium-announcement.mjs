@@ -7,6 +7,8 @@
 //       Sends the first recipient's email to that address, exactly as founders get it.
 //   ... --send
 //       Sends to every recipient not already in the sent log.
+//   ... --send --only=founder@example.com
+//       Sends to that one founder only, even one on the excluded list.
 //
 // The sent log (scripts/.launch-video-announcement-sent.json) makes --send safe
 // to re-run: anyone already emailed is skipped.
@@ -49,6 +51,7 @@ const sentLogPath = path.join(scriptDir, ".launch-video-announcement-sent.json")
 const args = process.argv.slice(2);
 const testTo = args.find((arg) => arg.startsWith("--test="))?.slice("--test=".length);
 const sendAll = args.includes("--send");
+const only = args.find((arg) => arg.startsWith("--only="))?.slice("--only=".length);
 
 /** "Ana Lopez" → "Ana". Usernames, emails and blanks fall back to "there". */
 function firstName(name, email) {
@@ -122,7 +125,7 @@ async function loadRecipients(prisma) {
   // One email per founder, naming every Premium product they launched.
   const byUser = new Map();
   for (const submission of submissions) {
-    if (EXCLUDED_EMAILS.has(submission.user.email)) continue;
+    if (only ? submission.user.email !== only : EXCLUDED_EMAILS.has(submission.user.email)) continue;
     const entry = byUser.get(submission.user.id) ?? {
       userId: submission.user.id,
       email: submission.user.email,
