@@ -38,6 +38,7 @@ type FounderSubmission = {
   /** Set when a launch video can still be added to this launch. */
   launchVideoAddOn?: {
     mode: "premium" | "standalone";
+    delivery: "launch_week" | "seven_days";
     priceUsd: number;
   } | null;
   tool: {
@@ -926,9 +927,13 @@ export function FounderDashboard({
                             </h4>
                             <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground/80">
                               A 20-second video of {sub.tool.name} doing its job, in 16:9 and 9:16.{" "}
-                              {sub.launchVideoAddOn.mode === "premium"
-                                ? `$${sub.launchVideoAddOn.priceUsd} with your Premium Launch, delivered during your launch week.`
-                                : `$${sub.launchVideoAddOn.priceUsd}, delivered within 7 days of your order.`}
+                              {`$${sub.launchVideoAddOn.priceUsd}${
+                                sub.launchVideoAddOn.mode === "premium" ? " with your Premium Launch" : ""
+                              }, ${
+                                sub.launchVideoAddOn.delivery === "launch_week"
+                                  ? "delivered during your launch week."
+                                  : "delivered within 7 days of your order."
+                              }`}
                             </p>
                           </div>
                           <div className="flex flex-col gap-2 md:min-w-[220px]">

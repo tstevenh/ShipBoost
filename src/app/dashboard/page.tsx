@@ -115,7 +115,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           }
         : null,
       launchVideoAddOn: launchVideoAddOn.ok
-        ? { mode: launchVideoAddOn.mode, priceUsd: launchVideoAddOn.priceUsd }
+        ? {
+            mode: launchVideoAddOn.mode,
+            delivery: launchVideoAddOn.delivery,
+            priceUsd: launchVideoAddOn.priceUsd,
+          }
         : null,
       tool: {
         id: submission.tool.id,

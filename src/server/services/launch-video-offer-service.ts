@@ -104,7 +104,7 @@ export async function sendDueLaunchVideoOfferEmails(now = new Date()) {
         offerUrl: getLaunchVideoBriefUrl(submission.id),
         priceUsd: addOn.priceUsd,
         delivery:
-          addOn.mode === "premium"
+          addOn.delivery === "launch_week"
             ? { kind: "premium" }
             : {
                 kind: "standalone",

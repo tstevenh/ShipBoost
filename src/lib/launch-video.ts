@@ -117,9 +117,22 @@ type AddOnLaunch = {
   launchDate: Date | string;
 };
 
+/**
+ * How a video is delivered: during a Premium launch week, or within 7 days of
+ * the order. Separate from the price: a Premium founder whose launch week has
+ * started pays the Premium price but gets the 7-day delivery.
+ */
+export type LaunchVideoDelivery = "launch_week" | "seven_days";
+
 /** A launch video bought after the launch is already scheduled. */
 export type LaunchVideoAddOn =
-  | { ok: true; mode: LaunchVideoMode; priceUsd: number; launchWeekStart: string }
+  | {
+      ok: true;
+      mode: LaunchVideoMode;
+      delivery: LaunchVideoDelivery;
+      priceUsd: number;
+      launchWeekStart: string;
+    }
   | { ok: false; reason: "unavailable" | "has_video" | "no_launch" };
 
 function utcDayIso(value: Date | string) {
@@ -131,9 +144,10 @@ function utcDayIso(value: Date | string) {
 
 /**
  * Whether a submission can still add a launch video, and at which price.
- * A paid Premium launch gets the Premium price until its launch week starts.
+ * A paid Premium launch always gets the Premium price: delivered during its
+ * launch week before that week starts, within 7 days of the order after.
  * Every other launch, scheduled, live or ended, gets the standalone price
- * (delivered within 7 days of the order).
+ * with the 7-day delivery.
  */
 export function getLaunchVideoAddOn(
   submission: {
@@ -151,17 +165,19 @@ export function getLaunchVideoAddOn(
   const premiumLaunch =
     submission.submissionType === "FEATURED_LAUNCH" && submission.paymentStatus === "PAID"
       ? submission.launches.find(
-          (launch) =>
-            launch.launchType === "FEATURED" &&
-            (launch.status === "PENDING" || launch.status === "APPROVED") &&
-            new Date(launch.launchDate).getTime() > now.getTime(),
+          (launch) => launch.launchType === "FEATURED" && launch.status !== "REJECTED",
         )
       : undefined;
 
   if (premiumLaunch) {
+    const weekNotStarted =
+      (premiumLaunch.status === "PENDING" || premiumLaunch.status === "APPROVED") &&
+      new Date(premiumLaunch.launchDate).getTime() > now.getTime();
+
     return {
       ok: true,
       mode: "premium",
+      delivery: weekNotStarted ? "launch_week" : "seven_days",
       priceUsd: offer.priceUsd.premium,
       launchWeekStart: utcDayIso(premiumLaunch.launchDate),
     };
@@ -179,6 +195,7 @@ export function getLaunchVideoAddOn(
     return {
       ok: true,
       mode: "standalone",
+      delivery: "seven_days",
       priceUsd: offer.priceUsd.standalone,
       launchWeekStart: utcDayIso(anyLaunch.launchDate),
     };

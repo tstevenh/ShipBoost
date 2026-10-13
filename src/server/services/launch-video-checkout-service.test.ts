@@ -100,6 +100,7 @@ describe("launch-video-checkout-service", () => {
       });
       expect(createPendingLaunchVideoOrderMock).toHaveBeenCalledWith({
         mode: "premium",
+        delivery: "launch_week",
         submissionId: "sub_1",
         launchWeekStart: new Date("2099-10-19T00:00:00.000Z"),
       });
@@ -135,6 +136,29 @@ describe("launch-video-checkout-service", () => {
 
       expect(createPendingLaunchVideoOrderMock).toHaveBeenCalledWith({
         mode: "standalone",
+        delivery: "seven_days",
+        submissionId: "sub_1",
+        launchWeekStart: undefined,
+      });
+    });
+
+    it("sells a past Premium launch the Premium product with 7-day delivery", async () => {
+      prismaMock.submission.findFirst.mockResolvedValue(
+        submission({
+          tool: {
+            name: "Acme",
+            launches: [
+              { launchType: "FEATURED", status: "LIVE", launchDate: new Date("2026-06-01T00:00:00.000Z") },
+            ],
+          },
+        }),
+      );
+
+      await createLaunchVideoCheckout({ submissionId: "sub_1", founder });
+
+      expect(createPendingLaunchVideoOrderMock).toHaveBeenCalledWith({
+        mode: "premium",
+        delivery: "seven_days",
         submissionId: "sub_1",
         launchWeekStart: undefined,
       });

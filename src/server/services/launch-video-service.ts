@@ -5,6 +5,7 @@ import {
   LAUNCH_VIDEO_LATER_PRICE_USD,
   LAUNCH_VIDEO_LAUNCH_PRICE_LIMIT,
   LAUNCH_VIDEO_STANDALONE_DELIVERY_DAYS,
+  type LaunchVideoDelivery,
   type LaunchVideoDemo,
   type LaunchVideoMode,
   type LaunchVideoOffer,
@@ -140,7 +141,10 @@ export async function getLaunchVideoOffer(): Promise<LaunchVideoOffer> {
 }
 
 export async function createPendingLaunchVideoOrder(input: {
+  /** The product and price. */
   mode: LaunchVideoMode;
+  /** Defaults to the launch week for Premium, 7 days for standalone. */
+  delivery?: LaunchVideoDelivery;
   submissionId: string;
   /** Required for Premium orders: the reserved launch week. */
   launchWeekStart?: Date;
@@ -154,10 +158,11 @@ export async function createPendingLaunchVideoOrder(input: {
   }
 
   const now = input.now ?? new Date();
+  const delivery = input.delivery ?? (input.mode === "premium" ? "launch_week" : "seven_days");
   let launchWeekStart: Date;
   let deliverBy: Date;
 
-  if (input.mode === "premium") {
+  if (delivery === "launch_week") {
     if (!input.launchWeekStart) {
       throw new AppError(400, "Premium launch week is missing.");
     }
@@ -174,7 +179,8 @@ export async function createPendingLaunchVideoOrder(input: {
   const order = await prisma.launchVideoOrder.create({
     data: {
       submissionId: input.submissionId,
-      standalone: input.mode === "standalone",
+      // "standalone" means the 7-day delivery, whatever the price.
+      standalone: delivery === "seven_days",
       launchWeekStart,
       deliverBy,
       focusNote: focusNote ? focusNote : null,
@@ -273,7 +279,9 @@ export async function handleLaunchVideoPaymentSucceeded(input: {
         toolUrl: tool.websiteUrl,
         listingUrl: `${env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/tools/${tool.slug}`,
         founderEmail: user.email,
-        orderType: order.standalone ? "Free launch (standalone)" : "Premium Launch add-on",
+        orderType: order.standalone
+          ? "Delivered within 7 days of the order"
+          : "Premium Launch add-on, delivered during the launch week",
         deliverBy: formatDate(order.deliverBy ?? paidAt),
         focusNote: order.focusNote,
         amountPaid: `$${(order.priceCents / 100).toFixed(0)}`,

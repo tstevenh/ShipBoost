@@ -150,6 +150,27 @@ describe("launch-video-service", () => {
   });
 
   describe("createPendingLaunchVideoOrder", () => {
+    it("bills the Premium product with the 7-day delivery when asked", async () => {
+      prismaMock.launchVideoOrder.create.mockResolvedValue({ id: "lvo_1" });
+      const now = new Date("2026-10-13T09:00:00.000Z");
+
+      const result = await createPendingLaunchVideoOrder({
+        mode: "premium",
+        delivery: "seven_days",
+        submissionId: "sub_1",
+        now,
+      });
+
+      expect(result.productId).toBe("pdt_launch_video");
+      expect(prismaMock.launchVideoOrder.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          standalone: true,
+          deliverBy: new Date("2026-10-20T09:00:00.000Z"),
+          priceCents: 9900,
+        }),
+      });
+    });
+
     it("has no weekly limit on orders", async () => {
       prismaMock.launchVideoOrder.create.mockResolvedValue({ id: "lvo_1" });
 

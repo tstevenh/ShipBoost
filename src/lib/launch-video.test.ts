@@ -25,34 +25,48 @@ describe("getLaunchVideoAddOn", () => {
     expect(getLaunchVideoAddOn(submission(), offer, now)).toEqual({
       ok: true,
       mode: "premium",
+      delivery: "launch_week",
       priceUsd: 99,
       launchWeekStart: "2026-10-19T00:00:00.000Z",
     });
   });
 
-  it("switches a Premium launch to the standalone price once its week has started", () => {
+  it("keeps the Premium price with 7-day delivery once the launch week has started", () => {
     expect(
       getLaunchVideoAddOn(submission(), offer, new Date("2026-10-19T08:00:00.000Z")),
     ).toEqual({
       ok: true,
-      mode: "standalone",
-      priceUsd: 129,
+      mode: "premium",
+      delivery: "seven_days",
+      priceUsd: 99,
       launchWeekStart: "2026-10-19T00:00:00.000Z",
     });
-  });
 
-  it("offers the standalone price to launches that already ended", () => {
-    for (const launchType of ["FREE", "FEATURED"] as const) {
+    for (const status of ["LIVE", "ENDED"] as const) {
       expect(
         getLaunchVideoAddOn(
           submission({
-            launches: [{ launchType, status: "ENDED", launchDate: "2026-09-07T00:00:00.000Z" }],
+            launches: [{ launchType: "FEATURED", status, launchDate: "2026-06-01T00:00:00.000Z" }],
           }),
           offer,
           now,
         ),
-      ).toMatchObject({ ok: true, mode: "standalone", priceUsd: 129 });
+      ).toMatchObject({ mode: "premium", delivery: "seven_days", priceUsd: 99 });
     }
+  });
+
+  it("offers the standalone price to free launches that already ended", () => {
+    expect(
+      getLaunchVideoAddOn(
+        submission({
+          submissionType: "FREE_LAUNCH",
+          paymentStatus: "NOT_REQUIRED",
+          launches: [{ launchType: "FREE", status: "ENDED", launchDate: "2026-09-07T00:00:00.000Z" }],
+        }),
+        offer,
+        now,
+      ),
+    ).toMatchObject({ ok: true, mode: "standalone", delivery: "seven_days", priceUsd: 129 });
   });
 
   it("compares against the most recent launch", () => {

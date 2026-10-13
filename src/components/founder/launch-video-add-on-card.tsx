@@ -8,6 +8,7 @@ import {
   formatLaunchVideoPriceNote,
   getLaunchVideoFeatures,
   getLaunchVideoTerms,
+  type LaunchVideoDelivery,
   type LaunchVideoMode,
   type LaunchVideoOffer,
 } from "@/lib/launch-video";
@@ -16,12 +17,14 @@ import {
 export function LaunchVideoAddOnCard({
   submissionId,
   mode,
+  delivery,
   priceUsd,
   deliveryLine,
   offer,
 }: {
   submissionId: string;
   mode: LaunchVideoMode;
+  delivery: LaunchVideoDelivery;
   priceUsd: number;
   deliveryLine: string;
   offer: Pick<LaunchVideoOffer, "launchPriceSpotsLeft" | "demo">;
@@ -29,6 +32,8 @@ export function LaunchVideoAddOnCard({
   const [isOpening, setIsOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const priceNote = formatLaunchVideoPriceNote(offer, mode);
+  // Features and terms follow the delivery promise, not the price.
+  const deliveryMode: LaunchVideoMode = delivery === "launch_week" ? "premium" : "standalone";
 
   async function beginCheckout() {
     setIsOpening(true);
@@ -73,7 +78,7 @@ export function LaunchVideoAddOnCard({
         <p className="mt-2 text-sm font-bold text-foreground">{deliveryLine}</p>
 
         <ul className="mt-5 space-y-2">
-          {getLaunchVideoFeatures(mode).map((feature) => (
+          {getLaunchVideoFeatures(deliveryMode).map((feature) => (
             <li
               key={feature}
               className="flex items-start gap-2.5 text-sm font-medium text-foreground/70"
@@ -88,7 +93,7 @@ export function LaunchVideoAddOnCard({
           <p className="mt-5 text-[10px] font-black tracking-widest text-primary">{priceNote}</p>
         ) : null}
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          {getLaunchVideoTerms(mode)}
+          {getLaunchVideoTerms(deliveryMode)}
         </p>
 
         {error ? (

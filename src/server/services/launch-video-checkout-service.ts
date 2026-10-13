@@ -97,8 +97,9 @@ export async function createLaunchVideoCheckout(input: {
 
   const videoOrder = await createPendingLaunchVideoOrder({
     mode: addOn.mode,
+    delivery: addOn.delivery,
     submissionId: found.submissionId,
-    launchWeekStart: addOn.mode === "premium" ? new Date(addOn.launchWeekStart) : undefined,
+    launchWeekStart: addOn.delivery === "launch_week" ? new Date(addOn.launchWeekStart) : undefined,
   });
 
   const base = getEnv().NEXT_PUBLIC_APP_URL.replace(/\/$/, "");

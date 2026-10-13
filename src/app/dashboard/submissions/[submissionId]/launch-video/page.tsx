@@ -104,7 +104,7 @@ async function LaunchVideoAddOnPage({
     const launchWeekStart = new Date(addOn.launchWeekStart);
     const { deliverBy } = getStandaloneDeliveryWindow(new Date());
     deliveryLine =
-      addOn.mode === "premium"
+      addOn.delivery === "launch_week"
         ? `Delivered during your launch week of ${formatDay(launchWeekStart)}.`
         : deliverBy.getTime() <= launchWeekStart.getTime()
           ? `Delivered by ${formatDay(deliverBy)}, before your launch week of ${formatDay(launchWeekStart)}.`
@@ -131,6 +131,7 @@ async function LaunchVideoAddOnPage({
           <LaunchVideoAddOnCard
             submissionId={submissionId}
             mode={addOn.mode}
+            delivery={addOn.delivery}
             priceUsd={addOn.priceUsd}
             deliveryLine={deliveryLine}
             offer={{
