@@ -60,6 +60,13 @@ export async function POST(request: Request) {
           checkoutSessionId: payload.data.checkout_session_id ?? null,
           metadata: payload.data.metadata ?? {},
         });
+      } else if (shipboostProduct === "launch_video") {
+        // A launch video bought on its own, after the launch was scheduled.
+        const launchVideoOrderId =
+          payload.data.metadata?.shipboostLaunchVideoOrderId;
+        if (typeof launchVideoOrderId === "string" && launchVideoOrderId.length > 0) {
+          await handleLaunchVideoPaymentSucceeded({ orderId: launchVideoOrderId, paymentId });
+        }
       } else if (shipboostProduct === "launch_bundle") {
         const launchType = payload.data.metadata?.shipboostLaunchType;
         const placementIdsRaw =

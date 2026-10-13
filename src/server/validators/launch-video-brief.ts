@@ -5,6 +5,7 @@ import {
   LAUNCH_VIDEO_FOCUS_NOTE_MAX_LENGTH,
   LAUNCH_VIDEO_HIGHLIGHT_MAX_LENGTH,
 } from "@/lib/launch-video";
+import { cuidSchema } from "@/server/validators/shared";
 
 const screenshotSchema = z.object({
   role: z.enum(["before", "after"]),
@@ -26,3 +27,7 @@ export const launchVideoBriefSchema = z.object({
 });
 
 export type LaunchVideoBriefInput = z.infer<typeof launchVideoBriefSchema>;
+
+export const launchVideoCheckoutSchema = z.object({
+  submissionId: cuidSchema,
+});

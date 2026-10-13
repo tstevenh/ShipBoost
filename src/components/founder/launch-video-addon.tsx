@@ -17,7 +17,6 @@ export function LaunchVideoAddon({
   offer,
   mode,
   selected,
-  bookedMessage,
   premiumBundleTotal,
   focusNote,
   onToggle,
@@ -27,8 +26,6 @@ export function LaunchVideoAddon({
   offer: LaunchVideoOffer;
   mode: LaunchVideoMode;
   selected: boolean;
-  /** Shown instead of the price note when no videos are left for that week. */
-  bookedMessage: string | null;
   /** Premium Launch + video, shown to free launchers as the cheaper path. */
   premiumBundleTotal?: number;
   focusNote: string;
@@ -37,7 +34,6 @@ export function LaunchVideoAddon({
   onSwitchToPremium?: () => void;
 }) {
   const priceNote = formatLaunchVideoPriceNote(offer, mode);
-  const booked = bookedMessage !== null;
   const showPremiumNudge =
     mode === "standalone" &&
     onSwitchToPremium !== undefined &&
@@ -57,7 +53,6 @@ export function LaunchVideoAddon({
         className={cn(
           "rounded-2xl border bg-card transition-all",
           selected ? "border-primary ring-2 ring-primary/5" : "border-border",
-          booked && "opacity-60",
         )}
       >
         <div className="flex items-center gap-3 p-4">
@@ -65,7 +60,6 @@ export function LaunchVideoAddon({
             type="checkbox"
             id="launch-video-addon"
             checked={selected}
-            disabled={booked}
             onChange={onToggle}
             className="h-4 w-4 rounded border-border accent-primary"
           />
@@ -98,11 +92,7 @@ export function LaunchVideoAddon({
               </li>
             ))}
           </ul>
-          {booked ? (
-            <p className="mt-4 text-[10px] font-black tracking-widest text-foreground/60">
-              {bookedMessage}
-            </p>
-          ) : priceNote ? (
+          {priceNote ? (
             <p className="mt-4 text-[10px] font-black tracking-widest text-primary">{priceNote}</p>
           ) : null}
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">

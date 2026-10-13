@@ -5,7 +5,6 @@
 
 export const LAUNCH_VIDEO_LAUNCH_PRICE_LIMIT = 10;
 export const LAUNCH_VIDEO_LATER_PRICE_USD = { premium: 149, standalone: 179 } as const;
-export const LAUNCH_VIDEO_WEEKLY_CAPACITY = 5;
 export const LAUNCH_VIDEO_STANDALONE_DELIVERY_DAYS = 7;
 export const LAUNCH_VIDEO_FOCUS_NOTE_MAX_LENGTH = 200;
 export const LAUNCH_VIDEO_HIGHLIGHT_MAX_LENGTH = 120;
@@ -58,8 +57,6 @@ export type LaunchVideoOffer = {
   available: boolean;
   priceUsd: Record<LaunchVideoMode, number>;
   launchPriceSpotsLeft: number;
-  bookedWeekStarts: string[];
-  standaloneBooked: boolean;
   demo: LaunchVideoDemo | null;
 };
 
@@ -112,4 +109,80 @@ export function formatLaunchVideoPriceNote(
 
 export function formatLaunchVideoPremiumPerk(offer: Pick<LaunchVideoOffer, "priceUsd">) {
   return `Launch video add-on for $${offer.priceUsd.premium} ($${offer.priceUsd.standalone} without Premium)`;
+}
+
+type AddOnLaunch = {
+  launchType: "FREE" | "FEATURED" | "RELAUNCH";
+  status: "PENDING" | "APPROVED" | "LIVE" | "ENDED" | "REJECTED";
+  launchDate: Date | string;
+};
+
+/** A launch video bought after the launch is already scheduled. */
+export type LaunchVideoAddOn =
+  | { ok: true; mode: LaunchVideoMode; priceUsd: number; launchWeekStart: string }
+  | { ok: false; reason: "unavailable" | "has_video" | "no_launch" };
+
+function utcDayIso(value: Date | string) {
+  const date = new Date(value);
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+  ).toISOString();
+}
+
+/**
+ * Whether a submission can still add a launch video, and at which price.
+ * A paid Premium launch gets the Premium price until its launch week starts.
+ * Every other launch, scheduled, live or ended, gets the standalone price
+ * (delivered within 7 days of the order).
+ */
+export function getLaunchVideoAddOn(
+  submission: {
+    submissionType: "LISTING_ONLY" | "FREE_LAUNCH" | "FEATURED_LAUNCH" | "RELAUNCH";
+    paymentStatus: "NOT_REQUIRED" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+    hasVideo: boolean;
+    launches: AddOnLaunch[];
+  },
+  offer: Pick<LaunchVideoOffer, "available" | "priceUsd">,
+  now = new Date(),
+): LaunchVideoAddOn {
+  if (submission.hasVideo) return { ok: false, reason: "has_video" };
+  if (!offer.available) return { ok: false, reason: "unavailable" };
+
+  const premiumLaunch =
+    submission.submissionType === "FEATURED_LAUNCH" && submission.paymentStatus === "PAID"
+      ? submission.launches.find(
+          (launch) =>
+            launch.launchType === "FEATURED" &&
+            (launch.status === "PENDING" || launch.status === "APPROVED") &&
+            new Date(launch.launchDate).getTime() > now.getTime(),
+        )
+      : undefined;
+
+  if (premiumLaunch) {
+    return {
+      ok: true,
+      mode: "premium",
+      priceUsd: offer.priceUsd.premium,
+      launchWeekStart: utcDayIso(premiumLaunch.launchDate),
+    };
+  }
+
+  // The most recent launch, so the delivery line compares against the right week.
+  const anyLaunch = submission.launches
+    .filter(
+      (launch) =>
+        launch.status === "APPROVED" || launch.status === "LIVE" || launch.status === "ENDED",
+    )
+    .sort((a, b) => new Date(b.launchDate).getTime() - new Date(a.launchDate).getTime())[0];
+
+  if (anyLaunch) {
+    return {
+      ok: true,
+      mode: "standalone",
+      priceUsd: offer.priceUsd.standalone,
+      launchWeekStart: utcDayIso(anyLaunch.launchDate),
+    };
+  }
+
+  return { ok: false, reason: "no_launch" };
 }

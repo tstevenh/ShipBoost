@@ -711,6 +711,76 @@ export async function sendLaunchVideoBriefReminderEmailMessage(input: {
   });
 }
 
+export async function sendLaunchVideoOfferEmailMessage(input: {
+  to: string;
+  name?: string | null;
+  toolName: string;
+  launchWeek: string;
+  offerUrl: string;
+  priceUsd: number;
+  /** Premium: delivered during the launch week. Standalone: within 7 days of the order. */
+  delivery:
+    | { kind: "premium" }
+    | { kind: "standalone"; readyBeforeLaunch: boolean; arrivesBy: string };
+  launchPriceSpotsLeft: number;
+}) {
+  const subject = `A launch video for ${input.toolName}`;
+  const greeting = input.name ? `Hi ${input.name},` : "Hi,";
+  const intro = `${input.toolName} launches on ShipBoost the week of ${input.launchWeek}.`;
+  const what =
+    "We now make a 20-second launch video for it: one real action in your product, the result it produces, and an end card. You get 16:9 for your site and X, and 9:16 for Reels, TikTok and Shorts.";
+  const price =
+    input.delivery.kind === "premium"
+      ? `It's $${input.priceUsd} with your Premium Launch and delivered during your launch week, so you can post it while you're on the board. Not delivered that week? Full refund.`
+      : `It's $${input.priceUsd} and delivered within 7 days of your order. ${
+          input.delivery.readyBeforeLaunch
+            ? "Order now and it's ready before your launch week starts."
+            : `Order today and it arrives by ${input.delivery.arrivesBy}, during your launch week.`
+        } Not delivered within 7 days? Full refund.`;
+  const spots =
+    input.launchPriceSpotsLeft > 0
+      ? `That's the launch price for the first 10 videos. ${input.launchPriceSpotsLeft} left.`
+      : null;
+  const terms =
+    "No revision rounds: every video uses one fixed format. If we get a fact about your product wrong, we fix it.";
+  const footer = `This is the only email about a launch video for ${input.toolName}.`;
+
+  const html = renderEmailDocument({
+    title: subject,
+    preview:
+      input.delivery.kind === "premium"
+        ? "20 seconds of your product, delivered during your launch week."
+        : "20 seconds of your product, delivered within 7 days.",
+    content: [
+      h1(subject),
+      paragraph(`${escapeHtml(greeting)} <strong>${escapeHtml(intro)}</strong>`),
+      paragraph(escapeHtml(what)),
+      paragraph(escapeHtml(price)),
+      spots ? paragraph(escapeHtml(spots)) : "",
+      ctaButton(input.offerUrl, "See the sample and add it"),
+      paragraph(escapeHtml(terms)),
+      paragraph(`<span style="font-size:13px;">${escapeHtml(footer)}</span>`),
+    ].join(""),
+  });
+
+  await sendTransactionalEmail({
+    from: getTimFromShipBoostAddress(),
+    to: input.to,
+    subject,
+    html,
+    text: [
+      greeting,
+      intro,
+      what,
+      price,
+      ...(spots ? [spots] : []),
+      `See the sample and add it: ${input.offerUrl}`,
+      terms,
+      footer,
+    ].join("\n\n"),
+  });
+}
+
 export async function sendLaunchVideoOrderAdminEmailMessage(input: {
   to: string;
   toolName: string;

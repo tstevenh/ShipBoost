@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { FounderDashboard } from "@/components/founder/founder-dashboard";
 import { getServerSession } from "@/server/auth/session";
 import { getEnv } from "@/server/env";
+import { getLaunchVideoAddOn } from "@/lib/launch-video";
+import { getLaunchVideoOffer } from "@/server/services/launch-video-service";
 import { listFounderListingClaims } from "@/server/services/listing-claim-service";
 import {
   listFounderSponsorPlacements,
@@ -56,66 +58,84 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         })
       : null;
 
-  const [submissions, tools, claims, sponsorPlacements] = await Promise.all([
+  const [submissions, tools, claims, sponsorPlacements, launchVideoOffer] = await Promise.all([
     listFounderSubmissions(session.user.id),
     listFounderTools(session.user.id),
     listFounderListingClaims(session.user.id),
     listFounderSponsorPlacements(session.user.id),
+    getLaunchVideoOffer(),
   ]);
   const initialSuccessMessage =
     resolvedSearchParams?.checkout === "success"
-      ? resolvedSearchParams.status &&
-          resolvedSearchParams.status !== "succeeded"
-        ? "Checkout did not complete. You can try again from your dashboard."
-        : reconciledCheckoutSubmission?.submissionType !== "FEATURED_LAUNCH"
-          ? "Checkout completed. Your payment is confirmed."
-          : reconciledCheckoutSubmission.paymentStatus === "PAID"
-            ? "Checkout completed. ShipBoost confirmed your premium launch payment."
-            : "Checkout completed. ShipBoost is syncing your premium launch payment now."
+      ? resolvedSearchParams.status === "processing"
+        ? "Checkout completed. ShipBoost is confirming your payment now. Refresh in a minute."
+        : resolvedSearchParams.status &&
+            resolvedSearchParams.status !== "succeeded"
+          ? "Checkout did not complete. You can try again from your dashboard."
+          : reconciledCheckoutSubmission?.submissionType !== "FEATURED_LAUNCH"
+            ? "Checkout completed. Your payment is confirmed."
+            : reconciledCheckoutSubmission.paymentStatus === "PAID"
+              ? "Checkout completed. ShipBoost confirmed your premium launch payment."
+              : "Checkout completed. ShipBoost is syncing your premium launch payment now."
       : null;
-  const serializedSubmissions = submissions.map((submission) => ({
-    id: submission.id,
-    submissionType: submission.submissionType,
-    reviewStatus: submission.reviewStatus,
-    preferredLaunchDate: submission.preferredLaunchDate?.toISOString() ?? null,
-    paymentStatus: submission.paymentStatus,
-    badgeVerification: submission.badgeVerification,
-    spotlightBrief: submission.spotlightBrief
-      ? {
-          status: submission.spotlightBrief.status,
-          updatedAt: submission.spotlightBrief.updatedAt.toISOString(),
-          publishedAt:
-            submission.spotlightBrief.publishedAt?.toISOString() ?? null,
-          publishedArticle: submission.spotlightBrief.publishedArticle,
-        }
-      : null,
-    launchVideo: submission.launchVideoOrders[0]
-      ? {
-          status: submission.launchVideoOrders[0].status === "DELIVERED" ? "DELIVERED" as const : "PAID" as const,
-          standalone: submission.launchVideoOrders[0].standalone,
-          launchWeekStart: submission.launchVideoOrders[0].launchWeekStart.toISOString(),
-          deliverBy: submission.launchVideoOrders[0].deliverBy?.toISOString() ?? null,
-          briefUpdatedAt: submission.launchVideoOrders[0].briefUpdatedAt?.toISOString() ?? null,
-        }
-      : null,
-    tool: {
-      id: submission.tool.id,
-      slug: submission.tool.slug,
-      name: submission.tool.name,
-      websiteUrl: submission.tool.websiteUrl,
-      logoMedia: submission.tool.logoMedia
+  const serializedSubmissions = submissions.map((submission) => {
+    const launchVideoAddOn = getLaunchVideoAddOn(
+      {
+        submissionType: submission.submissionType,
+        paymentStatus: submission.paymentStatus,
+        hasVideo: submission.launchVideoOrders.length > 0,
+        launches: submission.tool.launches,
+      },
+      launchVideoOffer,
+    );
+
+    return {
+      id: submission.id,
+      submissionType: submission.submissionType,
+      reviewStatus: submission.reviewStatus,
+      preferredLaunchDate: submission.preferredLaunchDate?.toISOString() ?? null,
+      paymentStatus: submission.paymentStatus,
+      badgeVerification: submission.badgeVerification,
+      spotlightBrief: submission.spotlightBrief
         ? {
-            url: submission.tool.logoMedia.url,
+            status: submission.spotlightBrief.status,
+            updatedAt: submission.spotlightBrief.updatedAt.toISOString(),
+            publishedAt:
+              submission.spotlightBrief.publishedAt?.toISOString() ?? null,
+            publishedArticle: submission.spotlightBrief.publishedArticle,
           }
         : null,
-      launches: submission.tool.launches.map((launch) => ({
-        id: launch.id,
-        launchType: launch.launchType,
-        status: launch.status,
-        launchDate: launch.launchDate.toISOString(),
-      })),
-    },
-  }));
+      launchVideo: submission.launchVideoOrders[0]
+        ? {
+            status: submission.launchVideoOrders[0].status === "DELIVERED" ? "DELIVERED" as const : "PAID" as const,
+            standalone: submission.launchVideoOrders[0].standalone,
+            launchWeekStart: submission.launchVideoOrders[0].launchWeekStart.toISOString(),
+            deliverBy: submission.launchVideoOrders[0].deliverBy?.toISOString() ?? null,
+            briefUpdatedAt: submission.launchVideoOrders[0].briefUpdatedAt?.toISOString() ?? null,
+          }
+        : null,
+      launchVideoAddOn: launchVideoAddOn.ok
+        ? { mode: launchVideoAddOn.mode, priceUsd: launchVideoAddOn.priceUsd }
+        : null,
+      tool: {
+        id: submission.tool.id,
+        slug: submission.tool.slug,
+        name: submission.tool.name,
+        websiteUrl: submission.tool.websiteUrl,
+        logoMedia: submission.tool.logoMedia
+          ? {
+              url: submission.tool.logoMedia.url,
+            }
+          : null,
+        launches: submission.tool.launches.map((launch) => ({
+          id: launch.id,
+          launchType: launch.launchType,
+          status: launch.status,
+          launchDate: launch.launchDate.toISOString(),
+        })),
+      },
+    };
+  });
   const serializedTools = tools.map((tool) => ({
     id: tool.id,
     slug: tool.slug,

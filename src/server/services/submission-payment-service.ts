@@ -8,6 +8,7 @@ import {
 } from "@/server/repositories/submission-repository";
 import { getDodoClient, getDodoDashboardReturnUrl } from "@/server/dodo";
 import { capturePostHogEventSafely } from "@/server/posthog";
+import { moveLaunchVideoOrderToWeek } from "@/server/services/launch-video-service";
 import {
   getLaunchpadGoLiveAtUtc,
   isAnchoredLaunchWeekStart,
@@ -489,6 +490,9 @@ export async function reschedulePremiumLaunch(
   if (nextLaunchDate <= now) {
     throw new AppError(400, "Choose a future launch week.");
   }
+
+  // A paid launch video moves with the launch.
+  await moveLaunchVideoOrderToWeek(submission.id, nextLaunchDate);
 
   await prisma.$transaction(async (tx) => {
     await tx.submission.update({

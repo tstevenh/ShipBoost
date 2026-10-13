@@ -330,17 +330,7 @@ export function LaunchSection({
   // sold on its own to free launchers (delivered within 7 days).
   const launchVideoMode: LaunchVideoMode =
     selectedLaunch === "FEATURED" ? "premium" : "standalone";
-  const launchVideoBookedMessage = !launchVideoOffer
-    ? null
-    : launchVideoMode === "premium"
-      ? launchVideoOffer.bookedWeekStarts.some((week) => week.slice(0, 10) === preferredDate)
-        ? "Booked for this launch week. Pick another week to add a video."
-        : null
-      : launchVideoOffer.standaloneBooked
-        ? "Fully booked this week. Check back next week."
-        : null;
-  const launchVideoInCart =
-    launchVideoSelected && launchVideoBookedMessage === null && Boolean(launchVideoOffer);
+  const launchVideoInCart = launchVideoSelected && Boolean(launchVideoOffer);
   const launchVideoPrice =
     launchVideoInCart && launchVideoOffer ? launchVideoOffer.priceUsd[launchVideoMode] : 0;
 
@@ -583,7 +573,6 @@ export function LaunchSection({
           offer={launchVideoOffer}
           mode={launchVideoMode}
           selected={launchVideoInCart}
-          bookedMessage={launchVideoBookedMessage}
           premiumBundleTotal={premiumPrice + launchVideoOffer.priceUsd.premium}
           focusNote={launchVideoFocusNote}
           onToggle={() => setLaunchVideoSelected((selected) => !selected)}

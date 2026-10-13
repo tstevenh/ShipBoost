@@ -5,7 +5,6 @@ import {
   LAUNCH_VIDEO_LATER_PRICE_USD,
   LAUNCH_VIDEO_LAUNCH_PRICE_LIMIT,
   LAUNCH_VIDEO_STANDALONE_DELIVERY_DAYS,
-  LAUNCH_VIDEO_WEEKLY_CAPACITY,
   type LaunchVideoDemo,
   type LaunchVideoMode,
   type LaunchVideoOffer,
@@ -89,10 +88,10 @@ export function buildLaunchVideoDemo(): LaunchVideoDemo | null {
   };
 }
 
-/** A standalone video is due 7 days after the order, counted in that week's capacity. */
+/** A standalone video is due 7 days after the order; it is filed under the week it is due in. */
 export function getStandaloneDeliveryWindow(now: Date) {
   const deliverBy = new Date(now.getTime() + LAUNCH_VIDEO_STANDALONE_DELIVERY_DAYS * DAY_IN_MS);
-  return { deliverBy, capacityWeekStart: getLaunchWeekStart(deliverBy) };
+  return { deliverBy, deliveryWeekStart: getLaunchWeekStart(deliverBy) };
 }
 
 function getPremiumDeliverBy(launchWeekStart: Date) {
@@ -105,26 +104,7 @@ async function countLaunchPriceOrdersSold() {
   });
 }
 
-async function listBookedWeekStarts(now: Date) {
-  const weeks = await prisma.launchVideoOrder.groupBy({
-    by: ["launchWeekStart"],
-    where: {
-      status: { in: [...SOLD_STATUSES] },
-      launchWeekStart: { gte: startOfUtcDay(now) },
-    },
-    _count: { _all: true },
-  });
-
-  return weeks
-    .filter((week) => week._count._all >= LAUNCH_VIDEO_WEEKLY_CAPACITY)
-    .map((week) => week.launchWeekStart.toISOString());
-}
-
-function isWeekBooked(bookedWeekStarts: string[], weekStart: Date) {
-  return bookedWeekStarts.includes(startOfUtcDay(weekStart).toISOString());
-}
-
-export async function getLaunchVideoOffer(now = new Date()): Promise<LaunchVideoOffer> {
+export async function getLaunchVideoOffer(): Promise<LaunchVideoOffer> {
   const prices = await getCachedLaunchVideoPrices(
     getLaunchVideoProductId("premium"),
     getLaunchVideoProductId("standalone"),
@@ -136,8 +116,6 @@ export async function getLaunchVideoOffer(now = new Date()): Promise<LaunchVideo
       standalone: FALLBACK_PRICE_CENTS.standalone / 100,
     },
     launchPriceSpotsLeft: 0,
-    bookedWeekStarts: [],
-    standaloneBooked: true,
     demo: null,
   };
 
@@ -147,20 +125,12 @@ export async function getLaunchVideoOffer(now = new Date()): Promise<LaunchVideo
   }
 
   try {
-    const [soldCount, bookedWeekStarts] = await Promise.all([
-      countLaunchPriceOrdersSold(),
-      listBookedWeekStarts(now),
-    ]);
+    const soldCount = await countLaunchPriceOrdersSold();
 
     return {
       available: true,
       priceUsd: { premium: prices.premium / 100, standalone: prices.standalone / 100 },
       launchPriceSpotsLeft: Math.max(0, LAUNCH_VIDEO_LAUNCH_PRICE_LIMIT - soldCount),
-      bookedWeekStarts,
-      standaloneBooked: isWeekBooked(
-        bookedWeekStarts,
-        getStandaloneDeliveryWindow(now).capacityWeekStart,
-      ),
       demo: buildLaunchVideoDemo(),
     };
   } catch (error) {
@@ -195,24 +165,8 @@ export async function createPendingLaunchVideoOrder(input: {
     deliverBy = getPremiumDeliverBy(launchWeekStart);
   } else {
     const window = getStandaloneDeliveryWindow(now);
-    launchWeekStart = startOfUtcDay(window.capacityWeekStart);
+    launchWeekStart = startOfUtcDay(window.deliveryWeekStart);
     deliverBy = window.deliverBy;
-  }
-
-  const bookedThatWeek = await prisma.launchVideoOrder.count({
-    where: {
-      launchWeekStart,
-      status: { in: [...SOLD_STATUSES] },
-    },
-  });
-
-  if (bookedThatWeek >= LAUNCH_VIDEO_WEEKLY_CAPACITY) {
-    throw new AppError(
-      409,
-      input.mode === "premium"
-        ? "Launch videos for that week are fully booked. Pick another launch week or continue without the video."
-        : "Launch videos are fully booked this week. Continue without the video or try again next week.",
-    );
   }
 
   const priceCents = (await loadLaunchVideoPriceCents(input.mode)) ?? FALLBACK_PRICE_CENTS[input.mode];
@@ -365,4 +319,22 @@ export async function handleLaunchVideoRefundSucceeded(input: {
   });
 
   return result.count > 0 && input.isPartial;
+}
+
+/** Moves a paid Premium video to the launch's new week when the founder reschedules. */
+export async function moveLaunchVideoOrderToWeek(submissionId: string, nextWeekStart: Date) {
+  const order = await prisma.launchVideoOrder.findFirst({
+    where: { submissionId, standalone: false, status: "PAID" },
+    select: { id: true, launchWeekStart: true },
+  });
+  const launchWeekStart = startOfUtcDay(nextWeekStart);
+
+  if (!order || order.launchWeekStart.getTime() === launchWeekStart.getTime()) {
+    return;
+  }
+
+  await prisma.launchVideoOrder.update({
+    where: { id: order.id },
+    data: { launchWeekStart, deliverBy: getPremiumDeliverBy(launchWeekStart) },
+  });
 }

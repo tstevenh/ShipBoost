@@ -68,7 +68,7 @@ export async function createLaunchBundleCheckout(input: {
   );
 
   if (launchType === "FREE") {
-    // Create the video order first so a fully booked week fails before the
+    // Create the video order first so a failure there happens before the
     // free launch is scheduled.
     const videoOrder = launchVideo
       ? await createPendingLaunchVideoOrder({

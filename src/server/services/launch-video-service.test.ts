@@ -11,11 +11,11 @@ const {
   prismaMock: {
     launchVideoOrder: {
       count: vi.fn(),
-      groupBy: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
   },
   dodoMock: {
@@ -57,6 +57,7 @@ import {
   getLaunchVideoOffer,
   handleLaunchVideoPaymentSucceeded,
   handleLaunchVideoRefundSucceeded,
+  moveLaunchVideoOrderToWeek,
 } from "@/server/services/launch-video-service";
 
 const weekStart = new Date("2026-10-19T00:00:00.000Z");
@@ -89,55 +90,26 @@ describe("launch-video-service", () => {
 
     it("reads both prices from Dodo and counts launch-price spots left", async () => {
       prismaMock.launchVideoOrder.count.mockResolvedValue(3);
-      prismaMock.launchVideoOrder.groupBy.mockResolvedValue([]);
 
-      const offer = await getLaunchVideoOffer(new Date("2026-10-11T00:00:00.000Z"));
+      const offer = await getLaunchVideoOffer();
 
       expect(offer).toMatchObject({
         available: true,
         priceUsd: { premium: 99, standalone: 129 },
         launchPriceSpotsLeft: 7,
-        bookedWeekStarts: [],
-        standaloneBooked: false,
       });
-    });
-
-    it("marks standalone videos booked when the week they are due in is full", async () => {
-      prismaMock.launchVideoOrder.count.mockResolvedValue(3);
-      // Ordered Oct 11 → due Oct 18, which falls in the launch week starting Oct 12.
-      prismaMock.launchVideoOrder.groupBy.mockResolvedValue([
-        { launchWeekStart: new Date("2026-10-12T00:00:00.000Z"), _count: { _all: 5 } },
-      ]);
-
-      const offer = await getLaunchVideoOffer(new Date("2026-10-11T00:00:00.000Z"));
-
-      expect(offer.standaloneBooked).toBe(true);
     });
 
     it("never reports negative spots once the launch price is used up", async () => {
       prismaMock.launchVideoOrder.count.mockResolvedValue(14);
-      prismaMock.launchVideoOrder.groupBy.mockResolvedValue([]);
 
       const offer = await getLaunchVideoOffer();
 
       expect(offer.launchPriceSpotsLeft).toBe(0);
     });
 
-    it("lists weeks that reached the weekly capacity", async () => {
-      prismaMock.launchVideoOrder.count.mockResolvedValue(6);
-      prismaMock.launchVideoOrder.groupBy.mockResolvedValue([
-        { launchWeekStart: weekStart, _count: { _all: 5 } },
-        { launchWeekStart: new Date("2026-10-26T00:00:00.000Z"), _count: { _all: 1 } },
-      ]);
-
-      const offer = await getLaunchVideoOffer();
-
-      expect(offer.bookedWeekStarts).toEqual([weekStart.toISOString()]);
-    });
-
     it("hides the add-on when the order table cannot be read", async () => {
       prismaMock.launchVideoOrder.count.mockRejectedValue(new Error("relation does not exist"));
-      prismaMock.launchVideoOrder.groupBy.mockResolvedValue([]);
       const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
       const offer = await getLaunchVideoOffer();
@@ -178,17 +150,17 @@ describe("launch-video-service", () => {
   });
 
   describe("createPendingLaunchVideoOrder", () => {
-    it("rejects a week that is fully booked", async () => {
-      prismaMock.launchVideoOrder.count.mockResolvedValue(5);
+    it("has no weekly limit on orders", async () => {
+      prismaMock.launchVideoOrder.create.mockResolvedValue({ id: "lvo_1" });
 
-      await expect(
-        createPendingLaunchVideoOrder({
-          mode: "premium",
-          submissionId: "sub_1",
-          launchWeekStart: weekStart,
-        }),
-      ).rejects.toMatchObject({ statusCode: 409 });
-      expect(prismaMock.launchVideoOrder.create).not.toHaveBeenCalled();
+      await createPendingLaunchVideoOrder({
+        mode: "premium",
+        submissionId: "sub_1",
+        launchWeekStart: weekStart,
+      });
+
+      expect(prismaMock.launchVideoOrder.count).not.toHaveBeenCalled();
+      expect(prismaMock.launchVideoOrder.create).toHaveBeenCalled();
     });
 
     it("creates a pending Premium order due by the end of the launch week", async () => {
@@ -329,6 +301,29 @@ describe("launch-video-service", () => {
       await expect(
         handleLaunchVideoRefundSucceeded({ paymentId: "pay_2", isPartial: true }),
       ).resolves.toBe(false);
+    });
+  });
+
+  describe("moveLaunchVideoOrderToWeek", () => {
+    const nextWeek = new Date("2026-11-02T00:00:00.000Z");
+
+    it("moves a paid Premium video to the new launch week", async () => {
+      prismaMock.launchVideoOrder.findFirst.mockResolvedValue({ id: "lvo_1", launchWeekStart: weekStart });
+
+      await moveLaunchVideoOrderToWeek("sub_1", nextWeek);
+
+      expect(prismaMock.launchVideoOrder.update).toHaveBeenCalledWith({
+        where: { id: "lvo_1" },
+        data: { launchWeekStart: nextWeek, deliverBy: new Date("2026-11-09T00:00:00.000Z") },
+      });
+    });
+
+    it("does nothing without a paid Premium video", async () => {
+      prismaMock.launchVideoOrder.findFirst.mockResolvedValue(null);
+
+      await moveLaunchVideoOrderToWeek("sub_1", nextWeek);
+
+      expect(prismaMock.launchVideoOrder.update).not.toHaveBeenCalled();
     });
   });
 });

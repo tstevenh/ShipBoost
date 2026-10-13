@@ -80,8 +80,6 @@ describe("LaunchSection", () => {
       available: true,
       priceUsd: { premium: 99, standalone: 129 },
       launchPriceSpotsLeft: 7,
-      bookedWeekStarts: [],
-      standaloneBooked: false,
       demo: null,
     };
     const fetchMock = vi.fn().mockImplementation((url: string) => {
@@ -147,66 +145,6 @@ describe("LaunchSection", () => {
     });
   });
 
-  it("blocks the launch video when the week is fully booked", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockImplementation((url: string) =>
-        Promise.resolve({
-          ok: true,
-          json: async () =>
-            url === "/api/launch-video/offer"
-              ? {
-                  data: {
-                    available: true,
-                    priceUsd: { premium: 99, standalone: 129 },
-                    launchPriceSpotsLeft: 0,
-                    bookedWeekStarts: ["2099-10-19T00:00:00.000Z"],
-                    standaloneBooked: true,
-                    demo: null,
-                  },
-                }
-              : { data: {} },
-        }),
-      ),
-    );
-
-    render(
-      <LaunchSection
-        submissionId="submission_1"
-        toolId="tool_1"
-        freeLaunchEstimateDate="2099-10-19T00:00:00.000Z"
-        premiumLaunchWeeks={[{ value: "2099-10-19", label: "Week of Oct 19, 2099" }]}
-        foundingPremiumSpotsLeft={0}
-        foundingPremiumLaunchLimit={20}
-        paidPremiumLaunchCount={20}
-        currentScheduledLaunch={null}
-        isPremiumScheduled={false}
-        isFreeScheduled={false}
-        onBack={vi.fn()}
-        onFreeScheduled={vi.fn()}
-        badges={[]}
-        freeLaunchRequirements={{
-          badgeVerification: "VERIFIED",
-          boardTools: [],
-          eligibleCount: 0,
-          requiredCount: 0,
-        }}
-      />,
-    );
-
-    expect(await screen.findByLabelText(/Add a launch video/)).toBeDisabled();
-    expect(
-      screen.getByText("Booked for this launch week. Pick another week to add a video."),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("Free launch").closest("button") as HTMLButtonElement);
-
-    expect(screen.getByLabelText(/Add a launch video/)).toBeDisabled();
-    expect(
-      screen.getByText("Fully booked this week. Check back next week."),
-    ).toBeInTheDocument();
-  });
-
   it("sells the launch video to free launchers at the standalone price", async () => {
     const fetchMock = vi.fn().mockImplementation((url: string) =>
       Promise.resolve({
@@ -218,8 +156,6 @@ describe("LaunchSection", () => {
                   available: true,
                   priceUsd: { premium: 99, standalone: 129 },
                   launchPriceSpotsLeft: 7,
-                  bookedWeekStarts: [],
-                  standaloneBooked: false,
                   demo: null,
                 },
               }
@@ -302,8 +238,6 @@ describe("LaunchSection", () => {
                     available: true,
                     priceUsd: { premium: 99, standalone: 129 },
                     launchPriceSpotsLeft: 7,
-                    bookedWeekStarts: [],
-                    standaloneBooked: false,
                     demo: null,
                   },
                 }

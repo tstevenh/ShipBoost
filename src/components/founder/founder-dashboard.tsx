@@ -35,6 +35,11 @@ type FounderSubmission = {
     deliverBy: string | null;
     briefUpdatedAt: string | null;
   } | null;
+  /** Set when a launch video can still be added to this launch. */
+  launchVideoAddOn?: {
+    mode: "premium" | "standalone";
+    priceUsd: number;
+  } | null;
   tool: {
     id: string;
     slug: string;
@@ -908,6 +913,30 @@ export function FounderDashboard({
                                 : sub.launchVideo.briefUpdatedAt
                                   ? "Edit video brief"
                                   : "Open video brief"}
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ) : sub?.launchVideoAddOn ? (
+                      <div className="rounded-[1.5rem] border border-border bg-muted/20 p-4 sm:p-5">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                          <div className="space-y-1">
+                            <h4 className="text-sm font-black tracking-tight text-foreground">
+                              Add a launch video
+                            </h4>
+                            <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground/80">
+                              A 20-second video of {sub.tool.name} doing its job, in 16:9 and 9:16.{" "}
+                              {sub.launchVideoAddOn.mode === "premium"
+                                ? `$${sub.launchVideoAddOn.priceUsd} with your Premium Launch, delivered during your launch week.`
+                                : `$${sub.launchVideoAddOn.priceUsd}, delivered within 7 days of your order.`}
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-2 md:min-w-[220px]">
+                            <Link
+                              href={`/dashboard/submissions/${sub.id}/launch-video`}
+                              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-black hover:bg-muted"
+                            >
+                              See the sample
                             </Link>
                           </div>
                         </div>

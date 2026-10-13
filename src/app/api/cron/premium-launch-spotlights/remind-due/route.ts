@@ -4,6 +4,7 @@ import { getEnv } from "@/server/env";
 import { AppError } from "@/server/http/app-error";
 import { errorResponse, ok } from "@/server/http/response";
 import { sendDueLaunchVideoBriefReminders } from "@/server/services/launch-video-brief-service";
+import { sendDueLaunchVideoOfferEmails } from "@/server/services/launch-video-offer-service";
 import { sendDuePremiumLaunchSpotlightReminders } from "@/server/services/premium-launch-spotlight-reminder-service";
 
 function getProvidedSecret(request: NextRequest) {
@@ -39,12 +40,13 @@ function assertCronAccess(request: NextRequest) {
 async function handleRequest(request: NextRequest) {
   try {
     assertCronAccess(request);
-    // Launch video brief reminders ride on this existing cron schedule.
-    const [spotlights, launchVideoBriefs] = await Promise.all([
+    // Launch video brief reminders and offers ride on this existing cron schedule.
+    const [spotlights, launchVideoBriefs, launchVideoOffers] = await Promise.all([
       sendDuePremiumLaunchSpotlightReminders(),
       sendDueLaunchVideoBriefReminders(),
+      sendDueLaunchVideoOfferEmails(),
     ]);
-    return ok({ ...spotlights, ...launchVideoBriefs });
+    return ok({ ...spotlights, ...launchVideoBriefs, ...launchVideoOffers });
   } catch (error) {
     return errorResponse(error);
   }
