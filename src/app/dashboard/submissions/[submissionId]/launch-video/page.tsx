@@ -27,12 +27,15 @@ export default async function FounderLaunchVideoBriefPage({
   params,
 }: RouteContext) {
   const session = await getServerSession();
+  const { submissionId } = await params;
 
   if (!session) {
-    redirect("/sign-in");
+    // Founders arrive here from the offer email, often signed out.
+    redirect(
+      `/sign-in?redirect=${encodeURIComponent(`/dashboard/submissions/${submissionId}/launch-video`)}`,
+    );
   }
 
-  const { submissionId } = await params;
   const brief = await getFounderLaunchVideoBrief(submissionId, {
     id: session.user.id,
   }).catch((error) => {
