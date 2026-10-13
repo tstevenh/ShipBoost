@@ -43,3 +43,6 @@ next-env.d.ts
 
 # playwright mcp artifacts
 .playwright-mcp/
+
+# one-off email send logs
+scripts/.launch-video-announcement-sent.json
