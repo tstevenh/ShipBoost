@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { authClient } from "@/lib/auth-client";
+import { useHydratedSession } from "@/lib/auth-client";
 
 type ViewerVotePayload = {
   dailyVotesRemaining: number;
@@ -43,7 +43,7 @@ export function ViewerVoteStateProvider({
   children: ReactNode;
   toolIds: string[];
 }) {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending } = useHydratedSession();
   const [upvotedToolIds, setUpvotedToolIds] = useState<Set<string>>(new Set());
   const [upvoteCountByToolId, setUpvoteCountByToolId] = useState<
     Map<string, number>

@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition, useEffect } from "react";
 import { Menu, X, ChevronDown, Rocket, Tag, Layers, LogOut, User, Hash } from "lucide-react";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient, useHydratedSession } from "@/lib/auth-client";
 import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
 import { isAuthRoutePathname } from "@/lib/route-groups";
@@ -51,7 +51,7 @@ function AppHeaderInner({
   categories: AppHeaderCategory[];
 }) {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending } = useHydratedSession();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSigningOut, startSignOutTransition] = useTransition();
   

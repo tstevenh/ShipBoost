@@ -16,15 +16,13 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/auth-client", () => ({
-  authClient: {
-    useSession: () => ({
-      data: {
-        user: {
-          id: "user_1",
-        },
+  useHydratedSession: () => ({
+    data: {
+      user: {
+        id: "user_1",
       },
-    }),
-  },
+    },
+  }),
 }));
 
 vi.mock("@/components/public/viewer-vote-state-provider", () => ({

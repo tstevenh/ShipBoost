@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ChevronUp, Loader2 } from "lucide-react";
 
 import { useViewerVoteState } from "@/components/public/viewer-vote-state-provider";
-import { authClient } from "@/lib/auth-client";
+import { useHydratedSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
 type ToolUpvoteButtonProps = {
@@ -25,7 +25,7 @@ export function ToolUpvoteButton({
 }: ToolUpvoteButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { data: session } = authClient.useSession();
+  const { data: session } = useHydratedSession();
   const viewerVoteState = useViewerVoteState(toolId);
   const [count, setCount] = useState(initialCount);
   const [hasUpvoted, setHasUpvoted] = useState(initialHasUpvoted);
