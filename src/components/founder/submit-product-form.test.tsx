@@ -278,6 +278,43 @@ describe("submit-product-form scheduling helpers", () => {
 
     expect(findActiveScheduledLaunch(draft, now)).toBeNull();
   });
+
+  it("does not treat a premium week left on an unscheduled free draft as scheduled", () => {
+    // Founder picked a premium week, left checkout, then went back to Free.
+    const draft: TestDraft = {
+      id: "submission_1",
+      submissionType: "FREE_LAUNCH",
+      reviewStatus: "DRAFT",
+      paymentStatus: "NOT_REQUIRED",
+      badgeVerification: "FAILED",
+      preferredLaunchDate: "2026-05-25T00:00:00.000Z",
+      tool: {
+        id: "tool_1",
+        slug: "free-tool",
+        name: "Free Tool",
+        tagline: "Not scheduled yet",
+        websiteUrl: "https://example.com",
+        richDescription: "A free draft that was never scheduled.",
+        pricingModel: "FREE",
+        affiliateUrl: null,
+        affiliateSource: null,
+        hasAffiliateProgram: false,
+        founderXUrl: null,
+        founderGithubUrl: null,
+        founderLinkedinUrl: null,
+        founderFacebookUrl: null,
+        logoMedia: null,
+        screenshots: [],
+        categoryIds: [],
+        tagIds: [],
+        launches: [],
+      },
+    };
+
+    const now = new Date("2026-05-16T00:00:00.000Z");
+
+    expect(findActiveScheduledLaunch(draft, now)).toBeNull();
+  });
 });
 
 describe("SubmitProductForm", () => {
@@ -289,6 +326,31 @@ describe("SubmitProductForm", () => {
     expect(
       screen.queryByRole("button", { name: "Remove AI tag" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps the tag picker open while picking and closes it on an outside click", () => {
+    renderSubmitProductForm();
+
+    fireEvent.click(screen.getByRole("button", { name: /^AI$/ }));
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Automation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Automation" }));
+    expect(screen.getByPlaceholderText("Search tags")).toBeInTheDocument();
+
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByPlaceholderText("Search tags")).not.toBeInTheDocument();
+  });
+
+  it("closes the category picker on an outside click or Escape", () => {
+    renderSubmitProductForm();
+
+    fireEvent.click(screen.getByRole("button", { name: /Productivity/ }));
+    expect(screen.getByPlaceholderText("Search categories")).toBeInTheDocument();
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByPlaceholderText("Search categories")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Productivity/ }));
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByPlaceholderText("Search categories")).not.toBeInTheDocument();
   });
 
   it("saves approved listing edits through the founder listing endpoint", async () => {

@@ -360,8 +360,11 @@ export function findActiveScheduledLaunch(
     return activeLaunch;
   }
 
+  // A draft has never been scheduled (scheduling moves it to PENDING), so a
+  // preferredLaunchDate on it is a leftover premium week pick, not a booking.
   if (
     draft?.preferredLaunchDate &&
+    draft.reviewStatus !== "DRAFT" &&
     draft.submissionType !== "LISTING_ONLY" &&
     (draft.submissionType !== "FEATURED_LAUNCH" ||
       draft.paymentStatus === "PAID") &&
@@ -565,6 +568,31 @@ export function SubmitProductForm({
   const [tagSearch, setTagSearch] = useState("");
   const [isCatOpen, setIsCatOpen] = useState(false);
   const [isTagOpen, setIsTagOpen] = useState(false);
+  const catPickerRef = useRef<HTMLDivElement>(null);
+  const tagPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isCatOpen && !isTagOpen) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (!catPickerRef.current?.contains(target)) setIsCatOpen(false);
+      if (!tagPickerRef.current?.contains(target)) setIsTagOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setIsCatOpen(false);
+      setIsTagOpen(false);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isCatOpen, isTagOpen]);
 
   const isBusy =
     isSavingDraft || isSubmittingDraft || isVerifyingBadge || isDeletingProduct;
@@ -1582,7 +1610,7 @@ export function SubmitProductForm({
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  <div className="relative space-y-2">
+                  <div ref={catPickerRef} className="relative space-y-2">
                     <label className="text-sm font-bold text-foreground">Category *</label>
                     <button
                       type="button"
@@ -1620,7 +1648,7 @@ export function SubmitProductForm({
                     ) : null}
                   </div>
 
-                  <div className="relative space-y-2">
+                  <div ref={tagPickerRef} className="relative space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       <label className="text-sm font-bold text-foreground">Tags *</label>
                       <span className="text-xs font-medium text-muted-foreground">
