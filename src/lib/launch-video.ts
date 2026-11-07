@@ -107,10 +107,6 @@ export function formatLaunchVideoPriceNote(
   return `Launch price for the first ${LAUNCH_VIDEO_LAUNCH_PRICE_LIMIT} videos · ${offer.launchPriceSpotsLeft} left · ${later} after that`;
 }
 
-export function formatLaunchVideoPremiumPerk(offer: Pick<LaunchVideoOffer, "priceUsd">) {
-  return `Launch video add-on for $${offer.priceUsd.premium} ($${offer.priceUsd.standalone} without Premium)`;
-}
-
 type AddOnLaunch = {
   launchType: "FREE" | "FEATURED" | "RELAUNCH";
   status: "PENDING" | "APPROVED" | "LIVE" | "ENDED" | "REJECTED";

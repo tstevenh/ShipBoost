@@ -19,7 +19,6 @@ import { JsonLdScript } from "@/components/seo/json-ld";
 import { Footer } from "@/components/ui/footer";
 import { AdPreviewButton } from "@/components/public/ad-preview-modal";
 import { LaunchVideoPricing } from "@/components/public/launch-video-pricing";
-import { formatLaunchVideoPremiumPerk } from "@/lib/launch-video";
 import { getLaunchVideoOffer } from "@/server/services/launch-video-service";
 import {
   getRemainingFoundingPremiumLaunchSpots,
@@ -173,9 +172,6 @@ export default async function PricingPage() {
                 <CheckItem text="Featured placement on the launchboard that week" />
                 <CheckItem text="Indexed in category and tag pages" />
                 <CheckItem text="Guaranteed dofollow link from your listing and editorial article" />
-                {launchVideoOffer.available && (
-                  <CheckItem text={formatLaunchVideoPremiumPerk(launchVideoOffer)} />
-                )}
               </ul>
               {premiumLaunchAvailable ? (
                 <Link
@@ -200,7 +196,7 @@ export default async function PricingPage() {
 
         {/* ── LAUNCH VIDEO ── */}
         {launchVideoOffer.available ? (
-          <LaunchVideoPricing offer={launchVideoOffer} premiumLaunchPrice={premiumPrice} />
+          <LaunchVideoPricing offer={launchVideoOffer} />
         ) : null}
 
         {/* ── SPONSOR PLACEMENTS ── */}

@@ -16,12 +16,6 @@ import {
   FreeLaunchRequirementsPanel,
   type BadgePreviewOption,
 } from "@/components/founder/free-launch-requirements-panel";
-import { LaunchVideoAddon } from "@/components/founder/launch-video-addon";
-import {
-  formatLaunchVideoPremiumPerk,
-  type LaunchVideoMode,
-  type LaunchVideoOffer,
-} from "@/lib/launch-video";
 import type { SponsorEligibilitySlot } from "@/app/api/sponsor/eligibility/route";
 import type { SponsorSlot } from "@prisma/client";
 import type { FreeLaunchRequirements } from "@/server/services/free-launch-requirements";
@@ -60,8 +54,6 @@ export type LaunchSectionProps = {
   badges: BadgePreviewOption[];
   freeLaunchRequirements: FreeLaunchRequirements | null;
   listedToolCount?: number;
-  /** True when the founder came from the pricing page's launch video button. */
-  initialLaunchVideoSelected?: boolean;
 };
 
 const PREMIUM_FEATURES = [
@@ -203,6 +195,22 @@ function areFreeLaunchRequirementsMet(requirements: FreeLaunchRequirements | nul
   );
 }
 
+type LaunchType = "FREE" | "FEATURED";
+
+/** Fire-and-forget: tracking must never block or break the launch step. */
+function trackLaunchFunnel(
+  submissionId: string,
+  event: "launch_step_viewed" | "launch_type_selected",
+  launchType: LaunchType,
+) {
+  fetch(`/api/submissions/${submissionId}/launch-funnel`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ event, launchType }),
+    keepalive: true,
+  }).catch(() => {});
+}
+
 function readApiErrorMessage(payload: unknown, fallback: string) {
   if (!payload || typeof payload !== "object" || !("error" in payload)) return fallback;
   const error = (payload as { error?: unknown }).error;
@@ -232,18 +240,14 @@ export function LaunchSection({
   badges,
   freeLaunchRequirements,
   listedToolCount,
-  initialLaunchVideoSelected = false,
 }: LaunchSectionProps) {
-  const [selectedLaunch, setSelectedLaunch] = useState<"FREE" | "FEATURED">("FEATURED");
+  const [selectedLaunch, setSelectedLaunch] = useState<LaunchType>("FEATURED");
   const [preferredDate, setPreferredDate] = useState<string>(
     premiumLaunchWeeks[0]?.value ?? "",
   );
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [expandedSlot, setExpandedSlot] = useState<string | null>(null);
   const [slots, setSlots] = useState<SponsorEligibilitySlot[]>([]);
-  const [launchVideoOffer, setLaunchVideoOffer] = useState<LaunchVideoOffer | null>(null);
-  const [launchVideoSelected, setLaunchVideoSelected] = useState(initialLaunchVideoSelected);
-  const [launchVideoFocusNote, setLaunchVideoFocusNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const requirementsRef = useRef<HTMLDivElement>(null);
@@ -294,6 +298,16 @@ export function LaunchSection({
     };
   }, [selectedLaunch, submissionId, requirements, requirementsFetchAttempt]);
 
+  // Fires once per mount; the step opens with Premium selected.
+  useEffect(() => {
+    if (submissionId) trackLaunchFunnel(submissionId, "launch_step_viewed", "FEATURED");
+  }, [submissionId]);
+
+  function selectLaunch(launchType: LaunchType) {
+    setSelectedLaunch(launchType);
+    if (submissionId) trackLaunchFunnel(submissionId, "launch_type_selected", launchType);
+  }
+
   useEffect(() => {
     if (!toolId) return;
     fetch("/api/sponsor/eligibility")
@@ -303,15 +317,6 @@ export function LaunchSection({
       })
       .catch(() => {});
   }, [toolId]);
-
-  useEffect(() => {
-    fetch("/api/launch-video/offer")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.data?.available) setLaunchVideoOffer(data.data as LaunchVideoOffer);
-      })
-      .catch(() => {});
-  }, []);
 
   function toggleSlot(slot: string) {
     setSelectedSlots((prev) =>
@@ -326,14 +331,6 @@ export function LaunchSection({
   // Founding $9 round: $9 while spots remain, with the $19 anchor struck through.
   const premiumPrice = foundingPremiumSpotsLeft > 0 ? 9 : 19;
 
-  // Launch video: cheaper with Premium (delivered in the launch week), also
-  // sold on its own to free launchers (delivered within 7 days).
-  const launchVideoMode: LaunchVideoMode =
-    selectedLaunch === "FEATURED" ? "premium" : "standalone";
-  const launchVideoInCart = launchVideoSelected && Boolean(launchVideoOffer);
-  const launchVideoPrice =
-    launchVideoInCart && launchVideoOffer ? launchVideoOffer.priceUsd[launchVideoMode] : 0;
-
   const premiumCompareAt = foundingPremiumSpotsLeft > 0 ? 19 : 29;
   const spotsLabel =
     foundingPremiumSpotsLeft > 0
@@ -341,10 +338,10 @@ export function LaunchSection({
       : "Early access pricing — rising to $29 soon";
   const totalPrice =
     selectedLaunch === "FEATURED"
-      ? premiumPrice + selectedSponsorPrice + launchVideoPrice
-      : selectedSponsorPrice + launchVideoPrice;
+      ? premiumPrice + selectedSponsorPrice
+      : selectedSponsorPrice;
 
-  async function handleConfirm(launchType: "FREE" | "FEATURED" = selectedLaunch) {
+  async function handleConfirm(launchType: LaunchType = selectedLaunch) {
     setErrorMessage(null);
     setIsLoading(true);
 
@@ -357,10 +354,6 @@ export function LaunchSection({
           launchType,
           preferredLaunchDate: launchType === "FEATURED" ? preferredDate : undefined,
           sponsorSlots: selectedSlots,
-          launchVideo:
-            launchVideoInCart
-              ? { focusNote: launchVideoFocusNote.trim() || undefined }
-              : undefined,
         }),
       });
 
@@ -439,9 +432,7 @@ export function LaunchSection({
           {/* Premium card */}
           <button
             type="button"
-            onClick={() => {
-              setSelectedLaunch("FEATURED");
-            }}
+            onClick={() => selectLaunch("FEATURED")}
             className={cn(
               "relative flex flex-col rounded-3xl border bg-card p-7 text-left transition-all",
               selectedLaunch === "FEATURED"
@@ -478,10 +469,7 @@ export function LaunchSection({
               </p>
             ) : null}
             <ul className="mt-6 flex-1 space-y-3">
-              {[
-                ...PREMIUM_FEATURES,
-                ...(launchVideoOffer ? [formatLaunchVideoPremiumPerk(launchVideoOffer)] : []),
-              ].map((f) => (
+              {PREMIUM_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm font-medium text-foreground/70">
                   <Check size={13} strokeWidth={3} className="mt-0.5 shrink-0 text-primary" />
                   {f}
@@ -493,9 +481,7 @@ export function LaunchSection({
           {/* Free card */}
           <button
             type="button"
-            onClick={() => {
-              setSelectedLaunch("FREE");
-            }}
+            onClick={() => selectLaunch("FREE")}
             className={cn(
               "relative flex flex-col rounded-3xl border bg-card p-7 text-left transition-all",
               selectedLaunch === "FREE"
@@ -567,19 +553,6 @@ export function LaunchSection({
         </div>
       )}
 
-      {/* Launch video add-on — priced on top of either launch */}
-      {launchVideoOffer ? (
-        <LaunchVideoAddon
-          offer={launchVideoOffer}
-          mode={launchVideoMode}
-          selected={launchVideoInCart}
-          premiumBundleTotal={premiumPrice + launchVideoOffer.priceUsd.premium}
-          focusNote={launchVideoFocusNote}
-          onToggle={() => setLaunchVideoSelected((selected) => !selected)}
-          onFocusNoteChange={setLaunchVideoFocusNote}
-          onSwitchToPremium={() => setSelectedLaunch("FEATURED")}
-        />
-      ) : null}
 
       {/* Sponsor add-ons */}
       {slots.length > 0 && (
@@ -736,7 +709,6 @@ export function LaunchSection({
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">
             {selectedLaunch === "FEATURED" ? "Premium Launch" : "Free Launch"}
-            {launchVideoInCart ? " + launch video" : ""}
             {selectedSlots.length > 0
               ? ` + ${selectedSlots.length} placement${selectedSlots.length > 1 ? "s" : ""}`
               : ""}
@@ -753,7 +725,7 @@ export function LaunchSection({
         >
           {isLoading ? (
             <Loader2 size={14} className="animate-spin" />
-          ) : selectedLaunch === "FREE" && selectedSlots.length === 0 && !launchVideoInCart ? (
+          ) : selectedLaunch === "FREE" && selectedSlots.length === 0 ? (
             "Schedule free launch"
           ) : (
             `Continue to checkout — ${totalPrice === 0 ? "Free" : `$${totalPrice}`}`

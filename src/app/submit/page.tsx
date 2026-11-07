@@ -23,7 +23,6 @@ import { buildPublicPageMetadata } from "@/server/seo/page-metadata";
 type SubmitPageProps = {
   searchParams?: Promise<{
     draft?: string;
-    addon?: string;
   }>;
 };
 
@@ -39,8 +38,6 @@ export default async function SubmitPage({ searchParams }: SubmitPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const resumeParams = new URLSearchParams();
   if (resolvedSearchParams?.draft) resumeParams.set("draft", resolvedSearchParams.draft);
-  // Keep the add-on picked on /pricing through sign-in.
-  if (resolvedSearchParams?.addon) resumeParams.set("addon", resolvedSearchParams.addon);
   const resumeHref = resumeParams.size > 0 ? `/submit?${resumeParams.toString()}` : "/submit";
   const env = getEnv();
   const isPrelaunch = env.NEXT_PUBLIC_PRELAUNCH_MODE === "true";

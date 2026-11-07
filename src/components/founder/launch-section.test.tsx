@@ -75,29 +75,12 @@ describe("LaunchSection", () => {
     ).toBeInTheDocument();
   });
 
-  it("adds the launch video to a premium checkout", async () => {
-    const offer = {
-      available: true,
-      priceUsd: { premium: 99, standalone: 129 },
-      launchPriceSpotsLeft: 7,
-      demo: null,
-    };
-    const fetchMock = vi.fn().mockImplementation((url: string) => {
-      if (url === "/api/launch-video/offer") {
-        return Promise.resolve({ ok: true, json: async () => ({ data: offer }) });
-      }
-
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({
-          data: {
-            checkoutUrl: null,
-            launchScheduled: false,
-            scheduledLaunch: null,
-            submission: null,
-          },
-        }),
-      });
+  it("keeps the launch video out of the launch step", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: { checkoutUrl: null, launchScheduled: false, scheduledLaunch: null, submission: null },
+      }),
     });
     vi.stubGlobal("fetch", fetchMock);
 
@@ -120,136 +103,32 @@ describe("LaunchSection", () => {
       />,
     );
 
-    const checkbox = await screen.findByLabelText(/Add a launch video/);
-    expect(
-      screen.getByText("Launch price for the first 10 videos · 7 left · $149 after that"),
-    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Add a launch video/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Launch video add-on/)).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith("/api/launch-video/offer");
 
-    fireEvent.click(checkbox);
-    fireEvent.change(screen.getByLabelText(/What should people see your product do/), {
-      target: { value: "Paste a URL, get a report" },
-    });
-
-    expect(screen.getByText("Premium Launch + launch video")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Continue to checkout — $118" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue to checkout — $19" }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
         "/api/dodo/checkout/launch-bundle",
-        expect.objectContaining({
-          body: expect.stringContaining(
-            '"launchVideo":{"focusNote":"Paste a URL, get a report"}',
-          ),
-        }),
-      );
-    });
-  });
-
-  it("sells the launch video to free launchers at the standalone price", async () => {
-    const fetchMock = vi.fn().mockImplementation((url: string) =>
-      Promise.resolve({
-        ok: true,
-        json: async () =>
-          url === "/api/launch-video/offer"
-            ? {
-                data: {
-                  available: true,
-                  priceUsd: { premium: 99, standalone: 129 },
-                  launchPriceSpotsLeft: 7,
-                  demo: null,
-                },
-              }
-            : {
-                data: {
-                  checkoutUrl: null,
-                  launchScheduled: false,
-                  scheduledLaunch: null,
-                  submission: null,
-                },
-              },
-      }),
-    );
-    vi.stubGlobal("fetch", fetchMock);
-
-    render(
-      <LaunchSection
-        submissionId="submission_1"
-        toolId="tool_1"
-        freeLaunchEstimateDate="2099-10-19T00:00:00.000Z"
-        premiumLaunchWeeks={[{ value: "2099-10-19", label: "Week of Oct 19, 2099" }]}
-        foundingPremiumSpotsLeft={0}
-        foundingPremiumLaunchLimit={20}
-        paidPremiumLaunchCount={20}
-        currentScheduledLaunch={null}
-        isPremiumScheduled={false}
-        isFreeScheduled={false}
-        onBack={vi.fn()}
-        onFreeScheduled={vi.fn()}
-        badges={[]}
-        freeLaunchRequirements={{
-          badgeVerification: "VERIFIED",
-          boardTools: [],
-          eligibleCount: 0,
-          requiredCount: 0,
-        }}
-      />,
-    );
-
-    expect(
-      await screen.findByText("Launch video add-on for $99 ($129 without Premium)"),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("Free launch").closest("button") as HTMLButtonElement);
-    fireEvent.click(screen.getByLabelText(/Add a launch video/));
-
-    expect(screen.getByText("Delivered within 7 days of your order")).toBeInTheDocument();
-    expect(screen.getByText("Premium Launch + video is $118")).toBeInTheDocument();
-    expect(screen.getByText("Free Launch + launch video")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Continue to checkout — $129" }));
-
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/dodo/checkout/launch-bundle",
-        expect.objectContaining({
-          body: expect.stringContaining('"launchType":"FREE"'),
-        }),
+        expect.anything(),
       );
     });
     const checkoutCall = fetchMock.mock.calls.find(
       ([url]) => url === "/api/dodo/checkout/launch-bundle",
     );
-    expect(JSON.parse(checkoutCall?.[1]?.body as string).launchVideo).toEqual({});
-
-    fireEvent.click(screen.getByRole("button", { name: "Switch to Premium" }));
-    expect(screen.getByRole("button", { name: "Continue to checkout — $118" })).toBeInTheDocument();
+    expect(JSON.parse(checkoutCall?.[1]?.body as string)).not.toHaveProperty("launchVideo");
   });
 
-  it("starts with the launch video ticked when the founder came from the pricing page", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockImplementation((url: string) =>
-        Promise.resolve({
-          ok: true,
-          json: async () =>
-            url === "/api/launch-video/offer"
-              ? {
-                  data: {
-                    available: true,
-                    priceUsd: { premium: 99, standalone: 129 },
-                    launchPriceSpotsLeft: 7,
-                    demo: null,
-                  },
-                }
-              : { data: {} },
-        }),
-      ),
-    );
+  it("tracks the launch step view and each launch type pick", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: {} }) });
+    vi.stubGlobal("fetch", fetchMock);
 
     render(
       <LaunchSection
         submissionId="submission_1"
-        toolId="tool_1"
+        toolId={null}
         freeLaunchEstimateDate="2099-10-19T00:00:00.000Z"
         premiumLaunchWeeks={[{ value: "2099-10-19", label: "Week of Oct 19, 2099" }]}
         foundingPremiumSpotsLeft={0}
@@ -262,11 +141,19 @@ describe("LaunchSection", () => {
         onFreeScheduled={vi.fn()}
         badges={[]}
         freeLaunchRequirements={null}
-        initialLaunchVideoSelected
       />,
     );
 
-    expect(await screen.findByLabelText(/Add a launch video/)).toBeChecked();
-    expect(screen.getByRole("button", { name: "Continue to checkout — $118" })).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Free launch").closest("button") as HTMLButtonElement);
+
+    await waitFor(() => {
+      const funnelBodies = fetchMock.mock.calls
+        .filter(([url]) => url === "/api/submissions/submission_1/launch-funnel")
+        .map(([, init]) => JSON.parse((init as RequestInit).body as string));
+      expect(funnelBodies).toEqual([
+        { event: "launch_step_viewed", launchType: "FEATURED" },
+        { event: "launch_type_selected", launchType: "FREE" },
+      ]);
+    });
   });
 });

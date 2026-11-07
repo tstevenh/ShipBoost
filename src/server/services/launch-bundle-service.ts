@@ -2,6 +2,7 @@ import { prisma } from "@/server/db/client";
 import { getDodoClient } from "@/server/dodo";
 import { getEnv } from "@/server/env";
 import { AppError } from "@/server/http/app-error";
+import { capturePostHogEventSafely } from "@/server/posthog";
 import { getSubmissionByIdForFounder } from "@/server/repositories/submission-repository";
 import {
   createPendingSponsorPlacements,
@@ -123,6 +124,20 @@ export async function createLaunchBundleCheckout(input: {
     placements,
     launchVideo,
   });
+
+  await capturePostHogEventSafely(
+    {
+      distinctId: founder.id,
+      event: "premium_checkout_started",
+      properties: {
+        submission_id: submissionId,
+        preferred_launch_date: preferredLaunchDate,
+        sponsor_slot_count: placements.length,
+        has_launch_video: Boolean(launchVideo),
+      },
+    },
+    "createLaunchBundleCheckout",
+  );
 
   return {
     checkoutUrl,

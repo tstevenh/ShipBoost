@@ -54,13 +54,7 @@ function FramesIllustration() {
   );
 }
 
-export function LaunchVideoPricing({
-  offer,
-  premiumLaunchPrice,
-}: {
-  offer: LaunchVideoOffer;
-  premiumLaunchPrice: number;
-}) {
+export function LaunchVideoPricing({ offer }: { offer: LaunchVideoOffer }) {
   const launchPriceLine =
     offer.launchPriceSpotsLeft > 0
       ? `Launch price for the first ${LAUNCH_VIDEO_LAUNCH_PRICE_LIMIT} videos (${offer.launchPriceSpotsLeft} left), then $${LAUNCH_VIDEO_LATER_PRICE_USD.premium} and $${LAUNCH_VIDEO_LATER_PRICE_USD.standalone}. `
@@ -109,9 +103,6 @@ export function LaunchVideoPricing({
               <p className="mt-3 text-sm font-medium leading-snug text-foreground/70">
                 Delivered during your launch week.
               </p>
-              <p className="mt-auto pt-3 text-xs text-muted-foreground">
-                ${premiumLaunchPrice + offer.priceUsd.premium} together with Premium.
-              </p>
             </article>
             <article className="flex flex-col rounded-3xl border border-border bg-card p-6 shadow-sm">
               <p className="text-[10px] font-black tracking-[0.2em] text-foreground/40">
@@ -145,12 +136,15 @@ export function LaunchVideoPricing({
 
           <div className="mt-auto pt-6">
             <Link
-              href="/submit?addon=launch-video"
+              href="/submit"
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-black text-primary-foreground shadow-xl shadow-black/20 transition-all hover:opacity-90 active:scale-95"
             >
-              Submit with a launch video
+              Submit your product
               <ArrowRight size={15} />
             </Link>
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              Add the video from your dashboard once your launch is scheduled.
+            </p>
           </div>
         </div>
       </div>

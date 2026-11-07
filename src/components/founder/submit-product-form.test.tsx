@@ -10,9 +10,11 @@ import {
   SubmitProductForm,
 } from "@/components/founder/submit-product-form";
 
+const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: pushMock,
     refresh: vi.fn(),
   }),
   useSearchParams: () => new URLSearchParams(),
@@ -453,6 +455,17 @@ describe("SubmitProductForm", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("keeps the draft in the URL when opening the launch step", async () => {
+    pushMock.mockClear();
+    renderSubmitProductForm();
+
+    fireEvent.click(screen.getByRole("button", { name: "Schedule your launch" }));
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("?draft=submission_1&section=launch");
+    });
   });
 
   it("adds dropped product images to the screenshots preview", () => {

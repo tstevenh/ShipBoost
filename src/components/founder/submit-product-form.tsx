@@ -1060,11 +1060,14 @@ export function SubmitProductForm({
           : form.submissionType,
       };
       const overrideChanged = overrides.submissionType !== form.submissionType;
+      let submissionId = draftSubmissionId;
       if (hasFormChangedRef.current || overrideChanged || !draftSubmissionId) {
-        await saveDraft(overrides);
+        submissionId = (await saveDraft(overrides))?.id ?? draftSubmissionId;
         hasFormChangedRef.current = false;
       }
       const params = new URLSearchParams(searchParams.toString());
+      // Keep the draft in the URL so Back from checkout or a reload reopens it.
+      if (submissionId) params.set("draft", submissionId);
       params.set("section", "launch");
       router.push(`?${params.toString()}`);
     } catch (error) {
@@ -1205,7 +1208,6 @@ export function SubmitProductForm({
         }
         freeLaunchRequirements={freeLaunchRequirements}
         listedToolCount={listedToolCount}
-        initialLaunchVideoSelected={searchParams.get("addon") === "launch-video"}
         onBack={() => {
           const params = new URLSearchParams(searchParams.toString());
           params.delete("section");
