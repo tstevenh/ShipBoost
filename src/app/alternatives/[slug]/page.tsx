@@ -245,6 +245,7 @@ export default async function AlternativesPage(context: RouteContext) {
                       slug: tag.slug,
                     }))}
                   primaryCategory={tool.toolCategories[0]?.category ?? null}
+                  followWebsiteLink={page.entry.followedToolSlugs?.includes(tool.slug) ?? false}
                 />
               ))}
             </div>

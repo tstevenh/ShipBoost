@@ -31,6 +31,8 @@ type PublicDirectoryToolCardProps = {
   imagePriority?: boolean;
   isPremiumLaunch?: boolean;
   sourceSurface?: "launch_board" | "category_page" | "best_tag_page" | "alternatives_page";
+  // Only paid placements named in an alternatives entry's followedToolSlugs get a followed link.
+  followWebsiteLink?: boolean;
 };
 
 export function PublicDirectoryToolCard({
@@ -49,6 +51,7 @@ export function PublicDirectoryToolCard({
   imagePriority = false,
   isPremiumLaunch = false,
   sourceSurface,
+  followWebsiteLink = false,
 }: PublicDirectoryToolCardProps) {
   const visibleLinkedTags = linkedTags.slice(0, 3);
   const fallbackTags =
@@ -153,7 +156,7 @@ export function PublicDirectoryToolCard({
               <a
                 href={externalHref}
                 target="_blank"
-                rel="noreferrer sponsored"
+                rel={followWebsiteLink ? "noopener" : "noreferrer sponsored"}
                 onClick={(event) => event.stopPropagation()}
                 data-shipboost-outbound-source="launch_board"
                 data-shipboost-outbound-context="tool_listing"

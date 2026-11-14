@@ -68,6 +68,8 @@ export type AlternativesSeoEntry = {
   metaTitle: string;
   metaDescription: string;
   toolSlugs: string[];
+  // Paid placements whose card links out followed. Every other card stays sponsored.
+  followedToolSlugs?: string[];
   faq?: SeoFaqItem[];
 };
 

@@ -219,6 +219,8 @@ export const alternativesSeoRegistry: Record<string, AlternativesSeoEntry> = {
     metaTitle: "Best Klaviyo Alternatives for Ecommerce Email | ShipBoost",
     metaDescription: "Compare Klaviyo alternatives like Omnisend, Drip, Mailchimp, and ActiveCampaign for buyers evaluating ecommerce email, SMS, and retention marketing platforms.",
     toolSlugs: ["omnisend", "drip", "mailchimp", "activecampaign", "brevo", "mailerlite", "sequenzy"],
+    // Paid placement, Nov 2026 ($30, Nic Polotnianko).
+    followedToolSlugs: ["sequenzy"],
   },
   typeform: {
     slug: "typeform",
