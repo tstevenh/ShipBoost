@@ -20,6 +20,7 @@ import {
   replaceToolCategories,
   replaceToolTags,
 } from "@/server/repositories/tool-repository";
+import { publiclyVisibleArticleWhere } from "@/server/services/blog-service";
 import { createUniqueToolSlug } from "@/server/services/slug";
 import { assertCatalogAssignments } from "@/server/services/catalog";
 import {
@@ -471,9 +472,7 @@ async function getPublishedToolSpotlight(toolId: string) {
         submissionType: "FEATURED_LAUNCH",
         paymentStatus: "PAID",
       },
-      publishedArticle: {
-        status: "PUBLISHED",
-      },
+      publishedArticle: publiclyVisibleArticleWhere(),
     },
     orderBy: {
       publishedAt: "desc",

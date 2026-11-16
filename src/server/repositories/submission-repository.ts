@@ -39,6 +39,7 @@ const founderSubmissionSpotlightSummarySelect = {
     select: {
       slug: true,
       title: true,
+      publishedAt: true,
     },
   },
 } satisfies Prisma.SubmissionSpotlightBriefSelect;

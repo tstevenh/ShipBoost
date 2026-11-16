@@ -44,6 +44,7 @@ import {
   createAdminBlogArticle,
   getPublicBlogTagPage,
   getPublishedBlogArticleBySlug,
+  liveArticleLinkOrNull,
   updateAdminBlogArticle,
 } from "@/server/services/blog-service";
 
@@ -144,6 +145,38 @@ describe("blog-service", () => {
         }),
       }),
     );
+  });
+
+  it("hides published articles until their publish date (scheduled posts)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-17T08:00:00.000Z"));
+    prismaMock.blogArticle.findFirst.mockResolvedValueOnce(null);
+
+    try {
+      await getPublishedBlogArticleBySlug("scheduled-post");
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(prismaMock.blogArticle.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          slug: "scheduled-post",
+          status: "PUBLISHED",
+          publishedAt: { lte: new Date("2026-11-17T08:00:00.000Z") },
+        }),
+      }),
+    );
+  });
+
+  it("only links founders to a spotlight once it is live", () => {
+    const now = new Date("2026-11-17T08:00:00.000Z");
+    const article = { slug: "s", title: "T" };
+
+    expect(liveArticleLinkOrNull({ ...article, publishedAt: new Date("2026-11-17T02:00:00.000Z") }, now)).toEqual(article);
+    expect(liveArticleLinkOrNull({ ...article, publishedAt: new Date("2026-11-18T02:00:00.000Z") }, now)).toBeNull();
+    expect(liveArticleLinkOrNull({ ...article, publishedAt: null }, now)).toBeNull();
+    expect(liveArticleLinkOrNull(null, now)).toBeNull();
   });
 
   it("filters inactive tags from public archives", async () => {

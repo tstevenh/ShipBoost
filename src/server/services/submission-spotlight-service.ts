@@ -1,6 +1,7 @@
 import type { SubmissionSpotlightStatus } from "@prisma/client";
 
 import { prisma } from "@/server/db/client";
+import { liveArticleLinkOrNull } from "@/server/services/blog-service";
 import { AppError } from "@/server/http/app-error";
 import {
   spotlightBriefSchema,
@@ -10,6 +11,7 @@ import {
 type FounderSpotlightArticleSummary = {
   slug: string;
   title: string;
+  publishedAt: Date | null;
 };
 
 type FounderSpotlightBriefRecord = {
@@ -100,7 +102,7 @@ function serializeFounderSpotlightBrief(
     completedAt: brief.completedAt?.toISOString() ?? null,
     publishedAt: brief.publishedAt?.toISOString() ?? null,
     updatedAt: brief.updatedAt.toISOString(),
-    publishedArticle: brief.publishedArticle,
+    publishedArticle: liveArticleLinkOrNull(brief.publishedArticle),
   };
 }
 
@@ -144,6 +146,7 @@ async function getFounderPremiumSubmission(
             select: {
               slug: true,
               title: true,
+              publishedAt: true,
             },
           },
         },
@@ -196,6 +199,7 @@ async function ensureSpotlightBrief(
         select: {
           slug: true,
           title: true,
+          publishedAt: true,
         },
       },
     },
@@ -256,6 +260,7 @@ export async function saveFounderSpotlightBrief(
         select: {
           slug: true,
           title: true,
+          publishedAt: true,
         },
       },
     },
@@ -336,6 +341,7 @@ export async function linkPublishedSpotlightArticle(input: {
         select: {
           slug: true,
           title: true,
+          publishedAt: true,
         },
       },
     },

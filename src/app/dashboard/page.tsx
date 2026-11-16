@@ -14,6 +14,7 @@ import {
   listFounderSubmissions,
   reconcilePremiumLaunchPayment,
 } from "@/server/services/submission-service";
+import { liveArticleLinkOrNull } from "@/server/services/blog-service";
 import { listFounderTools } from "@/server/services/tool-service";
 import { Footer } from "@/components/ui/footer";
 
@@ -102,7 +103,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             updatedAt: submission.spotlightBrief.updatedAt.toISOString(),
             publishedAt:
               submission.spotlightBrief.publishedAt?.toISOString() ?? null,
-            publishedArticle: submission.spotlightBrief.publishedArticle,
+            publishedArticle: liveArticleLinkOrNull(submission.spotlightBrief.publishedArticle),
           }
         : null,
       launchVideo: submission.launchVideoOrders[0]

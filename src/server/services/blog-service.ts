@@ -542,11 +542,32 @@ export async function updateAdminBlogArticle(
   });
 }
 
+// Public reads show an article only once it is published AND its publishedAt has
+// passed, so an article saved with a future publishedAt is a scheduled post: it stays
+// hidden (404, out of listings, sitemap and feeds) until that moment, then appears as
+// the time-based caches in server/cache/public-content.ts refresh.
+export function publiclyVisibleArticleWhere(now = new Date()) {
+  return {
+    status: "PUBLISHED" as const,
+    publishedAt: { lte: now },
+  };
+}
+
+// Founder-facing links to a spotlight: hidden until the article is publicly visible,
+// so a scheduled article never shows up as a link that 404s.
+export function liveArticleLinkOrNull(
+  article: { slug: string; title: string; publishedAt: Date | null } | null,
+  now = new Date(),
+) {
+  if (!article?.publishedAt || article.publishedAt > now) return null;
+  return { slug: article.slug, title: article.title };
+}
+
 export function getPublishedBlogArticleBySlug(slug: string) {
   return prisma.blogArticle.findFirst({
     where: {
       slug,
-      status: "PUBLISHED",
+      ...publiclyVisibleArticleWhere(),
       primaryCategory: {
         isActive: true,
       },
@@ -561,7 +582,7 @@ export function getPublishedBlogArticleBySlug(slug: string) {
 export async function listLatestSpotlightArticles(limit = 2) {
   const articles = await prisma.blogArticle.findMany({
     where: {
-      status: "PUBLISHED",
+      ...publiclyVisibleArticleWhere(),
       primaryCategory: { isActive: true },
       author: { isActive: true },
       spotlightBrief: { isNot: null },
@@ -616,7 +637,7 @@ export function listPublicBlogCategories() {
       isActive: true,
       articles: {
         some: {
-          status: "PUBLISHED",
+          ...publiclyVisibleArticleWhere(),
           author: {
             isActive: true,
           },
@@ -636,7 +657,7 @@ export async function getPublicBlogIndexPage() {
   const [articles, categories, tags] = await Promise.all([
     prisma.blogArticle.findMany({
       where: {
-        status: "PUBLISHED",
+        ...publiclyVisibleArticleWhere(),
         primaryCategory: {
           isActive: true,
         },
@@ -653,7 +674,7 @@ export async function getPublicBlogIndexPage() {
         isActive: true,
         articles: {
           some: {
-            status: "PUBLISHED",
+            ...publiclyVisibleArticleWhere(),
           },
         },
       },
@@ -663,7 +684,7 @@ export async function getPublicBlogIndexPage() {
           select: {
             articles: {
               where: {
-                status: "PUBLISHED",
+                ...publiclyVisibleArticleWhere(),
               },
             },
           },
@@ -676,7 +697,7 @@ export async function getPublicBlogIndexPage() {
         articleTags: {
           some: {
             article: {
-              status: "PUBLISHED",
+              ...publiclyVisibleArticleWhere(),
             },
           },
         },
@@ -689,7 +710,7 @@ export async function getPublicBlogIndexPage() {
             articleTags: {
               where: {
                 article: {
-                  status: "PUBLISHED",
+                  ...publiclyVisibleArticleWhere(),
                 },
               },
             },
@@ -720,7 +741,7 @@ export async function getPublicBlogCategoryPage(slug: string) {
       isActive: true,
       articles: {
         some: {
-          status: "PUBLISHED",
+          ...publiclyVisibleArticleWhere(),
           author: {
             isActive: true,
           },
@@ -730,7 +751,7 @@ export async function getPublicBlogCategoryPage(slug: string) {
     include: {
       articles: {
         where: {
-          status: "PUBLISHED",
+          ...publiclyVisibleArticleWhere(),
           author: {
             isActive: true,
           },
@@ -750,7 +771,7 @@ export async function getPublicBlogTagPage(slug: string) {
       articleTags: {
         some: {
           article: {
-            status: "PUBLISHED",
+            ...publiclyVisibleArticleWhere(),
             author: {
               isActive: true,
             },
@@ -765,7 +786,7 @@ export async function getPublicBlogTagPage(slug: string) {
       articleTags: {
         where: {
           article: {
-            status: "PUBLISHED",
+            ...publiclyVisibleArticleWhere(),
             author: {
               isActive: true,
             },
@@ -826,7 +847,7 @@ export function listRelatedPublishedBlogArticles(input: {
       id: {
         not: input.articleId,
       },
-      status: "PUBLISHED",
+      ...publiclyVisibleArticleWhere(),
       author: {
         isActive: true,
       },
@@ -844,7 +865,7 @@ export function listRelatedPublishedBlogArticles(input: {
 export function listPublishedBlogArticleStaticParams() {
   return prisma.blogArticle.findMany({
     where: {
-      status: "PUBLISHED",
+      ...publiclyVisibleArticleWhere(),
       author: {
         isActive: true,
       },
@@ -866,7 +887,7 @@ export function listPublishedBlogCategoryStaticParams() {
       isActive: true,
       articles: {
         some: {
-          status: "PUBLISHED",
+          ...publiclyVisibleArticleWhere(),
           author: {
             isActive: true,
           },
@@ -888,7 +909,7 @@ export function listPublishedBlogTagStaticParams() {
       articleTags: {
         some: {
           article: {
-            status: "PUBLISHED",
+            ...publiclyVisibleArticleWhere(),
             author: {
               isActive: true,
             },
